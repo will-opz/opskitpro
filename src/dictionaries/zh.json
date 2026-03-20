@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "kb": "知识库",
+    "services": "服务矩阵",
+    "blog": "技术笔记"
+  },
+  "home": {
+    "meta_title": "deops - AI 原生运维基建",
+    "meta_desc": "运维的未来，由 AI 定义。极简、硬核、纯粹自动化。",
+    "system_status": "系统内核 v2.4 运行中",
+    "title_part1": "运维的未来",
+    "title_part2": "由 AI 定义。",
+    "subtitle": "极简，极客，全面自动化。deops 是为下一代 AI 原生工程师构建的去中心化运维基础设施。",
+    "btn_init": "初始化协议",
+    "btn_docs": "查看文档",
+    "card1_title": "AI 驱动洞察",
+    "card1_desc": "基于大语言模型的预测性异常检测与自动化根因分析，将 MTTR 降至冰点。",
+    "card2_title": "全自动流水线",
+    "card2_desc": "事件驱动修复与 CI/CD 深度集成。基础设施即代码，把其余的交给算法。",
+    "card3_title": "极客知识库",
+    "card3_desc": "类 Obsidian 的 Markdown 渲染引擎，用于事故复盘与架构设计。沉淀你的全量运维记忆。"
+  },
+  "services": {
+    "title_part1": "服务",
+    "title_part2": "导航矩阵.",
+    "subtitle": "基础设施管理、可观测性链路与持续交付流水线的中央指挥台 (HUD)。",
+    "matrix_active": "矩阵已在线",
+    "status_operational": "运行健康",
+    "status_maintenance": "系统维护",
+    "cat_monitoring": "监控与可观测性",
+    "cat_infra": "基础设施与边缘网",
+    "cat_cicd": "持续集成与交付"
+  },
+  "footer": {
+    "copyright": "© 2026 deops.org",
+    "slogan": "深度. 定义. 去中心化.",
+    "all_systems_operational": "所有节点响应健康"
+  }
+}

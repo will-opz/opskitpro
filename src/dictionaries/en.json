@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "kb": "KB",
+    "services": "Services",
+    "blog": "Blog"
+  },
+  "home": {
+    "meta_title": "deops - AI-Native Operations Infrastructure",
+    "meta_desc": "The Future of Ops is Defined by AI. Simple, Hardcore, Automated.",
+    "system_status": "System Core v2.4 operational",
+    "title_part1": "The Future of Ops is",
+    "title_part2": "Defined by AI.",
+    "subtitle": "Minimalist, hardcore, and fully automated. deops is the decentralized operations infrastructure built for the next generation of AI-native engineers.",
+    "btn_init": "Initialize Protocol",
+    "btn_docs": "View Docs",
+    "card1_title": "AI-Driven Insights",
+    "card1_desc": "Predictive anomaly detection and automated root-cause analysis powered by LLMs, reducing MTTR to virtually zero.",
+    "card2_title": "Automated Workflows",
+    "card2_desc": "Event-driven remediation and seamless CI/CD pipeline integrations. Define your infra state once, let algorithms handle the rest.",
+    "card3_title": "Knowledge Base",
+    "card3_desc": "Obsidian-inspired Markdown engine for incident post-mortems and architecture specs. Your ops memory, eternally searchable."
+  },
+  "services": {
+    "title_part1": "Service",
+    "title_part2": "Navigation.",
+    "subtitle": "Centralized Head-Up Display (HUD) for infrastructure management, observability tools, and continuous delivery pipelines.",
+    "matrix_active": "Matrix Active",
+    "status_operational": "Operational",
+    "status_maintenance": "Under Maintenance",
+    "cat_monitoring": "Monitoring & Observability",
+    "cat_infra": "Infrastructure & Edge",
+    "cat_cicd": "CI/CD & Delivery"
+  },
+  "footer": {
+    "copyright": "© 2026 deops.org",
+    "slogan": "Deep. Define. Decentralized.",
+    "all_systems_operational": "All Systems Operational"
+  }
+}
