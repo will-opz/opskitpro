@@ -13,9 +13,7 @@ export const metadata: Metadata = {
 }
 
 export const runtime = 'edge'
-export function generateStaticParams() {
-  return [{ lang: 'en' }, { lang: 'zh' }]
-}
+
 
 export default async function RootLayout({
   children,

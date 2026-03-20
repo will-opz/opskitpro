@@ -5,24 +5,20 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "cf:build": "opennextjs-cloudflare",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.8.2",
     "@tailwindcss/typography": "^0.5.19",
-    "gray-matter": "^4.0.3",
     "lucide-react": "^0.577.0",
     "negotiator": "^1.0.0",
     "next": "16.2.0",
-    "next-mdx-remote": "^6.0.0",
     "qrcode.react": "^4.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.17.1",
     "@tailwindcss/postcss": "^4",
     "@types/negotiator": "^0.6.4",
     "@types/node": "^20",

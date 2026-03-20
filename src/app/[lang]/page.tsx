@@ -29,15 +29,10 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
         </Link>
 
         <nav className="hidden md:flex gap-8 items-center font-mono text-sm">
-          <Link href={`/${lang}#kb`} className="text-zinc-400 hover:text-white hover:-translate-y-0.5 transition-all flex items-center gap-2">
-            <BookOpen className="w-4 h-4" /> {dict.nav.kb}
-          </Link>
           <Link href={`/${lang}/services`} className="text-zinc-400 hover:text-white hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <TerminalSquare className="w-4 h-4" /> {dict.nav.services}
           </Link>
-          <Link href={`/${lang}#blog`} className="text-zinc-400 hover:text-white hover:-translate-y-0.5 transition-all flex items-center gap-2">
-            <FileText className="w-4 h-4" /> {dict.nav.blog}
-          </Link>
+          
           
           <div className="flex items-center gap-2 ml-4 border-l border-zinc-800 pl-6">
             <Link href="/zh" className={`text-xs font-bold transition-colors ${lang === 'zh' ? 'text-accent' : 'text-zinc-500 hover:text-white'}`}>ZH</Link>
@@ -86,18 +81,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl text-left">
-          <div className="glass-card p-8 rounded-xl group cursor-default">
-            <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
-              <BrainCircuit className="w-6 h-6 text-emerald-400" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              {dict.home.card1_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 transition-colors opacity-0 group-hover:opacity-100" />
-            </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              {dict.home.card1_desc}
-            </p>
-          </div>
+
 
           <div className="glass-card p-8 rounded-xl group cursor-default">
             <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all">
@@ -113,15 +97,15 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
           </div>
 
           <div className="glass-card p-8 rounded-xl group cursor-default">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
-              <Database className="w-6 h-6 text-purple-400" />
+            <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-orange-500/20 transition-all">
+              <Zap className="w-6 h-6 text-orange-400" />
             </div>
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              {dict.home.card3_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100" />
+              Hardcore Utilities
+              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-orange-400 transition-colors opacity-0 group-hover:opacity-100" />
             </h3>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              {dict.home.card3_desc}
+              Industrial-grade tools for everyday ops. Secure password generation and real-time QR encoding at your fingertips.
             </p>
           </div>
         </div>

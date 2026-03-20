@@ -1,8 +1,6 @@
 {
   "nav": {
-    "kb": "KB",
-    "services": "Services",
-    "blog": "Blog"
+    "services": "Service Matrix"
   },
   "home": {
     "meta_title": "deops - AI-Native Operations Infrastructure",
@@ -16,9 +14,7 @@
     "card1_title": "AI-Driven Insights",
     "card1_desc": "Predictive anomaly detection and automated root-cause analysis powered by LLMs, reducing MTTR to virtually zero.",
     "card2_title": "Automated Workflows",
-    "card2_desc": "Event-driven remediation and seamless CI/CD pipeline integrations. Define your infra state once, let algorithms handle the rest.",
-    "card3_title": "Knowledge Base",
-    "card3_desc": "Obsidian-inspired Markdown engine for incident post-mortems and architecture specs. Your ops memory, eternally searchable."
+    "card2_desc": "Event-driven remediation and seamless CI/CD pipeline integrations. Define your infra state once, let algorithms handle the rest."
   },
   "services": {
     "title_part1": "Service",
@@ -36,23 +32,7 @@
     "slogan": "Deep. Define. Decentralized.",
     "all_systems_operational": "All Systems Operational"
   },
-  "kb_index": {
-    "title_part1": "Knowledge",
-    "title_part2": "Base.",
-    "subtitle": "Core operational manuals and incident post-mortems (Git-backed)",
-    "runbooks": "Standard Operating Procedures (Runbooks)",
-    "btn_ai_copilot": "Launch AI Copilot",
-    "read_more": "Read more"
-  },
-  "kb": {
-    "title_part1": "Ops",
-    "title_part2": "Copilot.",
-    "subtitle": "RAG AI Search Engine securely connected to internal runbooks and incident post-mortems.",
-    "placeholder": "Describe your incident or query the architecture (e.g., How to restart the production gateway?)",
-    "btn_search": "Execute",
-    "kb_active": "Neural Link Active",
-    "loading": "Retrieving data from knowledge graphs..."
-  },
+
   "tools": {
     "cat_cyber": "Cyber Tools",
     "passgen_title": "Password Generator",
