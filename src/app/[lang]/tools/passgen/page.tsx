@@ -1,4 +1,6 @@
 import { getDictionary } from '../../../../dictionaries'
+
+export const runtime = 'edge'
 import PassClient from './pass-client'
 
 export default async function PassPage({ params }: { params: Promise<{ lang: 'en' | 'zh' }> }) {

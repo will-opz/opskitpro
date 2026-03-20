@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { BookOpen, TerminalSquare, FileText, Github, Zap, Code2, BrainCircuit, Workflow, Database, ArrowUpRight, Menu } from 'lucide-react'
 import { getDictionary } from '../../dictionaries'
 
+export const runtime = 'edge'
+
 export default async function Home({ params }: { params: Promise<{ lang: 'en' | 'zh' }> }) {
   const { lang } = await params;
   const dict = await getDictionary(lang)

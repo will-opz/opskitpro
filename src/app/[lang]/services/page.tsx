@@ -15,6 +15,8 @@ import {
 } from 'lucide-react'
 import { getDictionary } from '../../../dictionaries'
 
+export const runtime = 'edge'
+
 export default async function ServicesPage({ params }: { params: Promise<{ lang: 'en' | 'zh' }> }) {
   const { lang } = await params;
   const dict = await getDictionary(lang)
