@@ -119,15 +119,19 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
                           <h3 className="font-semibold text-zinc-200 group-hover:text-white transition-colors duration-300">
                             {tool.name}
                           </h3>
-                          <div 
-                            className="w-2.5 h-2.5 rounded-full mt-1.5 transition-all duration-300"
-                            title={isOperational ? dict.services.status_operational : dict.services.status_maintenance}
-                            style={{ 
-                              backgroundColor: isOperational ? '#10b981' : '#f59e0b',
-                              boxShadow: isOperational ? '0 0 10px rgba(16,185,129,0.4)' : '0 0 10px rgba(245,158,11,0.4)'
-                            }}
-                          >
-                            <div className="w-full h-full rounded-full animate-ping opacity-40" style={{ backgroundColor: isOperational ? '#10b981' : '#f59e0b' }}></div>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-mono font-medium uppercase tracking-wider ${isOperational ? 'text-emerald-500/80' : 'text-orange-500/80'}`}>
+                              {isOperational ? dict.services.status_operational : dict.services.status_maintenance}
+                            </span>
+                            <div 
+                              className="w-2 h-2 rounded-full transition-all duration-300"
+                              style={{ 
+                                backgroundColor: isOperational ? '#10b981' : '#f59e0b',
+                                boxShadow: isOperational ? '0 0 8px rgba(16,185,129,0.4)' : '0 0 8px rgba(245,158,11,0.4)'
+                              }}
+                            >
+                              <div className="w-full h-full rounded-full animate-ping opacity-40" style={{ backgroundColor: isOperational ? '#10b981' : '#f59e0b' }}></div>
+                            </div>
                           </div>
                         </div>
                         <p className="text-[13px] text-zinc-500 font-mono leading-relaxed group-hover:text-zinc-400 transition-colors duration-300">

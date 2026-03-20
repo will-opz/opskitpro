@@ -5,8 +5,8 @@
     "blog": "Blog"
   },
   "home": {
-    "meta_title": "deops - AI-Native Operations Infrastructure",
-    "meta_desc": "The Future of Ops is Defined by AI. Simple, Hardcore, Automated.",
+    "meta_title": "deops - AI-Driven Edge Operations Infrastructure",
+    "meta_desc": "The future of operations is defined by AI. Minimalist, hardcore, and Edge-optimized for SREs.",
     "system_status": "System Core v2.4 operational",
     "title_part1": "The Future of Ops is",
     "title_part2": "Defined by AI",
@@ -19,6 +19,10 @@
     "card2_desc": "Event-driven remediation and seamless CI/CD pipeline integrations. Define your infra state once, let algorithms handle the rest.",
     "card3_title": "Knowledge Base",
     "card3_desc": "Obsidian-inspired Markdown engine for incident post-mortems and architecture specs. Your ops memory, eternally searchable.",
+    "card4_title": "Hardcore Utilities",
+    "card4_desc": "Industrial-grade tools for everyday ops. Secure password generation and real-time QR encoding at your fingertips.",
+    "card5_title": "Technical Blog",
+    "card5_desc": "Deep dives into SRE practices and technical notes. Covering K8s tuning, cyber security, and AI automation.",
     "quick_access": "Quick Commands",
     "tool_passgen": "PassGen",
     "tool_qrgen": "QR-Encode"

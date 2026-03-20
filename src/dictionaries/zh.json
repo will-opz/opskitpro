@@ -5,8 +5,8 @@
     "blog": "技术笔记"
   },
   "home": {
-    "meta_title": "deops - AI 原生运维基建",
-    "meta_desc": "运维的未来，由 AI 定义。极简、硬核、纯粹自动化。",
+    "meta_title": "deops - AI 驱动的边缘运维基础设施",
+    "meta_desc": "运维的未来由 AI 定义。极简、硬核、边缘动态渲染，专为 SRE 打造。",
     "system_status": "系统内核 v2.4 运行中",
     "title_part1": "运维的未来",
     "title_part2": "由 AI 定义",
@@ -19,6 +19,10 @@
     "card2_desc": "事件驱动修复与 CI/CD 深度集成。基础设施即代码，把其余的交给算法。",
     "card3_title": "极客知识库",
     "card3_desc": "类 Obsidian 的 Markdown 渲染引擎，用于事故复盘与架构设计。沉淀你的全量运维记忆。",
+    "card4_title": "硬核工具箱",
+    "card4_desc": "工业级运维工具。支持熵增随机密码生成与实时二维码矩阵编码，边缘侧零延迟响应。",
+    "card5_title": "技术笔记 / 博客",
+    "card5_desc": "深度技术文章与 SRE 实战笔记。涵盖 K8s 调优、网络安全与 AI 自动化工作流。",
     "quick_access": "快捷指令",
     "tool_passgen": "密码生成",
     "tool_qrgen": "二维码转化"

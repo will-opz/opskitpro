@@ -79,7 +79,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-14 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-            <Link href={`/${lang}`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+            <Link href={`/${lang}/services`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
               <Zap className="w-5 h-5" /> {dict.home.btn_init}
             </Link>
             <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-300 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none">
@@ -114,7 +114,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             <span className="text-sm font-mono text-zinc-400 group-hover:text-white transition-colors">{dict.home.tool_qrgen}</span>
           </Link>
           
-          <div className="h-6 w-px bg-white/10 hidden md:block" />
+          <div className="h-6 w-px bg-white/10 hidden md:block" />Prefix
 
           <Link href={`/${lang}/services`} className="flex items-center gap-2.5 group hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">
             <div className="w-7 h-7 rounded-md bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
@@ -125,8 +125,8 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl text-left">
-          <div className="glass-card p-8 rounded-xl group cursor-default">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl text-left">
+          <div id="blog" className="glass-card p-8 rounded-xl group cursor-default scroll-mt-24">
             <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
               <BrainCircuit className="w-6 h-6 text-emerald-400" />
             </div>
@@ -139,44 +139,31 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             </p>
           </div>
 
-          <div className="glass-card p-8 rounded-xl group cursor-default">
+          <div id="kb" className="glass-card p-8 rounded-xl group cursor-default scroll-mt-24">
             <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all">
-              <Workflow className="w-6 h-6 text-cyan-400" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              {dict.home.card2_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 transition-colors opacity-0 group-hover:opacity-100" />
-            </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              {dict.home.card2_desc}
-            </p>
-          </div>
-
-          <div className="glass-card p-8 rounded-xl group cursor-default">
-            <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-orange-500/20 transition-all">
-              <Zap className="w-6 h-6 text-orange-400" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              Hardcore Utilities
-              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-orange-400 transition-colors opacity-0 group-hover:opacity-100" />
-            </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Industrial-grade tools for everyday ops. Secure password generation and real-time QR encoding at your fingertips.
-            </p>
-          </div>
-
-          <div className="glass-card p-8 rounded-xl group cursor-default">
-            <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
-              <BrainCircuit className="w-6 h-6 text-purple-400" />
+              <BookOpen className="w-6 h-6 text-cyan-400" />
             </div>
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
               {dict.home.card3_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100" />
+              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 transition-colors opacity-0 group-hover:opacity-100" />
             </h3>
             <p className="text-zinc-400 text-sm leading-relaxed">
               {dict.home.card3_desc}
             </p>
           </div>
+
+          <Link href={`/${lang}/services`} className="glass-card p-8 rounded-xl group hover:border-orange-500/30 transition-all scroll-mt-24 no-underline">
+            <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-orange-500/20 transition-all">
+              <Zap className="w-6 h-6 text-orange-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+              {dict.home.card4_title}
+              <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-orange-400 transition-colors opacity-0 group-hover:opacity-100" />
+            </h3>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              {dict.home.card4_desc}
+            </p>
+          </Link>
         </div>
       </main>
 
