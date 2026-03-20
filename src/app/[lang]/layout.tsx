@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   description: 'The Future of Ops is Defined by AI. Simple, Hardcore, Automated, Lightning-fast.',
 }
 
+export const dynamicParams = false
 export function generateStaticParams() {
   return [{ lang: 'en' }, { lang: 'zh' }]
 }

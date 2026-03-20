@@ -4,9 +4,16 @@ import { notFound } from 'next/navigation'
 import { getKbBySlug, getAllKbSlugs } from '../../../../lib/mdx'
 import { ArrowLeft, Calendar } from 'lucide-react'
 
+export const dynamicParams = false
 export async function generateStaticParams() {
   const slugs = getAllKbSlugs()
-  return slugs.map((slug) => ({ slug }))
+  const locales = ['en', 'zh']
+  return locales.flatMap((lang) => 
+    slugs.map((slug) => ({
+      lang,
+      slug,
+    }))
+  )
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
