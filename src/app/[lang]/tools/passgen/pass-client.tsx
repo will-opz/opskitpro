@@ -138,19 +138,19 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
             </div>
 
             {showQR && (
-              <div className="absolute inset-x-0 bottom-[84px] p-8 flex flex-col items-center justify-center bg-zinc-900/95 backdrop-blur-xl border-t border-white/10 animate-in slide-in-from-bottom-4 duration-300 z-20">
-                <div className="p-4 bg-white rounded-2xl mb-4">
-                  <QRCodeSVG value={password} size={180} level="M" />
+              <div className="absolute inset-0 p-8 flex flex-col items-center justify-center bg-zinc-950/98 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200 z-30">
+                <div className="p-4 bg-white rounded-2xl shadow-2xl mb-6">
+                  <QRCodeSVG value={password} size={200} level="M" />
                 </div>
-                <p className="text-sm text-zinc-400 text-center px-8">
-                  <ShieldCheck className="w-4 h-4 inline mr-1 text-emerald-500" />
+                <p className="text-sm text-zinc-400 text-center px-4 max-w-xs leading-relaxed">
+                  <ShieldCheck className="w-4 h-4 inline mr-1.5 text-emerald-500" />
                   Scan with your mobile device to securely transfer this password.
                 </p>
                 <button 
                   onClick={() => setShowQR(false)}
-                  className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+                  className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4 rotate-90" />
+                  <ArrowLeft className="w-5 h-5 rotate-90" />
                 </button>
               </div>
             )}
