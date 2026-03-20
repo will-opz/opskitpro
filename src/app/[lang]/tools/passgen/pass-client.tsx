@@ -136,37 +136,6 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
                 <QrCode className="w-5 h-5" />
               </button>
             </div>
-
-            {showQR && (
-              <div 
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
-                onClick={() => setShowQR(false)}
-              >
-                <div 
-                  className="bg-zinc-900 border border-white/10 p-10 rounded-3xl flex flex-col items-center gap-6 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="p-4 bg-white rounded-2xl shadow-xl">
-                    <QRCodeSVG value={password} size={220} level="M" />
-                  </div>
-                  <div className="text-center space-y-2">
-                    <p className="text-white font-medium flex items-center justify-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                      Security Transfer
-                    </p>
-                    <p className="text-sm text-zinc-500 leading-relaxed px-2">
-                      Scan with your mobile device to securely transfer this password without using the clipboard.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setShowQR(false)}
-                    className="mt-4 w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors font-medium"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Controls */}
@@ -261,6 +230,38 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
           </div>
         </div>
       </div>
+
+      {/* Global Fixed Modal */}
+      {showQR && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300"
+          onClick={() => setShowQR(false)}
+        >
+          <div 
+            className="bg-zinc-900 border border-white/10 p-10 rounded-3xl flex flex-col items-center gap-6 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 bg-white rounded-2xl shadow-xl">
+              <QRCodeSVG value={password} size={220} level="M" />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-white font-medium flex items-center justify-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                Security Transfer
+              </p>
+              <p className="text-sm text-zinc-500 leading-relaxed px-2">
+                Scan with your mobile device to securely transfer this password without using the clipboard.
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowQR(false)}
+              className="mt-4 w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors font-medium hover:text-white"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
