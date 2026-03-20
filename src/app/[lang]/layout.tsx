@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 
-export const runtime = 'edge'
+export function generateStaticParams() {
+  return [{ lang: 'en' }, { lang: 'zh' }]
+}
 import '../globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
