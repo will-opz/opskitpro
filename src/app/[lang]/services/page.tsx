@@ -9,7 +9,9 @@ import {
   Workflow, 
   Database,
   BarChart,
-  GitMerge
+  GitMerge,
+  KeyRound,
+  QrCode
 } from 'lucide-react'
 import { getDictionary } from '../../../dictionaries'
 
@@ -40,6 +42,13 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
         { name: "GitHub Actions", desc: "Automated Workflows", icon: GitMerge, status: "operational", url: "#" },
         { name: "ArgoCD", desc: "GitOps Delivery", icon: Workflow, status: "operational", url: "#" },
         { name: "Jenkins", desc: "Legacy Automation", icon: Terminal, status: "maintenance", url: "#" },
+      ]
+    },
+    {
+      category: dict.tools.cat_cyber,
+      tools: [
+        { name: dict.tools.passgen_title, desc: dict.tools.passgen_desc, icon: KeyRound, status: "operational", url: `/${lang}/tools/passgen` },
+        { name: dict.tools.qrgen_title, desc: dict.tools.qrgen_desc, icon: QrCode, status: "operational", url: `/${lang}/tools/qrgen` },
       ]
     }
   ]

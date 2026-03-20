@@ -52,5 +52,29 @@
     "btn_search": "Execute",
     "kb_active": "Neural Link Active",
     "loading": "Retrieving data from knowledge graphs..."
+  },
+  "tools": {
+    "cat_cyber": "Cyber Tools",
+    "passgen_title": "Password Generator",
+    "passgen_desc": "1Password-grade entropy with QR migration support.",
+    "qrgen_title": "Text-to-QR Code",
+    "qrgen_desc": "Fast matrix encoding with real-time preview.",
+    "passgen": {
+      "length": "Length",
+      "options": "Security Options",
+      "uppercase": "Uppercase (A-Z)",
+      "lowercase": "Lowercase (a-z)",
+      "numbers": "Numbers (0-9)",
+      "symbols": "Symbols (!@#$)",
+      "generate": "Regenerate",
+      "copy": "Copy to Clipboard",
+      "show_qr": "Show QR Code",
+      "copied": "Copied!"
+    },
+    "qrgen": {
+      "placeholder": "Type text or URLs here...",
+      "download": "Download QR",
+      "helper": "Scan the matrix on the right to retrieve information on mobile."
+    }
   }
 }

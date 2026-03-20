@@ -52,5 +52,29 @@
     "btn_search": "下发指令",
     "kb_active": "神经链路已接通",
     "loading": "检索云端知识图谱..."
+  },
+  "tools": {
+    "cat_cyber": "网安工具箱 (Cyber Tools)",
+    "passgen_title": "随机密码生成",
+    "passgen_desc": "1Password 级熵增策略，支持二维码安全迁移。",
+    "qrgen_title": "文字转二维码",
+    "qrgen_desc": "极速文本矩阵编码，支持实时预览与下载。",
+    "passgen": {
+      "length": "密码长度",
+      "options": "安全选项",
+      "uppercase": "大写字母 (A-Z)",
+      "lowercase": "小写字母 (a-z)",
+      "numbers": "数字 (0-9)",
+      "symbols": "符号 (!@#$)",
+      "generate": "重新生成",
+      "copy": "复制到剪贴板",
+      "show_qr": "显示二维码",
+      "copied": "已复制！"
+    },
+    "qrgen": {
+      "placeholder": "在此输入文字或链接...",
+      "download": "下载二维码",
+      "helper": "手机扫描右侧生成的二维码即可快速获取信息。"
+    }
   }
 }
