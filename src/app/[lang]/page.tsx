@@ -56,35 +56,40 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow flex flex-col items-center justify-center text-center px-6 z-10 mt-16 md:mt-24 mb-32">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/80 text-xs font-mono text-accent mb-8 shadow-lg backdrop-blur-sm">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-          </span>
-          {dict.home.system_status}
-        </div>
+      <main className="flex-grow flex flex-col items-center justify-center text-center px-6 z-10 mt-12 md:mt-20 mb-32 relative">
+        {/* Subtle Hero Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-accent/5 blur-[120px] rounded-full pointer-events-none z-[-1]"></div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-[1.1] max-w-4xl mb-6">
-          {dict.home.title_part1} <br/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 font-mono italic">{dict.home.title_part2}</span>
-        </h1>
-        
-        <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-12 leading-relaxed">
-          {dict.home.subtitle}
-        </p>
+        <div className="max-w-4xl mx-auto flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/80 text-xs font-mono text-accent mb-6 shadow-lg backdrop-blur-sm animate-in fade-in duration-1000">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+            </span>
+            {dict.home.system_status}
+          </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-24">
-          <Link href={`/${lang}`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-            <Zap className="w-5 h-5" /> {dict.home.btn_init}
-          </Link>
-          <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-300 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2">
-            <Github className="w-5 h-5" /> {dict.home.btn_docs}
-          </Link>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter leading-[1.05] mb-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-100">
+            {dict.home.title_part1} <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 font-mono italic">{dict.home.title_part2}</span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
+            {dict.home.subtitle}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-14 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+            <Link href={`/${lang}`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+              <Zap className="w-5 h-5" /> {dict.home.btn_init}
+            </Link>
+            <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-300 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none">
+              <Github className="w-5 h-5" /> {dict.home.btn_docs}
+            </Link>
+          </div>
         </div>
 
         {/* Quick Access HUD */}
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 px-6 py-3 rounded-2xl border border-white/5 bg-zinc-900/40 backdrop-blur-xl mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out shadow-2xl">
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 px-6 py-3 rounded-2xl border border-white/5 bg-zinc-900/40 backdrop-blur-xl mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 shadow-2xl">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em] border-r border-white/10 pr-6 mr-2 hidden sm:block">
               {dict.home.quick_access}
