@@ -78,8 +78,8 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
           <Link href={`/${lang}`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
             <Zap className="w-5 h-5" /> {dict.home.btn_init}
           </Link>
-          <Link href={`/${lang}`} className="px-8 py-3.5 rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-300 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2">
-            <Code2 className="w-5 h-5" /> {dict.home.btn_docs}
+          <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-700 bg-zinc-900/50 text-zinc-300 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <Github className="w-5 h-5" /> {dict.home.btn_docs}
           </Link>
         </div>
 
@@ -177,6 +177,10 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
         <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-zinc-500 text-sm font-mono flex items-center gap-2">
             {dict.footer.copyright}
+            <span className="hidden md:inline text-zinc-700">|</span>
+            <Link href="https://github.com/will-opz/deops.org" target="_blank" className="hover:text-zinc-300 transition-colors">
+              GitHub
+            </Link>
             <span className="hidden md:inline text-zinc-700">|</span>
             <span className="hidden md:inline hover:text-zinc-300 transition-colors cursor-default">{dict.footer.slogan}</span>
           </div>
