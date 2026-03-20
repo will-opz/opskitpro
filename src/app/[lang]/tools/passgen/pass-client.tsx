@@ -16,8 +16,20 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
   })
   const [copied, setCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [history, setHistory] = useState<string[]>([])
 
-  const generatePassword = useCallback(() => {
+  useEffect(() => {
+    const saved = localStorage.getItem('deops_pass_history')
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to parse history', e)
+      }
+    }
+  }, [])
+
+  const generatePassword = useCallback((saveToHistory = true) => {
     const charset: Record<string, string> = {
       uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
       lowercase: 'abcdefghijklmnopqrstuvwxyz',
@@ -40,16 +52,32 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
       generated += characters[array[i] % characters.length]
     }
     setPassword(generated)
+
+    if (saveToHistory) {
+      setHistory(prev => {
+        const newHistory = [generated, ...prev].slice(0, 5)
+        localStorage.setItem('deops_pass_history', JSON.stringify(newHistory))
+        return newHistory
+      })
+    }
   }, [length, options])
 
+  // Initial generation on mount
   useEffect(() => {
-    generatePassword()
-  }, [generatePassword])
+    generatePassword(false)
+  }, [])
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(password)
+  const regenerate = () => generatePassword(true)
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const clearHistory = () => {
+    setHistory([])
+    localStorage.removeItem('deops_pass_history')
   }
 
   return (
@@ -86,14 +114,14 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
             
             <div className="flex p-2 gap-2">
               <button
-                onClick={generatePassword}
+                onClick={regenerate}
                 className="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 group"
               >
                 <RefreshCw className="w-5 h-5 group-active:rotate-180 transition-transform duration-500" />
                 {dict.tools.passgen.generate}
               </button>
               <button
-                onClick={copyToClipboard}
+                onClick={() => copyToClipboard(password)}
                 className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
               >
                 {copied ? <Check className="w-5 h-5 animate-bounce" /> : <Copy className="w-5 h-5" />}
@@ -142,7 +170,7 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
                 max="64"
                 value={length}
                 onChange={(e) => setLength(parseInt(e.target.value))}
-                className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all"
               />
             </div>
 
@@ -169,6 +197,54 @@ export default function PassClient({ lang, dict }: { lang: string, dict: any }) 
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* History Section */}
+          <div className="bg-zinc-900/30 rounded-3xl border border-zinc-800/50 p-8 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-zinc-400 font-medium flex items-center gap-2">
+                <RefreshCw className="w-4 h-4" />
+                {dict.tools.passgen.history}
+              </h3>
+              {history.length > 0 && (
+                <button 
+                  onClick={clearHistory}
+                  className="text-xs text-zinc-600 hover:text-red-400 transition-colors"
+                >
+                  {dict.tools.passgen.clear_history}
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {history.length > 0 ? (
+                history.map((h, idx) => (
+                  <div 
+                    key={idx}
+                    className="flex items-center justify-between p-3 bg-black/30 rounded-xl border border-white/5 group hover:border-emerald-500/30 transition-colors"
+                  >
+                    <span className="font-mono text-zinc-400 group-hover:text-zinc-200 transition-colors truncate mr-4">
+                      {h}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(h)}
+                      className="p-2 text-zinc-600 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-zinc-700 italic text-sm">
+                  {dict.tools.passgen.history_empty}
+                </div>
+              )}
+            </div>
+
+            <p className="mt-6 text-[11px] text-zinc-600 flex items-center gap-1.5 justify-center">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {dict.tools.passgen.history_helper}
+            </p>
           </div>
         </div>
       </div>

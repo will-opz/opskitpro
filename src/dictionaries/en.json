@@ -69,7 +69,11 @@
       "generate": "Regenerate",
       "copy": "Copy to Clipboard",
       "show_qr": "Show QR Code",
-      "copied": "Copied!"
+      "copied": "Copied!",
+      "history": "Recent History",
+      "clear_history": "Clear History",
+      "history_empty": "No recent history",
+      "history_helper": "History is stored locally in your browser and never uploaded to any server."
     },
     "qrgen": {
       "placeholder": "Type text or URLs here...",

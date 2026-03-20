@@ -69,7 +69,11 @@
       "generate": "重新生成",
       "copy": "复制到剪贴板",
       "show_qr": "显示二维码",
-      "copied": "已复制！"
+      "copied": "已复制！",
+      "history": "生成历史",
+      "clear_history": "清除记录",
+      "history_empty": "暂无历史记录",
+      "history_helper": "历史记录仅存储在您的浏览器本地，不会上传至服务器。"
     },
     "qrgen": {
       "placeholder": "在此输入文字或链接...",
