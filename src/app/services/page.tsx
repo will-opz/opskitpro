@@ -78,7 +78,7 @@ export default async function ServicesPage() {
     {
       category: lang === 'zh' ? "人工智能体中枢" : "AI & Intelligence",
       tools: [
-        { name: "OpenClaw", desc: "AI Inference & Bypass", icon: Brain, status: "operational", url: "#" },
+        { name: "OpenClaw", desc: "AI Inference & Bypass", icon: Brain, status: "operational", url: "https://openclaw.ai/" },
         { name: "OpenAI", desc: "GPT-4 / O1 Inference", icon: Brain, status: "operational", url: "https://chat.openai.com" },
         { name: "Claude", desc: "Anthropic Opus/Sonnet", icon: MessageSquare, status: "operational", url: "https://claude.ai" },
         { name: "Gemini3", desc: "Google Advanced Gemini", icon: Sparkles, status: "operational", url: "https://gemini.google.com" },
