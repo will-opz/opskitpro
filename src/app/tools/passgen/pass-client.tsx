@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { KeyRound, RefreshCw, Copy, QrCode, ArrowLeft, Check, ShieldCheck } from 'lucide-react'
+import { KeyRound, RefreshCw, Copy, QrCode, Check, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { QRCodeSVG } from 'qrcode.react'
 
-export default function PassClient({ lang, dict }: { lang: string, dict: any }) {
+export default function PassClient({ dict }: { dict: any }) {
   const [password, setPassword] = useState('')
   const [length, setLength] = useState(16)
   const [options, setOptions] = useState({

@@ -13,7 +13,7 @@ export default async function PassPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <PassClient lang={lang} dict={dict} />
+      <PassClient dict={dict} />
       <SiteFooter dict={dict} />
     </>
   )

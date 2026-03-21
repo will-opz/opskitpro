@@ -13,7 +13,7 @@ export default async function QRPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <QRClient lang={lang} dict={dict} />
+      <QRClient dict={dict} />
       <SiteFooter dict={dict} />
     </>
   )

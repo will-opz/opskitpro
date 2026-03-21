@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { QrCode, Download, ArrowLeft, Info } from 'lucide-react'
+import { QrCode, Download, Info } from 'lucide-react'
 import Link from 'next/link'
 import { QRCodeSVG } from 'qrcode.react'
 
-export default function QRClient({ lang, dict }: { lang: string, dict: any }) {
+export default function QRClient({ dict }: { dict: any }) {
   const [text, setText] = useState('')
 
   const downloadQR = () => {
