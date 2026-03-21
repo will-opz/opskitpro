@@ -47,12 +47,14 @@ export default async function RootLayout({
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   return (
     <html lang={lang} className={`${inter.variable} ${jetbrainsMono.variable} ${notoSansSC.variable}`}>
-      <body className="font-sans antialiased min-h-screen flex flex-col relative overflow-x-hidden selection:bg-accent selection:text-zinc-900">
-        <Script 
+      <head>
+        <script 
+          async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3793455361566383"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        ></script>
+      </head>
+      <body className="font-sans antialiased min-h-screen flex flex-col relative overflow-x-hidden selection:bg-accent selection:text-zinc-900">
         {/* Grid overlay */}
         <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-[-2]"></div>
         {/* Ambient glow */}

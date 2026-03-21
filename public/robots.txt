@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://deops.org/sitemap.xml
