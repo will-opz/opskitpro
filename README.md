@@ -12,10 +12,15 @@
 ## 🚀 Key Features
 
 - **⚡ Edge-First Architecture**: Built on **Next.js 16 (Turbopack)** and optimized for **Cloudflare Pages**, bypassing traditional server bottlenecks.
-- **🛡️ Cyber Toolbelt**: Industrial-grade utilities including an entropy-focused **Password Generator** and real-time **Text-to-QR** matrix encoding.
-- **🌐 HUD Service Matrix**: A centralized "Head-Up Display" for infrastructure observability and CI/CD pipeline monitoring.
+- **🛡️ Cyber Toolbelt**: Industrial-grade native utilities including an entropy-focused **Password Generator**, real-time **Text-to-QR** matrix encoding, and **Ops IP Edge Sensing**.
+- **🌐 HUD Service Matrix**: A centralized "Head-Up Display" mapping 40+ operational tools covering:
+  - **Threat Intel & Recon** (Nmap, Shodan, VirusTotal)
+  - **DNS & Diagnostics** (MXToolBox, DNSDumpster, SecurityTrails)
+  - **Zero Trust & Tunnels** (Tailscale, JumpServer)
+  - **Password Management & AI** (1Password, OpenClaw, Claude)
+  - **IT Automation & IaC** (Ansible, Terraform)
 - **🧠 Knowledge Base (Ready for Core)**: A pre-configured Markdown engine for high-density incident post-mortems and architecture design docs.
-- **💎 Premium Aesthetic**: A sleek, Obsidian-inspired OLED black theme with glassmorphism and subtle geometric micro-animations.
+- **💎 Premium Aesthetic**: A sleek, minimal engineering theme with glassmorphism, Spotlight global search (Cmd+K), and smart sticky navigation.
 
 ---
 

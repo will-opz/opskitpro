@@ -125,6 +125,8 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
     {
       category: lang === 'zh' ? "威胁情报与资产探测" : "Threat Intel & Recon",
       tools: [
+        { name: "Nmap", desc: "Network Discovery & Auditing", icon: Search, status: "operational", url: "https://nmap.org" },
+        { name: "Masscan", desc: "Mass IP Port Scanner", icon: Crosshair, status: "operational", url: "https://github.com/robertdavidgraham/masscan" },
         { name: "Shodan", desc: "IoT Search Engine", icon: Radar, status: "operational", url: "https://www.shodan.io" },
         { name: "FOFA", desc: "Cyber Space Mapping", icon: Scan, status: "operational", url: "https://fofa.info" },
         { name: "VirusTotal", desc: "Malware Intelligence", icon: ShieldAlert, status: "operational", url: "https://www.virustotal.com" },
