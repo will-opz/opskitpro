@@ -276,7 +276,7 @@ export default function IPClient() {
                   </button>
                 )}
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter mb-4 font-mono truncate">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter mb-4 font-mono break-all sm:truncate">
                 {ipv4 || (loading ? dict.detecting : dict.not_found)}
               </h2>
               {ipv4 && (
@@ -298,7 +298,7 @@ export default function IPClient() {
                   </button>
                 )}
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter mb-4 font-mono truncate">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter mb-4 font-mono break-all sm:truncate">
                 {ipv6 || (loading ? dict.detecting : dict.not_found)}
               </h2>
               {ipv6 && (

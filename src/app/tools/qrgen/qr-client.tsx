@@ -65,7 +65,7 @@ export default function QRClient({ dict }: { dict: any }) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={dict.tools.qrgen.placeholder}
-                className="w-full h-64 bg-[#fafafa]/50 border border-black/10 rounded-xl p-4 text-zinc-900 font-mono placeholder:text-zinc-700 focus:outline-none focus:border-emerald-500/50 transition-colors resize-none mb-4"
+                className="w-full h-48 sm:h-64 bg-[#fafafa]/50 border border-black/10 rounded-xl p-4 text-zinc-900 font-mono placeholder:text-zinc-700 focus:outline-none focus:border-emerald-500/50 transition-colors resize-none mb-4"
               />
               <button
                 onClick={downloadQR}

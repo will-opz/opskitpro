@@ -30,8 +30,9 @@
 
 .glow {
   position: absolute;
-  width: 1200px;
-  height: 800px;
+  width: 100vw;
+  max-width: 1200px;
+  height: min(800px, 100vh);
   /* Premium Dual Core tech glow: cleaner colors for light */
   background: 
     radial-gradient(circle at 30% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),

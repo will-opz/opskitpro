@@ -114,29 +114,34 @@ export default function PassClient({ dict }: { dict: any }) {
               </span>
             </div>
             
-            <div className="flex p-2 gap-2">
-              <button
-                onClick={regenerate}
-                className="flex-1 py-4 bg-zinc-100 hover:bg-zinc-700 text-zinc-900 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group"
-              >
-                <RefreshCw className="w-5 h-5 group-active:rotate-180 transition-transform duration-500" />
-                {dict.tools.passgen.generate}
-              </button>
-              <button
-                onClick={() => copyToClipboard(password)}
-                className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-zinc-900 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-              >
-                {copied ? <Check className="w-5 h-5 animate-bounce" /> : <Copy className="w-5 h-5" />}
-                {copied ? dict.tools.passgen.copied : dict.tools.passgen.copy}
-              </button>
-              <button
-                onClick={() => setShowQR(!showQR)}
-                className={`p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                  showQR ? 'bg-white text-black' : 'bg-zinc-100 text-zinc-900 hover:bg-zinc-700'
-                }`}
-              >
-                <QrCode className="w-5 h-5" />
-              </button>
+            <div className="flex flex-col sm:flex-row p-2 gap-2">
+              <div className="flex flex-1 gap-2">
+                <button
+                  onClick={regenerate}
+                  className="flex-1 py-4 bg-zinc-100 hover:bg-zinc-700 text-zinc-900 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group"
+                >
+                  <RefreshCw className="w-5 h-5 group-active:rotate-180 transition-transform duration-500" />
+                  <span className="text-sm sm:text-base">{dict.tools.passgen.generate}</span>
+                </button>
+              </div>
+              <div className="flex flex-1 gap-2">
+                <button
+                  onClick={() => copyToClipboard(password)}
+                  className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-zinc-900 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  {copied ? <Check className="w-5 h-5 animate-bounce" /> : <Copy className="w-5 h-5" />}
+                  <span className="text-sm sm:text-base">{copied ? dict.tools.passgen.copied : dict.tools.passgen.copy}</span>
+                </button>
+                <button
+                  onClick={() => setShowQR(!showQR)}
+                  className={`p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                    showQR ? 'bg-white text-black' : 'bg-zinc-100 text-zinc-900 hover:bg-zinc-700'
+                  }`}
+                  aria-label="Show QR Code"
+                >
+                  <QrCode className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
 
