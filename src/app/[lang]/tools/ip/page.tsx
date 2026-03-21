@@ -49,7 +49,16 @@ export default function IPPage() {
   const [v6Data, setV6Data] = useState<IPData | null>(null)
   const [stack, setStack] = useState<'v4' | 'v6'>('v4')
   
-  const [uaInfo, setUaInfo] = useState({ ua: '', os: '', browser: '', protocol: 'HTTP/2' })
+  const [uaInfo, setUaInfo] = useState({ 
+    ua: '', 
+    os: '', 
+    browser: '', 
+    protocol: 'HTTP/2',
+    language: '',
+    resolution: '',
+    timezone: '',
+    cores: 0
+  })
   const [copied, setCopied] = useState(false)
 
   // Simplified Dictionary (will be injected via props in a real app, but fetched here for 1-file demo)
@@ -183,7 +192,16 @@ export default function IPPage() {
     else if (ua.indexOf("Safari") != -1 && ua.indexOf("Chrome") == -1) browser = "Safari"
     else if (ua.indexOf("Edge") != -1) browser = "Edge"
 
-    setUaInfo({ ua, os, browser, protocol: window.location.protocol === 'https:' ? 'HTTP/2' : 'HTTP/1.1' })
+    setUaInfo({ 
+      ua, 
+      os, 
+      browser, 
+      protocol: window.location.protocol === 'https:' ? 'HTTP/2' : 'HTTP/1.1',
+      language: navigator.language || 'N/A',
+      resolution: `${window.screen.width}x${window.screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      cores: navigator.hardwareConcurrency || 0
+    })
     probeConnectivity()
   }, [])
 
@@ -235,7 +253,14 @@ export default function IPPage() {
             {/* IPv4 Block */}
             <div className={`p-8 rounded-2xl border transition-all ${stack === 'v4' ? 'bg-white border-accent/30 shadow-[0_0_40px_rgba(16,185,129,0.05)]' : 'bg-transparent border-black/5 opacity-50'}`}
                  onClick={() => v4Data && (setData(v4Data), setStack('v4'))}>
-              <span className="text-[10px] font-mono text-accent uppercase tracking-[0.3em] mb-4 block">{dict.ipv4}</span>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-mono text-accent uppercase tracking-[0.3em] block">{dict.ipv4}</span>
+                {ipv4 && (
+                  <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(ipv4); }} className="text-zinc-400 hover:text-emerald-600 transition-colors p-1" title="Copy IPv4">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <h2 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter mb-4 font-mono truncate">
                 {ipv4 || (loading ? dict.detecting : dict.not_found)}
               </h2>
@@ -250,7 +275,14 @@ export default function IPPage() {
             {/* IPv6 Block */}
             <div className={`p-8 rounded-2xl border transition-all ${stack === 'v6' ? 'bg-white border-accent/30 shadow-[0_0_40px_rgba(16,185,129,0.05)]' : 'bg-transparent border-black/5 opacity-50'}`}
                  onClick={() => v6Data && (setData(v6Data), setStack('v6'))}>
-              <span className="text-[10px] font-mono text-accent uppercase tracking-[0.3em] mb-4 block">{dict.ipv6}</span>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-mono text-accent uppercase tracking-[0.3em] block">{dict.ipv6}</span>
+                {ipv6 && (
+                  <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(ipv6); }} className="text-zinc-400 hover:text-emerald-600 transition-colors p-1" title="Copy IPv6">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <h2 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter mb-4 font-mono truncate">
                 {ipv6 || (loading ? dict.detecting : dict.not_found)}
               </h2>
@@ -284,15 +316,15 @@ export default function IPPage() {
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.country}</span>
-                <span className="text-sm border-l-2 border-emerald-500/50 pl-3 py-0.5">{data?.country_name} ({data?.country_code})</span>
+                <span className="text-sm border-l-2 border-emerald-500/50 pl-3 py-0.5">{data?.country_name ? `${data.country_name} (${data.country_code})` : 'N/A'}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.region}</span>
-                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5">{data?.region}, {data?.city}</span>
+                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5">{data?.region || data?.city ? `${data?.region || ''}${data?.region && data?.city ? ', ' : ''}${data?.city || ''}` : 'N/A'}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.coords}</span>
-                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono">{data?.latitude}, {data?.longitude}</span>
+                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono">{data?.latitude && data?.longitude ? `${data.latitude}, ${data.longitude}` : 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -308,7 +340,7 @@ export default function IPPage() {
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.isp}</span>
-                <span className="text-sm border-l-2 border-cyan-500/50 pl-3 py-0.5 truncate" title={data?.org}>{data?.org}</span>
+                <span className="text-[11px] border-l-2 border-cyan-500/50 pl-3 py-0.5 truncate" title={data?.org}>{data?.org || 'N/A'}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-mono">BGP / ASN</span>
@@ -375,7 +407,11 @@ export default function IPPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.timezone}</span>
-                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono">{data?.utc_offset} ({data?.timezone?.split('/')[1]})</span>
+                <span className="text-[11px] border-l-2 border-zinc-200 pl-3 py-0.5 font-mono">{uaInfo.timezone}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">DISPLAY / LOCALE</span>
+                <span className="text-[11px] border-l-2 border-zinc-200 pl-3 py-0.5 font-mono text-zinc-600">{uaInfo.resolution} @ {uaInfo.language} {uaInfo.cores ? `| ${uaInfo.cores} Cores` : ''}</span>
               </div>
             </div>
           </div>
