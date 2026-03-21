@@ -34,7 +34,11 @@ import {
   Search,
   History,
   Fingerprint,
-  Map
+  Map,
+  Wrench,
+  Layers,
+  MonitorCheck,
+  Zap
 } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 
@@ -52,6 +56,15 @@ export default async function ServicesPage() {
         { name: "Grafana", desc: "Metrics & Visualization", icon: BarChart, status: "operational", url: "#" },
         { name: "Prometheus", desc: "Time-series Database", icon: Activity, status: "operational", url: "#" },
         { name: "Elasticsearch", desc: "Log Analytics Engine", icon: Database, status: "operational", url: "#" },
+        { name: "Zabbix", desc: "Enterprise Monitoring", icon: MonitorCheck, status: "operational", url: "https://www.zabbix.com" },
+      ]
+    },
+    {
+      category: lang === 'zh' ? "自动化与配置管理" : "IT Automation & IaC",
+      tools: [
+        { name: "Ansible", desc: "Agentless IT Automation", icon: Wrench, status: "operational", url: "https://www.ansible.com" },
+        { name: "SaltStack", desc: "Event-driven Infra", icon: Zap, status: "operational", url: "https://saltproject.io" },
+        { name: "Terraform", desc: "Infrastructure as Code", icon: Layers, status: "operational", url: "https://www.terraform.io" },
       ]
     },
     {
