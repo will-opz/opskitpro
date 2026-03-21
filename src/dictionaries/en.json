@@ -1,8 +1,9 @@
 {
   "nav": {
-    "kb": "KB",
-    "services": "Services",
-    "blog": "Blog"
+    "kb": "Digital Garden",
+    "services": "Matrix",
+    "blog": "Tech Blog",
+    "about": "About deops"
   },
   "home": {
     "meta_title": "deops - AI-Driven Edge Operations Infrastructure",

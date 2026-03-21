@@ -11,7 +11,8 @@ import {
   BookOpen,
   Globe,
   FileText,
-  Menu
+  Menu,
+  Fingerprint
 } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -44,14 +45,17 @@ export default async function Home() {
         </Link>
 
         <nav className="hidden md:flex gap-8 items-center font-mono text-sm">
-          <Link href={`/#kb`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-            <BookOpen className="w-4 h-4" /> {dict.nav.kb}
-          </Link>
           <Link href={`/services`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <TerminalSquare className="w-4 h-4" /> {dict.nav.services}
           </Link>
-          <Link href={`/#blog`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+          <Link href={`/blog`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <FileText className="w-4 h-4" /> {dict.nav.blog}
+          </Link>
+          <a href="https://kb.deops.org" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+            <BookOpen className="w-4 h-4" /> {dict.nav.kb}
+          </a>
+          <Link href={`/about`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+            <Fingerprint className="w-4 h-4" /> {dict.nav.about}
           </Link>
           <div className="flex items-center gap-2 ml-4 border-l border-zinc-200 pl-6">
             <LanguageToggle currentLang={lang} />
