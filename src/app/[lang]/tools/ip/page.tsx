@@ -122,37 +122,51 @@ export default function IPPage() {
     async function probeConnectivity() {
       setLoading(true)
       
-      const fetchIPData = async (url: string) => {
+      const fetchIpAddress = async (url: string) => {
         try {
           const res = await fetch(url, { signal: AbortSignal.timeout(3000) })
           const json = await res.json()
-          const ip = json.ip
-          const metaRes = await fetch(`https://ipapi.co/${ip}/json/`)
-          const meta = await metaRes.json()
-          return { ...meta, network_type: meta.org?.toLowerCase().includes('cloud') ? 'Data Center' : 'Residential' }
+          return json.ip
         } catch (e) {
           return null
         }
       }
 
-      const [v4, v6] = await Promise.all([
-        fetchIPData('https://api4.ipify.org?format=json'),
-        fetchIPData('https://api6.ipify.org?format=json')
+      const fetchIPMeta = async (ip: string) => {
+        try {
+          const metaRes = await fetch(`https://ipapi.co/${ip}/json/`)
+          const meta = await metaRes.json()
+          if (meta.error) return { ip }
+          return { ...meta, ip, network_type: meta.org?.toLowerCase().includes('cloud') ? 'Data Center' : 'Residential' }
+        } catch(e) {
+          return { ip }
+        }
+      }
+
+      const [v4Ip, v6Ip] = await Promise.all([
+        fetchIpAddress('https://api4.ipify.org?format=json'),
+        fetchIpAddress('https://api6.ipify.org?format=json')
       ])
 
-      setV4Data(v4)
-      setV6Data(v6)
-      setIpv4(v4?.ip || null)
-      setIpv6(v6?.ip || null)
-      
-      // Default to what we found
-      if (v6) {
-        setData(v6)
-        setStack('v6')
-      } else if (v4) {
-        setData(v4)
-        setStack('v4')
+      let v4DataResult = v4Ip ? { ip: v4Ip } as IPData : null
+      let v6DataResult = v6Ip ? { ip: v6Ip } as IPData : null
+
+      if (v4Ip) {
+        v4DataResult = await fetchIPMeta(v4Ip) as IPData
       }
+      if (v6Ip) {
+        await new Promise(r => setTimeout(r, 600)) // Rate limit avoidance
+        v6DataResult = await fetchIPMeta(v6Ip) as IPData
+      }
+
+      setV4Data(v4DataResult)
+      setV6Data(v6DataResult)
+      setIpv4(v4Ip)
+      setIpv6(v6Ip)
+      
+      const primaryData = v6DataResult || v4DataResult
+      if (primaryData) setData(primaryData)
+      setStack(v6DataResult ? 'v6' : 'v4')
 
       setLoading(false)
     }
