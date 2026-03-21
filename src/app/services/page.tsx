@@ -22,7 +22,15 @@ import {
   Brain,
   MessageSquare,
   Sparkles,
-  Rocket
+  Rocket,
+  Radar,
+  Scan,
+  ShieldAlert,
+  Bug,
+  FileCode,
+  Box,
+  Eye,
+  Crosshair
 } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 
@@ -83,6 +91,30 @@ export default async function ServicesPage() {
         { name: "Claude", desc: "Anthropic Opus/Sonnet", icon: MessageSquare, status: "operational", url: "https://claude.ai" },
         { name: "Gemini3", desc: "Google Advanced Gemini", icon: Sparkles, status: "operational", url: "https://gemini.google.com" },
         { name: "Grok", desc: "xAI Unfiltered Model", icon: Rocket, status: "operational", url: "https://twitter.com/i/grok" },
+      ]
+    },
+    {
+      category: lang === 'zh' ? "威胁情报与资产探测" : "Threat Intel & Recon",
+      tools: [
+        { name: "Shodan", desc: "IoT Search Engine", icon: Radar, status: "operational", url: "https://www.shodan.io" },
+        { name: "FOFA", desc: "Cyber Space Mapping", icon: Scan, status: "operational", url: "https://fofa.info" },
+        { name: "VirusTotal", desc: "Malware Intelligence", icon: ShieldAlert, status: "operational", url: "https://www.virustotal.com" },
+      ]
+    },
+    {
+      category: lang === 'zh' ? "渗透拦截与防御抓包" : "Offensive & Traffic",
+      tools: [
+        { name: "Burp Suite", desc: "Web Vuln Scanner", icon: Crosshair, status: "operational", url: "https://portswigger.net/burp" },
+        { name: "Wireshark", desc: "Packet Capture Analysis", icon: Activity, status: "operational", url: "https://www.wireshark.org" },
+        { name: "Nuclei", desc: "Fast Vulnerability Scanner", icon: Bug, status: "operational", url: "https://github.com/projectdiscovery/nuclei" },
+      ]
+    },
+    {
+      category: lang === 'zh' ? "云原生安全与审计" : "Cloud & DevSecOps",
+      tools: [
+        { name: "Trivy", desc: "Container Security Scanner", icon: Box, status: "operational", url: "https://aquasecurity.github.io/trivy" },
+        { name: "Checkov", desc: "IaC Security Misconfigs", icon: FileCode, status: "operational", url: "https://www.checkov.io" },
+        { name: "Wazuh", desc: "Open Source XDR & SIEM", icon: Shield, status: "operational", url: "https://wazuh.com" },
       ]
     }
   ]
