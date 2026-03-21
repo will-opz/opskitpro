@@ -4,7 +4,6 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import ServicesClient from './ServicesClient'
 
-export const runtime = 'edge'
 
 export default async function ServicesPage() {
   const cookieStore = await cookies();

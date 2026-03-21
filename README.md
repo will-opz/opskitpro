@@ -5,14 +5,14 @@
 **deops** is a minimalist, hardcore, and fully automated operations infrastructure built for the next generation of AI-native engineers. Designed from the perspective of a Senior SRE, it embodies a decentralized, code-defined philosophy with a high-end, terminal-inspired aesthetic.
 
 > [!IMPORTANT]
-> This project is optimized for the **Cloudflare Edge Runtime**. It uses a pure Edge Dynamic architecture to achieve near-zero latency for operational tools and service management.
+> This project runs on **Cloudflare Workers** via [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare). The Worker entry point is only ~2 KB — all server logic and static assets are loaded on-demand from the edge.
 
 ---
 
 ## 🏛️ Architecture
 
 ```
-deops.org (Main Site — Next.js 16)
+deops.org (Main Site — Next.js 16 on Cloudflare Workers)
 ├── /              Home — Hero + Quick Access HUD
 ├── /services      Service Matrix (45+ tools, 12 categories)
 ├── /tools/passgen Password Generator (entropy-focused)
@@ -20,7 +20,7 @@ deops.org (Main Site — Next.js 16)
 ├── /tools/ip      Ops IP Edge Sensing (dual-stack)
 ├── /blog          Tech Blog (coming soon)
 ├── /about         About + Contact
-└── /api/ip        Edge Runtime IP API
+└── /api/ip        IP Geolocation API (via Cloudflare context)
 
 kb.deops.org (Sub Site — Quartz + Obsidian)
 └── Digital Garden (knowledge graph, notes, deep content)
@@ -33,37 +33,20 @@ kb.deops.org (Sub Site — Quartz + Obsidian)
 ### Native Cyber Tools (Self-Built)
 - **🔐 Password Generator**: Cryptographically secure, entropy-focused random password generation on the edge.
 - **📱 QR Matrix Encoder**: Real-time text-to-QR code conversion with instant rendering.
-- **🌍 Ops IP Edge Sensing**: Dual-stack (IPv4/IPv6) geolocation and network intelligence powered by Cloudflare Edge.
+- **🌍 Ops IP Edge Sensing**: Dual-stack (IPv4/IPv6) geolocation and network intelligence powered by Cloudflare.
 
 ### HUD Service Matrix
-A centralized "Head-Up Display" mapping **45+ operational tools** across **12 categories** with Spotlight global search (`Cmd+K`) and sticky sidebar navigation:
-
-| Category | Tools |
-|----------|-------|
-| **Native Cyber Tools** | PassGen, QRGen, IP Pulse |
-| **Password Management** | 1Password, Enpass, Bitwarden |
-| **Monitoring & Observability** | Grafana, Prometheus, Elasticsearch, Zabbix |
-| **IT Automation & IaC** | Ansible, SaltStack, Terraform |
-| **Infrastructure & Edge** | AWS Console, Cloudflare, Kubernetes |
-| **CI/CD** | GitHub Actions, ArgoCD, Jenkins |
-| **Zero Trust & Tunnels** | JumpServer, Tailscale, WireGuard, Pritunl, Proton Mail |
-| **AI & Intelligence** | OpenClaw, OpenAI, Claude, Gemini, Grok |
-| **Threat Intel & Recon** | Nmap, Masscan, Shodan, FOFA, VirusTotal |
-| **Offensive & Traffic** | Burp Suite, Wireshark, Nuclei |
-| **Cloud & DevSecOps** | Trivy, Checkov, Wazuh |
-| **DNS & Diagnostics** | MXToolBox, DNSDumpster, SecurityTrails, ViewDNS, ICANN Lookup |
+A centralized "Head-Up Display" mapping **45+ operational tools** across **12 categories** with Spotlight global search (`Cmd+K`) and sticky sidebar navigation.
 
 ### Digital Garden (Sub-Site)
 - **Engine**: [Quartz 4](https://quartz.jzhao.xyz/) — purpose-built for Obsidian `[[wikilinks]]` and knowledge graphs.
 - **URL**: [kb.deops.org](https://kb.deops.org)
-- **Content**: Cybersecurity notes, cloud-native playbooks, AI engineering, SRE incident post-mortems.
 
 ### UX & Internationalization
 - **Cookie-based i18n** (zh/en) — language preference detected via `Accept-Language`, persisted via `NEXT_LOCALE` cookie.
 - **Premium typography** — Inter + Noto Sans SC (Chinese) + JetBrains Mono (code).
 - **Spotlight Search** — `Cmd+K` / `Ctrl+K` global search across all services.
 - **Smart 404 Redirect** — All dead links redirect seamlessly to the homepage.
-- **Scroll-to-Top FAB** — Floating action button appears on long pages.
 
 ---
 
@@ -72,7 +55,8 @@ A centralized "Head-Up Display" mapping **45+ operational tools** across **12 ca
 | Layer | Technology |
 |-------|-----------|
 | **Framework** | [Next.js 16](https://nextjs.org/) (Turbopack + App Router) |
-| **Runtime** | [Cloudflare Edge Runtime](https://workers.cloudflare.com/) |
+| **Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
+| **Runtime** | [Cloudflare Workers](https://workers.cloudflare.com/) (Node.js compat) |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) + PostCSS |
 | **Icons** | [Lucide React](https://lucide.dev/) (45+ icons) |
 | **Typography** | Inter, Noto Sans SC, JetBrains Mono (via `next/font/google`) |
@@ -81,20 +65,107 @@ A centralized "Head-Up Display" mapping **45+ operational tools** across **12 ca
 
 ---
 
-## 📦 Deployment
+## 💻 Development
 
-### Main Site (Cloudflare Pages)
+### Prerequisites
+
+- **Node.js** >= 20
+- **npm** >= 10
+
+### Setup
 
 ```bash
-npx @cloudflare/next-on-pages@1
+# Clone the repository
+git clone https://github.com/will-opz/deops.org.git
+cd deops.org
+
+# Install dependencies
+npm install
 ```
+
+### Dev Server
+
+```bash
+# Standard dev mode with full-reload file watching
+npm run dev
+
+# Or use Next.js native HMR (faster, but no config hot-reload)
+npm run dev:hmr
+```
+
+The dev server starts at `http://localhost:3000`. The `dev` script uses `nodemon` to restart on config/package changes, while `dev:hmr` relies on Next.js's built-in hot module replacement.
+
+### Cloudflare Bindings in Dev
+
+Cloudflare bindings (e.g., `getCloudflareContext()`) are available in local dev via `initOpenNextCloudflareForDev()` in `next.config.ts`. Environment variables for local dev are stored in `.dev.vars` (gitignored).
+
+---
+
+## 🔍 Debugging
+
+### Local Workers Preview
+
+To test in the actual Cloudflare Workers runtime locally:
+
+```bash
+npm run preview
+```
+
+This builds the app with OpenNext and runs it in a local Workers simulator via `wrangler dev`. Useful for catching runtime-specific issues that don't show up in `next dev`.
+
+### Production Logs
+
+To tail live logs from the deployed Worker:
+
+```bash
+npx wrangler tail
+```
+
+Add `--format json` for structured output, or `--format pretty` for readable logs.
+
+### Type Generation
+
+Generate TypeScript types from Cloudflare bindings defined in `wrangler.jsonc`:
+
+```bash
+npm run cf-typegen
+```
+
+---
+
+## 📦 Deployment
+
+### Deploy to Production
+
+```bash
+npm run deploy
+```
+
+This runs `opennextjs-cloudflare build && opennextjs-cloudflare deploy`, which:
+1. Builds the Next.js app
+2. Bundles it into a Cloudflare Worker (entry ~2 KB + assets)
+3. Uploads assets and deploys the Worker to Cloudflare
+
+### Upload Only (no route activation)
+
+```bash
+npm run upload
+```
+
+Useful for staging a new version without activating it.
+
+### Configuration
+
+Worker configuration lives in [`wrangler.jsonc`](./wrangler.jsonc):
 
 | Setting | Value |
 |---------|-------|
-| Framework Preset | None (Custom) |
-| Build Output Directory | `.vercel/output/static` |
-| Compatibility Flags | `nodejs_compat` |
-| Compatibility Date | `2024-11-18` |
+| Worker Name | `deops-org` |
+| Custom Domains | `deops.org`, `www.deops.org` |
+| Compatibility Flags | `nodejs_compat`, `global_fetch_strictly_public` |
+| Compatibility Date | `2024-12-30` |
+
+OpenNext config lives in [`open-next.config.ts`](./open-next.config.ts).
 
 ### Sub-Site `kb.deops.org` (Cloudflare Pages)
 
@@ -107,17 +178,26 @@ npx @cloudflare/next-on-pages@1
 
 ---
 
-## 🛠️ Development
+## 📁 Project Structure
 
-```bash
-# Clone the repository
-git clone https://github.com/will-opz/deops.org.git
-
-# Install dependencies
-npm install
-
-# Launch Turbopack dev server
-npm run dev
+```
+.
+├── src/
+│   ├── app/                  # Next.js App Router pages
+│   │   ├── api/ip/           # IP geolocation API route
+│   │   ├── about/            # About page
+│   │   ├── blog/             # Blog page
+│   │   ├── services/         # Service matrix page
+│   │   └── tools/            # Cyber tools (passgen, qrgen, ip)
+│   ├── components/           # Shared React components
+│   ├── dictionaries/         # i18n translation files (zh.json, en.json)
+│   └── middleware.ts          # Locale detection middleware
+├── public/                   # Static assets
+├── next.config.ts            # Next.js + OpenNext dev config
+├── open-next.config.ts       # OpenNext adapter config
+├── wrangler.jsonc            # Cloudflare Worker config
+├── tailwind.config.ts        # Tailwind CSS config
+└── package.json
 ```
 
 ---

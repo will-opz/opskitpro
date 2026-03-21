@@ -4,7 +4,6 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import IPClient from './ip-client'
 
-export const runtime = 'edge'
 
 export default async function IPPage() {
   const cookieStore = await cookies();

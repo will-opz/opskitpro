@@ -35,7 +35,6 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: 'en
   }
 }
 
-export const runtime = 'edge'
 
 
 export default async function RootLayout({

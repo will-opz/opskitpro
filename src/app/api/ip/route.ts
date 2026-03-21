@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-export const runtime = 'edge'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -39,35 +38,39 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ip: targetIp, error: 'External API failure' }, { status: 500 })
   }
 
-  // 2. Feature: Current User Info using Cloudflare Edge (request.cf)
+  // 2. Feature: Current User Info using Cloudflare (getCloudflareContext)
   const cfip = request.headers.get('cf-connecting-ip');
   const xff = request.headers.get('x-forwarded-for')?.split(',')[0];
   const rip = request.headers.get('x-real-ip');
   const nextIp = (request as any).ip;
   const ip = cfip || xff || rip || nextIp || '127.0.0.1';
 
-  // Cloudflare injects the CF object in edge runtime
-  const cf = (request as any).cf;
+  // Use getCloudflareContext to access CF metadata
+  try {
+    const { cf } = await getCloudflareContext();
 
-  if (cf && Object.keys(cf).length > 0) {
-    return NextResponse.json({
-      ip,
-      country_name: cf.country || 'N/A', // CF returns ISO 3166-1 Alpha 2 code
-      country_code: cf.country || '',
-      region: cf.region || cf.regionCode || 'N/A',
-      city: cf.city || 'N/A',
-      latitude: cf.latitude || '',
-      longitude: cf.longitude || '',
-      org: cf.asOrganization || 'N/A',
-      asn: cf.asn ? `AS${cf.asn}` : '',
-      timezone: cf.timezone || 'UTC',
-      network_type: (cf.asOrganization || '').toLowerCase().includes('cloud') ? 'Data Center' : 'Residential',
-      proxy: false, 
-      _source: 'cloudflare-edge'
-    })
+    if (cf && Object.keys(cf).length > 0) {
+      return NextResponse.json({
+        ip,
+        country_name: cf.country || 'N/A',
+        country_code: cf.country || '',
+        region: cf.region || cf.regionCode || 'N/A',
+        city: cf.city || 'N/A',
+        latitude: cf.latitude || '',
+        longitude: cf.longitude || '',
+        org: cf.asOrganization || 'N/A',
+        asn: cf.asn ? `AS${cf.asn}` : '',
+        timezone: cf.timezone || 'UTC',
+        network_type: (cf.asOrganization || '').toLowerCase().includes('cloud') ? 'Data Center' : 'Residential',
+        proxy: false, 
+        _source: 'cloudflare-context'
+      })
+    }
+  } catch {
+    // getCloudflareContext not available (e.g., local dev without wrangler)
   }
 
-  // Fallback for Local Development (where CF object is mostly absent)
+  // Fallback for Local Development (where CF context is mostly absent)
   const fallbackData = await fetchFallbackData(ip)
   if (fallbackData) {
     return NextResponse.json({ ...fallbackData, _source: 'local-fallback' })

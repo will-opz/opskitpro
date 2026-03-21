@@ -15,7 +15,6 @@ import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 
-export const runtime = 'edge'
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -33,9 +32,17 @@ export default async function Home() {
 
         <div className="max-w-4xl mx-auto flex flex-col items-center">
 
-          <h1 className="text-5xl md:text-7xl font-black text-zinc-900 tracking-[-0.04em] leading-[1.05] mb-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-100">
-            {dict.home.title_part1} <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-emerald-600 to-cyan-500 font-mono italic tracking-[-0.02em]">{dict.home.title_part2}</span>
+          <h1 className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-100">
+            <span className="block text-4xl md:text-6xl font-semibold text-zinc-800 tracking-[-0.03em] leading-[1.2] mb-2">
+              {dict.home.title_part1}
+            </span>
+            <span className="block text-5xl md:text-7xl font-bold text-zinc-900 tracking-[-0.04em] leading-[1.1]">
+              {dict.home.title_part2_pre}{' '}
+              <span className="inline-block font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-emerald-400 tracking-[0.06em] [text-shadow:0_0_40px_rgba(16,185,129,0.3)]" style={{ WebkitTextStroke: '0px' }}>
+                {dict.home.title_part2_ai}
+              </span>
+              {dict.home.title_part2_suf ? ` ${dict.home.title_part2_suf}` : ''}
+            </span>
           </h1>
           
           <p className="text-lg md:text-xl text-zinc-600 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">

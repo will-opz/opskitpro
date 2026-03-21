@@ -5,7 +5,6 @@ import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 
-export const runtime = 'edge'
 
 export default async function BlogPage() {
   const cookieStore = await cookies();

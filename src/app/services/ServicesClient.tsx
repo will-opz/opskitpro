@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { LanguageToggle } from '@/components/LanguageToggle'
+
 import { 
   Activity, 
   Server, 
@@ -99,7 +99,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       tools: [
         { name: "GitHub Actions", desc: "Automated Workflows", icon: GitMerge, status: "operational", url: "https://github.com/features/actions" },
         { name: "ArgoCD", desc: "GitOps Delivery", icon: Workflow, status: "operational", url: "https://argoproj.github.io/cd/" },
-        { name: "Jenkins", desc: "Legacy Automation", icon: Terminal, status: "maintenance", url: "https://www.jenkins.io" },
+        { name: "Jenkins", desc: "Legacy Automation", icon: Terminal, status: "operational", url: "https://www.jenkins.io" },
       ]
     },
     {
@@ -268,7 +268,6 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
           </div>
           
           <div className="flex flex-col items-end gap-4 w-full lg:w-auto shrink-0">
-            <LanguageToggle currentLang={lang} />
             
             {/* Option 1: Global Search Command Palette */}
             <div className="relative w-full lg:w-72">

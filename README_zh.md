@@ -2,74 +2,184 @@
 
 [English](./README.md) | [简体中文](./README_zh.md)
 
-**deops** 是一个极简、硬核且高度自动化的运维基础设施，专为下一代 AI 原生工程师构建。该项目从资深 SRE 的视角设计，体现了去中心化、代码定义（Infrastructure as Code）的核心理念，并采用了高端的终端风格美学。
+**deops** 是一个极简、硬核且高度自动化的运维基础设施，专为下一代 AI 原生工程师构建。该项目从资深 SRE 的视角设计，体现去中心化、代码定义（Infrastructure as Code）的核心理念。
 
 > [!IMPORTANT]
-> 本项目已针对 **Cloudflare Edge Runtime** 进行深度优化。采用纯边缘动态渲染（Edge Dynamic）架构，为运维工具和服务管理提供近乎零延迟的响应。
+> 本项目运行在 **Cloudflare Workers** 上，通过 [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) 适配器部署。Worker 入口仅 ~2 KB，服务端逻辑和静态资源从边缘按需加载。
 
 ---
 
 ## 🚀 核心特性
 
-- **⚡ 边缘优先架构**：基于 **Next.js 16 (Turbopack)** 并在 **Cloudflare Pages** 上部署，绕过传统服务器瓶颈。
-- **🛡️ 网络安全工具箱**：工业级实用工具，包括基于熵值增强的 **随机密码生成器** 和实时 **文本转二维码** 矩阵编码。
-- **🌐 HUD 服务矩阵**：基础设施可观测性和 CI/CD 流水线监控的中央“平显”导航。
-- **🧠 极客知识库 (扩展就绪)**：预配置的 Markdown 渲染引擎，用于高密度的事故复盘和架构设计文档展示。
-- **💎 高级极客美学**：受 Obsidian 启发的 OLED 纯黑主题，结合玻璃拟态和细腻的几何微动效。
+- **⚡ 边缘优先架构** — 基于 **Next.js 16 (Turbopack)** + **Cloudflare Workers**，绕过传统服务器瓶颈
+- **🛡️ 网安工具箱** — 工业级实用工具（随机密码生成器、文本转二维码、IP 态势感知）
+- **🌐 HUD 服务矩阵** — 45+ 运维工具，12 个分类，Spotlight 全局搜索（`Cmd+K`）
+- **🧠 数字花园** — [kb.deops.org](https://kb.deops.org)，基于 Quartz + Obsidian 的知识图谱
+- **🌏 国际化** — Cookie 驱动的中英双语切换，自动检测浏览器语言
 
 ---
 
 ## 🛠️ 技术栈
 
-- **核心**: [Next.js 16](https://nextjs.org/) (App Router & Server Components)
-- **运行时**: [Cloudflare Edge Runtime](https://workers.cloudflare.com/)
-- **样式**: [Tailwind CSS v4](https://tailwindcss.com/) + PostCSS
-- **图标**: [Lucide React](https://lucide.dev/)
-- **国际化 (i18n)**: 通过自定义 `proxy.ts` 层实现纯边缘侧本地化。
+| 层级 | 技术 |
+|------|------|
+| **框架** | [Next.js 16](https://nextjs.org/) (Turbopack + App Router) |
+| **适配器** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
+| **运行时** | [Cloudflare Workers](https://workers.cloudflare.com/) (Node.js compat) |
+| **样式** | [Tailwind CSS v4](https://tailwindcss.com/) + PostCSS |
+| **图标** | [Lucide React](https://lucide.dev/) |
+| **字体** | Inter, Noto Sans SC, JetBrains Mono |
 
 ---
 
-## 📦 部署 (Cloudflare Pages)
+## 💻 开发
 
-本项目专为 **Cloudflare Pages** 打造，使用 `@cloudflare/next-on-pages@1` 插件确保最高兼容性。
+### 环境要求
 
-### 1. 构建指令
-```bash
-npx @cloudflare/next-on-pages@1
-```
+- **Node.js** >= 20
+- **npm** >= 10
 
-### 2. 必要设置
-- **Framework Preset**: 无 (Custom)
-- **Build Output Directory**: `.vercel/output/static`
-- **Compatibility Flags**: 在 Production 和 Preview 中添加 `nodejs_compat`。
-- **Compatibility Date**: 设置为 `2024-11-18` 或更晚。
-
----
-
-## 🛠️ 开发环境
+### 初始化
 
 ```bash
 # 克隆仓库
 git clone https://github.com/will-opz/deops.org.git
+cd deops.org
 
 # 安装依赖
 npm install
+```
 
-# 启动 Turbopack 开发服务器
+### 启动开发服务器
+
+```bash
+# 标准开发模式（nodemon 监听配置变化，自动重启）
 npm run dev
+
+# 纯 HMR 模式（更快的热更新，不监听配置文件）
+npm run dev:hmr
+```
+
+开发服务器启动后访问 `http://localhost:3000`。
+
+`dev` 使用 nodemon 在 `src/`、`package.json`、`next.config.ts` 变化时重启；`dev:hmr` 使用 Next.js 原生 HMR，适合纯组件开发。
+
+### Cloudflare 绑定
+
+本地开发中可通过 `next.config.ts` 里的 `initOpenNextCloudflareForDev()` 访问 Cloudflare 上下文（如 `getCloudflareContext()`）。本地环境变量存放在 `.dev.vars`（已 gitignore）。
+
+---
+
+## 🔍 调试
+
+### 本地 Workers 预览
+
+在真实的 Cloudflare Workers 运行环境中本地测试：
+
+```bash
+npm run preview
+```
+
+会先构建 Next.js 应用，再在本地 Workers 模拟器中运行。适合排查仅在 Workers 运行时才出现的问题。
+
+### 生产日志
+
+实时查看已部署 Worker 的日志：
+
+```bash
+# 结构化 JSON 输出
+npx wrangler tail --format json
+
+# 可读格式
+npx wrangler tail --format pretty
+```
+
+### 类型生成
+
+根据 `wrangler.jsonc` 中定义的 Cloudflare 绑定生成 TypeScript 类型：
+
+```bash
+npm run cf-typegen
+```
+
+---
+
+## 📦 部署
+
+### 部署到生产环境
+
+```bash
+npm run deploy
+```
+
+该命令执行 `opennextjs-cloudflare build && opennextjs-cloudflare deploy`，流程如下：
+
+1. 构建 Next.js 应用
+2. 通过 OpenNext 打包为 Cloudflare Worker（入口 ~2 KB + 静态资源）
+3. 上传资源并部署 Worker 到 Cloudflare 全球边缘网络
+
+### 仅上传（不激活路由）
+
+```bash
+npm run upload
+```
+
+### Worker 配置
+
+配置文件 [`wrangler.jsonc`](./wrangler.jsonc)：
+
+| 配置项 | 值 |
+|--------|-----|
+| Worker 名称 | `deops-org` |
+| 自定义域名 | `deops.org`, `www.deops.org` |
+| 兼容性标志 | `nodejs_compat`, `global_fetch_strictly_public` |
+| 兼容日期 | `2024-12-30` |
+
+OpenNext 适配器配置：[`open-next.config.ts`](./open-next.config.ts)
+
+### 子站 `kb.deops.org` (Cloudflare Pages)
+
+| 配置项 | 值 |
+|--------|-----|
+| 仓库 | `will-opz/kb.deops.org` |
+| 构建命令 | `npx quartz build` |
+| 输出目录 | `public` |
+
+---
+
+## 📁 项目结构
+
+```
+.
+├── src/
+│   ├── app/                  # Next.js App Router 页面
+│   │   ├── api/ip/           # IP 地理定位 API
+│   │   ├── about/            # 关于页面
+│   │   ├── blog/             # 博客页面
+│   │   ├── services/         # 服务矩阵页面
+│   │   └── tools/            # 网安工具（passgen, qrgen, ip）
+│   ├── components/           # 共享 React 组件
+│   ├── dictionaries/         # i18n 翻译文件（zh.json, en.json）
+│   └── middleware.ts          # 语言检测中间件
+├── public/                   # 静态资源
+├── next.config.ts            # Next.js + OpenNext 开发配置
+├── open-next.config.ts       # OpenNext 适配器配置
+├── wrangler.jsonc            # Cloudflare Worker 配置
+├── tailwind.config.ts        # Tailwind CSS 配置
+└── package.json
 ```
 
 ---
 
 ## 🤝 参与贡献
 
-我们欢迎来自 SRE 和 DevOps 社区的贡献。无论是添加新的运维工具还是优化 HUD 布局，欢迎提交 PR。
+欢迎 SRE 和 DevOps 社区的贡献。无论是添加新工具还是优化 HUD 布局，欢迎提交 PR。
 
 1. Fork 本项目
-2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交你的改动 (`git commit -m 'Add some AmazingFeature'`)
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交改动 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启一个 Pull Request
+5. 开启 Pull Request
 
 ---
 

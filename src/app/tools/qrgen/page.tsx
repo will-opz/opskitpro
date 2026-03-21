@@ -4,7 +4,6 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import QRClient from './qr-client'
 
-export const runtime = 'edge'
 
 export default async function QRPage() {
   const cookieStore = await cookies();

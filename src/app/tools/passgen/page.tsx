@@ -4,7 +4,6 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import PassClient from './pass-client'
 
-export const runtime = 'edge'
 
 export default async function PassPage() {
   const cookieStore = await cookies();
