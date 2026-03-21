@@ -72,13 +72,13 @@ export default async function ServicesPage() {
         { name: "Tailscale", desc: "Mesh VPN Network", icon: Network, status: "operational", url: "https://tailscale.com" },
         { name: "WireGuard", desc: "Fast & Modern VPN", icon: Lock, status: "operational", url: "https://www.wireguard.com" },
         { name: "Pritunl", desc: "Enterprise VPN Server", icon: Shield, status: "operational", url: "https://pritunl.com" },
-        { name: "OpenClaw", desc: "Traffic Routing & Bypass", icon: Wifi, status: "operational", url: "#" },
         { name: "Proton Mail", desc: "Encrypted Email Service", icon: Mail, status: "operational", url: "https://proton.me/mail" },
       ]
     },
     {
       category: lang === 'zh' ? "人工智能体中枢" : "AI & Intelligence",
       tools: [
+        { name: "OpenClaw", desc: "AI Inference & Bypass", icon: Brain, status: "operational", url: "#" },
         { name: "OpenAI", desc: "GPT-4 / O1 Inference", icon: Brain, status: "operational", url: "https://chat.openai.com" },
         { name: "Claude", desc: "Anthropic Opus/Sonnet", icon: MessageSquare, status: "operational", url: "https://claude.ai" },
         { name: "Gemini3", desc: "Google Advanced Gemini", icon: Sparkles, status: "operational", url: "https://gemini.google.com" },
