@@ -61,16 +61,16 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
     <div className="min-h-screen flex flex-col relative w-full">
       <header className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-10">
         <div className="flex items-center gap-4">
-          <Link href={`/${lang}`} className="text-zinc-400 hover:text-zinc-900 transition-colors" title="Back">
+          <Link href={`/${lang}`} className="text-zinc-600 hover:text-zinc-900 transition-colors" title="Back">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="font-mono text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
-            <span className="text-zinc-400">deops /</span> services<span className="text-accent animate-pulse">_</span>
+            <span className="text-zinc-600">deops /</span> services<span className="text-accent animate-pulse">_</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-3 bg-white/80 px-4 py-2 rounded-full border border-zinc-200 text-xs font-mono text-zinc-400 shadow-md backdrop-blur-sm cursor-default">
-          <Activity className="w-3.5 h-3.5 text-emerald-500" />
+        <div className="flex items-center gap-3 bg-white/80 px-4 py-2 rounded-full border border-zinc-200 text-xs font-mono text-zinc-600 shadow-md backdrop-blur-sm cursor-default">
+          <Activity className="w-3.5 h-3.5 text-emerald-700" />
           {dict.services.matrix_active}
         </div>
       </header>
@@ -79,18 +79,18 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
         <div className="mb-14 flex justify-between items-start">
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-4">
-              {dict.services.title_part1} <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-600 font-mono italic">{dict.services.title_part2}</span>
+              {dict.services.title_part1} <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 font-mono italic">{dict.services.title_part2}</span>
             </h1>
-            <p className="text-zinc-400 max-w-xl leading-relaxed">
+            <p className="text-zinc-600 max-w-xl leading-relaxed">
               {dict.services.subtitle}
             </p>
           </div>
           
           {/* Language Toggle */}
-          <div className="hidden md:flex items-center gap-2 border border-zinc-200 rounded-full px-4 py-1.5 bg-white/50">
-            <Link href="/zh/services" className={`text-xs font-bold transition-colors ${lang === 'zh' ? 'text-accent' : 'text-zinc-400 hover:text-zinc-900'}`}>ZH</Link>
+          <div className="hidden md:flex items-center gap-2 border border-zinc-200 rounded-full px-4 py-1.5 bg-zinc-100">
+            <Link href="/zh/services" className={`text-xs font-bold transition-colors ${lang === 'zh' ? 'text-accent' : 'text-zinc-600 hover:text-zinc-900'}`}>ZH</Link>
             <span className="text-zinc-700 text-xs">/</span>
-            <Link href="/en/services" className={`text-xs font-bold transition-colors ${lang === 'en' ? 'text-accent' : 'text-zinc-400 hover:text-zinc-900'}`}>EN</Link>
+            <Link href="/en/services" className={`text-xs font-bold transition-colors ${lang === 'en' ? 'text-accent' : 'text-zinc-600 hover:text-zinc-900'}`}>EN</Link>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
                       className="glass-card group p-5 rounded-xl flex items-start gap-4 no-underline hover:bg-white/60"
                     >
                       <div className="w-10 h-10 rounded-lg bg-zinc-100/50 flex items-center justify-center shrink-0 border border-zinc-300/50 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 transition-all duration-300 shadow-inner">
-                        <Icon className="w-5 h-5 text-zinc-400 group-hover:text-emerald-600 transition-colors duration-300" />
+                        <Icon className="w-5 h-5 text-zinc-600 group-hover:text-emerald-600 transition-colors duration-300" />
                       </div>
                       
                       <div className="flex-grow">
@@ -122,7 +122,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
                             {tool.name}
                           </h3>
                           <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-mono font-medium uppercase tracking-wider ${isOperational ? 'text-emerald-500/80' : 'text-orange-500/80'}`}>
+                            <span className={`text-[10px] font-mono font-medium uppercase tracking-wider ${isOperational ? 'text-emerald-700/80' : 'text-orange-500/80'}`}>
                               {isOperational ? dict.services.status_operational : dict.services.status_maintenance}
                             </span>
                             <div 
@@ -136,7 +136,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
                             </div>
                           </div>
                         </div>
-                        <p className="text-[13px] text-zinc-400 font-mono leading-relaxed group-hover:text-zinc-400 transition-colors duration-300">
+                        <p className="text-[13px] text-zinc-600 font-mono leading-relaxed group-hover:text-zinc-600 transition-colors duration-300">
                           {tool.desc}
                         </p>
                       </div>

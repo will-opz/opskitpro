@@ -33,7 +33,7 @@ export default function QRClient({ lang, dict }: { lang: string, dict: any }) {
       <div className="max-w-4xl mx-auto">
         <Link 
           href={`/${lang}/services`}
-          className="inline-flex items-center text-emerald-500 hover:text-emerald-600 transition-colors mb-8 group"
+          className="inline-flex items-center text-emerald-700 hover:text-emerald-600 transition-colors mb-8 group"
         >
           <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
           {dict.nav.services}
@@ -41,21 +41,21 @@ export default function QRClient({ lang, dict }: { lang: string, dict: any }) {
 
         <div className="flex items-center gap-4 mb-2">
           <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-            <QrCode className="w-8 h-8 text-emerald-500" />
+            <QrCode className="w-8 h-8 text-emerald-700" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-zinc-800 to-zinc-500">
               {dict.tools.qrgen_title}
             </h1>
-            <p className="text-zinc-400 mt-1">{dict.tools.qrgen_desc}</p>
+            <p className="text-zinc-600 mt-1">{dict.tools.qrgen_desc}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
           {/* Input Side */}
           <div className="space-y-6">
-            <div className="bg-white/50 rounded-2xl border border-black/10 p-6 backdrop-blur-sm">
-              <label className="block text-sm font-medium text-zinc-400 mb-4 flex items-center gap-2">
+            <div className="bg-zinc-100 rounded-2xl border border-black/10 p-6 backdrop-blur-sm">
+              <label className="block text-sm font-medium text-zinc-600 mb-4 flex items-center gap-2">
                 <Info className="w-4 h-4" />
                 {dict.tools.qrgen.helper}
               </label>
@@ -79,7 +79,7 @@ export default function QRClient({ lang, dict }: { lang: string, dict: any }) {
           {/* Preview Side */}
           <div className="flex flex-col items-center justify-start py-8">
             <div className="relative group p-8 bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] transition-transform hover:scale-[1.02]">
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/5 to-transparent pointer-events-none" />
               {text ? (
                 <QRCodeSVG
                   id="qr-code-svg"

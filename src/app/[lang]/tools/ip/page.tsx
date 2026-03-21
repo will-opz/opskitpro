@@ -198,7 +198,7 @@ export default function IPPage() {
     return (
       <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center font-mono p-6">
         <Activity className="w-12 h-12 text-accent animate-pulse mb-6 rotate-radar" />
-        <p className="text-zinc-400 animate-pulse uppercase tracking-[0.2em]">{dict.loading}</p>
+        <p className="text-zinc-600 animate-pulse uppercase tracking-[0.2em]">{dict.loading}</p>
       </div>
     )
   }
@@ -211,11 +211,11 @@ export default function IPPage() {
 
       <header className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-20 relative">
         <div className="flex items-center gap-4">
-          <Link href={`/${lang}/services`} className="text-zinc-400 hover:text-zinc-900 transition-colors p-2 hover:bg-white rounded-lg">
+          <Link href={`/${lang}/services`} className="text-zinc-600 hover:text-zinc-900 transition-colors p-2 hover:bg-white rounded-lg">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="font-mono text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
-            <span className="text-zinc-400">deops /</span> ip-pulse<span className="text-accent animate-pulse">_</span>
+            <span className="text-zinc-600">deops /</span> ip-pulse<span className="text-accent animate-pulse">_</span>
           </div>
         </div>
         
@@ -223,7 +223,7 @@ export default function IPPage() {
           onClick={copyToClipboard}
           className="flex items-center gap-2 bg-white border border-zinc-200 px-4 py-2 rounded-md hover:border-zinc-300 transition-all active:scale-95"
         >
-          {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+          {copied ? <Check className="w-4 h-4 text-emerald-700" /> : <Copy className="w-4 h-4" />}
           <span className="text-xs font-mono uppercase tracking-wider">{copied ? dict.copied : dict.copy}</span>
         </button>
       </header>
@@ -283,15 +283,15 @@ export default function IPPage() {
             </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.country}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.country}</span>
                 <span className="text-sm border-l-2 border-emerald-500/50 pl-3 py-0.5">{data?.country_name} ({data?.country_code})</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.region}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.region}</span>
                 <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5">{data?.region}, {data?.city}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.coords}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.coords}</span>
                 <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono">{data?.latitude}, {data?.longitude}</span>
               </div>
             </div>
@@ -307,17 +307,17 @@ export default function IPPage() {
             </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.isp}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.isp}</span>
                 <span className="text-sm border-l-2 border-cyan-500/50 pl-3 py-0.5 truncate" title={data?.org}>{data?.org}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-mono">BGP / ASN</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-mono">BGP / ASN</span>
                 <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 text-cyan-600 font-mono italic">{data?.asn || 'AS.PROBING'}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.type}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.type}</span>
                 <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5">
-                  <span className="bg-zinc-100 px-2 py-0.5 rounded text-[10px] font-mono text-zinc-400">
+                  <span className="bg-zinc-100 px-2 py-0.5 rounded text-[10px] font-mono text-zinc-600">
                     {data?.network_type === 'Data Center' ? 'CLOUD/IDC' : 'ISP/RES'}
                   </span>
                 </span>
@@ -335,7 +335,7 @@ export default function IPPage() {
             </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.proxy}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.proxy}</span>
                 <span className="text-sm border-l-2 border-orange-500/50 pl-3 py-0.5">
                   <span className={data?.proxy ? 'text-orange-600' : 'text-emerald-600'}>
                     {data?.proxy ? 'DETECTED' : 'CLEAR'}
@@ -343,15 +343,15 @@ export default function IPPage() {
                 </span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.risk}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.risk}</span>
                 <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span>
                   {dict.security}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">VPN / TOR / RELAY</span>
-                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono text-zinc-400 italic">NEGATIVE</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">VPN / TOR / RELAY</span>
+                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono text-zinc-600 italic">NEGATIVE</span>
               </div>
             </div>
           </div>
@@ -366,15 +366,15 @@ export default function IPPage() {
             </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.ua}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.ua}</span>
                 <span className="text-[11px] border-l-2 border-purple-500/50 pl-3 py-0.5 leading-tight">{uaInfo.browser} / {uaInfo.os}</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.protocol}</span>
-                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono text-emerald-600">{uaInfo.protocol} <span className="text-[10px] text-zinc-400">(ALPN)</span></span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.protocol}</span>
+                <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono text-emerald-600">{uaInfo.protocol} <span className="text-[10px] text-zinc-600">(ALPN)</span></span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-zinc-400 uppercase tracking-widest">{dict.timezone}</span>
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{dict.timezone}</span>
                 <span className="text-sm border-l-2 border-zinc-200 pl-3 py-0.5 font-mono">{data?.utc_offset} ({data?.timezone?.split('/')[1]})</span>
               </div>
             </div>
@@ -384,9 +384,9 @@ export default function IPPage() {
         {/* Global Traffic Radar Mockup */}
         <div className="mt-16 glass-card p-4 rounded-xl border border-black/5 bg-black/10 backdrop-blur-md overflow-hidden relative min-h-[120px]">
           <div className="absolute top-0 right-0 p-4">
-            <Activity className="w-4 h-4 text-emerald-500 opacity-30" />
+            <Activity className="w-4 h-4 text-emerald-700 opacity-30" />
           </div>
-          <p className="text-[11px] font-mono text-zinc-400 mb-2 uppercase tracking-widest">Global Routing Trace (Simulated)</p>
+          <p className="text-[11px] font-mono text-zinc-600 mb-2 uppercase tracking-widest">Global Routing Trace (Simulated)</p>
           <div className="h-20 flex items-end gap-1 opacity-20">
             {[...Array(40)].map((_, i) => (
               <div 

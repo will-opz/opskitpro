@@ -41,28 +41,28 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
         </Link>
 
         <nav className="hidden md:flex gap-8 items-center font-mono text-sm">
-          <Link href={`/${lang}#kb`} className="text-zinc-400 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+          <Link href={`/${lang}#kb`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <BookOpen className="w-4 h-4" /> {dict.nav.kb}
           </Link>
-          <Link href={`/${lang}/services`} className="text-zinc-400 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+          <Link href={`/${lang}/services`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <TerminalSquare className="w-4 h-4" /> {dict.nav.services}
           </Link>
-          <Link href={`/${lang}#blog`} className="text-zinc-400 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+          <Link href={`/${lang}#blog`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
             <FileText className="w-4 h-4" /> {dict.nav.blog}
           </Link>
           <div className="flex items-center gap-2 ml-4 border-l border-zinc-200 pl-6">
-            <Link href="/zh" className={`text-xs font-bold transition-colors ${lang === 'zh' ? 'text-accent' : 'text-zinc-400 hover:text-zinc-900'}`}>ZH</Link>
+            <Link href="/zh" className={`text-xs font-bold transition-colors ${lang === 'zh' ? 'text-accent' : 'text-zinc-600 hover:text-zinc-900'}`}>ZH</Link>
             <span className="text-zinc-700 text-xs">/</span>
-            <Link href="/en" className={`text-xs font-bold transition-colors ${lang === 'en' ? 'text-accent' : 'text-zinc-400 hover:text-zinc-900'}`}>EN</Link>
+            <Link href="/en" className={`text-xs font-bold transition-colors ${lang === 'en' ? 'text-accent' : 'text-zinc-600 hover:text-zinc-900'}`}>EN</Link>
           </div>
 
-          <Link href="https://github.com/will-opz/deops.org" target="_blank" className="text-zinc-400 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2 ml-4">
+          <Link href="https://github.com/will-opz/deops.org" target="_blank" className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2 ml-4">
             <Github className="w-5 h-5" />
           </Link>
         </nav>
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden text-zinc-400 hover:text-zinc-900">
+        <button className="md:hidden text-zinc-600 hover:text-zinc-900">
           <Menu className="w-6 h-6" />
         </button>
       </header>
@@ -83,10 +83,10 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-zinc-900 tracking-tighter leading-[1.05] mb-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-100">
             {dict.home.title_part1} <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-600 font-mono italic">{dict.home.title_part2}</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 font-mono italic">{dict.home.title_part2}</span>
           </h1>
           
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
+          <p className="text-lg md:text-xl text-zinc-600 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
             {dict.home.subtitle}
           </p>
 
@@ -94,16 +94,16 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             <Link href={`/${lang}/services`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
               <Zap className="w-5 h-5" /> {dict.home.btn_init}
             </Link>
-            <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-300 bg-white/50 text-zinc-700 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-100 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none">
+            <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-300 bg-zinc-100 text-zinc-700 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-100 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none">
               <Github className="w-5 h-5" /> {dict.home.btn_docs}
             </Link>
           </div>
         </div>
 
         {/* Quick Access HUD */}
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 px-6 py-3 rounded-2xl border border-black/5 bg-white/40 backdrop-blur-xl mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 shadow-2xl">
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 px-6 py-3 rounded-2xl border border-black/5 bg-white/80 backdrop-blur-xl mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 shadow-2xl">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-zinc-400 border-r border-black/10 pr-6 mr-2 hidden sm:flex">
+            <div className="flex items-center gap-2 text-zinc-600 border-r border-black/10 pr-6 mr-2 hidden sm:flex">
               <Terminal className="w-3.5 h-3.5 text-accent/70" />
               <span className="text-[11px] font-mono uppercase tracking-[0.15em] font-medium">
                 {dict.home.quick_access}
@@ -113,7 +113,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
               <div className="w-7 h-7 rounded-md bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
                 <Zap className="w-4 h-4 text-orange-600 group-hover:scale-110 transition-transform" />
               </div>
-              <span className="text-sm font-mono text-zinc-400 group-hover:text-zinc-900 transition-colors">{dict.home.tool_passgen}</span>
+              <span className="text-sm font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors">{dict.home.tool_passgen}</span>
             </Link>
           </div>
           
@@ -123,7 +123,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             <div className="w-7 h-7 rounded-md bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
               <QrCode className="w-4 h-4 text-cyan-600 group-hover:scale-110 transition-transform" />
             </div>
-            <span className="text-sm font-mono text-zinc-400 group-hover:text-zinc-900 transition-colors">{dict.home.tool_qrgen}</span>
+            <span className="text-sm font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors">{dict.home.tool_qrgen}</span>
           </Link>
           
           <div className="h-6 w-px bg-black/10 hidden md:block" />
@@ -132,7 +132,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             <div className="w-7 h-7 rounded-md bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
               <Globe className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
             </div>
-            <span className="text-sm font-mono text-zinc-400 group-hover:text-zinc-900 transition-colors">{dict.home.tool_ip}</span>
+            <span className="text-sm font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors">{dict.home.tool_ip}</span>
           </Link>
 
           <div className="h-6 w-px bg-black/10 hidden md:block" />
@@ -141,7 +141,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             <div className="w-7 h-7 rounded-md bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
               <TerminalSquare className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
             </div>
-            <span className="text-sm font-mono text-zinc-400 group-hover:text-zinc-900 transition-colors">{dict.nav.services}</span>
+            <span className="text-sm font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors">{dict.nav.services}</span>
           </Link>
         </div>
 
@@ -153,9 +153,9 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             </div>
             <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2">
               {dict.home.card1_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-400 group-hover:text-emerald-600 transition-colors opacity-0 group-hover:opacity-100" />
+              <ArrowUpRight className="w-4 h-4 text-zinc-600 group-hover:text-emerald-600 transition-colors opacity-0 group-hover:opacity-100" />
             </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
+            <p className="text-zinc-600 text-sm leading-relaxed">
               {dict.home.card1_desc}
             </p>
           </div>
@@ -166,9 +166,9 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             </div>
             <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2">
               {dict.home.card3_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-400 group-hover:text-cyan-600 transition-colors opacity-0 group-hover:opacity-100" />
+              <ArrowUpRight className="w-4 h-4 text-zinc-600 group-hover:text-cyan-600 transition-colors opacity-0 group-hover:opacity-100" />
             </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
+            <p className="text-zinc-600 text-sm leading-relaxed">
               {dict.home.card3_desc}
             </p>
           </div>
@@ -179,9 +179,9 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             </div>
             <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2">
               {dict.home.card4_title}
-              <ArrowUpRight className="w-4 h-4 text-zinc-400 group-hover:text-orange-600 transition-colors opacity-0 group-hover:opacity-100" />
+              <ArrowUpRight className="w-4 h-4 text-zinc-600 group-hover:text-orange-600 transition-colors opacity-0 group-hover:opacity-100" />
             </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
+            <p className="text-zinc-600 text-sm leading-relaxed">
               {dict.home.card4_desc}
             </p>
           </Link>
@@ -191,7 +191,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
       {/* Footer */}
       <footer className="w-full border-t border-zinc-200/50 bg-zinc-950/80 backdrop-blur-md z-10 mt-auto">
         <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-zinc-400 text-sm font-mono flex items-center gap-2">
+          <div className="text-zinc-600 text-sm font-mono flex items-center gap-2">
             {dict.footer.copyright}
             <span className="hidden md:inline text-zinc-700">|</span>
             <Link href="https://github.com/will-opz/deops.org" target="_blank" className="hover:text-zinc-700 transition-colors">
@@ -206,7 +206,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 duration-1000"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-widest">{dict.footer.all_systems_operational}</span>
+            <span className="text-[11px] font-mono text-zinc-600 uppercase tracking-widest">{dict.footer.all_systems_operational}</span>
           </div>
         </div>
       </footer>
