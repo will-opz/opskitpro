@@ -147,7 +147,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl text-left">
-          <div id="blog" className="glass-card p-8 rounded-xl group cursor-default scroll-mt-24">
+          <div id="insight" className="glass-card p-8 rounded-xl group cursor-default scroll-mt-24">
             <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
               <BrainCircuit className="w-6 h-6 text-emerald-600" />
             </div>
@@ -183,6 +183,19 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             </h3>
             <p className="text-zinc-600 text-sm leading-relaxed">
               {dict.home.card4_desc}
+            </p>
+          </Link>
+
+          <Link href={`/${lang}#blog`} id="blog" className="glass-card p-8 rounded-xl group hover:border-purple-500/30 transition-all scroll-mt-24 no-underline">
+            <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
+              <FileText className="w-6 h-6 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2">
+              {dict.home.card5_title || "Technical Blog"}
+              <ArrowUpRight className="w-4 h-4 text-zinc-600 group-hover:text-purple-600 transition-colors opacity-0 group-hover:opacity-100" />
+            </h3>
+            <p className="text-zinc-600 text-sm leading-relaxed">
+              {dict.home.card5_desc || "Deep dives into Kubernetes, SRE workflows, and AI automation."}
             </p>
           </Link>
         </div>

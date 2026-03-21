@@ -31,13 +31,15 @@ export default function QRClient({ lang, dict }: { lang: string, dict: any }) {
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <Link 
-          href={`/${lang}/services`}
-          className="inline-flex items-center text-emerald-700 hover:text-emerald-600 transition-colors mb-8 group"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-          {dict.nav.services}
-        </Link>
+        <div className="flex items-center gap-2 mb-8 text-sm font-mono">
+          <Link href={`/${lang}`} className="text-zinc-500 hover:text-zinc-900 transition-colors">
+            🏠 首页
+          </Link>
+          <span className="text-zinc-300">/</span>
+          <Link href={`/${lang}/services`} className="text-emerald-700 hover:text-emerald-600 transition-colors">
+            {dict.nav.services}
+          </Link>
+        </div>
 
         <div className="flex items-center gap-4 mb-2">
           <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">

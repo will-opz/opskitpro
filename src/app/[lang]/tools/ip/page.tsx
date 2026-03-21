@@ -210,9 +210,9 @@ export default function IPPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-accent/5 blur-[120px] rounded-full pointer-events-none"></div>
 
       <header className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-20 relative">
-        <div className="flex items-center gap-4">
-          <Link href={`/${lang}/services`} className="text-zinc-600 hover:text-zinc-900 transition-colors p-2 hover:bg-white rounded-lg">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="flex flex-col gap-2">
+          <Link href={`/${lang}`} className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-900 font-mono text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> 返回首页
           </Link>
           <div className="font-mono text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
             <span className="text-zinc-600">deops /</span> ip-pulse<span className="text-accent animate-pulse">_</span>

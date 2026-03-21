@@ -60,9 +60,9 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
   return (
     <div className="min-h-screen flex flex-col relative w-full">
       <header className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-10">
-        <div className="flex items-center gap-4">
-          <Link href={`/${lang}`} className="text-zinc-600 hover:text-zinc-900 transition-colors" title="Back">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="flex flex-col gap-2">
+          <Link href={`/${lang}`} className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-900 font-mono text-sm transition-colors" title="Return to Home">
+            <ArrowLeft className="w-4 h-4" /> 返回首页
           </Link>
           <div className="font-mono text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
             <span className="text-zinc-600">deops /</span> services<span className="text-accent animate-pulse">_</span>
