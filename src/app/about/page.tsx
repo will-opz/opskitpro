@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { ArrowLeft, Globe, Github, Shield, Zap, Brain, Terminal, ArrowUpRight } from 'lucide-react'
+import { ArrowLeft, Globe, Github, Shield, Zap, Brain, Terminal, ArrowUpRight, Mail } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 import { LanguageToggle } from '@/components/LanguageToggle'
 
@@ -129,6 +129,24 @@ export default async function AboutPage() {
                 </a>
               )
             })}
+          </div>
+        </section>
+
+        {/* Contact */}
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold text-zinc-900 mb-8 font-mono flex items-center gap-3">
+            <span className="text-accent">#</span> {isZh ? "联系我们" : "Contact"}
+          </h2>
+          <div className="glass-card rounded-xl border border-zinc-100 p-6 flex items-center gap-5">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-200/50 shrink-0">
+              <Mail className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-zinc-500 mb-1 font-mono">{isZh ? "业务合作 / 技术交流 / 安全反馈" : "Business / Tech / Security Feedback"}</p>
+              <a href="mailto:admin@deops.org" className="text-lg font-bold text-zinc-900 hover:text-emerald-600 transition-colors font-mono">
+                admin@deops.org
+              </a>
+            </div>
           </div>
         </section>
 
