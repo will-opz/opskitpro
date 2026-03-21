@@ -6,21 +6,37 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const targetIp = searchParams.get('q')
 
+  const fetchFallbackData = async (queryIp: string) => {
+    try {
+      const res = await fetch(`http://ip-api.com/json/${queryIp}`, { signal: AbortSignal.timeout(4000) })
+      const data = await res.json()
+      if (data.status === 'fail') throw new Error('API Fail')
+      return {
+        ip: queryIp,
+        country_name: data.country || 'N/A',
+        country_code: data.countryCode || '',
+        region: data.regionName || 'N/A',
+        city: data.city || 'N/A',
+        latitude: data.lat || '',
+        longitude: data.lon || '',
+        org: data.isp || 'N/A',
+        asn: data.as ? data.as.split(' ')[0] : '',
+        timezone: data.timezone || 'UTC',
+        network_type: (data.isp || '').toLowerCase().includes('cloud') ? 'Data Center' : 'Residential',
+        proxy: false
+      }
+    } catch {
+      return null
+    }
+  }
+
   // 1. Feature: Support querying a specified IP
   if (targetIp) {
-    try {
-      const res = await fetch(`https://ipapi.co/${targetIp}/json/`)
-      const data = await res.json()
-      if (data.error) return NextResponse.json({ ip: targetIp, error: true }, { status: 400 })
-      return NextResponse.json({ 
-        ...data, 
-        ip: targetIp, 
-        network_type: data.org?.toLowerCase().includes('cloud') ? 'Data Center' : 'Residential',
-        _source: 'external-lookup'
-      })
-    } catch {
-      return NextResponse.json({ ip: targetIp, error: 'External API failure' }, { status: 500 })
+    const fallbackData = await fetchFallbackData(targetIp)
+    if (fallbackData) {
+      return NextResponse.json({ ...fallbackData, _source: 'external-lookup' })
     }
+    return NextResponse.json({ ip: targetIp, error: 'External API failure' }, { status: 500 })
   }
 
   // 2. Feature: Current User Info using Cloudflare Edge (request.cf)
@@ -52,16 +68,10 @@ export async function GET(request: NextRequest) {
   }
 
   // Fallback for Local Development (where CF object is mostly absent)
-  try {
-    const res = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(3000) })
-    const data = await res.json()
-    return NextResponse.json({ 
-      ...data, 
-      ip, 
-      network_type: data.org?.toLowerCase().includes('cloud') ? 'Data Center' : 'Residential',
-      _source: 'local-fallback' 
-    })
-  } catch {
-    return NextResponse.json({ ip, _source: 'unknown-fallback' })
+  const fallbackData = await fetchFallbackData(ip)
+  if (fallbackData) {
+    return NextResponse.json({ ...fallbackData, _source: 'local-fallback' })
   }
+  
+  return NextResponse.json({ ip, _source: 'unknown-fallback' })
 }
