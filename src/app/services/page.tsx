@@ -30,7 +30,11 @@ import {
   FileCode,
   Box,
   Eye,
-  Crosshair
+  Crosshair,
+  Search,
+  History,
+  Fingerprint,
+  Map
 } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 
@@ -115,6 +119,16 @@ export default async function ServicesPage() {
         { name: "Trivy", desc: "Container Security Scanner", icon: Box, status: "operational", url: "https://aquasecurity.github.io/trivy" },
         { name: "Checkov", desc: "IaC Security Misconfigs", icon: FileCode, status: "operational", url: "https://www.checkov.io" },
         { name: "Wazuh", desc: "Open Source XDR & SIEM", icon: Shield, status: "operational", url: "https://wazuh.com" },
+      ]
+    },
+    {
+      category: lang === 'zh' ? "网络与域名诊断" : "DNS & Diagnostics",
+      tools: [
+        { name: "MXToolBox", desc: "DNS & Mail Health Check", icon: Mail, status: "operational", url: "https://mxtoolbox.com" },
+        { name: "DNSDumpster", desc: "DNS Topology Mapping", icon: Map, status: "operational", url: "https://dnsdumpster.com" },
+        { name: "SecurityTrails", desc: "Historical DNS Records", icon: History, status: "operational", url: "https://securitytrails.com" },
+        { name: "ViewDNS", desc: "Reverse IP & Network Utils", icon: Search, status: "operational", url: "https://viewdns.info" },
+        { name: "ICANN Lookup", desc: "Global WHOIS Registry", icon: Fingerprint, status: "operational", url: "https://lookup.icann.org" },
       ]
     }
   ]
