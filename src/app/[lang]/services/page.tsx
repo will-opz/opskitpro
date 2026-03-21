@@ -11,7 +11,8 @@ import {
   BarChart,
   GitMerge,
   KeyRound,
-  QrCode
+  QrCode,
+  Globe
 } from 'lucide-react'
 import { getDictionary } from '../../../dictionaries'
 
@@ -51,6 +52,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ lang:
       tools: [
         { name: dict.tools.passgen_title, desc: dict.tools.passgen_desc, icon: KeyRound, status: "operational", url: `/${lang}/tools/passgen` },
         { name: dict.tools.qrgen_title, desc: dict.tools.qrgen_desc, icon: QrCode, status: "operational", url: `/${lang}/tools/qrgen` },
+        { name: dict.tools.ip_title, desc: dict.tools.ip_desc, icon: Globe, status: "operational", url: `/${lang}/tools/ip` },
       ]
     }
   ]

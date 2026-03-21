@@ -1,5 +1,17 @@
 import Link from 'next/link'
-import { BookOpen, TerminalSquare, FileText, Github, Zap, Code2, BrainCircuit, Workflow, Database, ArrowUpRight, Menu, QrCode, Terminal } from 'lucide-react'
+import { 
+  BrainCircuit, 
+  ArrowUpRight, 
+  Zap,
+  Github,
+  Terminal,
+  QrCode,
+  TerminalSquare,
+  BookOpen,
+  Globe,
+  FileText,
+  Menu
+} from 'lucide-react'
 import { getDictionary } from '../../dictionaries'
 
 export const runtime = 'edge'
@@ -114,7 +126,16 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
             <span className="text-sm font-mono text-zinc-400 group-hover:text-white transition-colors">{dict.home.tool_qrgen}</span>
           </Link>
           
-          <div className="h-6 w-px bg-white/10 hidden md:block" />Prefix
+          <div className="h-6 w-px bg-white/10 hidden md:block" />
+
+          <Link href={`/${lang}/tools/ip`} className="flex items-center gap-2.5 group hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">
+            <div className="w-7 h-7 rounded-md bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+              <Globe className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+            </div>
+            <span className="text-sm font-mono text-zinc-400 group-hover:text-white transition-colors">{dict.home.tool_ip}</span>
+          </Link>
+
+          <div className="h-6 w-px bg-white/10 hidden md:block" />
 
           <Link href={`/${lang}/services`} className="flex items-center gap-2.5 group hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">
             <div className="w-7 h-7 rounded-md bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
@@ -125,7 +146,7 @@ export default async function Home({ params }: { params: Promise<{ lang: 'en' | 
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl text-left">
           <div id="blog" className="glass-card p-8 rounded-xl group cursor-default scroll-mt-24">
             <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
               <BrainCircuit className="w-6 h-6 text-emerald-400" />
