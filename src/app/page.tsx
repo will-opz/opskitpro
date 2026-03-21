@@ -94,15 +94,6 @@ export default async function Home() {
           <p className="text-lg md:text-xl text-zinc-600 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
             {dict.home.subtitle}
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mb-14 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-            <Link href={`/services`} className="px-8 py-3.5 rounded-md bg-white text-zinc-900 font-semibold hover:bg-zinc-200 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
-              <Zap className="w-5 h-5" /> {dict.home.btn_init}
-            </Link>
-            <Link href="https://github.com/will-opz/deops.org" target="_blank" className="px-8 py-3.5 rounded-md border border-zinc-300 bg-zinc-100 text-zinc-700 font-mono text-sm hover:border-zinc-500 hover:bg-zinc-100 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none">
-              <Github className="w-5 h-5" /> {dict.home.btn_docs}
-            </Link>
-          </div>
         </div>
 
         {/* Quick Access HUD */}
