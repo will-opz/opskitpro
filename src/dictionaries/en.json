@@ -118,7 +118,9 @@
       "copy": "Copy",
       "sample": "Sample",
       "upload": "Upload",
-      "download": "Download"
+      "download": "Download",
+      "repair": "Repair",
+      "repair_summary": "Fixes applied"
     }
   }
 }

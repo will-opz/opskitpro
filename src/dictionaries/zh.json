@@ -118,7 +118,9 @@
       "copy": "复制",
       "sample": "示例数据",
       "upload": "上传文件",
-      "download": "下载 JSON"
+      "download": "下载 JSON",
+      "repair": "智能修复",
+      "repair_summary": "已应用修复"
     }
   }
 }
