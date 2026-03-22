@@ -80,6 +80,61 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
     fixes.push('Replaced undefined/NaN → null')
   }
 
+  // Replace Python types with JSON types
+  const pythonTypesBefore = s
+  s = s.replace(/\bTrue\b/g, 'true')
+  s = s.replace(/\bFalse\b/g, 'false')
+  s = s.replace(/\bNone\b/g, 'null')
+  if (s !== pythonTypesBefore) {
+    fixes.push('Replaced Python-style True/False/None → true/false/null')
+  }
+
+  // Add missing commas between objects/arrays (e.g., } { -> }, {)
+  const missingCommaObjPattern = /([}\]])\s+([{\[])/g
+  const missingCommasObj = s.match(missingCommaObjPattern)
+  if (missingCommasObj && missingCommasObj.length > 0) {
+    s = s.replace(missingCommaObjPattern, '$1, $2')
+    fixes.push(`Added ${missingCommasObj.length} missing comma(s) between structures`)
+  }
+
+  // Add missing commas between key-value pairs (e.g., "a": 1 "b": 2 -> "a": 1, "b": 2)
+  // Matches end of value (}, ], ", e, l, 0-9) followed by whitespace, followed by " (start of next key or string)
+  const missingCommaValPattern = /([}\]"el0-9])\s+(?=")/g
+  const missingCommasVal = s.match(missingCommaValPattern)
+  if (missingCommasVal && missingCommasVal.length > 0) {
+    s = s.replace(missingCommaValPattern, '$1, ')
+    fixes.push(`Added ${missingCommasVal.length} missing comma(s) before keys/values`)
+  }
+
+  // Convert template literals (backticks) to double quotes
+  if (s.includes('`')) {
+    s = s.replace(/`([^`\\]*(?:\\.[^`\\]*)*)`/g, '"$1"')
+    fixes.push('Converted template literals (backticks) → double quotes')
+  }
+
+  // Fix numbers with leading zeros (but not decimals like 0.1)
+  const leadingZeroPattern = /(?<=[:[,]\s*)0+(?=[1-9]\d*(\.|$|[^.]))/g
+  if (s.match(leadingZeroPattern)) {
+    s = s.replace(leadingZeroPattern, '')
+    fixes.push('Removed leading zeros from number(s)')
+  }
+
+  // Convert hex to decimal
+  const hexPattern = /(?<=[:[,]\s*)0x([0-9a-fA-F]+)/g
+  const hexMatches = s.match(hexPattern)
+  if (hexMatches) {
+    s = s.replace(hexPattern, (_match, hex) => parseInt(hex, 16).toString())
+    fixes.push(`Converted ${hexMatches.length} hex number(s) → decimal`)
+  }
+
+  // Fix unquoted word values (excluding booleans and null)
+  const unquotedValPattern = /(?<=:\s*)(?!(true|false|null|undefined|NaN))([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*[,}\]])/g
+  const unquotedValMatches = s.match(unquotedValPattern)
+  if (unquotedValMatches) {
+    s = s.replace(unquotedValPattern, '"$1"')
+    fixes.push(`Quoted ${unquotedValMatches.length} unquoted string value(s)`)
+  }
+
   // ─── Bracket Balancing (position-tracked, handles both missing & extra) ───
   // Track positions of unmatched brackets so we can remove exact characters
   const openerStack: { ch: string; pos: number }[] = []
