@@ -9,7 +9,8 @@ import {
   TerminalSquare,
   BookOpen,
   Globe,
-  FileText
+  FileText,
+  Braces
 } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
@@ -83,6 +84,15 @@ export default async function Home() {
               <Globe className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
             </div>
             <span className="text-sm font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors">{dict.home.tool_ip}</span>
+          </Link>
+
+          <div className="h-6 w-px bg-black/10 hidden md:block" />
+
+          <Link href={`/tools/json`} className="flex items-center gap-2.5 group hover:bg-black/5 px-3 py-1.5 rounded-lg transition-all">
+            <div className="w-7 h-7 rounded-md bg-zinc-500/10 flex items-center justify-center group-hover:bg-zinc-500/20 transition-colors">
+              <Braces className="w-4 h-4 text-zinc-600 group-hover:scale-110 transition-transform" />
+            </div>
+            <span className="text-sm font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors">{dict.home.tool_json || 'JSON'}</span>
           </Link>
 
           <div className="h-6 w-px bg-black/10 hidden md:block" />

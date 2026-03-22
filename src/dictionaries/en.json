@@ -29,7 +29,8 @@
     "quick_access": "Quick Commands",
     "tool_passgen": "PassGen",
     "tool_qrgen": "QR-Encode",
-    "tool_ip": "IP-Pulse"
+    "tool_ip": "IP Probe",
+    "tool_json": "JSON Tool"
   },
   "services": {
     "title_part1": "Service",
@@ -113,7 +114,11 @@
       "clear": "Clear",
       "invalid": "Invalid JSON mapping",
       "valid": "JSON schema functional",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "copy": "Copy",
+      "sample": "Sample",
+      "upload": "Upload",
+      "download": "Download"
     }
   }
 }

@@ -29,7 +29,8 @@
     "quick_access": "快捷指令",
     "tool_passgen": "密码生成",
     "tool_qrgen": "二维码转化",
-    "tool_ip": "IP 指令"
+    "tool_ip": "IP 指令",
+    "tool_json": "JSON 工具"
   },
   "services": {
     "title_part1": "服务",
@@ -113,7 +114,11 @@
       "clear": "清空",
       "invalid": "无效的 JSON 格式",
       "valid": "JSON 格式合法",
-      "copied": "已复制到剪贴板"
+      "copied": "已复制到剪贴板",
+      "copy": "复制",
+      "sample": "示例数据",
+      "upload": "上传文件",
+      "download": "下载 JSON"
     }
   }
 }
