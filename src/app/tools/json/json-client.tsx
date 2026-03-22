@@ -72,12 +72,13 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
     fixes.push('Removed trailing comma(s)')
   }
 
-  // Replace undefined/NaN with null
-  const undefinedBefore = s
+  // Replace undefined/NaN/Infinity with null
+  const specialValuesBefore = s
   s = s.replace(/\bundefined\b/g, 'null')
   s = s.replace(/\bNaN\b/g, 'null')
-  if (s !== undefinedBefore) {
-    fixes.push('Replaced undefined/NaN → null')
+  s = s.replace(/\bInfinity\b/g, 'null')
+  if (s !== specialValuesBefore) {
+    fixes.push('Replaced undefined/NaN/Infinity → null')
   }
 
   // Replace Python types with JSON types
@@ -98,7 +99,6 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
   }
 
   // Add missing commas between key-value pairs (e.g., "a": 1 "b": 2 -> "a": 1, "b": 2)
-  // Matches end of value (}, ], ", e, l, 0-9) followed by whitespace, followed by " (start of next key or string)
   const missingCommaValPattern = /([}\]"el0-9])\s+(?=")/g
   const missingCommasVal = s.match(missingCommaValPattern)
   if (missingCommasVal && missingCommasVal.length > 0) {
@@ -128,7 +128,7 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
   }
 
   // Fix unquoted word values (excluding booleans and null)
-  const unquotedValPattern = /(?<=:\s*)(?!(true|false|null|undefined|NaN))([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*[,}\]])/g
+  const unquotedValPattern = /(?<=:\s*)(?!(?:true|false|null|undefined|NaN))([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\s*[,}\]])/g
   const unquotedValMatches = s.match(unquotedValPattern)
   if (unquotedValMatches) {
     s = s.replace(unquotedValPattern, '"$1"')
@@ -136,7 +136,6 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
   }
 
   // ─── Bracket Balancing (position-tracked, handles both missing & extra) ───
-  // Track positions of unmatched brackets so we can remove exact characters
   const openerStack: { ch: string; pos: number }[] = []
   const unmatchedClosers: number[] = [] // positions of extra ] or }
   let inString = false
@@ -166,7 +165,6 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
     }
   }
 
-  // Remove unmatched closing brackets (iterate positions in reverse to keep indices valid)
   if (unmatchedClosers.length > 0) {
     const removed = unmatchedClosers.map(p => s[p]).join('')
     for (let i = unmatchedClosers.length - 1; i >= 0; i--) {
@@ -176,14 +174,12 @@ function repairJson(input: string): { repaired: string; fixes: string[] } {
     fixes.push(`Removed ${unmatchedClosers.length} extra bracket(s) "${removed}"`)
   }
 
-  // Add missing closing brackets for unclosed openers
   if (openerStack.length > 0) {
     const closers = openerStack.map(o => o.ch === '{' ? '}' : ']').reverse().join('')
     s += closers
     fixes.push(`Added ${openerStack.length} missing bracket(s) "${closers}"`)
   }
 
-  // Final cleanup: if after all fixes the string is empty or just whitespace, it's unsalvageable
   s = s.trim()
 
   return { repaired: s, fixes }
