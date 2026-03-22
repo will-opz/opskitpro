@@ -56,6 +56,8 @@
     "qrgen_desc": "极速文本矩阵编码，支持实时预览与下载。",
     "ip_title": "Ops IP 态势感知",
     "ip_desc": "深度解析网络元数据，包括 ASN、运营商属性及安全风险判定。",
+    "json_title": "JSON 格式化 / 校验器",
+    "json_desc": "极低延迟的 JSON 结构化处理工具，支持实时校验与压缩。",
     "ip": {
       "loading": "正在同步全球路由节点...",
       "your_ip": "您的访问地址",
@@ -103,6 +105,15 @@
       "placeholder": "在此输入文字或链接...",
       "download": "下载二维码",
       "helper": "手机扫描右侧生成的二维码即可快速获取信息。"
+    },
+    "json": {
+      "placeholder": "在此粘贴您的 JSON 数据...",
+      "format": "美化 JSON",
+      "minify": "压缩 JSON",
+      "clear": "清空",
+      "invalid": "无效的 JSON 格式",
+      "valid": "JSON 格式合法",
+      "copied": "已复制到剪贴板"
     }
   }
 }

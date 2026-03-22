@@ -56,6 +56,8 @@
     "qrgen_desc": "Fast matrix encoding with real-time preview.",
     "ip_title": "Ops IP Insights",
     "ip_desc": "Deep network metadata analysis including ASN, ISP attributes, and security forensics.",
+    "json_title": "JSON Formatter / Validator",
+    "json_desc": "Zero-lag structural processor with real-time validation and minification.",
     "ip": {
       "loading": "Synchronizing global routing nodes...",
       "your_ip": "Your Access Address",
@@ -103,6 +105,15 @@
       "placeholder": "Type text or URLs here...",
       "download": "Download QR",
       "helper": "Scan the matrix on the right to retrieve information on mobile."
+    },
+    "json": {
+      "placeholder": "Paste your JSON data here...",
+      "format": "Prettify",
+      "minify": "Minify",
+      "clear": "Clear",
+      "invalid": "Invalid JSON mapping",
+      "valid": "JSON schema functional",
+      "copied": "Copied to clipboard"
     }
   }
 }

@@ -44,7 +44,8 @@ import {
   Vault,
   KeySquare,
   ShieldCheck,
-  DoorOpen
+  DoorOpen,
+  Braces
 } from 'lucide-react'
 
 export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" | "en" }) {
@@ -59,6 +60,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
         { name: dict.tools.passgen_title, desc: dict.tools.passgen_desc, icon: KeyRound, status: "operational", url: `/tools/passgen` },
         { name: dict.tools.qrgen_title, desc: dict.tools.qrgen_desc, icon: QrCode, status: "operational", url: `/tools/qrgen` },
         { name: dict.tools.ip_title, desc: dict.tools.ip_desc, icon: Globe, status: "operational", url: `/tools/ip` },
+        { name: dict.tools.json_title, desc: dict.tools.json_desc, icon: Braces, status: "operational", url: `/tools/json` },
       ]
     },
     {
