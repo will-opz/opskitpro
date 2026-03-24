@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
+// Use Edge Runtime for optimal performance on Cloudflare Workers
+export const runtime = 'edge'
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const targetIp = searchParams.get('q')
