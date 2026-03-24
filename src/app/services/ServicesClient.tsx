@@ -61,6 +61,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
         { name: dict.tools.qrgen_title, desc: dict.tools.qrgen_desc, icon: QrCode, status: "operational", url: `/tools/qrgen` },
         { name: dict.tools.ip_title, desc: dict.tools.ip_desc, icon: Globe, status: "operational", url: `/tools/ip` },
         { name: dict.tools.json_title, desc: dict.tools.json_desc, icon: Braces, status: "operational", url: `/tools/json` },
+        { name: dict.tools.websocket_title, desc: dict.tools.websocket_desc, icon: Zap, status: "operational", url: `/tools/websocket` },
         { name: dict.tools.matrix_title, desc: dict.tools.matrix_desc, icon: MessageSquare, status: "operational", url: "https://matrix.org" },
       ]
     },

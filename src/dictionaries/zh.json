@@ -31,7 +31,8 @@
     "tool_passgen": "密码生成",
     "tool_qrgen": "二维码转化",
     "tool_ip": "IP 指令",
-    "tool_json": "JSON 工具"
+    "tool_json": "JSON 工具",
+    "tool_websocket": "WS 调试"
   },
   "services": {
     "title_part1": "服务",
@@ -60,6 +61,8 @@
     "ip_desc": "深度解析网络元数据，包括 ASN、运营商属性及安全风险判定。",
     "json_title": "JSON 格式化 / 校验器",
     "json_desc": "极低延迟的 JSON 结构化处理工具，支持实时校验与压缩。",
+    "websocket_title": "WebSocket 实时调试器",
+    "websocket_desc": "全双工通讯探测工具，支持消息订阅与实时日志记录。",
     "matrix_title": "Matrix 终端",
     "matrix_desc": "去中心化、端到端加密的实时通讯节点。",
     "ip": {
@@ -127,6 +130,25 @@
       "download": "下载 JSON",
       "repair": "智能修复",
       "repair_summary": "已应用修复"
+    },
+    "websocket": {
+      "placeholder": "输入 WebSocket 地址 (ws:// 或 wss://)",
+      "connect": "连接节点",
+      "disconnect": "断开连接",
+      "send": "发送数据",
+      "send_placeholder": "在此输入消息载荷...",
+      "status": "连接状态",
+      "connected": "已就绪",
+      "disconnected": "未连接",
+      "connecting": "握手中...",
+      "error": "连接异常",
+      "logs": "通讯流量监测",
+      "clear": "清除日志",
+      "no_logs": "暂无通讯数据",
+      "sample": "示例地址",
+      "type": "类型",
+      "message": "数据载荷",
+      "time": "时间"
     }
   }
 }

@@ -24,7 +24,16 @@ function getLocale(request: NextRequest): string {
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const host = request.headers.get('host') || ''
+  const { pathname, search } = request.nextUrl
+
+  // 1. Permanent Domain Redirect (301)
+  if (host.includes('deops.org')) {
+    const newUrl = new URL(`https://opskitpro.com${pathname}${search}`)
+    return NextResponse.redirect(newUrl, 301)
+  }
+
+  // 2. Language & Assets Handling
   if (
     pathname.includes('.') ||
     pathname.startsWith('/api') ||

@@ -31,7 +31,8 @@
     "tool_passgen": "PassGen",
     "tool_qrgen": "QR-Encode",
     "tool_ip": "IP Probe",
-    "tool_json": "JSON Tool"
+    "tool_json": "JSON Tool",
+    "tool_websocket": "WS Debug"
   },
   "services": {
     "title_part1": "Service",
@@ -60,6 +61,8 @@
     "ip_desc": "Deep network metadata analysis including ASN, ISP attributes, and security forensics.",
     "json_title": "JSON Formatter / Validator",
     "json_desc": "Zero-lag structural processor with real-time validation and minification.",
+    "websocket_title": "WebSocket Protocol Tester",
+    "websocket_desc": "Full-duplex debugger for real-time streams with message subscription and logging.",
     "matrix_title": "Matrix Terminal",
     "matrix_desc": "Decentralized, E2E encrypted real-time communication node.",
     "ip": {
@@ -127,6 +130,25 @@
       "download": "Download",
       "repair": "Repair",
       "repair_summary": "Fixes applied"
+    },
+    "websocket": {
+      "placeholder": "Enter WebSocket URL (ws:// or wss://)",
+      "connect": "Connect Node",
+      "disconnect": "Terminate",
+      "send": "Send Payload",
+      "send_placeholder": "Type message to send...",
+      "status": "State",
+      "connected": "Operational",
+      "disconnected": "Disconnected",
+      "connecting": "Handshaking...",
+      "error": "Fault Detected",
+      "logs": "Traffic Monitor",
+      "clear": "Wipe Logs",
+      "no_logs": "No data streams detected",
+      "sample": "Sample Node",
+      "type": "Type",
+      "message": "Payload",
+      "time": "Timestamp"
     }
   }
 }

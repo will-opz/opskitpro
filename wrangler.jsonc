@@ -20,6 +20,8 @@
   ],
   "routes": [
     { "pattern": "opskitpro.com", "custom_domain": true },
-    { "pattern": "www.opskitpro.com", "custom_domain": true }
+    { "pattern": "www.opskitpro.com", "custom_domain": true },
+    { "pattern": "deops.org", "custom_domain": true },
+    { "pattern": "www.deops.org", "custom_domain": true }
   ]
 }

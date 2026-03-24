@@ -2,7 +2,6 @@ import { cookies } from 'next/headers'
 import { getDictionary } from '@/dictionaries'
 import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono, Noto_Sans_SC } from 'next/font/google'
-import Script from 'next/script'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -49,8 +48,8 @@ export default async function RootLayout({
   return (
     <html lang={lang} className={`${inter.variable} ${jetbrainsMono.variable} ${notoSansSC.variable}`}>
       <head>
-        <script 
-          async 
+        <script
+          async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3793455361566383"
           crossOrigin="anonymous"
         ></script>
