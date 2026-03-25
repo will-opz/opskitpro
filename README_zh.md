@@ -12,7 +12,7 @@
 ## 🚀 核心特性
 
 - **⚡ 边缘优先架构** — 基于 **Next.js 16 (Turbopack)** + **Cloudflare Workers**，绕过传统服务器瓶颈
-- **🛡️ 网安工具箱** — 工业级实用工具（随机密码/UUID/PIN、二维码转化、IP 态势感知、JSON 智能修复）
+- **🛡️ 网安工具箱** — 工业级实用工具（随机密码/UUID/PIN、二维码转化、IP 态势感知、JSON 智能修复、WebSocket 实时调试）
 - **💬 Matrix 终端** — 去中心化、端到端加密的实时通讯节点，深度集成至服务矩阵
 - **🌐 HUD 服务矩阵** — 45+ 运维工具，12 个分类，Spotlight 全局搜索（`Cmd+K`）
 - **🧠 运维智能节点** — [kb.opskitpro.com](https://kb.opskitpro.com)，基于 Quartz + Obsidian 的知识图谱
@@ -132,7 +132,7 @@ npm run upload
 | 配置项 | 值 |
 |--------|-----|
 | Worker 名称 | `opskitpro-org` |
-| 自定义域名 | `opskitpro.com`, `www.opskitpro.com` |
+| 自定义域名 | `opskitpro.com`, `www.opskitpro.com`, `deops.org`, `www.deops.org` |
 | 兼容性标志 | `nodejs_compat`, `global_fetch_strictly_public` |
 | 兼容日期 | `2024-12-30` |
 
@@ -158,7 +158,7 @@ OpenNext 适配器配置：[`open-next.config.ts`](./open-next.config.ts)
 │   │   ├── about/            # 关于页面
 │   │   ├── blog/             # 博客页面
 │   │   ├── services/         # 服务矩阵页面
-│   │   └── tools/            # 网安工具（passgen, qrgen, ip）
+│   │   └── tools/            # 网安工具（passgen, qrgen, ip, json, websocket）
 │   ├── components/           # 共享 React 组件
 │   ├── dictionaries/         # i18n 翻译文件（zh.json, en.json）
 │   └── proxy.ts              # 语言检测与路由代理

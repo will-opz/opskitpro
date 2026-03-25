@@ -19,6 +19,7 @@ opskitpro.com (Main Site — Next.js 16 on Cloudflare Workers)
 ├── /tools/qrgen   Text-to-QR Matrix Encoder
 ├── /tools/ip      Ops IP Edge Sensing (Dual-Stack)
 ├── /tools/json    JSON Formatter & Smart Repair
+├── /tools/websocket WebSocket Real-time Debugger
 ├── /blog          Tech Blog (SRE & AI Ops)
 ├── /about         About OpsKitPro.com
 └── /api/ip        Edge Geolocation API (Cloudflare)
@@ -36,6 +37,7 @@ kb.opskitpro.com (Sub Site — Quartz + Obsidian)
 - **📱 QR Matrix Encoder**: Real-time text-to-QR code conversion with instant rendering.
 - **🌍 Ops IP Edge Sensing**: Dual-stack (IPv4/IPv6) geolocation and network intelligence powered by Cloudflare.
 - **{} JSON Workspace**: Industrial-grade JSON formatter, minifier, and smart structural repair engine.
+- **⚡ WebSocket Tester**: Real-time full-duplex protocol debugger with live traffic monitoring.
 - **💬 Matrix Terminal**: Decentralized, E2E encrypted communication node integrated into the matrix.
 
 ### HUD Service Matrix
@@ -164,7 +166,7 @@ Worker configuration lives in [`wrangler.jsonc`](./wrangler.jsonc):
 | Setting | Value |
 |---------|-------|
 | Worker Name | `opskitpro-org` |
-| Custom Domains | `opskitpro.com`, `www.opskitpro.com` |
+| Custom Domains | `opskitpro.com`, `www.opskitpro.com`, `deops.org`, `www.deops.org` |
 | Compatibility Flags | `nodejs_compat`, `global_fetch_strictly_public` |
 | Compatibility Date | `2024-12-30` |
 
@@ -191,7 +193,7 @@ OpenNext config lives in [`open-next.config.ts`](./open-next.config.ts).
 │   │   ├── about/            # About page
 │   │   ├── blog/             # Blog page
 │   │   ├── services/         # Service matrix page
-│   │   └── tools/            # Cyber tools (passgen, qrgen, ip)
+│   │   └── tools/            # Cyber tools (passgen, qrgen, ip, json, websocket)
 │   ├── components/           # Shared React components
 │   ├── dictionaries/         # i18n translation files (zh.json, en.json)
 │   └── proxy.ts              # Locale detection and routing proxy

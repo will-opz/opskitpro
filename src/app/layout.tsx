@@ -41,7 +41,14 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: 'en
       card: 'summary_large_image',
       title: dict.home.meta_title,
       description: dict.home.meta_desc,
-    }
+    },
+    alternates: {
+      canonical: `https://opskitpro.com/${lang}`,
+      languages: {
+        'zh-CN': 'https://opskitpro.com/zh',
+        'en-US': 'https://opskitpro.com/en',
+      },
+    },
   }
 }
 
