@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   Github,
   TerminalSquare,
@@ -15,6 +16,9 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 
 export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
+
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
 
   return (
     <header className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-50 relative">
@@ -47,17 +51,17 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' }) {
 
       {/* Desktop Nav */}
       <nav className="hidden md:flex gap-8 items-center font-mono text-sm">
-        <Link href={`/services`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-          <TerminalSquare className="w-4 h-4" /> {dict.nav.services}
+        <Link href={`/services`} className={`hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/services') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
+          <TerminalSquare className={`w-4 h-4 ${isActive('/services') ? 'text-emerald-500' : ''}`} /> {dict.nav.services}
         </Link>
-        <Link href={`/blog`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-          <FileText className="w-4 h-4" /> {dict.nav.blog}
+        <Link href={`/blog`} className={`hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/blog') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
+          <FileText className={`w-4 h-4 ${isActive('/blog') ? 'text-emerald-500' : ''}`} /> {dict.nav.blog}
         </Link>
-        <a href="https://kb.opskitpro.com" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+        <a href="https://kb.opskitpro.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
           <BookOpen className="w-4 h-4" /> {dict.nav.kb}
         </a>
-        <Link href={`/about`} className="text-zinc-600 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-          <Fingerprint className="w-4 h-4" /> {dict.nav.about}
+        <Link href={`/about`} className={`hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/about') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
+          <Fingerprint className={`w-4 h-4 ${isActive('/about') ? 'text-emerald-500' : ''}`} /> {dict.nav.about}
         </Link>
         <div className="flex items-center gap-2 ml-4 border-l border-zinc-200 pl-6">
           <LanguageToggle currentLang={lang} />

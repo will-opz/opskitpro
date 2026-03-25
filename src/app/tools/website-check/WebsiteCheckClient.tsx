@@ -176,16 +176,47 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
 
       {/* Loading Progress State */}
       {loading && (
-        <div className="max-w-2xl mx-auto space-y-4 animate-in fade-in duration-500">
+        <div className="max-w-2xl mx-auto space-y-3 animate-in fade-in duration-300">
            {steps.map((step, idx) => (
-             <div key={step.id} className="flex items-center justify-between p-4 bg-white border border-black/5 rounded-xl shadow-sm">
+             <div
+               key={step.id}
+               className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+                 currentStep > idx
+                   ? 'bg-emerald-50/60 border-emerald-200/60'
+                   : currentStep === idx
+                   ? 'bg-white border-emerald-300/50 shadow-md shadow-emerald-500/5'
+                   : 'bg-white/50 border-black/5'
+               }`}
+             >
                 <div className="flex items-center gap-4">
-                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${currentStep > idx ? 'bg-emerald-500' : currentStep === idx ? 'bg-zinc-100 border border-zinc-200' : 'bg-transparent border border-zinc-100'}`}>
-                      {currentStep > idx ? <CheckCircle2 className="w-5 h-5 text-white" /> : <div className={`w-2 h-2 rounded-full ${currentStep === idx ? 'bg-emerald-500 animate-ping' : 'bg-zinc-200'}`} />}
+                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                     currentStep > idx
+                       ? 'bg-emerald-500'
+                       : currentStep === idx
+                       ? 'bg-white border-2 border-emerald-400 shadow-sm'
+                       : 'bg-zinc-100 border border-zinc-200'
+                   }`}>
+                      {currentStep > idx
+                        ? <CheckCircle2 className="w-4 h-4 text-white" />
+                        : currentStep === idx
+                        ? <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        : <div className="w-2 h-2 rounded-full bg-zinc-300" />
+                      }
                    </div>
-                   <span className={`text-sm ${currentStep >= idx ? 'text-zinc-900 font-bold' : 'text-zinc-400'}`}>{step.label}</span>
+                   <span className={`text-sm font-mono transition-colors ${
+                     currentStep >= idx ? 'text-zinc-900 font-bold' : 'text-zinc-400'
+                   }`}>{step.label}</span>
                 </div>
-                {currentStep === idx && <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest animate-pulse">Running_Check...</span>}
+                {currentStep === idx && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                )}
+                {currentStep > idx && (
+                  <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest">Done</span>
+                )}
              </div>
            ))}
         </div>
@@ -245,17 +276,43 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                  </div>
               </div>
 
-              <div className="md:col-span-4 bg-white border border-black/5 p-10 rounded-[2.5rem] shadow-sm flex flex-col justify-between text-center relative overflow-hidden group">
+              <div className="md:col-span-4 bg-white border border-black/5 p-10 rounded-[2.5rem] shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group">
                  <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                 <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-8">{dict.tools.website_check.score}</h3>
-                 <div className="relative">
-                    <div className="text-8xl font-black text-zinc-900 tracking-tighter">{calculateScore(result)}</div>
-                    <div className="text-[10px] text-zinc-400 font-bold uppercase mt-2">Points_Accumulated</div>
+                 <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-6 relative z-10">{dict.tools.website_check.score}</h3>
+                 {/* SVG Score Ring */}
+                 <div className="relative z-10">
+                   {(() => {
+                     const score = calculateScore(result)
+                     const radius = 45
+                     const circumference = 2 * Math.PI * radius
+                     const offset = circumference - (score / 100) * circumference
+                     const color = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444'
+                     return (
+                       <div className="relative w-36 h-36 flex items-center justify-center">
+                         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                           <circle cx="50" cy="50" r={radius} fill="none" stroke="#f4f4f5" strokeWidth="8" />
+                           <circle
+                             cx="50" cy="50" r={radius}
+                             fill="none"
+                             stroke={color}
+                             strokeWidth="8"
+                             strokeLinecap="round"
+                             strokeDasharray={circumference}
+                             strokeDashoffset={offset}
+                             className="score-ring"
+                             style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }}
+                           />
+                         </svg>
+                         <div className="relative z-10 flex flex-col items-center">
+                           <span className="text-4xl font-black text-zinc-900 tracking-tighter leading-none">{score}</span>
+                           <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">/100</span>
+                         </div>
+                       </div>
+                     )
+                   })()}
                  </div>
-                 <div className="mt-8">
-                    <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden">
-                       <div className="bg-emerald-500 h-full transition-all duration-1000" style={{ width: `${calculateScore(result)}%` }}></div>
-                    </div>
+                 <div className="text-[10px] text-zinc-400 font-bold uppercase mt-4 relative z-10">
+                   {calculateScore(result) >= 80 ? 'Excellent' : calculateScore(result) >= 50 ? 'Degraded' : 'Critical'}
                  </div>
               </div>
            </div>

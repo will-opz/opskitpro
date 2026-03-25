@@ -138,13 +138,31 @@ export default async function Home() {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {(dict.home.blog_section?.posts || []).map((post: any, idx: number) => (
+              {(dict.home.blog_section?.posts || []).map((post: any, idx: number) => {
+                const cardGradients = [
+                  'from-emerald-500/10 via-cyan-500/5 to-emerald-500/10',
+                  'from-purple-500/10 via-pink-500/5 to-purple-500/10',
+                  'from-orange-500/10 via-amber-500/5 to-orange-500/10',
+                ]
+                const gridPattern = [
+                  'radial-gradient(circle at 20% 80%, rgba(16,185,129,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(6,182,212,0.1) 0%, transparent 50%)',
+                  'radial-gradient(circle at 80% 80%, rgba(168,85,247,0.15) 0%, transparent 50%), radial-gradient(circle at 20% 20%, rgba(236,72,153,0.1) 0%, transparent 50%)',
+                  'radial-gradient(circle at 50% 20%, rgba(249,115,22,0.15) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(245,158,11,0.1) 0%, transparent 50%)',
+                ]
+                return (
                 <Link key={idx} href="/blog" className="group flex flex-col gap-4">
-                   <div className="aspect-[16/9] w-full bg-zinc-100 rounded-[1.5rem] overflow-hidden border border-zinc-200/60 relative">
+                   <div className="aspect-[16/9] w-full rounded-[1.5rem] overflow-hidden border border-zinc-200/60 relative">
                       <div className="absolute top-3 left-3 px-2 py-0.5 bg-white/80 backdrop-blur-md rounded text-[9px] font-bold font-mono tracking-widest border border-black/5 z-10">
                         {post.tag}
                       </div>
-                      <div className="w-full h-full bg-gradient-to-br from-zinc-200/50 to-zinc-400/50 group-hover:scale-105 transition-transform duration-700"></div>
+                      <div
+                        className={`w-full h-full bg-gradient-to-br ${cardGradients[idx % 3]} group-hover:scale-105 transition-transform duration-700`}
+                        style={{ backgroundImage: gridPattern[idx % 3] }}
+                      >
+                        {/* Subtle dot grid overlay */}
+                        <div className="absolute inset-0 opacity-30"
+                          style={{ backgroundImage: 'radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+                      </div>
                    </div>
                    <div>
                       <div className="text-[10px] text-zinc-400 font-mono mb-2">{post.date}</div>
@@ -156,7 +174,8 @@ export default async function Home() {
                       </p>
                    </div>
                 </Link>
-              ))}
+                )}
+              )}
            </div>
         </div>
       </main>
