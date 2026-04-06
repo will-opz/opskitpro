@@ -6,7 +6,7 @@ import WebsocketClient from './WebsocketClient'
 import type { Metadata } from 'next'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang);
   
@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function WebsocketPage() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang)
 

@@ -65,12 +65,19 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
 
     try {
       const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(d)}`)
-      const data = await res.json()
       
-      if (!res.ok) throw new Error(data.message || 'Detection failed')
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Platform error (${res.status}): Received non-JSON response from server.`)
+      }
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || `Diagnostic failed with status ${res.status}`)
+      
       setResult(data)
     } catch (err: any) {
-      setError(err.message)
+      console.error('Forensics Engine Error:', err)
+      setError(err.message || 'Unknown forensic engine failure')
     } finally {
       clearInterval(stepInterval)
       setLoading(false)

@@ -58,6 +58,12 @@
       "view_all": "View all articles",
       "posts": [
         {
+          "tag": "SRE_INTEL",
+          "date": "2026-03-27",
+          "title": "OpsKitPro Edge Stability Rebuild: A 48-Hour SRE Field Note",
+          "desc": "A deep dive into troubleshooting OpsKitPro on Cloudflare Edge, covering resolved Next.js 14 compatibility issues."
+        },
+        {
           "tag": "DIAGNOSTIC",
           "date": "2026-03-25",
           "title": "Website not loading? 5 steps to fix.",

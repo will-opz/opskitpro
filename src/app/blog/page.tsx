@@ -15,13 +15,24 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 
 export default async function BlogPage() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang)
   const isZh = lang === 'zh'
 
   // Simulating the Articles in KB/02_Articles
   const articles = [
+    {
+      id: 'opskitpro-edge-stability-rebuild',
+      title: isZh ? "OpsKitPro 边缘网关稳定性重构：48小时 SRE 运维实战" : "OpsKitPro Edge Stability Rebuild: A 48-Hour SRE Field Note",
+      desc: isZh ? "深度复盘 OpsKitPro 在 Cloudflare Edge 环境下的故障排查过程，涵盖已解决的 Next.js 14 兼容性问题。" : "A deep dive into troubleshooting OpsKitPro on Cloudflare Edge, covering resolved Next.js 14 compatibility issues.",
+      date: "2026-03-27",
+      tag: "SRE_INTEL",
+      read: "6 min",
+      icon: Terminal,
+      color: "text-blue-500 bg-blue-500/10",
+      href: "/blog"
+    },
     {
       id: 'website-not-loading-fix',
       title: isZh ? "网站打不开怎么办？5个排空步骤快速定位故障" : "Website not loading? 5 steps to diagnose quickly",

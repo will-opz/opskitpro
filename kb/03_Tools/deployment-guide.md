@@ -23,9 +23,10 @@ OpsKitPro 使用的是 Next.js (App Router)，通过 `@cloudflare/next-on-pages`
 
 ## 🥉 3. 边缘运行时配置 (Edge Runtime)
 
-项目中所有诊断 API 已配置为 `export const runtime = 'edge'`，这使其能够自动运行在 Cloudflare Workers 的 V8 隔离环境中。
+为了获得最佳的组件负载能力与 OpenNext 的 Bundling 稳定性，项目中所有的诊断 API 已使用默认的 Node.js 运行时（结合 Cloudflare 的 `nodejs_compat` 模式）。
 
 ### 关键优化：
+- **Runtime 切换**：建议使用默认运行时，这在 OpenNext 1.15+ 环境中能显著减少构建阶段的资源追踪错误。
 -   **DoH 查询**：API 内部使用 `https://cloudflare-dns.com/dns-query`，无需额外库支持。
 -   **SSL 探测**：通过公共 API 或边缘 Node 模拟实现，避免了 Edge Runtime 对 `tls` 模块的限制。
 

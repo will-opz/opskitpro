@@ -1,10 +1,12 @@
 import 'server-only'
+import en from './dictionaries/en.json'
+import zh from './dictionaries/zh.json'
 
-const dictionaries = {
-  en: () => import('./dictionaries/en.json').then((module) => module.default),
-  zh: () => import('./dictionaries/zh.json').then((module) => module.default),
+const dictionaries: any = {
+  en,
+  zh,
 }
 
 export const getDictionary = async (locale: 'en' | 'zh') => {
-  return dictionaries[locale]?.() ?? dictionaries.zh()
+  return dictionaries[locale] || dictionaries.zh
 }

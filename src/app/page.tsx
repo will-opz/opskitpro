@@ -14,7 +14,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import HomeSearch from '@/components/HomeSearch'
 
 export default async function Home() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang)
 

@@ -5,7 +5,7 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 
 export default async function AboutPage() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang)
   const isZh = lang === 'zh'

@@ -6,7 +6,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import IPClient from './ip-client'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies()
+  const cookieStore = cookies()
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en"
   const dict = await getDictionary(lang)
   
@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function IPPage() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang)
   

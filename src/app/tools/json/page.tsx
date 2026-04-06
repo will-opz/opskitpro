@@ -6,7 +6,7 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies()
+  const cookieStore = cookies()
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en"
   const dict = await getDictionary(lang)
   
@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function JSONToolPage() {
-  const cookieStore = await cookies()
+  const cookieStore = cookies()
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en"
   const dict = await getDictionary(lang)
 

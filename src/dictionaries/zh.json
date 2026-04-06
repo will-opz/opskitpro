@@ -58,6 +58,12 @@
       "view_all": "查看全部笔记",
       "posts": [
         {
+          "tag": "SRE_INTEL",
+          "date": "2026-03-27",
+          "title": "OpsKitPro 边缘网关稳定性重构：48小时 SRE 运维实战",
+          "desc": "深度复盘 OpsKitPro 在 Cloudflare Edge 环境下的故障排查过程，涵盖已解决的 Next.js 14 兼容性问题。"
+        },
+        {
           "tag": "DIAGNOSTIC",
           "date": "2026-03-25",
           "title": "网站打不开怎么办？5步排查法",

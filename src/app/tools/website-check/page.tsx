@@ -5,9 +5,9 @@ import { SiteFooter } from '@/components/SiteFooter'
 import WebsiteCheckClient from './WebsiteCheckClient'
 import type { Metadata } from 'next'
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: 'en' | 'zh' }> }): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+export async function generateMetadata({ params }: { params: { lang: 'en' | 'zh' } }): Promise<Metadata> {
+  const cookieStore = cookies();
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "en") as "en" | "zh";
   const dict = await getDictionary(lang);
   
   return {
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: 'en
 }
 
 export default async function DiagnosticPage() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
   const dict = await getDictionary(lang)
   
