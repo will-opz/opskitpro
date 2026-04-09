@@ -76,6 +76,7 @@ npm run deploy
 ---
 
 ## 📬 联系与情报
+- **推特 / X**: [@deopsai](https://x.com/deopsai)
 - **邮箱**: [admin@opskitpro.com](mailto:admin@opskitpro.com)
 - **状态**: [全服务状态监控矩阵](https://opskitpro.com/services)
 

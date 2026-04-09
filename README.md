@@ -76,6 +76,7 @@ All technical field notes and tool guides are managed via Obsidian in the `/kb` 
 ---
 
 ## 📬 Contact / Intelligence
+- **Twitter / X**: [@deopsai](https://x.com/deopsai)
 - **Email**: [admin@opskitpro.com](mailto:admin@opskitpro.com)
 - **Status**: [Operational Matrix](https://opskitpro.com/services)
 
