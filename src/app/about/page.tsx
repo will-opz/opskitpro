@@ -24,8 +24,8 @@ export default async function AboutPage() {
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] italic leading-none">The_Forensics_Vision</span>
           </div>
-          <h1 className="text-4xl md:text-7xl font-black text-zinc-900 tracking-tighter italic mb-8 leading-[0.9] lowercase">
-             ULtimate_SRE<span className="text-zinc-300">.TOOLCHAIN</span>
+          <h1 className="text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter mb-8 leading-tight">
+             {dict.nav.about}
           </h1>
           <p className="text-lg text-zinc-600 leading-relaxed max-w-2xl font-mono lowercase">
             {isZh 

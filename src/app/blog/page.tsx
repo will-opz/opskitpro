@@ -93,8 +93,8 @@ export default async function BlogPage() {
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
               <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] italic leading-none">Intelligence_Streaming</span>
            </div>
-           <h1 className="text-5xl md:text-8xl font-black text-zinc-900 tracking-tighter italic mb-8 leading-none lowercase">
-              FIELD_NOTES<span className="text-zinc-300">.kb</span>
+           <h1 className="text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter mb-8 leading-tight">
+              {dict.nav.blog}
            </h1>
            <p className="text-base text-zinc-500 max-w-xl font-mono leading-relaxed lowercase">
               {isZh 
