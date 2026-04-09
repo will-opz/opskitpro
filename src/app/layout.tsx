@@ -56,8 +56,8 @@ export async function generateMetadata({ params }: { params: { lang: 'en' | 'zh'
       },
     },
     icons: {
-      icon: '/logo.png',
-      shortcut: '/logo.png',
+      icon: '/icon.png',
+      shortcut: '/icon.png',
       apple: '/logo.png',
     },
     alternates: {
