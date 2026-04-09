@@ -11,9 +11,9 @@
     "system_status": "系统内核 v2.4 运行中",
     "btn_chat": "Matrix 节点",
     "title_part1": "SRE 排障利器",
-    "title_part2_pre": "一键检测",
-    "title_part2_ai": "定位",
-    "title_part2_suf": "问题根因",
+    "title_part2_pre": "DNS·IP·网站",
+    "title_part2_ai": "在线",
+    "title_part2_suf": "诊断分析平台",
     "subtitle": "极速诊断 DNS · SSL · CDN · HTTP 全链路，覆盖全球边缘节点，无需登录。",
     "features": {
       "dns": "DNS 解析审计",

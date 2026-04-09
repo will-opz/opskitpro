@@ -140,7 +140,7 @@ export default function PassClient({ dict }: { dict: any }) {
 
   return (
     <div className="min-h-screen pt-12 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
@@ -156,8 +156,8 @@ export default function PassClient({ dict }: { dict: any }) {
         </div>
 
         <div className="flex items-center gap-4 mb-2">
-          <div className="p-3.5 bg-zinc-900 rounded-2xl shadow-xl border border-zinc-800 group transition-all">
-            <KeyRound className="w-7 h-7 text-emerald-500 group-hover:scale-110 transition-transform" />
+          <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
+            <KeyRound className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight flex items-center gap-3 italic">
@@ -196,7 +196,7 @@ export default function PassClient({ dict }: { dict: any }) {
               <div className="flex flex-1 gap-2">
                 <button
                   onClick={regenerate}
-                  className="flex-1 py-4 bg-white hover:bg-zinc-900 border border-black/5 hover:border-black/10 text-zinc-900 hover:text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-95"
+                  className="flex-1 py-4 bg-white hover:bg-emerald-50 border border-black/5 hover:border-emerald-200 text-zinc-900 hover:text-emerald-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-95"
                 >
                   <RefreshCw className="w-5 h-5 group-active:rotate-180 transition-transform duration-500" />
                   <span className="text-sm sm:text-base !text-zinc-900 group-hover:!text-white">{dict.tools.passgen.generate}</span>
@@ -213,7 +213,7 @@ export default function PassClient({ dict }: { dict: any }) {
                 <button
                   onClick={() => setShowQR(!showQR)}
                   className={`p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border shadow-sm active:scale-95 ${
-                    showQR ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-900 hover:bg-zinc-50 border-black/5'
+                    showQR ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-500/20' : 'bg-white text-zinc-900 hover:bg-emerald-50 hover:text-emerald-700 border-black/5'
                   }`}
                   aria-label="Show QR Code"
                 >

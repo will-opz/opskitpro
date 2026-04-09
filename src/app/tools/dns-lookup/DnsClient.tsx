@@ -96,7 +96,7 @@ export default function DnsClient() {
        {/* Header */}
        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
           <div className="text-center md:text-left">
-             <h1 className="text-4xl md:text-6xl font-black text-zinc-900 tracking-tighter italic mb-4 leading-none lowercase">
+             <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-zinc-900 tracking-tighter italic mb-4 leading-none lowercase break-words">
                 DNS_QUERIES<span className="text-orange-500 tracking-widest">_</span>
              </h1>
              <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">Deep propagation analysis & RDATA extraction</p>
@@ -144,7 +144,7 @@ export default function DnsClient() {
              <button 
                type="submit"
                disabled={loading}
-               className="bg-zinc-900 hover:bg-orange-600 text-white px-10 py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-bold shadow-lg disabled:opacity-50 group/btn"
+               className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white px-6 sm:px-10 py-4 sm:py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-orange-500/30 disabled:opacity-50 group/btn"
              >
                 {loading ? <Activity className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
                 <span className="tracking-widest uppercase">{dict.tools.dns.btn}</span>
@@ -195,7 +195,7 @@ export default function DnsClient() {
 
             {/* Answer Manifest Matrix */}
             <div className="bg-white border border-black/5 rounded-[2.5rem] overflow-hidden shadow-sm transition-all hover:shadow-xl">
-               <div className="px-10 py-6 bg-zinc-50 border-b border-zinc-100 flex items-center justify-between">
+               <div className="px-6 sm:px-10 py-6 bg-zinc-50 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-3">
                      <Database className="w-4 h-4 text-orange-500" /> Resolution_Manifest_JSON
                   </h3>
@@ -207,7 +207,7 @@ export default function DnsClient() {
                
                <div className="divide-y divide-zinc-50">
                   {result.answers.length > 0 ? result.answers.map((answer, idx) => (
-                    <div key={idx} className="p-10 hover:bg-zinc-50/50 transition-all group flex flex-col md:flex-row md:items-center gap-10">
+                    <div key={idx} className="p-6 sm:p-10 hover:bg-zinc-50/50 transition-all group flex flex-col md:flex-row md:items-center gap-6 sm:gap-10">
                        <div className="flex-grow">
                           <div className="flex items-center gap-4 mb-4">
                              <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
@@ -256,8 +256,8 @@ export default function DnsClient() {
                   ROOT_DNS_PROTOCOL_ADCHANGE_AUDIT
                </button>
                {showJson && (
-                 <div className="bg-zinc-900 rounded-[2.5rem] p-10 text-[11px] text-zinc-500 overflow-x-auto border border-zinc-800 shadow-2xl relative">
-                    <div className="absolute top-8 right-8">
+                 <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-[11px] text-zinc-500 overflow-x-auto border border-zinc-800 shadow-2xl relative">
+                    <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
                        <button onClick={() => copyData(JSON.stringify(result.raw))} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10">
                           {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                        </button>
@@ -307,7 +307,7 @@ export default function DnsClient() {
 
        {/* Hero Empty State View */}
        {!result && !loading && (
-          <div className="max-w-2xl mx-auto mt-24 p-20 rounded-[3.5rem] border border-dashed border-zinc-200 bg-white/40 text-center animate-in fade-in duration-1000">
+          <div className="max-w-2xl mx-auto mt-16 sm:mt-24 p-10 sm:p-20 rounded-[3.5rem] border border-dashed border-zinc-200 bg-white/40 text-center animate-in fade-in duration-1000">
               <Cpu className="w-16 h-16 text-zinc-100 mx-auto mb-8 animate-pulse text-orange-500/20" />
               <p className="text-zinc-500 text-[10px] leading-relaxed font-mono uppercase tracking-[0.5em] opacity-40">
                 A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines

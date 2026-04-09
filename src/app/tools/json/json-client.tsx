@@ -250,7 +250,7 @@ export default function JSONClient({ dict }: { dict: any }) {
 
   return (
     <div className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
@@ -265,8 +265,8 @@ export default function JSONClient({ dict }: { dict: any }) {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-zinc-900 rounded-2xl shadow-xl border border-zinc-800 group transition-all">
-              <Braces className="w-7 h-7 text-emerald-500 group-hover:scale-110 transition-transform" />
+            <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
+              <Braces className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight italic">
@@ -378,8 +378,9 @@ export default function JSONClient({ dict }: { dict: any }) {
                 Format
               </button>
               <button onClick={minifyJSON} disabled={!json}
-                className="px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-1.5">
-                <Minimize2 className="w-3.5 h-3.5" />
+                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-bold hover:from-emerald-400 hover:to-teal-500 transition-all shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-30 flex items-center gap-2"
+              >
+                <Minimize2 className="w-4 h-4" />
                 <span className="hidden sm:inline">Minify</span>
               </button>
             </div>

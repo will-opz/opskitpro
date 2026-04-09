@@ -7,7 +7,7 @@ import ServicesClient from './ServicesClient'
 
 export default async function ServicesPage() {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
 
   return (

@@ -30,7 +30,7 @@ export default function QRClient({ dict }: { dict: any }) {
 
   return (
     <div className="min-h-screen pt-12 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
@@ -42,8 +42,8 @@ export default function QRClient({ dict }: { dict: any }) {
         </div>
 
         <div className="flex items-center gap-4 mb-2">
-          <div className="p-3.5 bg-zinc-900 rounded-2xl shadow-xl border border-zinc-800 group transition-all">
-            <QrCode className="w-7 h-7 text-emerald-500 group-hover:scale-110 transition-transform" />
+          <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
+            <QrCode className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight flex items-center gap-3 italic">

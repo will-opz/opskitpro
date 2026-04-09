@@ -16,7 +16,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 
 export default async function BlogPage() {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   const isZh = lang === 'zh'
 
@@ -31,7 +31,18 @@ export default async function BlogPage() {
       read: "6 min",
       icon: Terminal,
       color: "text-blue-500 bg-blue-500/10",
-      href: "/blog"
+      href: "https://kb.opskitpro.com/02_Articles/opskitpro-edge-stability-rebuild"
+    },
+    {
+      id: 'opskitpro-mobile-ui-optimization',
+      title: isZh ? "OpsKitPro 极致打磨：拟光美学与 Next.js 编译死锁修复" : "OpsKitPro UI Polish: Glassmorphism & Next.js Build Fixes",
+      desc: isZh ? "记录修复前端横向滚动条溢出、设计流动玻璃拟物色组，及打破 Next.js 强制静态抓取编译链的实战历程。" : "Fixing mobile overflow, crafting fluid glassmorphism UI, and bypassing Next.js static build locks.",
+      date: "2026-04-10",
+      tag: "UI/UX & SRE",
+      read: "5 min",
+      icon: Zap,
+      color: "text-teal-500 bg-teal-500/10",
+      href: "https://kb.opskitpro.com/02_Articles/opskitpro-mobile-ui-optimization"
     },
     {
       id: 'website-not-loading-fix',
@@ -74,7 +85,7 @@ export default async function BlogPage() {
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-6 z-10 mt-12 mb-32 relative">
         {/* Background Glow */}
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
         {/* Hero Section */}
         <div className="mb-24 text-center md:text-left border-b border-zinc-100 pb-16">
@@ -142,7 +153,7 @@ export default async function BlogPage() {
               </div>
               <div className="flex items-center gap-2 p-1.5 bg-zinc-50 border border-zinc-100 rounded-xl focus-within:border-emerald-500/30 transition-all">
                  <input type="email" placeholder="ADMIN@NODE.LOCAL" className="bg-transparent border-none outline-none text-[10px] px-3 py-2 flex-grow placeholder:opacity-40 uppercase font-mono" />
-                 <button className="p-2 bg-zinc-900 hover:bg-emerald-500 text-white rounded-lg transition-all">
+                 <button className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-lg transition-all shadow-md shadow-emerald-500/20">
                     <Zap className="w-4 h-4 fill-current" />
                  </button>
               </div>
@@ -159,7 +170,7 @@ export default async function BlogPage() {
              href="https://kb.opskitpro.com" 
              target="_blank" 
              rel="noopener noreferrer"
-             className="px-10 py-5 bg-zinc-900 text-white rounded-2xl font-black italic text-lg hover:scale-105 hover:bg-emerald-600 transition-all flex items-center gap-4 group"
+             className="px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-2xl font-black italic text-lg hover:scale-105 transition-all flex items-center gap-4 group shadow-xl shadow-emerald-500/20"
            >
               ACCESS_VAULT
               <Radio className="w-5 h-5 group-hover:animate-pulse" />

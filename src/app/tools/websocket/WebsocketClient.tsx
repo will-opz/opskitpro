@@ -60,7 +60,7 @@ export default function WebsocketClient() {
     <div className="min-h-screen bg-[#fafafa] text-zinc-700 font-sans selection:bg-cyan-500/20 selection:text-zinc-900 pb-24 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-grid-zinc-900/[0.03] pointer-events-none" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       <main className="w-full max-w-7xl mx-auto px-6 mt-12 z-20 relative font-mono">
         {/* Breadcrumbs */}
@@ -75,8 +75,8 @@ export default function WebsocketClient() {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-zinc-900 rounded-2xl shadow-xl border border-zinc-800 group transition-all">
-              <Zap className="w-7 h-7 text-cyan-500 group-hover:scale-110 transition-transform" />
+            <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-lg shadow-cyan-500/10 group transition-all">
+              <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight italic">

@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Solid Background -->
+  <rect width="32" height="32" rx="6" fill="#18181b"/>
+  
+  <!-- Stylized Lightning / Pulse -->
+  <path d="M18 4L7 18H15L14 28L25 14H17L18 4Z" fill="#10b981">
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Orbital Rings -->
+  <circle cx="16" cy="16" r="13" stroke="#10b981" stroke-width="1" opacity="0.2" />
+  <circle cx="16" cy="16" r="10" stroke="#10b981" stroke-width="0.5" opacity="0.1" />
+</svg>

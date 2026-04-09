@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
 
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang);
   
   return {
@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function WebsocketPage() {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
 
   return (

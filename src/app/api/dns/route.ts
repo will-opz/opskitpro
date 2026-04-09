@@ -1,5 +1,6 @@
 // No Next.js imports at all
 // export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 // DNS Record Types
 type DnsRecordType = 'A' | 'AAAA' | 'CNAME' | 'MX' | 'NS' | 'TXT' | 'SOA' | 'PTR' | 'SRV' | 'CAA'

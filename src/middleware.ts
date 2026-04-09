@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   
   // 1. Handle language prefixing via REWRITE (internal routing)
   // This allows /zh/tools/ip-lookup to show /tools/ip-lookup content
-  const localeMatch = pathname.match(/^\/(zh|en)(\/.*|$)/)
+  const localeMatch = pathname.match(/^\/(zh|en|ja|tw)(\/.*|$)/)
   
   if (localeMatch) {
     const locale = localeMatch[1]
@@ -31,8 +31,40 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // 2. Default pass-through
-  return NextResponse.next()
+  // 2. Auto-detect logic for default locale based on Cloudflare IP Country
+  // If no locale prefix and no cookie exists, detect and set cookie.
+  let response = NextResponse.next()
+  const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
+  
+  if (!currentCookie && !pathname.match(/^\/(api|_next|favicon\.ico)/)) {
+    const country = request.headers.get('cf-ipcountry') || ''
+    
+    // Default logic
+    let defaultLocale = 'en'
+    if (country === 'JP') defaultLocale = 'ja'
+    else if (country === 'CN') defaultLocale = 'zh'
+    else if (['TW', 'HK', 'MO'].includes(country)) defaultLocale = 'tw'
+    
+    // Inject cookie into the request for downstream Server Components
+    const requestHeaders = new Headers(request.headers)
+    const existingCookie = requestHeaders.get('cookie') || ''
+    requestHeaders.set('cookie', `${existingCookie ? existingCookie + '; ' : ''}NEXT_LOCALE=${defaultLocale}`)
+    
+    response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+    
+    // Set the cookie on the client response to persist
+    response.cookies.set('NEXT_LOCALE', defaultLocale, { 
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax'
+    })
+  }
+
+  return response
 }
 
 export const config = {

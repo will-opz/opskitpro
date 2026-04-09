@@ -11,9 +11,9 @@
     "system_status": "System Core v2.4 operational",
     "btn_chat": "Matrix Node",
     "title_part1": "SRE Diagnostic Suite",
-    "title_part2_pre": "Pinpoint",
-    "title_part2_ai": "Root",
-    "title_part2_suf": "Cause",
+    "title_part2_pre": "DNS, IP & Site",
+    "title_part2_ai": "Online",
+    "title_part2_suf": "Diagnostics",
     "subtitle": "Instant DNS · SSL · CDN · HTTP forensics across global edge nodes. No login required.",
     "features": {
       "dns": "DNS_AUDIT",

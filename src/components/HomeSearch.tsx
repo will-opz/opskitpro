@@ -39,7 +39,7 @@ export default function HomeSearch({ dict, lang }: { dict: any, lang: string }) 
           />
           <button 
             type="submit"
-            className="bg-zinc-900 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/30"
           >
             {dict.home.diagnostics_btn}
             <ArrowRight className="w-4 h-4" />

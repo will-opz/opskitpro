@@ -15,7 +15,7 @@ import HomeSearch from '@/components/HomeSearch'
 
 export default async function Home() {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
 
   return (
@@ -25,7 +25,7 @@ export default async function Home() {
       {/* 1. Hero Section & 2. Quick Detection (via HomeSearch) */}
       <main className="flex-grow flex flex-col items-center justify-center text-center px-6 z-10 mt-12 md:mt-24 mb-32 relative">
         {/* Subtle Hero Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-accent/5 blur-[150px] rounded-full pointer-events-none z-[-1]"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-accent/5 blur-[150px] rounded-full pointer-events-none z-[-1]"></div>
 
         <div className="max-w-5xl mx-auto flex flex-col items-center">
           <h1 className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-100 flex flex-col items-center gap-3 leading-none">
@@ -35,7 +35,7 @@ export default async function Home() {
               {dict.home.title_part1}
             </span>
             {/* Main headline */}
-            <span className="block text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 tracking-[-0.04em] leading-[1.0] text-center">
+            <span className="block text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-zinc-900 tracking-[-0.04em] leading-[1.0] text-center">
               {dict.home.title_part2_pre}
               <span className="relative inline-block mx-3">
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-emerald-500 to-emerald-700 ai-glow">
@@ -57,7 +57,7 @@ export default async function Home() {
         <HomeSearch dict={dict} lang={lang} />
 
         {/* 3. Core Tools Section (Focused 3) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mb-24 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-600">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-6xl mb-24 px-0 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-600">
           <Link href={`/tools/website-check`} className="glass-card p-8 rounded-[2rem] group hover:border-emerald-500/30 transition-all text-left">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
               <Activity className="w-6 h-6 text-emerald-600" />
@@ -99,13 +99,13 @@ export default async function Home() {
         </div>
 
         {/* 4. Common Use Cases (Scenes) */}
-        <div className="w-full max-w-7xl mb-32 text-left bg-white border border-black/5 shadow-sm rounded-[3rem] p-12 md:p-24 relative overflow-hidden transition-all hover:shadow-xl group">
-           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full group-hover:bg-emerald-500/10 transition-colors"></div>
+        <div className="w-full max-w-7xl mb-32 text-left bg-white border border-black/5 shadow-sm rounded-2xl sm:rounded-[3rem] p-6 sm:p-12 md:p-24 relative overflow-hidden transition-all hover:shadow-xl group">
+           <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-emerald-500/5 blur-[120px] rounded-full group-hover:bg-emerald-500/10 transition-colors"></div>
            <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-black text-zinc-900 tracking-tighter italic mb-12 lowercase">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tighter italic mb-8 sm:mb-12 lowercase">
                  {dict.home.scenes.title}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12">
                  {[
                    { title: dict.home.scenes.s1_title, desc: dict.home.scenes.s1_desc, icon: AlertCircle },
                    { title: dict.home.scenes.s2_title, desc: dict.home.scenes.s2_desc, icon: Zap },
@@ -140,7 +140,7 @@ export default async function Home() {
               </Link>
            </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
               {(dict.home.blog_section?.posts || []).map((post: any, idx: number) => {
                 const cardGradients = [
                   'from-emerald-500/10 via-cyan-500/5 to-emerald-500/10',

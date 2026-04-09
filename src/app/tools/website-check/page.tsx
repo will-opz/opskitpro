@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: { lang: 'en' | 'zh'
 
 export default async function DiagnosticPage() {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   
   return (

@@ -108,18 +108,18 @@ export default function IPClient() {
     <div className="max-w-5xl mx-auto px-6 py-12 font-mono pb-32">
        {/* Background */}
        <div className="fixed inset-0 bg-[#fafafa] -z-10" />
-       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-purple-500/5 blur-[150px] rounded-full -z-10" />
+       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-purple-500/5 blur-[150px] rounded-full -z-10" />
 
        {/* Header */}
        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
           <div className="text-center md:text-left">
-             <h1 className="text-4xl md:text-6xl font-black text-zinc-900 tracking-tighter italic mb-4 leading-none lowercase">
+             <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-zinc-900 tracking-tighter italic mb-4 leading-none lowercase">
                 IP_INSIGHTS<span className="text-purple-500 tracking-widest">_</span>
              </h1>
              <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">ASN Forensics & Geolocation Intelligence</p>
           </div>
           
-          <form onSubmit={handleSearch} className="relative group w-full md:w-auto min-w-[320px]">
+          <form onSubmit={handleSearch} className="relative group w-full md:w-auto sm:min-w-[320px]">
              <div className="absolute inset-0 bg-purple-500/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
              <div className="relative flex items-center bg-white border border-black/5 p-1.5 rounded-2xl shadow-xl focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
                 <input 
@@ -132,7 +132,7 @@ export default function IPClient() {
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="bg-zinc-900 hover:bg-purple-600 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg"
+                  className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-purple-500/30"
                 >
                    {loading ? <Activity className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                    {dict.tools.ip.ip_btn}
@@ -145,19 +145,19 @@ export default function IPClient() {
          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Main HUD */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-               <div className="md:col-span-8 bg-white border border-black/5 p-10 rounded-[2.5rem] shadow-sm relative group overflow-hidden">
+               <div className="md:col-span-8 bg-white border border-black/5 p-6 sm:p-10 rounded-[2.5rem] shadow-sm relative group overflow-hidden">
                   <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-10 transition-opacity">
                      <Globe className="w-32 h-32" />
                   </div>
                   <div className="relative z-10 flex flex-col md:flex-row items-baseline gap-4 mb-12">
-                     <h1 className="text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter italic leading-none truncate max-w-full">
+                     <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter italic leading-none truncate max-w-full">
                         {data.ip}
                      </h1>
                      <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${data.proxy ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
                         {data.proxy ? 'PROXY_DETECTED' : 'DIRECT_NODE'}
                      </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
                      <div>
                         <p className="text-[9px] text-zinc-400 mb-1 uppercase font-bold tracking-widest">{dict.tools.ip.country}</p>
                         <p className="text-lg font-black text-zinc-900 flex items-center gap-2 truncate whitespace-nowrap overflow-hidden">
@@ -179,7 +179,7 @@ export default function IPClient() {
                </div>
 
                {/* Map Placeholder HUD */}
-               <div className="md:col-span-4 bg-zinc-900 border border-zinc-800 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col items-center justify-center group">
+               <div className="md:col-span-4 bg-zinc-900 border border-zinc-800 p-6 sm:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col items-center justify-center group">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.1),transparent)] opacity-50"></div>
                   {/* Radar Scanner Effect */}
                   <div className="relative w-40 h-40 border-2 border-purple-500/20 rounded-full flex items-center justify-center animate-pulse">
@@ -255,7 +255,7 @@ export default function IPClient() {
                          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Navigation className="w-3 h-3" />} GEO
                       </button>
                    </div>
-                   <button onClick={() => copyResult()} className="w-full mt-3 p-3 bg-zinc-900 text-white rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg">
+                   <button onClick={() => copyResult()} className="w-full mt-3 p-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl text-[10px] font-black tracking-widest uppercase hover:from-purple-400 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30">
                       {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {dict.tools.ip.ip_btn_copy || 'COPY_ALL_DATA'}
                    </button>
                </div>

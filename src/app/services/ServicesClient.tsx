@@ -235,7 +235,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
   }, [searchTerm])
 
   return (
-    <main className="flex-grow w-full max-w-7xl mx-auto px-6 z-10 mt-2 mb-32 relative flex flex-col md:flex-row gap-12 items-start">
+    <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 z-10 mt-2 mb-32 relative flex flex-col md:flex-row gap-6 md:gap-12 items-start overflow-x-hidden">
       
       {/* Option 2: Sticky Sidebar Index */}
       <aside className="sticky top-12 w-64 shrink-0 hidden md:block border-r border-zinc-200/60 pb-8 h-[calc(100vh-100px)] overflow-y-auto pr-4">
@@ -265,7 +265,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       <div className="flex-grow w-full min-w-0">
         <div className="mb-14 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-3 italic">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-3 italic">
               OpsKit<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 font-mono italic">Pro_</span>
             </h1>
             <p className="text-zinc-600 max-w-xl leading-relaxed text-sm">
@@ -322,14 +322,22 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
                       const Icon = tool.icon;
                       const isOperational = tool.status === "operational";
                       
+                      const getTheme = (url: string) => {
+                        if (url.includes('ip-lookup')) return { border: 'hover:border-purple-500/20', ring: 'focus:ring-purple-500/40', boxBorder: 'group-hover:border-purple-500/30', boxBg: 'group-hover:bg-purple-500/10', text: 'group-hover:text-purple-600' }
+                        if (url.includes('dns-lookup')) return { border: 'hover:border-orange-500/20', ring: 'focus:ring-orange-500/40', boxBorder: 'group-hover:border-orange-500/30', boxBg: 'group-hover:bg-orange-500/10', text: 'group-hover:text-orange-600' }
+                        if (url.includes('websocket')) return { border: 'hover:border-cyan-500/20', ring: 'focus:ring-cyan-500/40', boxBorder: 'group-hover:border-cyan-500/30', boxBg: 'group-hover:bg-cyan-500/10', text: 'group-hover:text-cyan-600' }
+                        return { border: 'hover:border-emerald-500/20', ring: 'focus:ring-emerald-500/40', boxBorder: 'group-hover:border-emerald-500/30', boxBg: 'group-hover:bg-emerald-500/10', text: 'group-hover:text-emerald-600' }
+                      }
+                      const theme = getTheme(tool.url);
+                      
                       return (
                         <Link 
                           key={tIdx} 
                           href={tool.url}
-                          className="glass-card group p-5 rounded-xl flex items-start gap-4 no-underline hover:bg-white/60 transition-all border border-zinc-100 hover:border-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                          className={`glass-card group p-5 rounded-xl flex items-start gap-4 no-underline hover:bg-white/60 transition-all border border-zinc-100 focus:outline-none focus:ring-2 ${theme.border} ${theme.ring}`}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-zinc-100/50 flex items-center justify-center shrink-0 border border-zinc-200/60 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 transition-all duration-300 shadow-sm">
-                            <Icon className="w-5 h-5 text-zinc-500 group-hover:text-emerald-600 transition-colors duration-300" />
+                          <div className={`w-10 h-10 rounded-lg bg-zinc-100/50 flex items-center justify-center shrink-0 border border-zinc-200/60 transition-all duration-300 shadow-sm ${theme.boxBorder} ${theme.boxBg}`}>
+                            <Icon className={`w-5 h-5 text-zinc-500 transition-colors duration-300 ${theme.text}`} />
                           </div>
                           
                           <div className="flex-grow min-w-0">
@@ -371,7 +379,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-10 right-10 p-4 bg-white/90 text-zinc-900 rounded-full shadow-2xl backdrop-blur-xl hover:bg-emerald-500 hover:text-white transition-all duration-300 z-50 group border border-black/5 hover:scale-110"
+          className="fixed bottom-6 right-4 sm:bottom-10 sm:right-10 p-3 sm:p-4 bg-white/90 text-zinc-900 rounded-full shadow-2xl backdrop-blur-xl hover:bg-emerald-500 hover:text-white transition-all duration-300 z-50 group border border-black/5 hover:scale-110"
           aria-label="Scroll to top"
         >
           <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300" />

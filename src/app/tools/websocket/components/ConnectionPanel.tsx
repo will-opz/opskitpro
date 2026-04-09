@@ -156,7 +156,7 @@ export function ConnectionPanel({
           <button
             onClick={handleConnect}
             disabled={!url.trim()}
-            className="bg-zinc-900 text-white px-6 py-3 rounded-xl hover:bg-zinc-800 transition-all active:scale-95 flex items-center gap-2 font-bold shadow-lg shadow-zinc-200 disabled:opacity-50"
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all active:scale-95 flex items-center gap-2 font-bold shadow-lg shadow-cyan-500/30 disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-current" />
             Connect

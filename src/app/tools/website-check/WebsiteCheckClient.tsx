@@ -142,11 +142,11 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
   return (
     <main className="w-full max-w-6xl mx-auto px-6 mt-12 mb-32 z-20 relative font-mono">
       {/* Background Glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none -z-10"></div>
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
       {/* Hero Header */}
       <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-zinc-900 tracking-tighter italic mb-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-zinc-900 tracking-tighter italic mb-6 break-words">
            {dict.tools.diagnostic_title}<span className="text-emerald-500">.exe</span>
         </h1>
         <p className="text-zinc-500 text-xs sm:text-sm uppercase tracking-[0.3em] font-light max-w-2xl mx-auto mb-10">
@@ -171,7 +171,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                <button 
                  type="submit"
                  disabled={loading}
-                 className="bg-zinc-900 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg disabled:opacity-50"
+                 className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/30 disabled:opacity-50"
                >
                  {loading ? <Activity className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
                  {loading ? 'ANALYZING' : dict.home.diagnostics_btn}
@@ -246,7 +246,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
            
            {/* Summary HUD */}
            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              <div className={`md:col-span-8 p-10 rounded-[2.5rem] shadow-sm border transition-all hover:shadow-xl flex flex-col justify-between relative overflow-hidden ${result.http.success ? 'bg-white text-zinc-900 border-black/5' : 'bg-red-50 text-red-600 border-red-100'}`}>
+              <div className={`md:col-span-8 p-6 sm:p-10 rounded-[2.5rem] shadow-sm border transition-all hover:shadow-xl flex flex-col justify-between relative overflow-hidden ${result.http.success ? 'bg-white text-zinc-900 border-black/5' : 'bg-red-50 text-red-600 border-red-100'}`}>
                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full"></div>
                  <div className="relative z-10">
                     <div className="flex items-center justify-between mb-8">
@@ -259,7 +259,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                          {copied ? 'COPIED' : 'COPY_AUDIT'}
                        </button>
                     </div>
-                    <h1 className={`text-4xl md:text-6xl font-black italic tracking-tighter mb-4 leading-none uppercase ${result.http.success ? 'text-zinc-900' : 'text-red-600'}`}>
+                    <h1 className={`text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter mb-4 leading-none uppercase ${result.http.success ? 'text-zinc-900' : 'text-red-600'}`}>
                        {result.http.success ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
                     </h1>
                  </div>
@@ -283,7 +283,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                  </div>
               </div>
 
-              <div className="md:col-span-4 bg-white border border-black/5 p-10 rounded-[2.5rem] shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group">
+              <div className="md:col-span-4 bg-white border border-black/5 p-6 sm:p-10 rounded-[2.5rem] shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden group">
                  <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                  <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-6 relative z-10">{dict.tools.website_check.score}</h3>
                  {/* SVG Score Ring */}
@@ -400,7 +400,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
            </div>
 
            {/* Suggestions & Advice Section */}
-           <div className="bg-orange-50 border border-orange-100 rounded-[2.5rem] p-10 md:p-16">
+           <div className="bg-orange-50 border border-orange-100 rounded-[2.5rem] p-6 sm:p-10 md:p-16">
               <div className="flex items-center gap-4 mb-10">
                  <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
                     <ShieldAlert className="w-6 h-6" />
@@ -454,8 +454,8 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                  ROOT_JSON_PAYLOAD_EXCHANGE
               </button>
               {showJson && (
-                <div className="bg-zinc-900 rounded-[2.5rem] p-10 text-[11px] text-zinc-400 overflow-x-auto border border-zinc-800 shadow-2xl relative">
-                   <div className="absolute top-8 right-8">
+                 <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-[11px] text-zinc-400 overflow-x-auto border border-zinc-800 shadow-2xl relative">
+                    <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
                       <button onClick={copyResult} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10">
                          {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                       </button>

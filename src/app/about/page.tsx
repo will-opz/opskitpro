@@ -6,7 +6,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 
 export default async function AboutPage() {
   const cookieStore = cookies();
-  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en";
+  const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   const isZh = lang === 'zh'
 
@@ -16,7 +16,7 @@ export default async function AboutPage() {
 
       <main className="flex-grow w-full max-w-4xl mx-auto px-6 z-10 mt-12 mb-32 relative">
         {/* Background Glow */}
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
         {/* Hero Section */}
         <section className="mb-24 text-center md:text-left">
