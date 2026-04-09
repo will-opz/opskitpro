@@ -97,7 +97,10 @@ export default async function BlogPage() {
               FIELD_NOTES<span className="text-zinc-300">.kb</span>
            </h1>
            <p className="text-base text-zinc-500 max-w-xl font-mono leading-relaxed lowercase">
-              Real-time SRE forensics, infrastructure orchestration, and AI-driven automation field reports. 
+              {isZh 
+                ? "来自可观测性、站点可靠性与边缘架构一线的实战记录。包含深度技术取证与架构拆解，与知识库实时同步。"
+                : "Practical insights from the front lines of observability, site reliability, and edge infrastructure. Detailed forensics and architectural deep-dives, synced from our knowledge base."
+              }
               <br/>
               <span className="opacity-40 italic mt-2 block">Powered by OpsKitPro Content Engine.</span>
            </p>
