@@ -26,6 +26,11 @@ function calculateScore(data: any): number {
   let dnsLatency = parseInt(String(latencyStr).replace('ms', ''), 10) || 0
   if (dnsLatency > 300) score -= 10
   if (!data.cdn.is_provider) score -= 5
+  
+  // NEW: Domain status penalty
+  const status = data.whois?.status?.toLowerCase() || ''
+  if (status.includes('hold')) score -= 50
+  
   return Math.max(0, score)
 }
 
@@ -70,10 +75,13 @@ API & Site powered by OpsKitPro.com${c.reset}
 
     const score = calculateScore(data)
     const scoreColor = score >= 80 ? c.bgGreen + c.black : score >= 50 ? c.yellow : c.bgRed + c.black
-    const stateStr = data.http.success ? `${c.green}NOMINAL${c.reset}` : `${c.red}UNREACHABLE${c.reset}`
-    const holds = data.whois?.status ? data.whois.status.split(',').filter((s:string) => s.toLowerCase().includes('hold')) : []
-    const domainStatusStr = holds.length > 0 
-        ? `${c.bgRed}${c.black} ${holds.join(', ').toUpperCase()} ${c.reset}` 
+    
+    const currentHolds = data.whois?.status ? data.whois.status.split(',').filter((s:string) => s.toLowerCase().includes('hold')) : []
+    const isCritical = !data.http.success || currentHolds.length > 0 || !data.ssl.valid
+
+    const stateStr = isCritical ? `${c.red}CRITICAL${c.reset}` : (score >= 80 ? `${c.green}NOMINAL${c.reset}` : `${c.yellow}DEGRADED${c.reset}`)
+    const domainStatusStr = currentHolds.length > 0 
+        ? `${c.bgRed}${c.black} ${currentHolds.join(', ').toUpperCase()} ${c.reset}` 
         : (data.whois?.status ? data.whois.status.split(',')[0].toUpperCase() : 'UNKNOWN')
 
     let out = `\n`
@@ -100,8 +108,19 @@ API & Site powered by OpsKitPro.com${c.reset}
         : data.dns.resolved_ip
     out += `  Resolved IP: ${ipStr}\n`
     out += `  Latency    : ${data.dns.latency}\n`
-    const nsCount = data.whois?.nameservers?.length || 0
-    out += `  Nameservers: ${nsCount > 0 ? (nsCount > 1 ? nsCount + " NS Records (" + data.whois.nameservers[0] + ")" : data.whois.nameservers[0]) : 'Unknown'}\n`
+    
+    if (data.dns.resolvers) {
+      const resolverSummary = data.dns.resolvers.map((r: any) => 
+        `${r.name}: ${r.status === 'OK' ? c.green + '●' : c.red + '○'}${c.reset}`
+      ).join('  ')
+      out += `  Resolvers  : ${resolverSummary}\n`
+    }
+
+    const dnsNsArr = data.dns.ns && data.dns.ns.length > 0 ? data.dns.ns : []
+    const rdapNsArr = data.whois?.nameservers && data.whois.nameservers.length > 0 ? data.whois.nameservers : []
+    const combinedNsArr = Array.from(new Set([...dnsNsArr, ...rdapNsArr])).map((s:any) => s.toLowerCase().replace(/\.$/, ''))
+    
+    out += `  Nameservers: ${combinedNsArr.length > 0 ? combinedNsArr.join(', ') : 'Unknown'}\n`
     out += `\n`
 
     // HTTP
