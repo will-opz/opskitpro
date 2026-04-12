@@ -6,7 +6,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import Script from 'next/script'
 import './globals.css'
 
-export async function generateMetadata({ params }: { params: { lang: 'en' | 'zh' } }): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = cookies();
   const langFromHeader = headers().get("x-next-locale");
   const lang = (langFromHeader || cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
@@ -74,10 +74,8 @@ export async function generateMetadata({ params }: { params: { lang: 'en' | 'zh'
 
 export default async function RootLayout({
   children,
-  params
 }: {
   children: React.ReactNode,
-  params: { lang: string }
 }) {
   const cookieStore = cookies();
   const langFromHeader = headers().get("x-next-locale");

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { cookies } from 'next/headers'
 import { Metadata } from 'next'
 import { getDictionary } from '@/dictionaries'
@@ -28,7 +29,16 @@ export default async function JSONToolPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <JSONClient dict={dict} />
+      <div className="flex-grow">
+        <Suspense fallback={
+          <div className="min-h-[60vh] flex flex-col items-center justify-center font-mono">
+            <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
+            <p className="text-zinc-400 uppercase tracking-widest text-[10px]">Assembling_JSON_Matrix...</p>
+          </div>
+        }>
+          <JSONClient dict={dict} />
+        </Suspense>
+      </div>
       <SiteFooter dict={dict} />
     </>
   )

@@ -80,9 +80,9 @@ export default async function AboutPage() {
              <Activity className="w-4 h-4 text-emerald-500" /> Technology Stack
           </h2>
            <div className="bg-zinc-50 rounded-[2.5rem] border border-black/5 p-10 font-mono text-[10px] text-zinc-500 uppercase tracking-widest grid grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> Next.js 16 (Turbo)</div>
+              <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> Next.js 14 (Standalone)</div>
               <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> CF Edge Runtime</div>
-              <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> Tailwind CSS v4</div>
+              <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> Tailwind CSS v3</div>
               <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> Lucide Icons</div>
               <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> Quartz Gen 4</div>
               <div className="flex items-center gap-3"><span className="text-emerald-500">▸</span> i18n Strategy</div>

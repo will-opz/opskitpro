@@ -16,11 +16,14 @@ import {
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 
-export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' }) {
+export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
+  const isActive = (path: string) => {
+    const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, '') || '/'
+    return normalizedPathname === path || (path !== '/' && normalizedPathname.startsWith(path + '/'))
+  }
 
   return (
     <header className="w-full max-w-6xl mx-auto px-6 py-8 flex justify-between items-center z-50 relative">

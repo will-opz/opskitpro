@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { 
   Globe, 
   ShieldCheck, 
@@ -35,21 +35,14 @@ interface IPData {
   proxy?: boolean;
 }
 
-export default function IPClient() {
-  const params = useParams()
+export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const searchParams = useSearchParams()
-  const lang = (params.lang as 'en' | 'zh') || 'zh'
   
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<IPData | null>(null)
   const [inputIp, setInputIp] = useState('')
   const [copied, setCopied] = useState(false)
   const [showJson, setShowJson] = useState(false)
-  const [dict, setDict] = useState<any>(null)
-
-  useEffect(() => {
-    import(`@/dictionaries/${lang}.json`).then(d => setDict(d.default))
-  }, [lang])
 
   const fetchIP = useCallback(async (target?: string) => {
     setLoading(true)

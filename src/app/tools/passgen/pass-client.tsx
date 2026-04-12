@@ -2,13 +2,10 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { KeyRound, RefreshCw, Copy, QrCode, Check, ShieldCheck } from 'lucide-react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { QRCodeSVG } from 'qrcode.react'
 
 export default function PassClient({ dict }: { dict: any }) {
-  const params = useParams()
-  const lang = (params.lang as 'en' | 'zh') || 'en'
   const [password, setPassword] = useState('')
   const [length, setLength] = useState(16)
   const [options, setOptions] = useState({
@@ -273,7 +270,7 @@ export default function PassClient({ dict }: { dict: any }) {
 
               <div className="space-y-4">
                 <h3 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest px-1">
-                  {lang === 'zh' ? '特殊格式 (Special Formats)' : 'Special Formats'}
+                  Special Formats
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {['uuid', 'pin6', 'pin8'].map((key) => (

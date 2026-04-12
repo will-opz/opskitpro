@@ -48,7 +48,7 @@ import {
   Braces
 } from 'lucide-react'
 
-export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" | "en" }) {
+export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" | "en" | "ja" | "tw" }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('')
 

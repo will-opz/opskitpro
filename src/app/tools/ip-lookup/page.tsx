@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { cookies } from 'next/headers'
 import { Metadata } from 'next'
 import { getDictionary } from '@/dictionaries'
@@ -28,7 +29,16 @@ export default async function IPPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <IPClient />
+      <div className="flex-grow">
+        <Suspense fallback={
+          <div className="min-h-[60vh] flex flex-col items-center justify-center font-mono">
+            <div className="w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-4" />
+            <p className="text-zinc-400 uppercase tracking-widest text-[10px]">Locating_Global_Route...</p>
+          </div>
+        }>
+          <IPClient dict={dict} lang={lang} />
+        </Suspense>
+      </div>
       <SiteFooter dict={dict} />
     </>
   )

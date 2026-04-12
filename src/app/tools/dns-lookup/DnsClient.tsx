@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { 
   Globe, 
   Search, 
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { useDnsLookup, type DnsRecordType, type DnsProvider } from './hooks'
 
-export default function DnsClient() {
+export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const { 
     loading, 
     result, 
@@ -34,14 +34,12 @@ export default function DnsClient() {
     history 
   } = useDnsLookup()
 
-  const params = useParams()
   const searchParams = useSearchParams()
-  const lang = (params.lang as 'en' | 'zh') || 'zh'
   
   const [domain, setDomain] = useState('')
   const [selectedType, setSelectedType] = useState<DnsRecordType>('A')
   const [selectedProvider, setSelectedProvider] = useState<DnsProvider>('cloudflare')
-  const [dict, setDict] = useState<any>(null)
+  // dict passed via props
   const [showJson, setShowJson] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -51,10 +49,6 @@ export default function DnsClient() {
     { id: 'google', name: 'Google (8.8.8.8)' },
     { id: 'quad9', name: 'Quad9 (9.9.9.9)' }
   ]
-
-  useEffect(() => {
-    import(`@/dictionaries/${lang}.json`).then(d => setDict(d.default))
-  }, [lang])
 
   useEffect(() => {
     const q = searchParams.get('q') || searchParams.get('domain')
