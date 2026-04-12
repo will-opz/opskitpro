@@ -346,8 +346,18 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                     </div>
                     <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
                        <span className="text-[10px] text-zinc-400">DOMAIN_STATUS</span>
-                       <span className="text-[10px] font-black text-emerald-500 uppercase italic truncate max-w-[150px]" title={result.whois?.status || 'Unknown'}>
-                          {result.whois?.status?.split(',')[0] || 'Active'}
+                       <span 
+                         className={`text-[10px] font-black uppercase italic truncate max-w-[150px] ${
+                           result.whois?.status?.toLowerCase().includes('hold') ? 'text-red-500' : 'text-emerald-500'
+                         }`} 
+                         title={result.whois?.status || 'Unknown'}
+                       >
+                          {(() => {
+                            if (!result.whois?.status) return 'Active'
+                            const holds = result.whois.status.split(',').map((s: string) => s.trim()).filter((s: string) => s.toLowerCase().includes('hold'))
+                            if (holds.length > 0) return holds.join(', ')
+                            return result.whois.status.split(',')[0]
+                          })()}
                        </span>
                     </div>
                  </div>
