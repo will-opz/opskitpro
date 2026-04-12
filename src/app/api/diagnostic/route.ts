@@ -57,11 +57,12 @@ export async function GET(request: NextRequest) {
 
     const httpRes = httpResRaw as Response | { error: true; message: string }
 
-    let whoisInfo = {
+    let whoisInfo: any = {
       registered: 'Unknown',
       expires: 'Unknown',
       registrar: 'Unknown',
       status: 'Unknown',
+      nameservers: [],
       success: false
     }
 
@@ -85,16 +86,22 @@ export async function GET(request: NextRequest) {
       if (rdapData.status && Array.isArray(rdapData.status)) {
         whoisInfo.status = rdapData.status.join(', ')
       }
+
+      if (rdapData.nameservers && Array.isArray(rdapData.nameservers)) {
+        whoisInfo.nameservers = rdapData.nameservers.map((ns: any) => ns.ldhName).filter(Boolean)
+      }
     }
 
     // Handle HTTP Fetch Error
     if ('error' in httpRes) {
       const ip = dnsResult.Answer?.[0]?.data || 'N/A'
+      const ips = dnsResult.Answer?.filter((a: any) => a.type === 1 || a.type === 28).map((a: any) => a.data) || []
       return NextResponse.json({
         domain,
         status: 'partial_success',
         dns: {
           resolved_ip: ip,
+          all_ips: ips,
           latency: `${dnsLatency}ms`,
           success: dnsResult.Status === 0
         },
@@ -110,6 +117,7 @@ export async function GET(request: NextRequest) {
     }
 
     const ip = dnsResult.Answer?.[0]?.data || 'N/A'
+    const ips = dnsResult.Answer?.filter((a: any) => a.type === 1 || a.type === 28).map((a: any) => a.data) || []
     const serverHeader = httpRes.headers.get('server') || 'Unknown'
     const isHttps = httpRes.url.startsWith('https')
 
@@ -183,6 +191,7 @@ export async function GET(request: NextRequest) {
       status: 'success',
       dns: {
         resolved_ip: ip,
+        all_ips: ips,
         latency: `${dnsLatency}ms`,
         success: dnsResult.Status === 0
       },

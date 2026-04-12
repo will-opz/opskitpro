@@ -372,14 +372,25 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                  <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">DNS_RESOLUTION</h4>
                  <div className="space-y-6">
                     <div>
-                       <p className="text-lg font-black text-zinc-900 leading-none truncate">{result.dns.resolved_ip}</p>
+                       <p className="text-lg font-black text-zinc-900 leading-none truncate" title={result.dns.all_ips?.join(', ')}>
+                         {result.dns.all_ips && result.dns.all_ips.length > 1 
+                           ? `${result.dns.all_ips.length} ANYCAST IPs` 
+                           : result.dns.resolved_ip}
+                       </p>
                        <p className="text-[9px] text-emerald-600 mt-2 font-bold uppercase tracking-widest flex items-center gap-2">
                           <Activity className="w-3 h-3" /> {result.dns.latency}
+                          {result.dns.all_ips && result.dns.all_ips.length > 1 && (
+                            <span className="text-zinc-400 truncate max-w-[120px]">| {result.dns.all_ips[0]}</span>
+                          )}
                        </p>
                     </div>
                     <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
-                       <span className="text-[10px] text-zinc-400">PROPAGATION</span>
-                       <span className="text-[10px] font-black text-emerald-500 uppercase italic">Active</span>
+                       <span className="text-[10px] text-zinc-400">NAMESERVERS</span>
+                       <span className="text-[10px] font-black text-zinc-500 uppercase italic truncate max-w-[150px]" title={result.whois?.nameservers?.join(', ') || 'Unknown'}>
+                          {result.whois?.nameservers && result.whois.nameservers.length > 0 
+                            ? (result.whois.nameservers.length > 1 ? `${result.whois.nameservers.length} NS Records` : result.whois.nameservers[0]) 
+                            : 'Unknown'}
+                       </span>
                     </div>
                  </div>
               </div>
