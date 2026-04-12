@@ -106,6 +106,11 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
     if (!data.ssl.valid) score -= 20
     if (parseLatencyMs(data.dns.latency) > 300) score -= 10
     if (!data.cdn.is_provider) score -= 5
+    
+    // Domain status penalty
+    const status = data.whois?.status?.toLowerCase() || ''
+    if (status.includes('hold')) score -= 50
+    
     return Math.max(0, score)
   }
 
@@ -271,8 +276,8 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                  })()}
                  <div>
                    <h2 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">GLOBAL_SYSTEM_SCORE</h2>
-                   <h1 className={`text-2xl sm:text-3xl font-black italic tracking-tighter uppercase ${result.http.success ? 'text-zinc-900' : 'text-red-600'}`}>
-                     {result.http.success ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
+                   <h1 className={`text-2xl sm:text-3xl font-black italic tracking-tighter uppercase ${result.http.success && !result.whois?.status?.toLowerCase().includes('hold') ? 'text-zinc-900' : 'text-red-600'}`}>
+                     {result.http.success && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
                    </h1>
                  </div>
               </div>

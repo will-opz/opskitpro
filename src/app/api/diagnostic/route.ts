@@ -214,7 +214,7 @@ export async function GET(request: NextRequest) {
         success: dnsResult.Status === 0
       },
       http: {
-        success: true,
+        success: httpRes.ok,
         status_code: httpRes.status,
         status_text: httpRes.statusText,
         latency: `${httpLatency}ms`,
