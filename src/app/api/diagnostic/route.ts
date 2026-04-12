@@ -7,6 +7,25 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('domain') || ''
   const domain = query.replace(/^https?:\/\//, '').split('/')[0]
+  const cacheKey = `diag:${domain}`
+  const KV = (process.env as any).KV
+
+  // 1. Global KV Cache Lookup
+  if (KV && !searchParams.has('_nocache')) {
+    try {
+      const cached = await KV.get(cacheKey)
+      if (cached) {
+        return NextResponse.json(JSON.parse(cached), {
+          headers: {
+            'X-Cache': 'HIT',
+            'Cache-Control': 'public, s-maxage=60'
+          }
+        })
+      }
+    } catch (e) {
+      console.error('KV Read Error:', e)
+    }
+  }
 
   if (!domain) {
     return NextResponse.json({ error: 'Invalid domain' }, { status: 400 })
@@ -230,7 +249,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const responseData = {
       domain,
       status: 'success',
       dns: {
@@ -256,8 +275,16 @@ export async function GET(request: NextRequest) {
       },
       geo,
       whois: whoisInfo
-    }, {
+    }
+
+    // Persist to Global KV Cache (1-hour TTL)
+    if (KV) {
+      await KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 3600 }).catch(() => null)
+    }
+
+    return NextResponse.json(responseData, {
       headers: {
+        'X-Cache': 'MISS',
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
         'X-Response-Time': `${httpLatency}ms`
       }
