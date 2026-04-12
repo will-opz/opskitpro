@@ -3,6 +3,14 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const url = request.nextUrl.clone()
+
+  // 0. Force HTTPS in production
+  const proto = request.headers.get('x-forwarded-proto')
+  if (process.env.NODE_ENV === 'production' && proto === 'http') {
+    url.protocol = 'https:'
+    return NextResponse.redirect(url, 301)
+  }
   
   // 1. Handle language prefixing via REWRITE (internal routing)
   // This allows /zh/tools/ip-lookup to show /tools/ip-lookup content
