@@ -43,13 +43,49 @@ export async function GET(request: NextRequest) {
       signal: AbortSignal.timeout(6000)
     }).then(r => r.json()).catch(() => null)
 
-    const [[dnsResult, dnsLatency], [httpResRaw, httpLatency], crtData] = await Promise.all([
+    // 4. WHOIS via RDAP
+    const whoisPromise = fetch(`https://rdap.org/domain/${domain}`, {
+      signal: AbortSignal.timeout(6000)
+    }).then(r => r.json()).catch(() => null)
+
+    const [[dnsResult, dnsLatency], [httpResRaw, httpLatency], crtData, rdapData] = await Promise.all([
       dnsPromise,
       httpPromise,
-      sslPromise
+      sslPromise,
+      whoisPromise
     ])
 
     const httpRes = httpResRaw as Response | { error: true; message: string }
+
+    let whoisInfo = {
+      registered: 'Unknown',
+      expires: 'Unknown',
+      registrar: 'Unknown',
+      status: 'Unknown',
+      success: false
+    }
+
+    if (rdapData && rdapData.events) {
+      whoisInfo.success = true
+      
+      const regEvent = rdapData.events.find((e: any) => e.eventAction === 'registration')
+      if (regEvent) whoisInfo.registered = String(regEvent.eventDate).split('T')[0]
+
+      const expEvent = rdapData.events.find((e: any) => e.eventAction === 'expiration')
+      if (expEvent) whoisInfo.expires = String(expEvent.eventDate).split('T')[0]
+
+      if (rdapData.entities) {
+        const regEntity = rdapData.entities.find((e: any) => e.roles && e.roles.includes('registrar'))
+        if (regEntity && regEntity.vcardArray && regEntity.vcardArray[1]) {
+          const fn = regEntity.vcardArray[1].find((v: any) => v[0] === 'fn')
+          if (fn) whoisInfo.registrar = fn[3]
+        }
+      }
+
+      if (rdapData.status && Array.isArray(rdapData.status)) {
+        whoisInfo.status = rdapData.status.join(', ')
+      }
+    }
 
     // Handle HTTP Fetch Error
     if ('error' in httpRes) {
@@ -68,7 +104,8 @@ export async function GET(request: NextRequest) {
         },
         ssl: { valid: false, issuer: 'Unknown', expiry: 'Unknown', tls_version: 'N/A' },
         cdn: { is_provider: false, provider: 'Unknown', server: 'N/A' },
-        geo: { country: 'Unknown', isp: 'Unknown' }
+        geo: { country: 'Unknown', isp: 'Unknown' },
+        whois: whoisInfo
       })
     }
 
@@ -162,7 +199,8 @@ export async function GET(request: NextRequest) {
         provider,
         server: serverHeader
       },
-      geo
+      geo,
+      whois: whoisInfo
     }, {
       headers: {
         'Cache-Control': 'no-store',

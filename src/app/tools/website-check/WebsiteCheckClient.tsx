@@ -24,7 +24,8 @@ import {
   Cpu,
   Monitor,
   Lock,
-  Calendar
+  Calendar,
+  Database
 } from 'lucide-react'
 
 interface DiagnosticStep {
@@ -43,6 +44,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
   const [copied, setCopied] = useState(false)
 
   const steps: DiagnosticStep[] = useMemo(() => [
+    { id: 'whois', label: dict.tools.website_check.l0 || 'WHOIS Registry' },
     { id: 'dns', label: dict.tools.website_check.l1 },
     { id: 'server', label: dict.tools.website_check.l2 },
     { id: 'ssl', label: dict.tools.website_check.l3 },
@@ -325,7 +327,32 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
            </div>
 
            {/* Detailed Cards Matrix */}
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* WHOIS Card */}
+              <div className="bg-white border border-black/5 p-8 rounded-3xl group shadow-sm transition-all hover:shadow-xl">
+                 <div className="flex items-center justify-between mb-8 opacity-40 group-hover:opacity-100 transition-opacity">
+                    <Database className="w-5 h-5 text-zinc-400" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Forensics_Layer_00</span>
+                 </div>
+                 <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">WHOIS_REGISTRY</h4>
+                 <div className="space-y-6">
+                    <div>
+                       <p className={`text-lg font-black leading-none truncate ${result.whois?.success ? 'text-zinc-900' : 'text-zinc-400'}`}>
+                          {result.whois?.success ? result.whois.registrar : 'NO_RDAP_RECORD'}
+                       </p>
+                       <p className="text-[9px] text-zinc-400 mt-2 font-bold uppercase tracking-widest flex items-center gap-2">
+                          <Clock className="w-3 h-3" /> {result.whois?.success ? `Reg: ${result.whois.registered} / Exp: ${result.whois.expires}` : 'Information Unavailable'}
+                       </p>
+                    </div>
+                    <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                       <span className="text-[10px] text-zinc-400">DOMAIN_STATUS</span>
+                       <span className="text-[10px] font-black text-emerald-500 uppercase italic truncate max-w-[150px]" title={result.whois?.status || 'Unknown'}>
+                          {result.whois?.status?.split(',')[0] || 'Active'}
+                       </span>
+                    </div>
+                 </div>
+              </div>
+
               {/* DNS Card */}
               <div className="bg-white border border-black/5 p-8 rounded-3xl group shadow-sm transition-all hover:shadow-xl">
                  <div className="flex items-center justify-between mb-8 opacity-40 group-hover:opacity-100 transition-opacity">
