@@ -99,7 +99,7 @@ API & Site powered by OpsKitPro.com${c.reset}
     out += `  Resolved IP: ${ipStr}\n`
     out += `  Latency    : ${data.dns.latency}\n`
     const nsCount = data.whois?.nameservers?.length || 0
-    out += `  Nameservers: ${nsCount > 0 ? (nsCount > 1 ? \`\${nsCount} NS Records (\${data.whois.nameservers[0]})\` : data.whois.nameservers[0]) : 'Unknown'}\n`
+    out += `  Nameservers: ${nsCount > 0 ? (nsCount > 1 ? nsCount + " NS Records (" + data.whois.nameservers[0] + ")" : data.whois.nameservers[0]) : 'Unknown'}\n`
     out += `\n`
 
     // HTTP
