@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
       },
       signal: AbortSignal.timeout(6000)
     })
-    .then(async r => {
+    .then(r => {
       if (!r.ok) {
-        whoisFetchError = `HTTP ${r.status}: \${await r.text()}`;
+        whoisFetchError = `HTTP ${r.status} ${r.statusText}`;
         return null;
       }
       return r.json();
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       status: 'Unknown',
       nameservers: [],
       success: false,
-      debug_error: whoisFetchError
+      error: whoisFetchError
     }
 
     if (rdapData && rdapData.events) {

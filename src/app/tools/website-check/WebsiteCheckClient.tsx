@@ -294,34 +294,45 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                     <span className="text-sm font-bold text-zinc-900 uppercase tracking-widest">WHOIS Registry</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
-                  <div>
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Registrar</p>
-                    <p className={`text-sm font-black truncate ${result.whois?.success ? 'text-zinc-900' : 'text-zinc-400'}`}>
-                      {result.whois?.success ? result.whois.registrar : 'NO_RDAP'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Registered On</p>
-                    <p className="text-sm font-mono text-zinc-700">{result.whois?.success ? result.whois.registered : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Expires On</p>
-                    <p className="text-sm font-mono text-zinc-700">{result.whois?.success ? result.whois.expires : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Domain Status</p>
-                    <p className={`text-sm font-black uppercase italic truncate ${
-                        result.whois?.status?.toLowerCase().includes('hold') ? 'text-red-500' : 'text-emerald-500'
-                    }`} title={result.whois?.status || 'Unknown'}>
-                        {(() => {
-                          if (!result.whois?.status) return 'Active'
-                          const holds = result.whois.status.split(',').map((s: string) => s.trim()).filter((s: string) => s.toLowerCase().includes('hold'))
-                          if (holds.length > 0) return holds.join(', ')
-                          return result.whois.status.split(',')[0]
-                        })()}
-                    </p>
-                  </div>
+                <div className="flex-grow">
+                  {!result.whois?.success && result.whois?.error ? (
+                    <div className="w-full h-full flex flex-col justify-center">
+                       <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Diagnostic Exception</p>
+                       <p className="text-sm font-black text-red-500 uppercase italic">
+                         RDAP_FAULT: {result.whois.error}
+                       </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div>
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Registrar</p>
+                        <p className={`text-sm font-black truncate ${result.whois?.success ? 'text-zinc-900' : 'text-zinc-400'}`}>
+                          {result.whois?.success ? result.whois.registrar : 'NO_INFO'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Registered On</p>
+                        <p className="text-sm font-mono text-zinc-700">{result.whois?.success ? result.whois.registered : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Expires On</p>
+                        <p className="text-sm font-mono text-zinc-700">{result.whois?.success ? result.whois.expires : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Domain Status</p>
+                        <p className={`text-sm font-black uppercase italic truncate ${
+                            result.whois?.status?.toLowerCase().includes('hold') ? 'text-red-500' : 'text-emerald-500'
+                        }`} title={result.whois?.status || 'Unknown'}>
+                            {(() => {
+                              if (!result.whois?.status) return 'Active'
+                              const holds = result.whois.status.split(',').map((s: string) => s.trim()).filter((s: string) => s.toLowerCase().includes('hold'))
+                              if (holds.length > 0) return holds.join(', ')
+                              return result.whois.status.split(',')[0]
+                            })()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
