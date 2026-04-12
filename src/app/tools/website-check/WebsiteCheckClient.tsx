@@ -358,9 +358,14 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                            ? `${result.dns.all_ips.length} ANYCAST IPs` 
                            : result.dns.resolved_ip}
                     </p>
-                    {result.dns.all_ips && result.dns.all_ips.length > 1 && (
-                      <p className="text-[10px] text-zinc-400 mt-1 font-mono">{result.dns.all_ips[0]}...</p>
-                    )}
+                    <div className="flex items-center gap-4 mt-2">
+                        {result.dns.resolvers?.map((r: any) => (
+                           <div key={r.name} className="flex items-center gap-1.5" title={`${r.name}: ${r.status}`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${r.status === 'OK' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase">{r.name}</span>
+                           </div>
+                        ))}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Lookup Latency</p>
@@ -370,10 +375,13 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                   </div>
                   <div>
                     <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Nameservers</p>
-                    <p className="text-sm font-black text-zinc-600 uppercase italic truncate" title={result.whois?.nameservers?.join(', ') || 'Unknown'}>
-                        {result.whois?.nameservers && result.whois.nameservers.length > 0 
-                            ? (result.whois.nameservers.length > 1 ? `${result.whois.nameservers.length} NS Records` : result.whois.nameservers[0]) 
-                            : 'Unknown'}
+                    <p className="text-sm font-black text-zinc-600 uppercase italic truncate" title={[...(result.dns.ns || []), ...(result.whois?.nameservers || [])].join(', ') || 'Unknown'}>
+                        {(() => {
+                           const combined = Array.from(new Set([...(result.dns.ns || []), ...(result.whois?.nameservers || [])]))
+                           return combined.length > 0 
+                             ? (combined.length > 1 ? `${combined.length} Records` : combined[0]) 
+                             : 'Unknown'
+                        })()}
                     </p>
                   </div>
                 </div>

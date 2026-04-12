@@ -108,8 +108,19 @@ API & Site powered by OpsKitPro.com${c.reset}
         : data.dns.resolved_ip
     out += `  Resolved IP: ${ipStr}\n`
     out += `  Latency    : ${data.dns.latency}\n`
-    const nsCount = data.whois?.nameservers?.length || 0
-    out += `  Nameservers: ${nsCount > 0 ? (nsCount > 1 ? nsCount + " NS Records (" + data.whois.nameservers[0] + ")" : data.whois.nameservers[0]) : 'Unknown'}\n`
+    
+    if (data.dns.resolvers) {
+      const resolverSummary = data.dns.resolvers.map((r: any) => 
+        `${r.name}: ${r.status === 'OK' ? c.green + '●' : c.red + '○'}${c.reset}`
+      ).join('  ')
+      out += `  Resolvers  : ${resolverSummary}\n`
+    }
+
+    const dnsNsArr = data.dns.ns && data.dns.ns.length > 0 ? data.dns.ns : []
+    const rdapNsArr = data.whois?.nameservers && data.whois.nameservers.length > 0 ? data.whois.nameservers : []
+    const combinedNsArr = Array.from(new Set([...dnsNsArr, ...rdapNsArr]))
+    
+    out += `  Nameservers: ${combinedNsArr.length > 0 ? (combinedNsArr.length > 1 ? combinedNsArr.length + " Records (" + combinedNsArr[0] + ")" : combinedNsArr[0]) : 'Unknown'}\n`
     out += `\n`
 
     // HTTP

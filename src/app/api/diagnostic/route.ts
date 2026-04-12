@@ -13,16 +13,30 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 1. DNS Lookup (Using Cloudflare DoH) — timed independently
+    // 1. Multi-Resolver DNS Lookup (Cloudflare, Google, Quad9) — timed independently
+    const dnsResolvers = [
+      { name: 'Cloudflare', url: `https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, headers: { 'accept': 'application/dns-json' } },
+      { name: 'Google', url: `https://dns.google/resolve?name=${domain}&type=A`, headers: {} },
+      { name: 'Quad9', url: `https://dns.quad9.net/dns-query?name=${domain}&type=A`, headers: { 'accept': 'application/dns-json' } }
+    ];
+
     const dnsPromise: Promise<[any, number]> = (() => {
       const t0 = Date.now()
-      return fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
-        headers: { 'accept': 'application/dns-json' },
-        signal: AbortSignal.timeout(5000)
-      })
-        .then(res => res.json())
-        .then(data => [data, Date.now() - t0] as [any, number])
+      return Promise.all(
+        dnsResolvers.map(r => 
+          fetch(r.url, { headers: r.headers, signal: AbortSignal.timeout(4000) })
+            .then(res => res.json())
+            .then(data => ({ resolver: r.name, data }))
+            .catch(() => ({ resolver: r.name, data: null }))
+        )
+      ).then(results => [results, Date.now() - t0] as [any, number])
     })()
+
+    // 1b. NS Lookup (Via Cloudflare)
+    const nsPromise = fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=NS`, {
+      headers: { 'accept': 'application/dns-json' },
+      signal: AbortSignal.timeout(4000)
+    }).then(r => r.json()).catch(() => null)
 
     // 2. HTTP Connectivity & Basic Detection — timed independently
     const targetUrl = query.startsWith('http') ? query : `https://${domain}`
@@ -65,11 +79,12 @@ export async function GET(request: NextRequest) {
       return null;
     })
 
-    const [[dnsResult, dnsLatency], [httpResRaw, httpLatency], crtData, rdapData] = await Promise.all([
+    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency], crtData, rdapData, nsData] = await Promise.all([
       dnsPromise,
       httpPromise,
       sslPromise,
-      whoisPromise
+      whoisPromise,
+      nsPromise
     ])
 
     const httpRes = httpResRaw as Response | { error: true; message: string }
@@ -110,18 +125,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const dnsResult = dnsResults.find((r: any) => r.data?.Status === 0)?.data || dnsResults[0]?.data || { Status: -1 }
+    const allIps = Array.from(new Set(
+        dnsResults.flatMap((r: any) => r.data?.Answer?.filter((a: any) => a.type === 1 || a.type === 28).map((a: any) => a.data) || [])
+    ))
+    const resolverStatus = dnsResults.map((r: any) => ({ 
+        name: r.resolver, 
+        status: r.data?.Status === 0 ? 'OK' : 'FAIL',
+        ips: r.data?.Answer?.filter((a: any) => a.type === 1).map((a: any) => a.data) || []
+    }))
+    const dnsNs = nsData?.Answer?.filter((a: any) => a.type === 2).map((a: any) => a.data) || []
+
     // Handle HTTP Fetch Error
     if ('error' in httpRes) {
-      const ip = dnsResult.Answer?.[0]?.data || 'N/A'
-      const ips = dnsResult.Answer?.filter((a: any) => a.type === 1 || a.type === 28).map((a: any) => a.data) || []
+      const currentIp = allIps[0] || 'N/A'
       return NextResponse.json({
         domain,
         status: 'partial_success',
         dns: {
-          resolved_ip: ip,
-          all_ips: ips,
+          resolved_ip: currentIp,
+          all_ips: allIps,
           latency: `${dnsLatency}ms`,
-          success: dnsResult.Status === 0
+          success: dnsResult.Status === 0,
+          resolvers: resolverStatus,
+          ns: dnsNs
         },
         http: {
           success: false,
@@ -134,8 +161,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const ip = dnsResult.Answer?.[0]?.data || 'N/A'
-    const ips = dnsResult.Answer?.filter((a: any) => a.type === 1 || a.type === 28).map((a: any) => a.data) || []
+    const ip = allIps[0] || 'N/A'
     const serverHeader = httpRes.headers.get('server') || 'Unknown'
     const isHttps = httpRes.url.startsWith('https')
 
@@ -209,9 +235,11 @@ export async function GET(request: NextRequest) {
       status: 'success',
       dns: {
         resolved_ip: ip,
-        all_ips: ips,
+        all_ips: allIps,
         latency: `${dnsLatency}ms`,
-        success: dnsResult.Status === 0
+        success: dnsResult.Status === 0,
+        resolvers: resolverStatus,
+        ns: dnsNs
       },
       http: {
         success: httpRes.ok,
