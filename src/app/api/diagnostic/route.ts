@@ -44,9 +44,26 @@ export async function GET(request: NextRequest) {
     }).then(r => r.json()).catch(() => null)
 
     // 4. WHOIS via RDAP
+    let whoisFetchError = null;
+    let rawRdap = null;
     const whoisPromise = fetch(`https://rdap.org/domain/${domain}`, {
+      headers: { 
+        'Accept': 'application/rdap+json',
+        'User-Agent': 'curl/8.4.0'
+      },
       signal: AbortSignal.timeout(6000)
-    }).then(r => r.json()).catch(() => null)
+    })
+    .then(async r => {
+      if (!r.ok) {
+        whoisFetchError = `HTTP ${r.status}: \${await r.text()}`;
+        return null;
+      }
+      return r.json();
+    })
+    .catch(e => {
+      whoisFetchError = e.message;
+      return null;
+    })
 
     const [[dnsResult, dnsLatency], [httpResRaw, httpLatency], crtData, rdapData] = await Promise.all([
       dnsPromise,
@@ -63,7 +80,8 @@ export async function GET(request: NextRequest) {
       registrar: 'Unknown',
       status: 'Unknown',
       nameservers: [],
-      success: false
+      success: false,
+      debug_error: whoisFetchError
     }
 
     if (rdapData && rdapData.events) {
