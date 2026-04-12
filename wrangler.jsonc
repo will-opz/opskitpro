@@ -1,28 +1,40 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
-  "name": "opskitpro-com",
-  "workers_dev": true,
-  "compatibility_date": "2025-02-01",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [],
-  "routes": [
-    { "pattern": "opskitpro.com", "custom_domain": true },
-    { "pattern": "www.opskitpro.com", "custom_domain": true },
-    { "pattern": "deops.org", "custom_domain": true },
-    { "pattern": "www.deops.org", "custom_domain": true }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "YOUR_KV_NAMESPACE_ID"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "opskitpro-com",
+	"workers_dev": true,
+	"compatibility_date": "2025-02-01",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [],
+	"routes": [
+		{
+			"pattern": "opskitpro.com",
+			"custom_domain": true
+		},
+		{
+			"pattern": "www.opskitpro.com",
+			"custom_domain": true
+		},
+		{
+			"pattern": "deops.org",
+			"custom_domain": true
+		},
+		{
+			"pattern": "www.deops.org",
+			"custom_domain": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "KV",
+			"id": "a611da5c720e44cca926c068473799b5"
+		}
+	]
 }
