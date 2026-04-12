@@ -118,9 +118,9 @@ API & Site powered by OpsKitPro.com${c.reset}
 
     const dnsNsArr = data.dns.ns && data.dns.ns.length > 0 ? data.dns.ns : []
     const rdapNsArr = data.whois?.nameservers && data.whois.nameservers.length > 0 ? data.whois.nameservers : []
-    const combinedNsArr = Array.from(new Set([...dnsNsArr, ...rdapNsArr]))
+    const combinedNsArr = Array.from(new Set([...dnsNsArr, ...rdapNsArr])).map((s:any) => s.toLowerCase().replace(/\.$/, ''))
     
-    out += `  Nameservers: ${combinedNsArr.length > 0 ? (combinedNsArr.length > 1 ? combinedNsArr.length + " Records (" + combinedNsArr[0] + ")" : combinedNsArr[0]) : 'Unknown'}\n`
+    out += `  Nameservers: ${combinedNsArr.length > 0 ? combinedNsArr.join(', ') : 'Unknown'}\n`
     out += `\n`
 
     // HTTP

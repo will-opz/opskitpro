@@ -373,16 +373,19 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                       <Activity className="w-3 h-3" /> {result.dns.latency}
                     </p>
                   </div>
-                  <div>
+                  <div className="col-span-2 lg:col-span-1">
                     <p className="text-[10px] text-zinc-400 uppercase font-bold mb-2">Nameservers</p>
-                    <p className="text-sm font-black text-zinc-600 uppercase italic truncate" title={[...(result.dns.ns || []), ...(result.whois?.nameservers || [])].join(', ') || 'Unknown'}>
+                    <div className="flex flex-col gap-0.5 max-h-[60px] overflow-y-auto pr-1 overflow-x-hidden">
                         {(() => {
                            const combined = Array.from(new Set([...(result.dns.ns || []), ...(result.whois?.nameservers || [])]))
+                               .map(s => s.toLowerCase().replace(/\.$/, ''))
                            return combined.length > 0 
-                             ? (combined.length > 1 ? `${combined.length} Records` : combined[0]) 
-                             : 'Unknown'
+                             ? combined.map(ns => (
+                                 <p key={ns} className="text-[11px] font-black text-zinc-500 uppercase italic truncate" title={ns}>{ns}</p>
+                               ))
+                             : <p className="text-sm font-black text-zinc-400 uppercase italic">Unknown</p>
                         })()}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>
