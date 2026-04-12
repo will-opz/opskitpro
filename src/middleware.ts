@@ -64,16 +64,6 @@ export function middleware(request: NextRequest) {
     })
   }
 
-  // 3. CLI Shortcut Routing
-  // Maps opskitpro.com/chk/domain.com or opskitpro.com/d/domain.com to /api/cli
-  const cliMatch = pathname.match(/^\/(chk|d)\/(.+)$/)
-  if (cliMatch) {
-    const domain = cliMatch[2]
-    const rewriteUrl = new URL('/api/cli', request.url)
-    rewriteUrl.searchParams.set('d', domain)
-    return NextResponse.rewrite(rewriteUrl)
-  }
-
   return response
 }
 
