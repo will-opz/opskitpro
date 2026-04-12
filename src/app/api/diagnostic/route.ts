@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
       whois: whoisInfo
     }, {
       headers: {
-        'Cache-Control': 'no-store',
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
         'X-Response-Time': `${httpLatency}ms`
       }
     })

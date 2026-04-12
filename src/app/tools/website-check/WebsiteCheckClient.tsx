@@ -51,7 +51,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
     { id: 'cdn', label: dict.tools.website_check.l4 }
   ], [dict])
 
-  const runDiagnostic = useCallback(async (target?: string) => {
+  const runDiagnostic = useCallback(async (target?: string, skipCache: boolean = false) => {
     const d = target || domain
     if (!d) return
 
@@ -66,7 +66,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
     }, 800)
 
     try {
-      const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(d)}`)
+      const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(d)}${skipCache ? '&_nocache=' + Date.now() : ''}`)
       
       const contentType = res.headers.get('content-type') || ''
       if (!contentType.includes('application/json')) {
@@ -183,7 +183,7 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                />
                <button 
                  type="button"
-                 onClick={() => runDiagnostic()}
+                 onClick={() => runDiagnostic(undefined, true)}
                  disabled={loading}
                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/30 disabled:opacity-50"
                >
