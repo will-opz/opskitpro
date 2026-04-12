@@ -11,6 +11,7 @@ const c = {
   yellow: '\x1b[33m',
   cyan: '\x1b[36m',
   magenta: '\x1b[35m',
+  blue: '\x1b[34m',
   bgRed: '\x1b[41m',
   bgGreen: '\x1b[42m',
   black: '\x1b[30m',

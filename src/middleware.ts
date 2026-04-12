@@ -69,10 +69,9 @@ export function middleware(request: NextRequest) {
   const cliMatch = pathname.match(/^\/(chk|d)\/(.+)$/)
   if (cliMatch) {
     const domain = cliMatch[2]
-    const url = request.nextUrl.clone()
-    url.pathname = '/api/cli'
-    url.searchParams.set('d', domain)
-    return NextResponse.rewrite(url)
+    const rewriteUrl = new URL('/api/cli', request.url)
+    rewriteUrl.searchParams.set('d', domain)
+    return NextResponse.rewrite(rewriteUrl)
   }
 
   return response
