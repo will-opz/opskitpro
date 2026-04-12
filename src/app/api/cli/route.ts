@@ -39,10 +39,11 @@ ${c.bold}${c.cyan}============================================
 
 ${c.bold}USAGE:${c.reset}
   curl opskitpro.com/chk/<domain>
+  curl opskitpro.com/d/<domain>
 
 ${c.bold}EXAMPLES:${c.reset}
   curl opskitpro.com/chk/google.com
-  curl opskitpro.com/chk/115n.top
+  curl opskitpro.com/d/115n.top
 
 ${c.dim}Automated Global Edge & Network Forensics
 API & Site powered by OpsKitPro.com${c.reset}
