@@ -172,11 +172,18 @@ export default function WebsiteCheckClient({ dict }: { dict: any }) {
                  type="text" 
                  value={domain}
                  onChange={(e) => setDomain(e.target.value)}
+                 onKeyDown={(e) => {
+                   if (e.key === 'Enter') {
+                     e.preventDefault()
+                     runDiagnostic()
+                   }
+                 }}
                  placeholder={dict.home.diagnostics_placeholder}
                  className="flex-grow bg-transparent border-none outline-none text-zinc-900 text-lg px-2"
                />
                <button 
-                 type="submit"
+                 type="button"
+                 onClick={() => runDiagnostic()}
                  disabled={loading}
                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/30 disabled:opacity-50"
                >
