@@ -12,14 +12,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary(lang)
   
   return {
-    title: `${dict.tools.ip_title} - OpsKitPro`,
+    title: dict.tools.ip_title,
     description: dict.tools.ip_desc,
     openGraph: {
-      title: `${dict.tools.ip_title} - OpsKitPro`,
+      title: dict.tools.ip_title,
       description: dict.tools.ip_desc,
     },
   }
 }
+
 
 export default async function IPPage() {
   const cookieStore = cookies();

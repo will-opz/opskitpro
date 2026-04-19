@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type {
+  DnsBatchResponse,
+  DnsLookupResponse,
+  DnsProvider,
+  DnsRecordType,
+} from '@/lib/api-contracts'
 
 // export const runtime = 'edge' // Removed to avoid 500 errors on Node.js runtime
 export const dynamic = 'force-dynamic'
-
-// DNS Record Types
-type DnsRecordType = 'A' | 'AAAA' | 'CNAME' | 'MX' | 'NS' | 'TXT' | 'SOA' | 'PTR' | 'SRV' | 'CAA'
 
 // DNS Providers
 const DNS_PROVIDERS = {
@@ -16,9 +19,13 @@ const DNS_PROVIDERS = {
     name: 'Cloudflare',
     url: 'https://cloudflare-dns.com/dns-query'
   },
+  aliyun: {
+    name: 'AliDNS',
+    url: 'https://dns.alidns.com/resolve'
+  },
   quad9: {
     name: 'Quad9',
-    url: 'https://dns.quad9.net:5053/dns-query'
+    url: 'https://dns.quad9.net/dns-query'
   }
 }
 
@@ -71,13 +78,13 @@ const STATUS_CODES: Record<number, string> = {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const domain = searchParams.get('domain')
+  const domain = searchParams.get('domain') || searchParams.get('target')
   const type = (searchParams.get('type') || 'A').toUpperCase() as DnsRecordType
-  const provider = searchParams.get('provider') || 'cloudflare'
+  const provider = (searchParams.get('provider') || 'cloudflare') as DnsProvider
 
   if (!domain) {
     return NextResponse.json(
-      { error: 'Domain parameter is required' },
+      { error: 'Missing domain parameter' },
       { status: 400 }
     )
   }
@@ -115,7 +122,7 @@ export async function GET(request: NextRequest) {
     const data: DnsResponse = await response.json()
 
     // Parse and format the response
-    const result = {
+    const result: DnsLookupResponse = {
       domain,
       type,
       provider: dnsProvider.name,
@@ -179,6 +186,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { domain, types, provider = 'cloudflare' } = body
+    const normalizedProvider = provider as DnsProvider
 
     if (!domain) {
       return NextResponse.json(
@@ -188,7 +196,7 @@ export async function POST(request: NextRequest) {
     }
 
     const recordTypes: DnsRecordType[] = types || ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT']
-    const dnsProvider = DNS_PROVIDERS[provider as keyof typeof DNS_PROVIDERS] || DNS_PROVIDERS.cloudflare
+    const dnsProvider = DNS_PROVIDERS[normalizedProvider as keyof typeof DNS_PROVIDERS] || DNS_PROVIDERS.cloudflare
 
     const startTime = Date.now()
     
@@ -211,7 +219,11 @@ export async function POST(request: NextRequest) {
             name: a.name,
             type: TYPE_MAP[a.type] || a.type,
             ttl: a.TTL,
-            data: a.data
+            data: a.data,
+            ...(a.type === 15 && {
+              priority: parseInt(a.data.split(' ')[0]),
+              exchange: a.data.split(' ').slice(1).join(' ')
+            })
           })) || []
         }
       } catch (e: any) {
@@ -225,13 +237,14 @@ export async function POST(request: NextRequest) {
 
     const results = await Promise.all(queries)
     const responseTime = Date.now() - startTime
-
-    return NextResponse.json({
+    const batchResponse: DnsBatchResponse = {
       domain,
       provider: dnsProvider.name,
       responseTime,
       results
-    })
+    }
+
+    return NextResponse.json(batchResponse)
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Batch query failed' },

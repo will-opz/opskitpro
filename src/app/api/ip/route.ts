@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
+import type { IpLookupResponse } from '@/lib/api-contracts'
 
 // export const runtime = 'edge' // Removed to avoid 500 errors on OpenNext Node.js runtime
 export const dynamic = 'force-dynamic'
@@ -41,7 +42,26 @@ export async function GET(request: NextRequest) {
   if (targetIp) {
     const fallbackData = await fetchFallbackData(targetIp)
     if (fallbackData) {
-      return NextResponse.json({ ...fallbackData, _source: 'external-lookup' })
+      return NextResponse.json({
+        ip: fallbackData.ip,
+        country: fallbackData.country_name,
+        country_name: fallbackData.country_name,
+        country_code: fallbackData.country_code,
+        region: fallbackData.region,
+        city: fallbackData.city,
+        latitude: fallbackData.latitude,
+        longitude: fallbackData.longitude,
+        lat: fallbackData.latitude || '0',
+        lon: fallbackData.longitude || '0',
+        org: fallbackData.org,
+        isp: fallbackData.org,
+        asn: fallbackData.asn,
+        timezone: fallbackData.timezone,
+        network_type: fallbackData.network_type,
+        proxy: fallbackData.proxy,
+        provider: 'External Lookup',
+        _source: 'external-lookup',
+      } satisfies IpLookupResponse)
     }
     return NextResponse.json({ ip: targetIp, error: 'External API failure' }, { status: 500 })
   }
@@ -53,27 +73,39 @@ export async function GET(request: NextRequest) {
   const nextIp = (request as any).ip;
   const ip = cfip || xff || rip || nextIp || '127.0.0.1';
 
-  // Use getCloudflareContext to access CF metadata
-  try {
-    const { cf } = await getCloudflareContext();
+  const buildCloudflareResponse = (cf: any) =>
+    NextResponse.json({
+      ip,
+      country: cf.country || 'Unknown',
+      country_name: cf.country || 'N/A',
+      country_code: cf.country || '',
+      region: cf.region || cf.regionCode || 'N/A',
+      city: cf.city || 'N/A',
+      latitude: cf.latitude || '',
+      longitude: cf.longitude || '',
+      lat: cf.latitude || '0',
+      lon: cf.longitude || '0',
+      org: cf.asOrganization || 'N/A',
+      isp: cf.asOrganization || 'N/A',
+      asn: cf.asn || '',
+      timezone: cf.timezone || 'UTC',
+      // Cloudflare does not expose a direct hosting/residential flag; leave as unknown
+      network_type: 'Unknown',
+      proxy: false,
+      provider: 'Cloudflare Edge',
+      _source: 'cloudflare-context'
+    } satisfies IpLookupResponse)
 
-    if (cf && Object.keys(cf).length > 0) {
-      return NextResponse.json({
-        ip,
-        country_name: cf.country || 'N/A',
-        country_code: cf.country || '',
-        region: cf.region || cf.regionCode || 'N/A',
-        city: cf.city || 'N/A',
-        latitude: cf.latitude || '',
-        longitude: cf.longitude || '',
-        org: cf.asOrganization || 'N/A',
-        asn: cf.asn ? `AS${cf.asn}` : '',
-        timezone: cf.timezone || 'UTC',
-        // Cloudflare does not expose a direct hosting/residential flag; leave as unknown
-        network_type: 'Unknown',
-        proxy: false,
-        _source: 'cloudflare-context'
-      })
+  const requestCf = (request as any).cf
+  if (requestCf && Object.keys(requestCf).length > 0) {
+    return buildCloudflareResponse(requestCf)
+  }
+
+  // Prefer request-scoped CF metadata in tests/local dev, then fall back to OpenNext context.
+  try {
+    const { cf: cfContext } = await getCloudflareContext()
+    if (cfContext && Object.keys(cfContext).length > 0) {
+      return buildCloudflareResponse(cfContext)
     }
   } catch {
     // getCloudflareContext not available (e.g., local dev without wrangler)
@@ -82,8 +114,46 @@ export async function GET(request: NextRequest) {
   // Fallback for Local Development (where CF context is mostly absent)
   const fallbackData = await fetchFallbackData(ip)
   if (fallbackData) {
-    return NextResponse.json({ ...fallbackData, _source: 'local-fallback' })
+    return NextResponse.json({ 
+      ip: fallbackData.ip,
+      country: fallbackData.country_name,
+      country_name: fallbackData.country_name,
+      country_code: fallbackData.country_code,
+      region: fallbackData.region,
+      city: fallbackData.city,
+      latitude: fallbackData.latitude,
+      longitude: fallbackData.longitude,
+      lat: fallbackData.latitude || '0',
+      lon: fallbackData.longitude || '0',
+      org: fallbackData.org,
+      isp: fallbackData.org,
+      asn: fallbackData.asn,
+      timezone: fallbackData.timezone,
+      network_type: fallbackData.network_type,
+      proxy: fallbackData.proxy,
+      provider: 'Local Fallback',
+      _source: 'local-fallback' 
+    } satisfies IpLookupResponse)
   }
   
-  return NextResponse.json({ ip, _source: 'unknown-fallback' })
+  return NextResponse.json({ 
+    ip, 
+    country: 'Unknown',
+    country_name: 'Unknown',
+    country_code: '',
+    city: 'Unknown',
+    latitude: '',
+    longitude: '',
+    lat: '0',
+    lon: '0',
+    region: 'Unknown',
+    org: 'Unknown',
+    isp: 'Unknown',
+    asn: '',
+    timezone: 'UTC',
+    network_type: 'Unknown',
+    proxy: false,
+    provider: 'Cloudflare Edge',
+    _source: 'cloudflare-edge-default' 
+  } satisfies IpLookupResponse)
 }

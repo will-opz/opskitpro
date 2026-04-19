@@ -26,7 +26,7 @@
 ## 🏗️ Architecture
 
 ```
-opskitpro.com (Main Site — Next.js 16 on Cloudflare Workers)
+opskitpro.com (Main Site — Next.js 14 on Cloudflare Workers)
 ├── /              Home — Hero + Forensic HUD
 ├── /services      Service Matrix (45+ tools, 12 categories)
 ├── /tools/        Forensic Suite (Website, IP, DNS)
@@ -43,10 +43,10 @@ kb.opskitpro.com (Knowledge Node — Quartz + Obsidian)
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | [Next.js 16](https://nextjs.org/) (Turbopack + App Router) |
+| **Framework** | [Next.js 14](https://nextjs.org/) (App Router + standalone build) |
 | **Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
 | **Runtime** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) (Light/Premium UI) |
+| **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) (Light/Premium UI) |
 | **Icons** | [Lucide React](https://lucide.dev/) (SRE Optimized Icons) |
 | **Knowledge Base** | [Quartz 4](https://quartz.jzhao.xyz/) (Obsidian Linked) |
 

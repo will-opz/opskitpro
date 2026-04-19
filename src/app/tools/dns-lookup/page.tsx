@@ -12,10 +12,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary(lang);
   
   return {
-    title: `${dict.home.card3_title} - OpsKitPro`,
+    title: dict.home.card3_title,
     description: dict.home.card3_desc,
   }
 }
+
 
 export default async function DnsPage() {
   const cookieStore = cookies();

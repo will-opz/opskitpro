@@ -103,8 +103,10 @@ API & Site powered by OpsKitPro.com${c.reset}
 
     // DNS
     out += `${c.cyan}${c.bold}[ LAYER 01: DNS RESOLUTION ]${c.reset}\n`
-    const ipStr = data.dns.all_ips && data.dns.all_ips.length > 1 
-        ? `${data.dns.all_ips.length} ANYCAST IPs (${data.dns.all_ips[0]}...)` 
+    const ipStr = data.dns.all_ips && data.dns.all_ips.length > 0 
+        ? (data.dns.all_ips.length > 1 
+            ? `${data.dns.all_ips.length} IPs (${data.dns.all_ips.join(', ')})` 
+            : data.dns.all_ips[0])
         : data.dns.resolved_ip
     out += `  Resolved IP: ${ipStr}\n`
     out += `  Latency    : ${data.dns.latency}\n`
@@ -116,11 +118,8 @@ API & Site powered by OpsKitPro.com${c.reset}
       out += `  Resolvers  : ${resolverSummary}\n`
     }
 
-    const dnsNsArr = data.dns.ns && data.dns.ns.length > 0 ? data.dns.ns : []
-    const rdapNsArr = data.whois?.nameservers && data.whois.nameservers.length > 0 ? data.whois.nameservers : []
-    const combinedNsArr = Array.from(new Set([...dnsNsArr, ...rdapNsArr])).map((s:any) => s.toLowerCase().replace(/\.$/, ''))
-    
-    out += `  Nameservers: ${combinedNsArr.length > 0 ? combinedNsArr.join(', ') : 'Unknown'}\n`
+    const nsList = data.dns.ns || []
+    out += `  Nameservers: ${nsList.length > 0 ? nsList.join(', ') : 'Unknown'}\n`
     out += `\n`
 
     // HTTP
@@ -136,6 +135,12 @@ API & Site powered by OpsKitPro.com${c.reset}
     out += `  Cert Valid: ${data.ssl.valid ? c.green + 'YES' + c.reset : c.red + 'NO / FAULT' + c.reset}\n`
     out += `  Issuer CA : ${data.ssl.issuer}\n`
     out += `  Expires   : ${data.ssl.expiry}\n`
+    
+    const gradeColor = data.ssl.grade?.startsWith('A') ? c.green : (data.ssl.grade === 'B' ? c.yellow : c.red)
+    out += `  Trust Grade: ${gradeColor}${c.bold}${data.ssl.grade || 'N/A'}${c.reset}\n`
+    
+    const hstsColor = data.ssl.factors?.includes('HSTS_ENABLED') ? c.green : c.yellow
+    out += `  HSTS Enforce: ${hstsColor}${data.ssl.factors?.includes('HSTS_ENABLED') ? 'ACTIVE' : 'OPTIONAL_NONE'}${c.reset}\n`
     out += `\n`
 
     // EDGE CDN
@@ -147,7 +152,11 @@ API & Site powered by OpsKitPro.com${c.reset}
     out += `${c.dim}────────────────────────────────────────────────────────${c.reset}\n`
     out += `${c.dim}> Full UI Report: https://opskitpro.com/tools/website-check?target=${domain}${c.reset}\n\n`
 
-    return new NextResponse(out, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
+    return new NextResponse(out, { 
+      headers: { 
+        'Content-Type': 'text/plain; charset=utf-8'
+      } 
+    })
   } catch (error: any) {
     return new NextResponse(`\n${c.red}${c.bold}[!] INTERNAL ERROR:${c.reset} ${error.message}\n\n`, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },

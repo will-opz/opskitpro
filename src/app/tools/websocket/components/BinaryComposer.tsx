@@ -27,7 +27,7 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
     for (let i = 0; i < cleaned.length; i += 2) {
       bytes[i / 2] = parseInt(cleaned.substr(i, 2), 16)
     }
-    return bytes.buffer
+    return bytes.buffer as ArrayBuffer
   }
 
   // Convert base64 to ArrayBuffer
@@ -38,7 +38,7 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
       for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i)
       }
-      return bytes.buffer
+      return bytes.buffer as ArrayBuffer
     } catch {
       return null
     }
@@ -46,7 +46,7 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
 
   // Convert text (UTF-8) to ArrayBuffer
   const textToBuffer = (text: string): ArrayBuffer => {
-    return new TextEncoder().encode(text).buffer
+    return new TextEncoder().encode(text).buffer as ArrayBuffer
   }
 
   // Get current buffer based on mode

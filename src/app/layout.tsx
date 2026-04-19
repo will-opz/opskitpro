@@ -8,12 +8,17 @@ import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = cookies();
-  const langFromHeader = headers().get("x-next-locale");
+  const headersList = headers();
+  const langFromHeader = headersList.get("x-next-locale");
+  const pathname = headersList.get("x-pathname") || "";
   const lang = (langFromHeader || cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang);
   
+  const baseUrl = 'https://opskitpro.com';
+  const canonicalUrl = `${baseUrl}${pathname}`;
+  
   return {
-    metadataBase: new URL('https://opskitpro.com'),
+    metadataBase: new URL(baseUrl),
     title: {
       default: dict.home.meta_title || 'OpsKitPro | Edge Diagnostic Portal',
       template: '%s | OpsKitPro'
@@ -26,11 +31,11 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: dict.home.meta_title || 'OpsKitPro | Edge Diagnostic Portal',
       description: dict.home.meta_desc,
-      url: 'https://opskitpro.com',
+      url: canonicalUrl,
       siteName: 'OpsKitPro',
       images: [
         {
-          url: '/og-image.png', // Fallback for social embeddings
+          url: '/og-image.png',
           width: 1200,
           height: 630,
         },
@@ -61,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: '/logo.png',
     },
     alternates: {
-      canonical: 'https://opskitpro.com',
+      canonical: canonicalUrl,
       languages: {
         'en-US': '/en',
         'zh-CN': '/zh',
@@ -71,6 +76,7 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 }
+
 
 export default async function RootLayout({
   children,

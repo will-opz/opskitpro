@@ -26,7 +26,7 @@
 ## 🏗️ 系统架构
 
 ```
-opskitpro.com (主站 — Next.js 16 on Cloudflare Workers)
+opskitpro.com (主站 — Next.js 14 on Cloudflare Workers)
 ├── /              首页 — 英雄页面 + 排障 HUD
 ├── /services      服务矩阵 (45+ 工具, 12 个分类)
 ├── /tools/        取证套件 (网站, IP, DNS)
@@ -43,10 +43,10 @@ kb.opskitpro.com (知识节点 — Quartz + Obsidian)
 
 | 层级 | 技术选型 |
 |-------|-----------|
-| **框架** | [Next.js 16](https://nextjs.org/) (Turbopack + App Router) |
+| **框架** | [Next.js 14](https://nextjs.org/) (App Router + standalone 构建) |
 | **适配器** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
 | **运行时** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
-| **样式** | [Tailwind CSS v4](https://tailwindcss.com/) (极简高级感设计) |
+| **样式** | [Tailwind CSS v3](https://tailwindcss.com/) (极简高级感设计) |
 | **图标** | [Lucide React](https://lucide.dev/) (SRE 优化图标库) |
 | **知识库** | [Quartz 4](https://quartz.jzhao.xyz/) (Obsidian 全面同步) |
 

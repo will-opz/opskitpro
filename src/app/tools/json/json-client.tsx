@@ -249,7 +249,7 @@ export default function JSONClient({ dict }: { dict: any }) {
   ]
 
   return (
-    <div className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-7xl mx-auto">
@@ -263,27 +263,34 @@ export default function JSONClient({ dict }: { dict: any }) {
         </nav>
 
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
-              <Braces className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight italic">
-                JSON Workbench
-              </h1>
-              <p className="text-zinc-500 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1">
-                JQ • Diff • Schema • Extract • Convert
-              </p>
-            </div>
+        <header className="mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Structured Data Lab
           </div>
-          
-          {urlLoading && (
-            <div className="flex items-center gap-2 text-blue-600 text-[11px] font-mono">
-              <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-              Loading from URL...
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
+                <Braces className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight italic">
+                  JSON Workbench
+                </h1>
+                <p className="text-zinc-600 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1 leading-relaxed max-w-xl">
+                  JQ • Diff • Schema • Extract • Convert
+                </p>
+              </div>
             </div>
-          )}
+          
+            {urlLoading && (
+              <div className="flex items-center gap-2 text-blue-600 text-[11px] font-mono">
+                <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                Loading from URL...
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Action Bar */}
@@ -333,7 +340,7 @@ export default function JSONClient({ dict }: { dict: any }) {
         {/* Main Editor Card */}
         <main className="glass-card rounded-2xl border border-zinc-200/50 shadow-2xl overflow-hidden relative">
           {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-zinc-100 bg-white/40">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-zinc-100 bg-white/60">
             <div className="flex items-center gap-4">
               <div className="flex gap-1.5 items-center">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-400/40"></div>

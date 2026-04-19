@@ -11,14 +11,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary(lang)
   
   return {
-    title: `${dict.tools.qrgen_title} - OpsKitPro`,
+    title: dict.tools.qrgen_title,
     description: dict.tools.qrgen_desc,
     openGraph: {
-      title: `${dict.tools.qrgen_title} - OpsKitPro`,
+      title: dict.tools.qrgen_title,
       description: dict.tools.qrgen_desc,
     },
   }
 }
+
 
 export default async function QRPage() {
   const cookieStore = cookies();

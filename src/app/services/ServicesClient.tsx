@@ -51,6 +51,7 @@ import {
 export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" | "en" | "ja" | "tw" }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState('')
+  const isJapanese = lang === 'ja'
 
   // Move the massive data array here so we can import and use Lucide icons dynamically in a Client component
   const categorizedServices = [
@@ -62,13 +63,13 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
         { name: dict.tools.qrgen_title, desc: dict.tools.qrgen_desc, icon: QrCode, status: "operational", url: `/tools/qrgen` },
         { name: dict.tools.ip_title, desc: dict.tools.ip_desc, icon: Globe, status: "operational", url: `/tools/ip-lookup` },
         { name: dict.tools.json_title, desc: dict.tools.json_desc, icon: Braces, status: "operational", url: `/tools/json` },
-        { name: dict.tools.dns.btn, desc: dict.tools.dns_lookup_desc || "Deep DNS forensics", icon: Search, status: "operational", url: `/tools/dns-lookup` },
+        { name: dict.tools.dns.btn, desc: dict.tools.dns_lookup_desc || (isJapanese ? "DNS を深く確認できます" : "Deep DNS forensics"), icon: Search, status: "operational", url: `/tools/dns-lookup` },
         { name: dict.tools.websocket_title, desc: dict.tools.websocket_desc, icon: Zap, status: "operational", url: `/tools/websocket` },
         { name: dict.tools.matrix_title, desc: dict.tools.matrix_desc, icon: MessageSquare, status: "operational", url: "https://matrix.org" },
       ]
     },
     {
-      category: lang === 'zh' ? "密码管理与凭证" : "Password Management",
+      category: isJapanese ? "パスワード管理・認証情報" : (lang === 'zh' ? "密码管理与凭证" : "Password Management"),
       tools: [
         { name: "1Password", desc: "Enterprise Password Manager", icon: KeySquare, status: "operational", url: "https://1password.com" },
         { name: "Enpass", desc: "Offline Password Manager", icon: Vault, status: "operational", url: "https://www.enpass.io" },
@@ -85,7 +86,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "自动化与配置管理" : "IT Automation & IaC",
+      category: isJapanese ? "IT 自動化・IaC" : (lang === 'zh' ? "自动化与配置管理" : "IT Automation & IaC"),
       tools: [
         { name: "Ansible", desc: "Agentless IT Automation", icon: Wrench, status: "operational", url: "https://www.ansible.com" },
         { name: "SaltStack", desc: "Event-driven Infra", icon: Zap, status: "operational", url: "https://saltproject.io" },
@@ -109,7 +110,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "安全通道与零信任" : "Zero Trust & Tunnels",
+      category: isJapanese ? "ゼロトラスト・トンネル" : (lang === 'zh' ? "安全通道与零信任" : "Zero Trust & Tunnels"),
       tools: [
         { name: "JumpServer", desc: "Open Source Bastion Host", icon: DoorOpen, status: "operational", url: "https://www.jumpserver.org" },
         { name: "Tailscale", desc: "Mesh VPN Network", icon: Network, status: "operational", url: "https://tailscale.com" },
@@ -119,7 +120,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "人工智能体中枢" : "AI & Intelligence",
+      category: isJapanese ? "AI・情報活用" : (lang === 'zh' ? "人工智能体中枢" : "AI & Intelligence"),
       tools: [
         { name: "OpenClaw", desc: "AI Inference & Bypass", icon: Brain, status: "operational", url: "https://openclaw.ai/" },
         { name: "OpenAI", desc: "GPT-4 / O1 Inference", icon: Brain, status: "operational", url: "https://chat.openai.com" },
@@ -129,7 +130,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "威胁情报与资产探测" : "Threat Intel & Recon",
+      category: isJapanese ? "脅威インテリジェンス・偵察" : (lang === 'zh' ? "威胁情报与资产探测" : "Threat Intel & Recon"),
       tools: [
         { name: "Nmap", desc: "Network Discovery & Auditing", icon: Search, status: "operational", url: "https://nmap.org" },
         { name: "Masscan", desc: "Mass IP Port Scanner", icon: Crosshair, status: "operational", url: "https://github.com/robertdavidgraham/masscan" },
@@ -139,7 +140,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "渗透拦截与防御抓包" : "Offensive & Traffic",
+      category: isJapanese ? "トラフィック解析・テスト" : (lang === 'zh' ? "渗透拦截与防御抓包" : "Offensive & Traffic"),
       tools: [
         { name: "Burp Suite", desc: "Web Vuln Scanner", icon: Crosshair, status: "operational", url: "https://portswigger.net/burp" },
         { name: "Wireshark", desc: "Packet Capture Analysis", icon: Activity, status: "operational", url: "https://www.wireshark.org" },
@@ -147,7 +148,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "云原生安全与审计" : "Cloud & DevSecOps",
+      category: isJapanese ? "クラウド・DevSecOps" : (lang === 'zh' ? "云原生安全与审计" : "Cloud & DevSecOps"),
       tools: [
         { name: "Trivy", desc: "Container Security Scanner", icon: Box, status: "operational", url: "https://aquasecurity.github.io/trivy" },
         { name: "Checkov", desc: "IaC Security Misconfigs", icon: FileCode, status: "operational", url: "https://www.checkov.io" },
@@ -155,7 +156,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       ]
     },
     {
-      category: lang === 'zh' ? "网络与域名诊断" : "DNS & Diagnostics",
+      category: isJapanese ? "DNS・診断" : (lang === 'zh' ? "网络与域名诊断" : "DNS & Diagnostics"),
       tools: [
         { name: "MXToolBox", desc: "DNS & Mail Health Check", icon: Mail, status: "operational", url: "https://mxtoolbox.com" },
         { name: "DNSDumpster", desc: "DNS Topology Mapping", icon: Map, status: "operational", url: "https://dnsdumpster.com" },
@@ -235,11 +236,11 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
   }, [searchTerm])
 
   return (
-    <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 z-10 mt-2 mb-32 relative flex flex-col md:flex-row gap-6 md:gap-12 items-start overflow-x-hidden">
+    <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 z-10 mt-8 md:mt-12 mb-32 relative flex flex-col md:flex-row gap-6 md:gap-12 items-start overflow-x-hidden">
       
       {/* Option 2: Sticky Sidebar Index */}
       <aside className="sticky top-12 w-64 shrink-0 hidden md:block border-r border-zinc-200/60 pb-8 h-[calc(100vh-100px)] overflow-y-auto pr-4">
-        <h3 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest mb-6 px-3">Matrix Index</h3>
+        <h3 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest mb-6 px-3">{isJapanese ? 'カテゴリ一覧' : 'Matrix Index'}</h3>
         <nav className="flex flex-col gap-1">
           {filteredServices.map((cat, idx) => {
             const originalIdx = categorizedServices.findIndex(c => c.category === cat.category);
@@ -265,11 +266,15 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       <div className="flex-grow w-full min-w-0">
         <div className="mb-14 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-3 italic">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {isJapanese ? 'ツールマトリクス' : 'Matrix Control Center'}
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-4 italic">
               OpsKit<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 font-mono italic">Pro_</span>
             </h1>
-            <p className="text-zinc-600 max-w-xl leading-relaxed text-sm">
-              Professional Cloud & Ops Toolkit Matrix. Fully automated, decentralized infrastructure.
+            <p className="text-zinc-600 max-w-xl leading-relaxed text-sm font-mono">
+              {isJapanese ? 'インフラ、監視、配信、診断までを一か所で確認できる運用ダッシュボードです。' : 'Professional Cloud & Ops Toolkit Matrix. Fully automated, decentralized infrastructure.'}
             </p>
           </div>
           
@@ -283,7 +288,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
               <input
                 id="matrix-search"
                 type="text"
-                placeholder={lang === 'zh' ? "搜索模块 (Cmd+K)..." : "Search (Cmd+K)..."}
+                placeholder={isJapanese ? "モジュールを検索 (Cmd+K)..." : (lang === 'zh' ? "搜索模块 (Cmd+K)..." : "Search (Cmd+K)...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2.5 border border-zinc-200 rounded-xl leading-5 bg-white/60 backdrop-blur-sm placeholder-zinc-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono text-sm shadow-sm hover:border-zinc-300"
@@ -300,7 +305,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
           {filteredServices.length === 0 ? (
              <div className="text-center py-24 border border-dashed border-zinc-200 rounded-2xl bg-zinc-50/50 flex flex-col items-center justify-center">
                <Activity className="w-8 h-8 text-zinc-300 mb-4" />
-               <p className="text-zinc-500 font-mono text-sm">Target module not found in operational matrix.</p>
+               <p className="text-zinc-500 font-mono text-sm">{isJapanese ? '該当するモジュールが見つかりませんでした。' : 'Target module not found in operational matrix.'}</p>
              </div>
           ) : (
             filteredServices.map((cat, idx) => {
@@ -380,7 +385,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
         <button
           onClick={scrollToTop}
           className="fixed bottom-6 right-4 sm:bottom-10 sm:right-10 p-3 sm:p-4 bg-white/90 text-zinc-900 rounded-full shadow-2xl backdrop-blur-xl hover:bg-emerald-500 hover:text-white transition-all duration-300 z-50 group border border-black/5 hover:scale-110"
-          aria-label="Scroll to top"
+          aria-label={isJapanese ? 'ページ上部へ戻る' : 'Scroll to top'}
         >
           <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300" />
         </button>

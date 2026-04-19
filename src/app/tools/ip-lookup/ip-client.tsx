@@ -14,6 +14,7 @@ import {
   Check, 
   ChevronDown, 
   Search,
+  AlertCircle,
   ArrowRight,
   Cpu,
   Monitor,
@@ -37,22 +38,30 @@ interface IPData {
 
 export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const searchParams = useSearchParams()
+  const isJapanese = lang === 'ja'
   
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<IPData | null>(null)
   const [inputIp, setInputIp] = useState('')
   const [copied, setCopied] = useState(false)
   const [showJson, setShowJson] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchIP = useCallback(async (target?: string) => {
     setLoading(true)
+    setError(null)
+    setData(null)
     try {
       const q = target || ''
       const res = await fetch(`/api/ip?q=${encodeURIComponent(q)}`)
       const result = await res.json()
+      if (!res.ok) {
+        throw new Error(result?.message || 'NETWORK_LINK_FAULT')
+      }
       setData(result)
     } catch (e) {
       console.error(e)
+      setError(e instanceof Error ? e.message : 'NETWORK_LINK_FAULT')
     } finally {
       setLoading(false)
     }
@@ -92,7 +101,7 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
            <Activity className="w-12 h-12 text-purple-500 animate-pulse relative z-10" />
            <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full scale-150 animate-pulse"></div>
         </div>
-        <p className="text-zinc-400 uppercase tracking-[0.5em] text-[10px] font-black italic">Locating_Global_Route...</p>
+        <p className="text-zinc-400 uppercase tracking-[0.5em] text-[10px] font-black italic">{isJapanese ? '接続経路を確認中...' : 'Locating_Global_Route...'}</p>
       </div>
     )
   }
@@ -107,9 +116,9 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
           <div className="text-center md:text-left">
              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-zinc-900 tracking-tighter italic mb-4 leading-none lowercase">
-                IP_INSIGHTS<span className="text-purple-500 tracking-widest">_</span>
+                {isJapanese ? 'IP 情報' : 'IP_INSIGHTS'}<span className="text-purple-500 tracking-widest">{isJapanese ? '' : '_'}</span>
              </h1>
-             <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">ASN Forensics & Geolocation Intelligence</p>
+             <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">{isJapanese ? 'ASN と所在地を確認できます' : 'ASN Forensics & Geolocation Intelligence'}</p>
           </div>
           
           <form onSubmit={handleSearch} className="relative group w-full md:w-auto sm:min-w-[320px]">
@@ -134,6 +143,16 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
           </form>
        </div>
 
+       {error && !loading && (
+         <div className="mb-12 p-8 sm:p-10 bg-red-50 border border-red-100 rounded-[2.5rem] text-red-600 flex items-start gap-6 animate-in fade-in slide-in-from-top-4">
+            <AlertCircle className="w-8 h-8 shrink-0" />
+            <div>
+               <h3 className="text-xl font-black italic uppercase tracking-tight mb-2">{isJapanese ? '接続エラー' : 'NETWORK_LINK_FAULT'}</h3>
+               <p className="text-sm opacity-80 leading-relaxed uppercase">{error}</p>
+            </div>
+         </div>
+       )}
+
        {data && (
          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Main HUD */}
@@ -147,7 +166,7 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                         {data.ip}
                      </h1>
                      <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${data.proxy ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                        {data.proxy ? 'PROXY_DETECTED' : 'DIRECT_NODE'}
+                        {data.proxy ? (isJapanese ? 'プロキシ検出' : 'PROXY_DETECTED') : (isJapanese ? '直接接続' : 'DIRECT_NODE')}
                      </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
@@ -164,7 +183,7 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                         </p>
                      </div>
                      <div className="col-span-2 md:col-span-1 border-t md:border-t-0 md:border-l border-zinc-100 md:pl-8 pt-4 md:pt-0">
-                        <p className="text-[9px] text-zinc-400 mb-1 uppercase font-bold tracking-widest">ISP / Provider</p>
+                        <p className="text-[9px] text-zinc-400 mb-1 uppercase font-bold tracking-widest">{isJapanese ? '回線事業者' : 'ISP / Provider'}</p>
                         <p className="text-sm font-bold text-zinc-900 leading-snug">{data.org}</p>
                         <p className="text-[9px] text-purple-500 mt-2 font-black italic">{data.asn}</p>
                      </div>
@@ -184,7 +203,7 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                      <div className="absolute bottom-1/3 left-1/4 w-1 h-1 bg-purple-400 rounded-full blur-[1px]"></div>
                   </div>
                   <div className="mt-8 text-center relative z-10">
-                     <div className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-2">Geolocation_Locked</div>
+                     <div className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-2">{isJapanese ? '位置情報を取得済み' : 'Geolocation_Locked'}</div>
                      <div className="text-xs font-mono text-white/80">
                         {formatCoords(data.latitude, data.longitude)}
                      </div>
@@ -202,9 +221,9 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">{dict.tools.ip.risk}</h4>
                    <div className="space-y-6">
                       <div className="flex items-center justify-between bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                         <span className="text-xs font-bold text-zinc-600">Proxy Status</span>
+                         <span className="text-xs font-bold text-zinc-600">{isJapanese ? 'プロキシ状態' : 'Proxy Status'}</span>
                          <span className={`text-[10px] font-black uppercase italic ${data.proxy ? 'text-red-500' : 'text-emerald-500'}`}>
-                            {data.proxy ? 'ACTIVE' : 'CLEAN'}
+                            {data.proxy ? (isJapanese ? '検出' : 'ACTIVE') : (isJapanese ? '正常' : 'CLEAN')}
                          </span>
                       </div>
                       <div className="flex items-center justify-between px-2">
@@ -219,17 +238,17 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                <div className="bg-white border border-black/5 p-8 rounded-3xl shadow-sm group hover:shadow-xl transition-all">
                   <div className="flex items-center justify-between mb-8 opacity-40 group-hover:opacity-100 transition-opacity">
                       <Zap className="w-5 h-5 text-zinc-400" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Network_Latency</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">{isJapanese ? '回線情報' : 'Network_Latency'}</span>
                    </div>
-                   <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">EDGE_NODE</h4>
+                   <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">{isJapanese ? '接続環境' : 'EDGE_NODE'}</h4>
                    <div className="space-y-6">
                       <div>
-                         <p className="text-xl font-black text-zinc-900 leading-none">{data.network_type || 'Residential'}</p>
+                         <p className="text-xl font-black text-zinc-900 leading-none">{data.network_type || (isJapanese ? '家庭回線' : 'Residential')}</p>
                          <p className="text-[9px] text-zinc-400 mt-2 font-mono uppercase tracking-[0.2em]">{data.timezone}</p>
                       </div>
                       <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
-                         <span className="text-[10px] text-zinc-400">OPTIMIZED</span>
-                         <span className="text-[10px] font-black text-purple-500 uppercase italic">TLS_1.3_Ready</span>
+                         <span className="text-[10px] text-zinc-400">{isJapanese ? '最適化済み' : 'OPTIMIZED'}</span>
+                         <span className="text-[10px] font-black text-purple-500 uppercase italic">{isJapanese ? 'TLS 1.3 対応' : 'TLS_1.3_Ready'}</span>
                       </div>
                    </div>
                </div>
@@ -237,9 +256,9 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                <div className="bg-white border border-black/5 p-8 rounded-3xl shadow-sm group hover:shadow-xl transition-all">
                   <div className="flex items-center justify-between mb-8 opacity-40 group-hover:opacity-100 transition-opacity">
                       <Copy className="w-5 h-5 text-zinc-400" />
-                      <span className="text-[9px] font-black uppercase tracking-widest">Data_Exchange</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">{isJapanese ? '情報コピー' : 'Data_Exchange'}</span>
                    </div>
-                   <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">QUICK_COPY</h4>
+                   <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">{isJapanese ? '素早くコピー' : 'QUICK_COPY'}</h4>
                    <div className="grid grid-cols-2 gap-3">
                       <button onClick={() => copyResult(data.ip)} className="p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-[10px] font-bold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all flex items-center justify-center gap-2">
                          {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Monitor className="w-3 h-3" />} IP
@@ -249,7 +268,7 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                       </button>
                    </div>
                    <button onClick={() => copyResult()} className="w-full mt-3 p-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl text-[10px] font-black tracking-widest uppercase hover:from-purple-400 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30">
-                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {dict.tools.ip.ip_btn_copy || 'COPY_ALL_DATA'}
+                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />} {dict.tools.ip.ip_btn_copy || (isJapanese ? '全件コピー' : 'COPY_ALL_DATA')}
                    </button>
                </div>
             </div>
@@ -261,7 +280,7 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                    className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-zinc-900 transition-colors uppercase tracking-widest mb-6"
                 >
                    <ChevronDown className={`w-3 h-3 transition-transform ${showJson ? 'rotate-180' : ''}`} />
-                   RAW_FORENSIC_JSON_PAYLOAD
+                   {isJapanese ? '生の診断 JSON' : 'RAW_FORENSIC_JSON_PAYLOAD'}
                 </button>
                 {showJson && (
                  <div className="bg-zinc-900 rounded-[2.5rem] p-10 text-[11px] text-zinc-400 overflow-x-auto border border-zinc-800 shadow-2xl relative">
@@ -276,6 +295,16 @@ export default function IPClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' 
                  </div>
                )}
             </div>
+         </div>
+       )}
+
+       {!data && !loading && (
+         <div className="mt-16 max-w-2xl mx-auto p-10 sm:p-14 rounded-[3rem] border border-dashed border-zinc-200 bg-white/60 text-center animate-in fade-in duration-700">
+            <Globe className="w-14 h-14 text-purple-500/20 mx-auto mb-6" />
+            <h3 className="text-2xl font-black italic tracking-tighter text-zinc-900 mb-3 uppercase">{isJapanese ? '結果がまだありません' : 'No Route Captured'}</h3>
+            <p className="text-zinc-500 text-xs sm:text-sm leading-relaxed font-mono uppercase tracking-[0.3em]">
+              {isJapanese ? '別の IP を入力するか、もう一度検索して更新してください。' : 'Try another IP or press search again to refresh the lookup.'}
+            </p>
          </div>
        )}
     </div>

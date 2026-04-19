@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
   // 1. Handle language prefixing via REWRITE (internal routing)
   // This allows /zh/tools/ip-lookup to show /tools/ip-lookup content
   const localeMatch = pathname.match(/^\/(zh|en|ja|tw)(\/.*|$)/)
+  const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
   
   if (localeMatch) {
     const locale = localeMatch[1]
@@ -27,7 +28,6 @@ export function middleware(request: NextRequest) {
     const response = NextResponse.rewrite(url)
     
     // Set cookie so that Layout/Pages know the preferred language
-    const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
     if (currentCookie !== locale) {
       response.cookies.set('NEXT_LOCALE', locale, { 
         path: '/',
@@ -41,22 +41,26 @@ export function middleware(request: NextRequest) {
 
   // 2. Auto-detect logic for default locale based on Cloudflare IP Country
   // If no locale prefix and no cookie exists, detect and set cookie.
-  let response = NextResponse.next()
-  const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
+  const country = request.headers.get('cf-ipcountry') || ''
+  let defaultLocale = 'en'
+  if (country === 'JP') defaultLocale = 'ja'
+  else if (country === 'CN') defaultLocale = 'zh'
+  else if (['TW', 'HK', 'MO'].includes(country)) defaultLocale = 'tw'
+
+  const locale = currentCookie || defaultLocale
   
+  // Inject headers for downstream Server Components (Layouts/Pages)
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-url', request.url)
+  requestHeaders.set('x-pathname', pathname)
+  requestHeaders.set('x-next-locale', locale)
+
+  let response: NextResponse
+
   if (!currentCookie && !pathname.match(/^\/(api|_next|favicon\.ico)/)) {
-    const country = request.headers.get('cf-ipcountry') || ''
-    
-    // Default logic
-    let defaultLocale = 'en'
-    if (country === 'JP') defaultLocale = 'ja'
-    else if (country === 'CN') defaultLocale = 'zh'
-    else if (['TW', 'HK', 'MO'].includes(country)) defaultLocale = 'tw'
-    
     // Inject cookie into the request for downstream Server Components
-    const requestHeaders = new Headers(request.headers)
     const existingCookie = requestHeaders.get('cookie') || ''
-    requestHeaders.set('cookie', `${existingCookie ? existingCookie + '; ' : ''}NEXT_LOCALE=${defaultLocale}`)
+    requestHeaders.set('cookie', `${existingCookie ? existingCookie + '; ' : ''}NEXT_LOCALE=${locale}`)
     
     response = NextResponse.next({
       request: {
@@ -65,10 +69,17 @@ export function middleware(request: NextRequest) {
     })
     
     // Set the cookie on the client response to persist
-    response.cookies.set('NEXT_LOCALE', defaultLocale, { 
+    response.cookies.set('NEXT_LOCALE', locale, { 
       path: '/',
       maxAge: 31536000,
       sameSite: 'lax'
+    })
+  } else {
+    // Standard response with injected headers
+    response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
     })
   }
 
@@ -81,3 +92,4 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 }
+

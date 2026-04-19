@@ -2,7 +2,6 @@ import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://opskitpro.com'
-  const locales = ['', '/zh', '/en', '/ja', '/tw']
   const routes = [
     '',
     '/services',
@@ -17,21 +16,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/websocket',
   ]
 
-  const sitemapEntries: MetadataRoute.Sitemap = []
+  const supportedLocales = ['en', 'zh', 'ja', 'tw']
 
-  // Generate entries for all route and locale combinations
-  for (const locale of locales) {
-    for (const route of routes) {
-      // Don't double slash for root
-      const fullPath = `${locale}${route}`
-      sitemapEntries.push({
-        url: `${baseUrl}${fullPath}`,
-        lastModified: new Date(),
-        changeFrequency: route === '' ? 'daily' : 'weekly',
-        priority: route === '' ? 1.0 : 0.8,
-      })
+  return routes.map((route) => {
+    // Construct the canonical URL (naked or default locale)
+    const url = `${baseUrl}${route}`
+    
+    return {
+      url,
+      lastModified: new Date(),
+      changeFrequency: route === '' ? 'daily' : 'weekly',
+      priority: route === '' ? 1.0 : 0.8,
+      alternates: {
+        languages: Object.fromEntries(
+          supportedLocales.map((locale) => [
+            locale,
+            `${baseUrl}/${locale}${route === '' ? '' : route}`
+          ])
+        )
+      }
     }
-  }
-
-  return sitemapEntries
+  })
 }
+

@@ -136,10 +136,15 @@ export default function PassClient({ dict }: { dict: any }) {
   }
 
   return (
-    <div className="min-h-screen pt-12 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-2xl mx-auto">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Credential Forge
+        </div>
+
         <div className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
           <Link href={`/`} className="hover:text-emerald-600 transition-colors">
             HOME
@@ -157,10 +162,10 @@ export default function PassClient({ dict }: { dict: any }) {
             <KeyRound className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight flex items-center gap-3 italic">
+            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3 italic">
               {dict.tools.passgen_title}
             </h1>
-            <p className="text-zinc-500 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1">{dict.tools.passgen_desc}</p>
+            <p className="text-zinc-600 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1 leading-relaxed">{dict.tools.passgen_desc}</p>
           </div>
         </div>
 

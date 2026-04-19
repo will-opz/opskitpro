@@ -1,50 +1,15 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import type {
+  DnsRecordType,
+  DnsProvider,
+  DnsAnswer,
+  DnsLookupResponse,
+  DnsBatchResponse,
+} from '@/lib/api-contracts'
 
-export type DnsRecordType = 'A' | 'AAAA' | 'CNAME' | 'MX' | 'NS' | 'TXT' | 'SOA' | 'PTR' | 'SRV' | 'CAA'
-export type DnsProvider = 'cloudflare' | 'google' | 'quad9'
-
-export interface DnsAnswer {
-  name: string
-  type: string | number
-  ttl: number
-  data: string
-  priority?: number
-  exchange?: string
-}
-
-export interface DnsResult {
-  domain: string
-  type: string
-  provider: string
-  status: string
-  statusCode: number
-  responseTime: number
-  truncated: boolean
-  recursionDesired: boolean
-  recursionAvailable: boolean
-  authenticData: boolean
-  checkingDisabled: boolean
-  question: Array<{ name: string; type: string | number }>
-  answers: DnsAnswer[]
-  authority?: DnsAnswer[]
-  comment?: string
-  raw: any
-  error?: string
-}
-
-export interface BatchResult {
-  domain: string
-  provider: string
-  responseTime: number
-  results: Array<{
-    type: string
-    status?: string
-    answers: DnsAnswer[]
-    error?: string
-  }>
-}
+export type { DnsRecordType, DnsProvider, DnsAnswer, DnsLookupResponse as DnsResult, DnsBatchResponse as BatchResult } from '@/lib/api-contracts'
 
 export interface LookupHistory {
   id: string
@@ -52,14 +17,14 @@ export interface LookupHistory {
   type: DnsRecordType
   provider: DnsProvider
   timestamp: number
-  result?: DnsResult
+  result?: DnsLookupResponse
   error?: string
 }
 
 export function useDnsLookup() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<DnsResult | null>(null)
-  const [batchResult, setBatchResult] = useState<BatchResult | null>(null)
+  const [result, setResult] = useState<DnsLookupResponse | null>(null)
+  const [batchResult, setBatchResult] = useState<DnsBatchResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useState<LookupHistory[]>([])
 
@@ -67,7 +32,7 @@ export function useDnsLookup() {
     domain: string,
     type: DnsRecordType = 'A',
     provider: DnsProvider = 'cloudflare'
-  ): Promise<DnsResult | null> => {
+  ): Promise<DnsLookupResponse | null> => {
     setLoading(true)
     setError(null)
     setResult(null)
@@ -106,7 +71,7 @@ export function useDnsLookup() {
     domain: string,
     types: DnsRecordType[] = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT'],
     provider: DnsProvider = 'cloudflare'
-  ): Promise<BatchResult | null> => {
+  ): Promise<DnsBatchResponse | null> => {
     setLoading(true)
     setError(null)
     setBatchResult(null)
@@ -142,9 +107,9 @@ export function useDnsLookup() {
   const addToHistory = useCallback((
     domain: string,
     type: DnsRecordType,
-    provider: DnsProvider,
-    result?: DnsResult,
-    error?: string
+  provider: DnsProvider,
+  result?: DnsLookupResponse,
+  error?: string
   ) => {
     const entry: LookupHistory = {
       id: Date.now().toString(36),

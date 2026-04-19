@@ -36,5 +36,9 @@
 			"binding": "KV",
 			"id": "a611da5c720e44cca926c068473799b5"
 		}
-	]
+	],
+	"preview_urls": true,
+	"vars": {
+		"DEBUG_MODE": "true"
+	}
 }

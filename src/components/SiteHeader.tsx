@@ -19,6 +19,7 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
+  const isJapanese = lang === 'ja'
 
   const isActive = (path: string) => {
     const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, '') || '/'
@@ -43,22 +44,22 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
         </span>
         <div className="hidden lg:flex items-center gap-2 ml-4 px-3 py-1 bg-zinc-100 rounded-full border border-zinc-200 shadow-sm animate-in fade-in duration-1000">
            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mt-0.5">{dict.home.system_status}</span>
+           <span className={`text-[10px] font-bold text-zinc-400 leading-none mt-0.5 ${isJapanese ? 'tracking-[0.08em]' : 'uppercase tracking-widest'}`}>{dict.home.system_status}</span>
         </div>
       </Link>
 
       {/* Desktop Nav */}
       <nav className="hidden md:flex gap-8 items-center font-mono text-sm">
-        <Link href={`/services`} className={`hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/services') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
+        <Link href={`/services`} className={`whitespace-nowrap hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/services') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
           <TerminalSquare className={`w-4 h-4 ${isActive('/services') ? 'text-emerald-500' : ''}`} /> {dict.nav.services}
         </Link>
-        <Link href={`/blog`} className={`hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/blog') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
+        <Link href={`/blog`} className={`whitespace-nowrap hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/blog') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
           <FileText className={`w-4 h-4 ${isActive('/blog') ? 'text-emerald-500' : ''}`} /> {dict.nav.blog}
         </Link>
-        <a href="https://kb.opskitpro.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+        <a href="https://kb.opskitpro.com" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap text-zinc-500 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
           <BookOpen className="w-4 h-4" /> {dict.nav.kb}
         </a>
-        <Link href={`/about`} className={`hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/about') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
+        <Link href={`/about`} className={`whitespace-nowrap hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/about') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
           <Fingerprint className={`w-4 h-4 ${isActive('/about') ? 'text-emerald-500' : ''}`} /> {dict.nav.about}
         </Link>
         <div className="flex items-center gap-2 ml-4 border-l border-zinc-200 pl-6">

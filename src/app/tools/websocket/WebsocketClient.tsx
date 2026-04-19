@@ -62,7 +62,7 @@ export default function WebsocketClient() {
       <div className="absolute inset-0 bg-grid-zinc-900/[0.03] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-      <main className="w-full max-w-7xl mx-auto px-6 mt-12 z-20 relative font-mono">
+      <main className="w-full max-w-7xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-mono">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
           <Link href="/" className="hover:text-cyan-600 transition-colors">HOME</Link>
@@ -73,27 +73,34 @@ export default function WebsocketClient() {
         </nav>
 
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-lg shadow-cyan-500/10 group transition-all">
-              <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight italic">
-                WebSocket Workbench
-              </h1>
-              <p className="text-zinc-500 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1">
-                Multi-Tab • Binary • Templates • Sessions
-              </p>
-            </div>
+        <header className="mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/8 border border-cyan-500/20 text-cyan-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+            Real-Time Transport Lab
           </div>
 
-          {/* Session Manager */}
-          <SessionManager
-            currentUrl={activeTab.url}
-            currentLogs={activeTab.logs}
-            onLoadSession={handleLoadSession}
-          />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-lg shadow-cyan-500/10 group transition-all">
+                <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight italic">
+                  WebSocket Workbench
+                </h1>
+                <p className="text-zinc-600 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1 leading-relaxed max-w-xl">
+                  Multi-Tab • Binary • Templates • Sessions
+                </p>
+              </div>
+            </div>
+
+            {/* Session Manager */}
+            <SessionManager
+              currentUrl={activeTab.url}
+              currentLogs={activeTab.logs}
+              onLoadSession={handleLoadSession}
+            />
+          </div>
         </header>
 
         {/* Connection Tabs */}

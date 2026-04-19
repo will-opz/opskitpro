@@ -19,7 +19,7 @@ export function SiteFooter({ dict }: { dict: any }) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 duration-1000"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <span className="text-[11px] font-mono text-zinc-600 uppercase tracking-widest">{dict.footer.all_systems_operational}</span>
+          <span className="text-[11px] font-mono text-zinc-600 tracking-[0.12em]">{dict.footer.all_systems_operational}</span>
         </div>
       </div>
     </footer>
