@@ -5,7 +5,10 @@ import { KeyRound, RefreshCw, Copy, QrCode, Check, ShieldCheck } from 'lucide-re
 import Link from 'next/link'
 import { QRCodeSVG } from 'qrcode.react'
 
-export default function PassClient({ dict }: { dict: any }) {
+type Lang = 'zh' | 'en' | 'ja' | 'tw'
+
+export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
+  const isJapanese = lang === 'ja'
   const [password, setPassword] = useState('')
   const [length, setLength] = useState(16)
   const [options, setOptions] = useState({
@@ -136,25 +139,27 @@ export default function PassClient({ dict }: { dict: any }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Credential Forge
+          {dict.tools.passgen_title}
         </div>
 
-        <div className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
+        <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href={`/`} className="hover:text-emerald-600 transition-colors">
-            HOME
+            {isJapanese ? 'ホーム' : 'Home'}
           </Link>
           <span className="text-zinc-300">/</span>
           <Link href={`/services`} className="hover:text-emerald-600 transition-colors">
-            MATRIX
+            {isJapanese ? 'ツール' : 'Tools'}
           </Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-emerald-500/30 font-bold uppercase">OPSKIT-NODE</span>
+          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
+            {dict.tools.passgen_title}
+          </span>
         </div>
 
         <div className="flex items-center gap-4 mb-2">
@@ -162,10 +167,10 @@ export default function PassClient({ dict }: { dict: any }) {
             <KeyRound className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3 italic">
+            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
               {dict.tools.passgen_title}
             </h1>
-            <p className="text-zinc-600 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1 leading-relaxed">{dict.tools.passgen_desc}</p>
+            <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed">{dict.tools.passgen_desc}</p>
           </div>
         </div>
 
@@ -246,7 +251,7 @@ export default function PassClient({ dict }: { dict: any }) {
             {/* Toggles */}
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest px-1">
+                <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
                   {dict.tools.passgen.options}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -260,7 +265,7 @@ export default function PassClient({ dict }: { dict: any }) {
                           : 'bg-zinc-100/50 border-black/5 text-zinc-400'
                       }`}
                     >
-                      <span className="font-medium text-xs uppercase tracking-wider">{dict.tools.passgen[key]}</span>
+                      <span className="font-medium text-xs uppercase tracking-[0.18em]">{dict.tools.passgen[key]}</span>
                       <div className={`w-10 h-6 rounded-full relative transition-colors ${
                           options[key as keyof typeof options] ? 'bg-emerald-500' : 'bg-zinc-200'
                         }`}>
@@ -274,8 +279,8 @@ export default function PassClient({ dict }: { dict: any }) {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest px-1">
-                  Special Formats
+                <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
+                  {isJapanese ? '特別形式' : lang === 'zh' ? '特殊格式' : 'Special Formats'}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {['uuid', 'pin6', 'pin8'].map((key) => (
@@ -288,7 +293,7 @@ export default function PassClient({ dict }: { dict: any }) {
                           : 'bg-zinc-100/50 border-black/5 text-zinc-400'
                       }`}
                     >
-                      <span className="font-bold text-[10px] uppercase tracking-widest">{dict.tools.passgen[key]}</span>
+                      <span className="font-bold text-[10px] uppercase tracking-[0.18em]">{dict.tools.passgen[key]}</span>
                       <div className={`w-8 h-4 rounded-full relative transition-colors ${
                           options[key as keyof typeof options] ? 'bg-cyan-500' : 'bg-zinc-200'
                         }`}>
@@ -367,19 +372,23 @@ export default function PassClient({ dict }: { dict: any }) {
               <QRCodeSVG value={password} size={220} level="M" />
             </div>
             <div className="text-center space-y-2">
-              <p className="text-zinc-900 font-medium flex items-center justify-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                Security Transfer
+                <p className="text-zinc-900 font-medium flex items-center justify-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-700" />
+                {isJapanese ? '安全な共有' : lang === 'zh' ? '安全传输' : 'Secure Transfer'}
               </p>
               <p className="text-sm text-zinc-600 leading-relaxed px-2">
-                Scan with your mobile device to securely transfer this password without using the clipboard.
+                {isJapanese
+                  ? 'モバイル端末で読み取ると、クリップボードを使わずに安全に共有できます。'
+                  : lang === 'zh'
+                    ? '使用移动设备扫描即可安全传输密码，无需使用剪贴板。'
+                    : 'Scan with your mobile device to securely transfer this password without using the clipboard.'}
               </p>
             </div>
             <button 
               onClick={() => setShowQR(false)}
               className="mt-4 w-full py-3 bg-zinc-100 hover:bg-zinc-800 text-zinc-700 hover:text-white rounded-xl transition-colors font-medium"
             >
-              Close
+              {isJapanese ? '閉じる' : lang === 'zh' ? '关闭' : 'Close'}
             </button>
           </div>
         </div>

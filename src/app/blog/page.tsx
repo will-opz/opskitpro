@@ -102,7 +102,7 @@ export default async function BlogPage() {
 
         {/* Hero Section */}
         <div className="mb-12 text-center md:text-left border-b border-zinc-100 pb-10">
-           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.35em] mb-5">
+           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
               {isJapanese ? '技術記事' : 'Intelligence Streaming'}
            </div>
@@ -117,7 +117,7 @@ export default async function BlogPage() {
                   : "Practical insights from the front lines of observability, site reliability, and edge infrastructure. Detailed forensics and architectural deep-dives, synced from our knowledge base."
               }
               <br/>
-              <span className="opacity-40 italic mt-2 block">{isJapanese ? 'OpsKitPro ナレッジベースと連携しています。' : 'Powered by OpsKitPro Content Engine.'}</span>
+              <span className="opacity-40 mt-2 block">{isJapanese ? 'OpsKitPro ナレッジベースと連携しています。' : 'Powered by OpsKitPro Content Engine.'}</span>
            </p>
         </div>
 
@@ -138,7 +138,7 @@ export default async function BlogPage() {
           ].map((item) => (
             <div key={item.label} className="bg-white/80 backdrop-blur-md border border-black/5 rounded-2xl p-4 sm:p-5 shadow-sm flex items-start justify-between gap-4">
               <div>
-                <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.35em]">{item.label}</div>
+                <div className="text-[10px] font-semibold text-emerald-500 uppercase tracking-[0.28em]">{item.label}</div>
                 <div className="mt-2 text-sm text-zinc-700 leading-snug">{item.value}</div>
               </div>
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1" />
@@ -162,20 +162,20 @@ export default async function BlogPage() {
                        <span className={`px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase ${article.color}`}>
                           {article.tag}
                        </span>
-                       <div className="flex items-center gap-2 text-[10px] text-zinc-400 font-mono">
+                       <div className="flex items-center gap-2 text-[10px] text-zinc-400">
                           <Clock className="w-3 h-3" /> {article.read}
                        </div>
                    </div>
 
-                   <h3 className="text-lg sm:text-xl font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors leading-tight mb-3 italic">
+                   <h3 className="text-lg sm:text-xl font-semibold text-zinc-900 group-hover:text-emerald-600 transition-colors leading-tight mb-3">
                       {article.title}
                    </h3>
-                   <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed font-mono opacity-80 mb-6">
+                   <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed opacity-80 mb-6">
                       {article.desc}
                    </p>
 
                    <div className="pt-5 border-t border-zinc-50 flex items-center justify-between mt-auto">
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{article.date}</span>
+                      <span className="text-[10px] text-zinc-400 uppercase tracking-[0.18em]">{article.date}</span>
                       <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all transform group-hover:translate-x-1">
                          <ArrowRight className="w-4 h-4" />
                       </div>
@@ -185,17 +185,17 @@ export default async function BlogPage() {
            ))}
 
            {/* Newsletter / CTA Placeholder */}
-           <div className="lg:col-span-1 bg-white border border-black/5 rounded-[2rem] p-8 text-zinc-900 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all relative overflow-hidden group font-mono">
+           <div className="lg:col-span-1 bg-white border border-black/5 rounded-[2rem] p-8 text-zinc-900 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
                  <Terminal className="w-16 h-16" />
               </div>
               <div>
-                 <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-6 italic underline decoration-emerald-500/30 underline-offset-4">{isJapanese ? '購読する' : 'Join the Chain'}</h4>
-                 <h3 className="text-2xl font-black italic tracking-tighter mb-4">{isJapanese ? '最新の知見を受け取る' : 'WANT MORE INTEL?'}</h3>
-                 <p className="text-[10px] text-zinc-400 font-mono leading-relaxed mb-8 opacity-80 uppercase italic">{isJapanese ? '実運用で役立つ SRE の知見を、定期的にお届けします。' : 'Get the latest SRE techniques delivered straight to your terminal.'}</p>
+                 <h4 className="text-[10px] font-semibold text-emerald-500 uppercase tracking-[0.22em] mb-6 underline decoration-emerald-500/30 underline-offset-4">{isJapanese ? '購読する' : 'Join the Chain'}</h4>
+                 <h3 className="text-2xl font-black tracking-tighter mb-4">{isJapanese ? '最新の知見を受け取る' : 'WANT MORE INTEL?'}</h3>
+                 <p className="text-[10px] text-zinc-400 leading-relaxed mb-8 opacity-80 uppercase tracking-[0.18em]">{isJapanese ? '実運用で役立つ SRE の知見を、定期的にお届けします。' : 'Get the latest SRE techniques delivered straight to your terminal.'}</p>
               </div>
               <div className="flex items-center gap-2 p-1.5 bg-zinc-50 border border-zinc-100 rounded-xl focus-within:border-emerald-500/30 transition-all">
-                 <input type="email" placeholder={isJapanese ? "メールアドレスを入力" : "ADMIN@NODE.LOCAL"} className="bg-transparent border-none outline-none text-[10px] px-3 py-2 flex-grow placeholder:opacity-40 uppercase font-mono" />
+                 <input type="email" placeholder={isJapanese ? "メールアドレスを入力" : "ADMIN@NODE.LOCAL"} className="bg-transparent border-none outline-none text-[10px] px-3 py-2 flex-grow placeholder:opacity-40 uppercase" />
                  <button className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-lg transition-all shadow-md shadow-emerald-500/20">
                     <Zap className="w-4 h-4 fill-current" />
                  </button>
@@ -206,14 +206,14 @@ export default async function BlogPage() {
         {/* Knowledge Base Secondary Banner */}
            <div className="mt-24 p-10 sm:p-12 bg-white border border-black/5 rounded-[3rem] shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-10">
            <div className="flex-1">
-              <h2 className="text-3xl font-black italic tracking-tighter text-zinc-900 mb-4">{isJapanese ? 'ナレッジベース' : 'DEEP_KNOWLEDGE_NODE'}</h2>
-              <p className="text-sm text-zinc-500 font-mono leading-relaxed max-w-md">{isJapanese ? 'アーキテクチャ、Kubernetes、AI 導入の実践ガイドをまとめた専用アーカイブです。' : 'Our specialized vault for architectural patterns, Kubernetes orchestration, and AI deployment guides.'}</p>
+              <h2 className="text-3xl font-black tracking-tighter text-zinc-900 mb-4">{isJapanese ? 'ナレッジベース' : 'DEEP_KNOWLEDGE_NODE'}</h2>
+              <p className="text-sm text-zinc-500 leading-relaxed max-w-md">{isJapanese ? 'アーキテクチャ、Kubernetes、AI 導入の実践ガイドをまとめた専用アーカイブです。' : 'Our specialized vault for architectural patterns, Kubernetes orchestration, and AI deployment guides.'}</p>
            </div>
            <a 
              href="https://kb.opskitpro.com" 
              target="_blank" 
              rel="noopener noreferrer"
-             className="px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-2xl font-black italic text-lg hover:scale-105 transition-all flex items-center gap-4 group shadow-xl shadow-emerald-500/20"
+             className="px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-2xl font-semibold text-lg hover:scale-105 transition-all flex items-center gap-4 group shadow-xl shadow-emerald-500/20"
            >
               {isJapanese ? 'ナレッジを見る' : 'ACCESS_VAULT'}
               <Radio className="w-5 h-5 group-hover:animate-pulse" />

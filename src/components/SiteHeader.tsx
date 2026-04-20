@@ -19,7 +19,6 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
-  const isJapanese = lang === 'ja'
 
   const isActive = (path: string) => {
     const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, '') || '/'
@@ -39,17 +38,17 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
             priority
           />
         </div>
-        <span className="font-mono text-xl font-bold tracking-tight text-zinc-900 group-hover:text-emerald-600 transition-colors">
+        <span className="text-xl font-semibold tracking-tight text-zinc-900 group-hover:text-emerald-600 transition-colors">
           OpsKit<span className="text-emerald-500 animate-pulse">Pro_</span>
         </span>
         <div className="hidden lg:flex items-center gap-2 ml-4 px-3 py-1 bg-zinc-100 rounded-full border border-zinc-200 shadow-sm animate-in fade-in duration-1000">
            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-           <span className={`text-[10px] font-bold text-zinc-400 leading-none mt-0.5 ${isJapanese ? 'tracking-[0.08em]' : 'uppercase tracking-widest'}`}>{dict.home.system_status}</span>
+           <span className="text-[10px] font-semibold text-zinc-400 leading-none mt-0.5 tracking-[0.16em]">{dict.home.system_status}</span>
         </div>
       </Link>
 
       {/* Desktop Nav */}
-      <nav className="hidden md:flex gap-8 items-center font-mono text-sm">
+      <nav className="hidden md:flex gap-8 items-center text-sm">
         <Link href={`/services`} className={`whitespace-nowrap hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/services') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
           <TerminalSquare className={`w-4 h-4 ${isActive('/services') ? 'text-emerald-500' : ''}`} /> {dict.nav.services}
         </Link>
@@ -86,7 +85,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center pt-20 pb-10 animate-in fade-in duration-300">
-          <nav className="flex flex-col gap-8 items-center font-mono text-lg text-zinc-600">
+          <nav className="flex flex-col gap-8 items-center text-lg text-zinc-600">
             <Link href={`/services`} onClick={() => setIsMenuOpen(false)} className="hover:text-zinc-900 flex items-center gap-3">
               <TerminalSquare className="w-5 h-5" /> {dict.nav.services}
             </Link>

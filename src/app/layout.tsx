@@ -61,9 +61,9 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     icons: {
-      icon: '/icon.png',
-      shortcut: '/icon.png',
-      apple: '/logo.png',
+      icon: '/favicon.ico',
+      shortcut: '/favicon.ico',
+      apple: '/apple-touch-icon.png',
     },
     alternates: {
       canonical: canonicalUrl,

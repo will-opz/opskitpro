@@ -17,7 +17,9 @@ import {
 
 type ViewMode = 'text' | 'binary' | 'ping'
 
-export default function WebsocketClient() {
+type Lang = 'zh' | 'en' | 'ja' | 'tw'
+
+export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang }) {
   const {
     tabs,
     activeTab,
@@ -34,6 +36,64 @@ export default function WebsocketClient() {
   } = useMultiConnection()
 
   const [viewMode, setViewMode] = useState<ViewMode>('text')
+  const shellText = {
+    zh: {
+      badge: '实时传输实验室',
+      home: '首页',
+      tools: '工具',
+      title: dict.tools.websocket_title,
+      desc: dict.tools.websocket_desc,
+      text: '文本',
+      binary: '二进制',
+      ping: '心跳',
+      connected: '已连接',
+      connecting: '连接中...',
+      error: '连接异常',
+      disconnected: '未连接',
+    },
+    tw: {
+      badge: '即時傳輸實驗室',
+      home: '首頁',
+      tools: '工具',
+      title: dict.tools.websocket_title,
+      desc: dict.tools.websocket_desc,
+      text: '文字',
+      binary: '二進位',
+      ping: '心跳',
+      connected: '已連線',
+      connecting: '連線中...',
+      error: '連線異常',
+      disconnected: '未連線',
+    },
+    ja: {
+      badge: 'リアルタイム通信',
+      home: 'ホーム',
+      tools: 'ツール',
+      title: dict.tools.websocket_title,
+      desc: dict.tools.websocket_desc,
+      text: 'テキスト',
+      binary: 'バイナリ',
+      ping: 'Ping',
+      connected: '接続済み',
+      connecting: '接続中...',
+      error: 'エラー',
+      disconnected: '未接続',
+    },
+    en: {
+      badge: 'Real-Time Transport Lab',
+      home: 'Home',
+      tools: 'Tools',
+      title: dict.tools.websocket_title,
+      desc: dict.tools.websocket_desc,
+      text: 'Text',
+      binary: 'Binary',
+      ping: 'Ping',
+      connected: 'Connected',
+      connecting: 'Connecting...',
+      error: 'Error',
+      disconnected: 'Disconnected',
+    },
+  }[lang]
 
   const handleConnect = (url: string, options?: any) => {
     connect(activeTabId, url, options)
@@ -62,34 +122,36 @@ export default function WebsocketClient() {
       <div className="absolute inset-0 bg-grid-zinc-900/[0.03] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-      <main className="w-full max-w-7xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-mono">
+      <main className="w-full max-w-7xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-sans">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
-          <Link href="/" className="hover:text-cyan-600 transition-colors">HOME</Link>
+        <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
+          <Link href="/" className="hover:text-cyan-600 transition-colors">{shellText.home}</Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/services" className="hover:text-cyan-600 transition-colors">MATRIX</Link>
+          <Link href="/services" className="hover:text-cyan-600 transition-colors">{shellText.tools}</Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-cyan-500/30 font-bold uppercase">WS-WORKBENCH</span>
+          <span className="text-zinc-900 border-b border-cyan-500/30 font-semibold">
+            {dict.tools.websocket_title}
+          </span>
         </nav>
 
         {/* Header */}
         <header className="mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/8 border border-cyan-500/20 text-cyan-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/8 border border-cyan-500/20 text-cyan-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-            Real-Time Transport Lab
+            {shellText.badge}
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-lg shadow-cyan-500/10 group transition-all">
-                <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight italic">
-                  WebSocket Workbench
+                <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-lg shadow-cyan-500/10 group transition-all">
+                  <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
+                </div>
+                <div>
+                <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight">
+                  {shellText.title}
                 </h1>
-                <p className="text-zinc-600 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1 leading-relaxed max-w-xl">
-                  Multi-Tab • Binary • Templates • Sessions
+                <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed max-w-xl">
+                  {shellText.desc}
                 </p>
               </div>
             </div>
@@ -130,42 +192,42 @@ export default function WebsocketClient() {
               activeTab.status === 'error' ? 'bg-red-500' :
               'bg-zinc-400'
             }`} />
-            {activeTab.status === 'connected' ? 'Connected' :
-             activeTab.status === 'connecting' ? 'Connecting...' :
-             activeTab.status === 'error' ? 'Error' : 'Disconnected'}
+            {activeTab.status === 'connected' ? shellText.connected :
+             activeTab.status === 'connecting' ? shellText.connecting :
+             activeTab.status === 'error' ? shellText.error : shellText.disconnected}
           </div>
 
           {/* View Mode Tabs */}
           <div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode('text')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
-                viewMode === 'text' ? 'bg-white text-cyan-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
-              }`}
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              Text
-            </button>
-            <button
-              onClick={() => setViewMode('binary')}
+              <button
+                onClick={() => setViewMode('text')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  viewMode === 'text' ? 'bg-white text-cyan-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+              {shellText.text}
+              </button>
+              <button
+                onClick={() => setViewMode('binary')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
                 viewMode === 'binary' ? 'bg-white text-purple-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
               }`}
-            >
-              <Binary className="w-3.5 h-3.5" />
-              Binary
-            </button>
-            <button
-              onClick={() => setViewMode('ping')}
+              >
+                <Binary className="w-3.5 h-3.5" />
+              {shellText.binary}
+              </button>
+              <button
+                onClick={() => setViewMode('ping')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
                 viewMode === 'ping' ? 'bg-white text-amber-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
               }`}
-            >
-              <Activity className="w-3.5 h-3.5" />
-              Ping
-            </button>
+              >
+                <Activity className="w-3.5 h-3.5" />
+              {shellText.ping}
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

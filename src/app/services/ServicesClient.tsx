@@ -63,9 +63,9 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
         { name: dict.tools.qrgen_title, desc: dict.tools.qrgen_desc, icon: QrCode, status: "operational", url: `/tools/qrgen` },
         { name: dict.tools.ip_title, desc: dict.tools.ip_desc, icon: Globe, status: "operational", url: `/tools/ip-lookup` },
         { name: dict.tools.json_title, desc: dict.tools.json_desc, icon: Braces, status: "operational", url: `/tools/json` },
-        { name: dict.tools.dns.btn, desc: dict.tools.dns_lookup_desc || (isJapanese ? "DNS を深く確認できます" : "Deep DNS forensics"), icon: Search, status: "operational", url: `/tools/dns-lookup` },
+        { name: dict.tools.dns_lookup_title || dict.tools.dns.btn, desc: dict.tools.dns_lookup_desc || (isJapanese ? "DNS レコードと解決状態を確認できます。" : "Check DNS records and resolution status."), icon: Search, status: "operational", url: `/tools/dns-lookup` },
         { name: dict.tools.websocket_title, desc: dict.tools.websocket_desc, icon: Zap, status: "operational", url: `/tools/websocket` },
-        { name: dict.tools.matrix_title, desc: dict.tools.matrix_desc, icon: MessageSquare, status: "operational", url: "https://matrix.org" },
+        { name: dict.tools.matrix_title, desc: dict.tools.matrix_desc, icon: MessageSquare, status: "operational", url: "https://matrix.org", variant: "matrix" },
       ]
     },
     {
@@ -240,7 +240,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       
       {/* Option 2: Sticky Sidebar Index */}
       <aside className="sticky top-12 w-64 shrink-0 hidden md:block border-r border-zinc-200/60 pb-8 h-[calc(100vh-100px)] overflow-y-auto pr-4">
-        <h3 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest mb-6 px-3">{isJapanese ? 'カテゴリ一覧' : 'Matrix Index'}</h3>
+        <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] mb-6 px-3">{isJapanese ? 'カテゴリ一覧' : 'Matrix Index'}</h3>
         <nav className="flex flex-col gap-1">
           {filteredServices.map((cat, idx) => {
             const originalIdx = categorizedServices.findIndex(c => c.category === cat.category);
@@ -266,14 +266,14 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
       <div className="flex-grow w-full min-w-0">
         <div className="mb-14 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {isJapanese ? 'ツールマトリクス' : 'Matrix Control Center'}
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-4 italic">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-tight leading-tight mb-4">
               OpsKit<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 font-mono italic">Pro_</span>
             </h1>
-            <p className="text-zinc-600 max-w-xl leading-relaxed text-sm font-mono">
+            <p className="text-zinc-600 max-w-xl leading-relaxed text-sm">
               {isJapanese ? 'インフラ、監視、配信、診断までを一か所で確認できる運用ダッシュボードです。' : 'Professional Cloud & Ops Toolkit Matrix. Fully automated, decentralized infrastructure.'}
             </p>
           </div>
@@ -291,10 +291,10 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
                 placeholder={isJapanese ? "モジュールを検索 (Cmd+K)..." : (lang === 'zh' ? "搜索模块 (Cmd+K)..." : "Search (Cmd+K)...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2.5 border border-zinc-200 rounded-xl leading-5 bg-white/60 backdrop-blur-sm placeholder-zinc-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-mono text-sm shadow-sm hover:border-zinc-300"
+                className="block w-full pl-10 pr-3 py-2.5 border border-zinc-200 rounded-xl leading-5 bg-white/60 backdrop-blur-sm placeholder-zinc-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm shadow-sm hover:border-zinc-300"
               />
               <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-                 <span className="text-[10px] text-zinc-400 font-mono border border-zinc-200/80 rounded px-1.5 py-0.5 bg-zinc-50">⌘K</span>
+                 <span className="text-[10px] text-zinc-400 border border-zinc-200/80 rounded px-1.5 py-0.5 bg-zinc-50">⌘K</span>
               </div>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
           {filteredServices.length === 0 ? (
              <div className="text-center py-24 border border-dashed border-zinc-200 rounded-2xl bg-zinc-50/50 flex flex-col items-center justify-center">
                <Activity className="w-8 h-8 text-zinc-300 mb-4" />
-               <p className="text-zinc-500 font-mono text-sm">{isJapanese ? '該当するモジュールが見つかりませんでした。' : 'Target module not found in operational matrix.'}</p>
+               <p className="text-zinc-500 text-sm">{isJapanese ? '該当するモジュールが見つかりませんでした。' : 'Target module not found in operational matrix.'}</p>
              </div>
           ) : (
             filteredServices.map((cat, idx) => {
@@ -318,7 +318,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
                   className="scroll-mt-32 animate-in fade-in slide-in-from-bottom-4 duration-700" 
                   style={{ animationFillMode: 'both', animationDelay: `${idx * 100}ms` }}
                 >
-                  <h2 className="text-lg font-mono font-semibold text-zinc-700 mb-6 flex items-center gap-3 border-b border-zinc-200/50 pb-3">
+                  <h2 className="text-lg font-semibold text-zinc-700 mb-6 flex items-center gap-3 border-b border-zinc-200/50 pb-3">
                     <span className="text-accent text-xl leading-none">#</span> {cat.category}
                   </h2>
                   
@@ -326,48 +326,70 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: "zh" |
                     {cat.tools.map((tool: any, tIdx: number) => {
                       const Icon = tool.icon;
                       const isOperational = tool.status === "operational";
-                      
-                      const getTheme = (url: string) => {
-                        if (url.includes('ip-lookup')) return { border: 'hover:border-purple-500/20', ring: 'focus:ring-purple-500/40', boxBorder: 'group-hover:border-purple-500/30', boxBg: 'group-hover:bg-purple-500/10', text: 'group-hover:text-purple-600' }
-                        if (url.includes('dns-lookup')) return { border: 'hover:border-orange-500/20', ring: 'focus:ring-orange-500/40', boxBorder: 'group-hover:border-orange-500/30', boxBg: 'group-hover:bg-orange-500/10', text: 'group-hover:text-orange-600' }
-                        if (url.includes('websocket')) return { border: 'hover:border-cyan-500/20', ring: 'focus:ring-cyan-500/40', boxBorder: 'group-hover:border-cyan-500/30', boxBg: 'group-hover:bg-cyan-500/10', text: 'group-hover:text-cyan-600' }
-                        return { border: 'hover:border-emerald-500/20', ring: 'focus:ring-emerald-500/40', boxBorder: 'group-hover:border-emerald-500/30', boxBg: 'group-hover:bg-emerald-500/10', text: 'group-hover:text-emerald-600' }
-                      }
-                      const theme = getTheme(tool.url);
-                      
-                      return (
-                        <Link 
-                          key={tIdx} 
-                          href={tool.url}
-                          className={`glass-card group p-5 rounded-xl flex items-start gap-4 no-underline hover:bg-white/60 transition-all border border-zinc-100 focus:outline-none focus:ring-2 ${theme.border} ${theme.ring}`}
-                        >
-                          <div className={`w-10 h-10 rounded-lg bg-zinc-100/50 flex items-center justify-center shrink-0 border border-zinc-200/60 transition-all duration-300 shadow-sm ${theme.boxBorder} ${theme.boxBg}`}>
-                            <Icon className={`w-5 h-5 text-zinc-500 transition-colors duration-300 ${theme.text}`} />
-                          </div>
-                          
-                          <div className="flex-grow min-w-0">
-                            <div className="flex justify-between items-start mb-1.5 gap-2">
-                              <h3 className="font-semibold text-zinc-800 text-sm group-hover:text-zinc-900 transition-colors duration-300 truncate">
-                                {tool.name}
-                              </h3>
-                              <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                                <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${isOperational ? 'text-emerald-700/80' : 'text-orange-500/80'}`}>
-                                  {isOperational ? dict.services.status_operational : dict.services.status_maintenance}
-                                </span>
-                                <div 
-                                  className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                                  style={{ 
-                                    backgroundColor: isOperational ? '#10b981' : '#f59e0b',
-                                    boxShadow: isOperational ? '0 0 8px rgba(16,185,129,0.5)' : '0 0 8px rgba(245,158,11,0.5)'
-                                  }}
-                                >
-                                  <div className="w-full h-full rounded-full animate-ping opacity-50" style={{ backgroundColor: isOperational ? '#10b981' : '#f59e0b' }}></div>
+                      const isMatrix = tool.variant === 'matrix'
+
+                      if (isMatrix) {
+                        return (
+                          <Link
+                            key={tIdx}
+                            href={tool.url}
+                            className="group flex h-full min-h-[176px] flex-col justify-between rounded-[1.5rem] border border-emerald-200/25 bg-gradient-to-br from-zinc-950 via-zinc-900 to-emerald-950 p-5 text-white shadow-lg shadow-emerald-900/10 transition hover:-translate-y-0.5 hover:border-emerald-200/40"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3 min-w-0">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-emerald-300 shadow-sm">
+                                  <Icon className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[9px] font-mono font-bold uppercase tracking-[0.3em] text-emerald-300/80">
+                                    Matrix
+                                  </p>
+                                  <h3 className="mt-1 text-sm font-semibold text-white">
+                                    {tool.name}
+                                  </h3>
                                 </div>
                               </div>
+                              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/25 bg-white/5 px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-widest text-emerald-200">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                                Matrix
+                              </span>
                             </div>
-                            <p className="text-[12px] text-zinc-500/90 font-mono leading-relaxed group-hover:text-zinc-600 transition-colors duration-300 line-clamp-2">
+                            <p className="mt-4 text-[12px] leading-6 text-zinc-300">
                               {tool.desc}
                             </p>
+                            <div className="mt-5 flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.28em] text-emerald-200/70">
+                              <span>{dict.services.status_operational}</span>
+                              <ArrowUp className="h-4 w-4 rotate-45" />
+                            </div>
+                          </Link>
+                        )
+                      }
+
+                      return (
+                        <Link
+                          key={tIdx}
+                          href={tool.url}
+                          className="group flex h-full min-h-[176px] flex-col justify-between rounded-[1.5rem] border border-zinc-100 bg-white/90 p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-white hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 text-zinc-500 transition group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:text-emerald-600">
+                              <Icon className="h-5 w-5" />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="min-w-0 flex-1 text-sm font-semibold leading-6 text-zinc-900">
+                                  {tool.name}
+                                </h3>
+                                <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-widest ${isOperational ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-orange-200 bg-orange-50 text-orange-700'}`}>
+                                  <span className={`h-1.5 w-1.5 rounded-full ${isOperational ? 'bg-emerald-500' : 'bg-orange-500'}`} />
+                                  {isOperational ? dict.services.status_operational : dict.services.status_maintenance}
+                                </span>
+                              </div>
+                              <p className="mt-2 line-clamp-2 text-[12px] leading-6 text-zinc-500">
+                                {tool.desc}
+                              </p>
+                            </div>
                           </div>
                         </Link>
                       )

@@ -4,10 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Globe, ArrowRight, Zap, ShieldCheck } from 'lucide-react'
 
-export default function HomeSearch({ dict, lang }: { dict: any, lang: string }) {
+export default function HomeSearch({ dict }: { dict: any }) {
   const [query, setQuery] = useState('')
   const router = useRouter()
-  const isJapanese = lang === 'ja'
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +35,7 @@ export default function HomeSearch({ dict, lang }: { dict: any, lang: string }) 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={dict.home.diagnostics_placeholder}
-            className="flex-grow bg-transparent border-none outline-none font-mono text-zinc-900 placeholder:text-zinc-400 px-2"
+            className="flex-grow bg-transparent border-none outline-none font-sans text-zinc-900 placeholder:text-zinc-400 px-2"
           />
           <button 
             type="submit"
@@ -50,7 +49,7 @@ export default function HomeSearch({ dict, lang }: { dict: any, lang: string }) 
       
       <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
         {quickChecks.map((item) => (
-          <div key={item.name} className={`flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-[10px] font-mono font-bold text-emerald-600 border border-emerald-100 select-none transition-all hover:bg-emerald-100 cursor-default ${isJapanese ? 'tracking-[0.08em]' : 'uppercase tracking-wider'}`}>
+          <div key={item.name} className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-[10px] font-semibold tracking-[0.18em] text-emerald-600 border border-emerald-100 select-none transition-all hover:bg-emerald-100 cursor-default">
             <item.icon className="w-3 h-3" />
             <span>{item.name}</span>
           </div>
@@ -58,7 +57,7 @@ export default function HomeSearch({ dict, lang }: { dict: any, lang: string }) 
       </div>
 
       {/* Trust Footer */}
-      <div className={`mt-8 text-[9px] font-mono text-zinc-400 opacity-60 ${isJapanese ? 'tracking-[0.16em] not-italic' : 'uppercase tracking-[0.4em] italic'}`}>
+      <div className="mt-8 text-[10px] tracking-[0.2em] text-zinc-400 opacity-60">
         {dict.home.trust_footer}
       </div>
     </div>

@@ -17,8 +17,8 @@ export function DnsHistory({ history, onRerun, onClear }: DnsHistoryProps) {
       <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-zinc-400" />
-          <h3 className="text-sm font-bold text-zinc-700">Query History</h3>
-          <span className="px-2 py-0.5 bg-zinc-100 rounded-full text-[10px] font-bold text-zinc-500">
+          <h3 className="text-sm font-semibold text-zinc-700 tracking-[0.18em]">Query History</h3>
+          <span className="px-2 py-0.5 bg-zinc-100 rounded-full text-[10px] font-semibold text-zinc-500">
             {history.length}
           </span>
         </div>
@@ -44,8 +44,8 @@ export function DnsHistory({ history, onRerun, onClear }: DnsHistoryProps) {
               )}
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-zinc-700 truncate">{entry.domain}</span>
-                  <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 rounded text-[9px] font-bold shrink-0">
+                  <span className="text-sm text-zinc-700 truncate">{entry.domain}</span>
+                  <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 rounded text-[9px] font-semibold tracking-[0.18em] shrink-0">
                     {entry.type}
                   </span>
                 </div>

@@ -28,7 +28,7 @@ export default async function PassPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <PassClient dict={dict} />
+      <PassClient dict={dict} lang={lang} />
       <SiteFooter dict={dict} />
     </>
   )

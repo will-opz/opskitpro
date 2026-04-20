@@ -114,36 +114,36 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
   }
 
   if (!dict) return (
-     <div className="min-h-[60vh] flex flex-col items-center justify-center font-mono">
+     <div className="min-h-[60vh] flex flex-col items-center justify-center font-sans">
         <Activity className="w-10 h-10 text-orange-500 animate-pulse mb-6" />
-        <p className="text-zinc-400 uppercase tracking-widest text-[10px]">{isJapanese ? 'DNS 環境を初期化中...' : 'INIT_DNS_ENVIRONMENT...'}</p>
+        <p className="text-zinc-400 tracking-[0.24em] text-[10px]">{isJapanese ? 'DNS 環境を初期化中...' : 'Loading DNS environment...'}</p>
      </div>
   )
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 font-mono pb-32">
+    <div className="max-w-6xl mx-auto px-6 py-12 font-sans pb-32">
        {/* Breadcrumbs */}
-       <nav className="flex items-center gap-2 mb-12 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-          <Link href="/" className="hover:text-zinc-900 transition-colors">ROOT</Link>
+       <nav className="flex items-center gap-2 mb-12 text-[10px] tracking-[0.24em] text-zinc-400">
+          <Link href="/" className="hover:text-zinc-900 transition-colors">{isJapanese ? 'ホーム' : lang === 'zh' ? '首页' : lang === 'tw' ? '首頁' : 'Home'}</Link>
           <span>/</span>
-          <span className="text-zinc-900 border-b border-orange-500/50">DNS_FORENSICS</span>
+          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">{dict.tools.dns_lookup_title}</span>
        </nav>
 
        {/* Header */}
        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
           <div className="text-center md:text-left">
-             <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-zinc-900 tracking-tighter italic mb-4 leading-none lowercase break-words">
-                {isJapanese ? 'DNS 診断' : 'DNS_QUERIES'}<span className="text-orange-500 tracking-widest">{isJapanese ? '' : '_'}</span>
+             <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-zinc-900 tracking-tighter mb-4 leading-none break-words">
+                {dict.tools.dns_lookup_title}
              </h1>
-             <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{isJapanese ? 'DNS 伝播とレコードを確認します' : 'Deep propagation analysis & RDATA extraction'}</p>
+             <p className="text-sm text-zinc-500 leading-relaxed max-w-2xl">{dict.tools.dns_lookup_desc}</p>
           </div>
        </div>
 
        {/* Control Center */}
-       <div className="bg-white border border-black/5 rounded-[2.5rem] p-3 shadow-2xl mb-16 relative group">
+       <div className="bg-white border border-black/5 rounded-[2.5rem] p-3 shadow-sm mb-16 relative group">
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
              <div className="flex-grow flex items-center px-6 py-4">
-                <Globe className="w-5 h-5 text-zinc-400 mr-4 group-focus-within:text-orange-500 transition-colors" />
+                <Globe className="w-5 h-5 text-zinc-400 mr-4 group-focus-within:text-emerald-500 transition-colors" />
                 <input 
                   type="text"
                   value={domain}
@@ -159,7 +159,7 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                    <select 
                      value={selectedType}
                      onChange={(e) => setSelectedType(e.target.value as DnsRecordType)}
-                     className="bg-transparent text-xs font-black outline-none cursor-pointer text-zinc-600 appearance-none uppercase italic"
+                     className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-zinc-600 appearance-none tracking-[0.18em]"
                    >
                       {recordTypes.map(t => <option key={t} value={t}>{t}</option>)}
                    </select>
@@ -169,7 +169,7 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                    <select 
                      value={selectedProvider}
                      onChange={(e) => setSelectedProvider(e.target.value as DnsProvider)}
-                     className="bg-transparent text-[10px] font-bold outline-none cursor-pointer text-zinc-500 appearance-none uppercase"
+                     className="bg-transparent text-[10px] font-semibold outline-none cursor-pointer text-zinc-500 appearance-none tracking-[0.16em]"
                    >
                       {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                    </select>
@@ -180,10 +180,10 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
              <button 
                type="submit"
                disabled={loading}
-               className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-400 hover:to-rose-400 text-white px-6 sm:px-10 py-4 sm:py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-bold shadow-lg shadow-orange-500/30 disabled:opacity-50 group/btn"
+               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 sm:px-10 py-4 sm:py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-semibold shadow-lg shadow-emerald-500/20 disabled:opacity-50 group/btn"
              >
                 {loading ? <Activity className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
-                <span className="tracking-widest uppercase">{dict.tools.dns.btn}</span>
+                <span className="tracking-[0.18em]">{dict.tools.dns.btn}</span>
              </button>
           </form>
        </div>
@@ -192,8 +192,8 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
          <div className="mb-12 p-10 bg-red-50 border border-red-100 rounded-[2.5rem] text-red-600 flex items-start gap-6 animate-in fade-in slide-in-from-top-4">
             <AlertCircle className="w-8 h-8 shrink-0" />
             <div>
-               <h3 className="text-xl font-black italic uppercase tracking-tight mb-2">{isJapanese ? '診断エラー' : 'QUERY_EXCEPTION'}</h3>
-               <p className="text-sm opacity-80 leading-relaxed uppercase">{error}</p>
+               <h3 className="text-xl font-semibold tracking-tight mb-2">{isJapanese ? '診断エラー' : lang === 'zh' ? '查询异常' : lang === 'tw' ? '查詢異常' : 'Lookup error'}</h3>
+               <p className="text-sm opacity-80 leading-relaxed">{error}</p>
             </div>
          </div>
        )}
@@ -207,20 +207,20 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                      <Monitor className="w-5 h-5" />
                   </div>
                   <div>
-                     <h3 className="text-xl font-black italic text-zinc-900 tracking-tight uppercase">{isJapanese ? 'ローカルネットワーク確認' : 'Local_Network_Insight'}</h3>
-                     <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">{isJapanese ? 'クライアント側の複数リゾルバで確認' : 'Client-side Multi-Node Forensics'}</p>
+                     <h3 className="text-xl font-semibold text-zinc-900 tracking-tight">{isJapanese ? 'ローカル照合' : lang === 'zh' ? '本地联查' : lang === 'tw' ? '本地聯查' : 'Local Perspective'}</h3>
+                     <p className="text-[10px] text-zinc-400 tracking-[0.18em]">{isJapanese ? 'クライアント側の複数リゾルバで確認' : lang === 'zh' ? '通过多个本地解析器交叉确认' : lang === 'tw' ? '透過多個本地解析器交叉確認' : 'Client-side multi-resolver checks'}</p>
                   </div>
                </div>
                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   {Object.values(localResolvers).map((node: any) => (
                     <div key={node.id} className="bg-white p-5 rounded-3xl border border-zinc-100 flex flex-col gap-3 transition-all hover:border-indigo-500 group">
                        <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-black text-zinc-900 uppercase tracking-tighter">{node.name}</span>
+                          <span className="text-[9px] font-semibold text-zinc-900 tracking-[0.18em]">{node.name}</span>
                           <div className={`w-2 h-2 rounded-full ${node.status === 'OK' ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-red-400'}`}></div>
                        </div>
                        <div>
-                          <p className="text-[10px] font-mono font-bold text-zinc-500 truncate" title={node.ip}>{node.ip || 'NXDOMAIN'}</p>
-                          <p className="text-[9px] text-zinc-300 font-mono mt-1 uppercase tracking-widest">{node.latency}</p>
+                          <p className="text-[10px] text-zinc-500 truncate" title={node.ip}>{node.ip || 'NXDOMAIN'}</p>
+                          <p className="text-[9px] text-zinc-300 mt-1 tracking-[0.18em]">{node.latency}</p>
                        </div>
                     </div>
                   ))}
@@ -236,38 +236,38 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                   <div className="absolute top-0 right-0 p-8 scale-150 opacity-[0.03] group-hover:opacity-10 transition-transform">
                      <ShieldCheck className="w-12 h-12" />
                   </div>
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-[0.3em] font-bold">{isJapanese ? 'リゾルバ状態' : 'Resolver_Link'}</span>
+                  <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">{isJapanese ? '解析状態' : lang === 'zh' ? '解析状态' : lang === 'tw' ? '解析狀態' : 'Resolver Status'}</span>
                   <div className="flex items-center gap-3 relative z-10">
                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                     <span className="text-2xl font-black italic text-emerald-500 uppercase tracking-tighter">{isJapanese ? '安全な DoH' : 'SECURED_DOH'}</span>
+                     <span className="text-2xl font-semibold text-emerald-500 tracking-tighter">{isJapanese ? '安全な DoH' : lang === 'zh' ? '安全 DoH' : lang === 'tw' ? '安全 DoH' : 'Secure DoH'}</span>
                   </div>
                </div>
                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-[0.3em] font-bold">{isJapanese ? '応答時間' : 'Response_Time'}</span>
+                  <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">{isJapanese ? '応答時間' : lang === 'zh' ? '响应时间' : lang === 'tw' ? '回應時間' : 'Response Time'}</span>
                   <div>
-                     <div className="text-4xl font-black text-zinc-900 tracking-tighter">{result.responseTime}</div>
-                     <div className="text-[10px] text-orange-500 font-bold uppercase tracking-widest mt-1">{isJapanese ? 'ミリ秒' : 'Milliseconds_ETA'}</div>
+                     <div className="text-4xl font-semibold text-zinc-900 tracking-tighter">{result.responseTime}</div>
+                     <div className="text-[10px] text-emerald-500 font-semibold tracking-[0.18em] mt-1">{isJapanese ? 'ミリ秒' : lang === 'zh' ? '毫秒' : lang === 'tw' ? '毫秒' : 'Milliseconds'}</div>
                   </div>
                </div>
                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-[0.3em] font-bold">{isJapanese ? 'プロトコル' : 'Protocol_Gate'}</span>
-                  <div className="text-xl font-black text-zinc-900 uppercase italic">{isJapanese ? 'TLS 1.3 / ECH' : 'TLS_1.3 / ECH'}</div>
+                  <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">{isJapanese ? 'プロトコル' : lang === 'zh' ? '协议' : lang === 'tw' ? '協議' : 'Protocol'}</span>
+                  <div className="text-xl font-semibold text-zinc-900">{isJapanese ? 'TLS 1.3 / ECH' : 'TLS 1.3 / ECH'}</div>
                </div>
                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-[0.3em] font-bold">{isJapanese ? 'レコード種別' : 'Record_Class'}</span>
-                  <div className="text-4xl font-black text-orange-600 italic tracking-tighter underline decoration-2 underline-offset-8 decoration-orange-500/30">{result.type}</div>
+                  <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">{isJapanese ? 'レコード種別' : lang === 'zh' ? '记录类型' : lang === 'tw' ? '記錄類型' : 'Record Type'}</span>
+                  <div className="text-4xl font-semibold text-emerald-600 tracking-tighter underline decoration-2 underline-offset-8 decoration-emerald-500/30">{result.type}</div>
                </div>
             </div>
 
             {/* Answer Manifest Matrix */}
             <div className="bg-white border border-black/5 rounded-[2.5rem] overflow-hidden shadow-sm transition-all hover:shadow-xl">
                <div className="px-6 sm:px-10 py-6 bg-zinc-50 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-3">
-                     <Database className="w-4 h-4 text-orange-500" /> Resolution_Manifest_JSON
+                  <h3 className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em] flex items-center gap-3">
+                     <Database className="w-4 h-4 text-emerald-500" /> {isJapanese ? '応答記録 JSON' : lang === 'zh' ? '响应记录 JSON' : lang === 'tw' ? '回應記錄 JSON' : 'Resolution Manifest JSON'}
                   </h3>
-                  <button onClick={() => copyData(JSON.stringify(result.answers))} className="text-[10px] font-bold text-zinc-400 hover:text-orange-600 flex items-center gap-2 group transition-colors">
+                  <button onClick={() => copyData(JSON.stringify(result.answers))} className="text-[10px] font-semibold text-zinc-400 hover:text-orange-600 flex items-center gap-2 group transition-colors">
                      {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 group-hover:scale-110" />}
-                     {copied ? (isJapanese ? 'コピー完了' : 'PAYLOAD_COPIED') : (isJapanese ? '全件コピー' : 'COPY_ALL_RDATA')}
+                     {copied ? (isJapanese ? 'コピー完了' : lang === 'zh' ? '已复制' : lang === 'tw' ? '已複製' : 'Copied') : (isJapanese ? '全件コピー' : lang === 'zh' ? '复制全部' : lang === 'tw' ? '複製全部' : 'Copy all')}
                   </button>
                </div>
                
@@ -276,27 +276,27 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                     <div key={idx} className="p-6 sm:p-10 hover:bg-zinc-50/50 transition-all group flex flex-col md:flex-row md:items-center gap-6 sm:gap-10">
                        <div className="flex-grow">
                           <div className="flex items-center gap-4 mb-4">
-                             <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+                             <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-semibold tracking-[0.18em]">
                                 {answer.type}
                              </span>
                              <span className="text-zinc-200 font-light opacity-50">/</span>
-                             <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">{answer.name}</span>
+                             <span className="text-xs font-semibold text-zinc-400 tracking-[0.18em]">{answer.name}</span>
                           </div>
-                          <div className="font-black text-xl md:text-2xl text-zinc-900 break-all leading-tight flex items-start gap-3">
+                          <div className="font-semibold text-xl md:text-2xl text-zinc-900 break-all leading-tight flex items-start gap-3">
                              {answer.priority !== undefined && <span className="text-purple-500 text-sm mt-1">[{answer.priority}]</span>}
-                             <span className="group-hover:text-orange-600 transition-colors">{answer.data}</span>
+                             <span className="group-hover:text-emerald-600 transition-colors">{answer.data}</span>
                           </div>
                        </div>
                        <div className="flex md:flex-col items-center md:items-end justify-between gap-4 border-t md:border-t-0 pt-6 md:pt-0 border-zinc-100 min-w-max">
                           <div className="flex flex-col md:items-end gap-1">
-                             <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                             <div className="text-[10px] text-zinc-400 font-semibold tracking-[0.18em] flex items-center gap-2">
                                 <Clock className="w-3 h-3" /> {isJapanese ? 'TTL' : 'Time_To_Live'}
                              </div>
-                             <div className="text-lg font-black text-zinc-900">{answer.ttl}<span className="text-xs text-zinc-400 ml-1">S</span></div>
+                             <div className="text-lg font-semibold text-zinc-900">{answer.ttl}<span className="text-xs text-zinc-400 ml-1">S</span></div>
                           </div>
                           <button 
                             onClick={() => copyData(answer.data)}
-                            className="p-3 bg-zinc-100 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-orange-500 hover:text-white"
+                            className="p-3 bg-zinc-100 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-500 hover:text-white"
                           >
                              <Copy className="w-4 h-4" />
                           </button>
@@ -305,8 +305,8 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                   )) : (
                     <div className="py-32 text-center flex flex-col items-center bg-white">
                        <Terminal className="w-20 h-20 text-zinc-100 mb-6 animate-pulse" />
-                       <p className="text-zinc-400 font-mono text-sm uppercase tracking-widest">{dict.tools.dns.no_records}</p>
-                       <p className="text-[10px] text-zinc-300 mt-2 uppercase">{isJapanese ? 'NXDOMAIN / タイムアウトを確認してください' : 'Check_NXDOMAIN_OR_TIMEOUT'}</p>
+                       <p className="text-zinc-400 text-sm tracking-[0.18em]">{dict.tools.dns.no_records}</p>
+               <p className="text-[10px] text-zinc-300 mt-2">{isJapanese ? 'NXDOMAIN / タイムアウトを確認してください' : lang === 'zh' ? '请检查 NXDOMAIN / 超时' : lang === 'tw' ? '請檢查 NXDOMAIN / 逾時' : 'Check NXDOMAIN / timeout'}</p>
                     </div>
                   )}
                </div>
@@ -316,10 +316,10 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
             <div className="mt-16">
                <button 
                   onClick={() => setShowJson(!showJson)}
-                  className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 hover:text-zinc-900 transition-colors uppercase tracking-widest mb-6"
+                 className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400 hover:text-zinc-900 transition-colors tracking-[0.18em] mb-6"
                >
                   <ChevronDown className={`w-3 h-3 transition-transform ${showJson ? 'rotate-180' : ''}`} />
-                  {isJapanese ? '生の DNS 診断 JSON' : 'ROOT_DNS_PROTOCOL_AUDIT'}
+                  {isJapanese ? '生の DNS 診断 JSON' : lang === 'zh' ? '原始 DNS 记录 JSON' : lang === 'tw' ? '原始 DNS 記錄 JSON' : 'Raw DNS Audit JSON'}
                </button>
                {showJson && (
                  <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-[11px] text-zinc-500 overflow-x-auto border border-zinc-800 shadow-2xl relative">
@@ -342,10 +342,10 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
           <div className="animate-in fade-in duration-1000 mt-24">
              <div className="flex items-center justify-between mb-10 border-b border-zinc-100 pb-6">
                 <div>
-                   <h4 className="text-[11px] font-black text-zinc-900 uppercase tracking-[0.4em] flex items-center gap-3">
-                      <History className="w-5 h-5 text-orange-500" /> {isJapanese ? '最近の DNS 診断' : 'RECENT_DNS_FORENSICS'}
+                   <h4 className="text-[11px] font-semibold text-zinc-900 tracking-[0.18em] flex items-center gap-3">
+                      <History className="w-5 h-5 text-emerald-500" /> {isJapanese ? '最近の DNS 診断' : lang === 'zh' ? '最近的 DNS 记录' : lang === 'tw' ? '最近的 DNS 記錄' : 'Recent DNS Checks'}
                    </h4>
-                   <p className="text-[10px] text-zinc-400 font-mono mt-1 uppercase tracking-widest">{isJapanese ? 'キャッシュされた履歴' : 'Cached Query Persistence System'}</p>
+                   <p className="text-[10px] text-zinc-400 mt-1 tracking-[0.18em]">{isJapanese ? 'キャッシュされた履歴' : lang === 'zh' ? '缓存查询记录' : lang === 'tw' ? '快取查詢紀錄' : 'Cached query history'}</p>
                 </div>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -357,12 +357,12 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                   >
                      <div>
                         <div className="flex items-center gap-2 mb-4">
-                           <span className="px-2 py-0.5 bg-orange-500/10 text-orange-600 rounded-lg text-[9px] font-black uppercase">{h.type}</span>
-                           <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">@ {h.provider.split('_')[0]}</span>
+                           <span className="px-2 py-0.5 bg-orange-500/10 text-orange-600 rounded-lg text-[9px] font-semibold tracking-[0.18em]">{h.type}</span>
+                           <span className="text-[9px] font-semibold text-zinc-300 tracking-[0.18em]">@ {h.provider.split('_')[0]}</span>
                         </div>
-                        <p className="font-black text-zinc-900 text-base group-hover:text-orange-600 transition-colors truncate w-full">{h.domain}</p>
+                        <p className="font-semibold text-zinc-900 text-base group-hover:text-orange-600 transition-colors truncate w-full">{h.domain}</p>
                      </div>
-                     <div className="flex items-center gap-2 text-[9px] text-zinc-400 font-bold uppercase tracking-widest group-hover:text-zinc-900 transition-colors">
+                     <div className="flex items-center gap-2 text-[9px] text-zinc-400 font-semibold tracking-[0.18em] group-hover:text-zinc-900 transition-colors">
                         {isJapanese ? '再実行' : 'Replay_Probe'} <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                      </div>
                   </button>
@@ -373,9 +373,9 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
 
        {/* Hero Empty State View */}
        {!result && !loading && (
-          <div className="max-w-2xl mx-auto mt-16 sm:mt-24 p-10 sm:p-20 rounded-[3.5rem] border border-dashed border-zinc-200 bg-white/60 text-center animate-in fade-in duration-1000">
+       <div className="max-w-2xl mx-auto mt-16 sm:mt-24 p-10 sm:p-20 rounded-[3.5rem] border border-dashed border-zinc-200 bg-white/60 text-center animate-in fade-in duration-1000">
               <Cpu className="w-16 h-16 text-zinc-100 mx-auto mb-8 animate-pulse text-orange-500/20" />
-              <p className="text-zinc-500 text-[10px] leading-relaxed font-mono uppercase tracking-[0.5em] opacity-40">
+              <p className="text-zinc-500 text-[10px] leading-relaxed tracking-[0.18em] opacity-40">
                 {isJapanese ? 'A・AAAA・CNAME・MX・NS・TXT・CAA をまとめて確認できます。' : 'A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines'}
               </p>
           </div>

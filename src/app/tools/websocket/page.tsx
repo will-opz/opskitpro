@@ -24,7 +24,7 @@ export default async function WebsocketPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <WebsocketClient />
+      <WebsocketClient dict={dict} lang={lang} />
       <SiteFooter dict={dict} />
     </>
   )

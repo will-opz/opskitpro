@@ -9,6 +9,32 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const targetIp = searchParams.get('q')
 
+  const buildFallbackResponse = (
+    ip: string,
+    provider: string,
+    source: IpLookupResponse['_source']
+  ) =>
+    ({
+      ip,
+      country: 'Unknown',
+      country_name: 'Unknown',
+      country_code: '',
+      region: 'Unknown',
+      city: 'Unknown',
+      latitude: '',
+      longitude: '',
+      lat: '0',
+      lon: '0',
+      org: 'Unknown',
+      isp: 'Unknown',
+      asn: '',
+      timezone: 'UTC',
+      network_type: 'Unknown',
+      proxy: false,
+      provider,
+      _source: source,
+    }) satisfies IpLookupResponse
+
   const fetchFallbackData = async (queryIp: string) => {
     try {
       // Request `hosting` and `proxy` fields explicitly; free tier supports `hosting`
@@ -63,7 +89,9 @@ export async function GET(request: NextRequest) {
         _source: 'external-lookup',
       } satisfies IpLookupResponse)
     }
-    return NextResponse.json({ ip: targetIp, error: 'External API failure' }, { status: 500 })
+    return NextResponse.json(
+      buildFallbackResponse(targetIp, 'External Lookup', 'external-lookup')
+    )
   }
 
   // 2. Feature: Current User Info using Cloudflare (getCloudflareContext)
@@ -136,24 +164,7 @@ export async function GET(request: NextRequest) {
     } satisfies IpLookupResponse)
   }
   
-  return NextResponse.json({ 
-    ip, 
-    country: 'Unknown',
-    country_name: 'Unknown',
-    country_code: '',
-    city: 'Unknown',
-    latitude: '',
-    longitude: '',
-    lat: '0',
-    lon: '0',
-    region: 'Unknown',
-    org: 'Unknown',
-    isp: 'Unknown',
-    asn: '',
-    timezone: 'UTC',
-    network_type: 'Unknown',
-    proxy: false,
-    provider: 'Cloudflare Edge',
-    _source: 'cloudflare-edge-default' 
-  } satisfies IpLookupResponse)
+  return NextResponse.json(
+    buildFallbackResponse(ip, 'Cloudflare Edge', 'cloudflare-edge-default')
+  )
 }

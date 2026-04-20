@@ -72,8 +72,8 @@ export function DnsBatchResult({ result, loading }: DnsBatchResultProps) {
           <Layers className="w-5 h-5 text-purple-600" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-zinc-800">{result.domain}</span>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">
+              <span className="font-semibold text-zinc-800">{result.domain}</span>
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-semibold tracking-[0.16em]">
                 BATCH
               </span>
             </div>
@@ -91,7 +91,7 @@ export function DnsBatchResult({ result, loading }: DnsBatchResultProps) {
           </div>
         </div>
 
-        <button
+          <button
           onClick={copyAll}
           className="flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium hover:bg-zinc-50 transition-all"
         >
@@ -123,7 +123,7 @@ export function DnsBatchResult({ result, loading }: DnsBatchResultProps) {
                   ) : (
                     <ChevronRight className="w-4 h-4 text-zinc-400" />
                   )}
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${colorClass}`}>
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold tracking-[0.16em] ${colorClass}`}>
                     {typeResult.type}
                   </span>
                   <span className="text-sm text-zinc-500">
@@ -147,7 +147,7 @@ export function DnsBatchResult({ result, loading }: DnsBatchResultProps) {
                       className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg group"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-mono text-sm text-zinc-800 break-all">
+                        <div className="text-sm font-semibold text-zinc-800 break-all">
                           {answer.data}
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-400">

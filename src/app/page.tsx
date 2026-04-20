@@ -82,7 +82,7 @@ export default async function Home() {
         </div>
 
         {/* Global Diagnostic Input */}
-        <HomeSearch dict={dict} lang={lang} />
+        <HomeSearch dict={dict} />
 
         {/* Compact Status Strip */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-6xl mb-14 md:mb-16 px-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
@@ -119,11 +119,11 @@ export default async function Home() {
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all">
               <Activity className="w-6 h-6 text-emerald-600" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2 uppercase tracking-tighter italic">
+            <h3 className="text-xl font-semibold text-zinc-900 mb-3 flex items-center gap-2 tracking-tight">
               {dict.home.card1_title}
               <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </h3>
-            <p className="text-zinc-500 text-sm leading-relaxed font-mono">
+            <p className="text-zinc-500 text-sm leading-relaxed">
               {dict.home.card1_desc}
             </p>
           </Link>
@@ -132,11 +132,11 @@ export default async function Home() {
             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all">
               <Globe className="w-6 h-6 text-purple-600" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2 uppercase tracking-tighter italic">
+            <h3 className="text-xl font-semibold text-zinc-900 mb-3 flex items-center gap-2 tracking-tight">
               {dict.home.card2_title}
               <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </h3>
-            <p className="text-zinc-500 text-sm leading-relaxed font-mono">
+            <p className="text-zinc-500 text-sm leading-relaxed">
               {dict.home.card2_desc}
             </p>
           </Link>
@@ -145,11 +145,11 @@ export default async function Home() {
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-orange-500/20 transition-all">
               <History className="w-6 h-6 text-orange-600" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-3 flex items-center gap-2 uppercase tracking-tighter italic">
+            <h3 className="text-xl font-semibold text-zinc-900 mb-3 flex items-center gap-2 tracking-tight">
               {dict.home.card3_title}
               <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
             </h3>
-            <p className="text-zinc-500 text-sm leading-relaxed font-mono">
+            <p className="text-zinc-500 text-sm leading-relaxed">
               {dict.home.card3_desc}
             </p>
           </Link>
@@ -159,7 +159,7 @@ export default async function Home() {
         <div className="w-full max-w-7xl mb-32 text-left bg-white border border-black/5 shadow-sm rounded-2xl sm:rounded-[3rem] p-6 sm:p-12 md:p-24 relative overflow-hidden transition-all hover:shadow-xl group">
            <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-emerald-500/5 blur-[120px] rounded-full group-hover:bg-emerald-500/10 transition-colors"></div>
            <div className="relative z-10">
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tighter italic mb-8 sm:mb-12 lowercase">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tight mb-8 sm:mb-12">
                  {dict.home.scenes.title}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12">
@@ -172,10 +172,10 @@ export default async function Home() {
                       <div className="w-10 h-10 rounded-xl bg-emerald-500/5 flex items-center justify-center text-emerald-500">
                          <scene.icon className="w-5 h-5" />
                       </div>
-                      <h4 className="text-xl font-bold text-zinc-900 italic tracking-tight">{scene.title}</h4>
-                      <p className="text-zinc-500 text-sm font-mono leading-relaxed truncate-3">{scene.desc}</p>
-                   </div>
-                 ))}
+                      <h4 className="text-xl font-semibold text-zinc-900 tracking-tight">{scene.title}</h4>
+                      <p className="text-zinc-500 text-sm leading-relaxed truncate-3">{scene.desc}</p>
+                 </div>
+               ))}
               </div>
            </div>
         </div>
@@ -184,10 +184,10 @@ export default async function Home() {
         <div className="w-full max-w-7xl mb-12 text-left">
            <div className="flex items-center justify-between mb-10 border-b border-zinc-200/50 pb-6">
               <div>
-                 <h2 className="text-2xl font-black text-zinc-900 tracking-tight italic">
+                 <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
                    {dict.home.blog_section?.title || "FEATURED_INTEL"}
                  </h2>
-                 <p className="text-xs text-zinc-500 font-mono mt-1 uppercase tracking-widest">
+                 <p className="text-xs text-zinc-500 mt-1 tracking-[0.22em] uppercase">
                    {dict.home.blog_section?.subtitle || "SRE Field Notes & Tech Forensics"}
                  </p>
               </div>
@@ -212,7 +212,7 @@ export default async function Home() {
                 return (
                 <Link key={idx} href="/blog" className="group flex flex-col gap-4">
                    <div className="aspect-[16/9] w-full rounded-[1.5rem] overflow-hidden border border-zinc-200/60 relative">
-                      <div className="absolute top-3 left-3 px-2 py-0.5 bg-white/80 backdrop-blur-md rounded text-[9px] font-bold font-mono tracking-widest border border-black/5 z-10">
+                      <div className="absolute top-3 left-3 px-2 py-0.5 bg-white/80 backdrop-blur-md rounded text-[9px] font-semibold tracking-[0.22em] border border-black/5 z-10">
                         {post.tag}
                       </div>
                       <div
@@ -225,11 +225,11 @@ export default async function Home() {
                       </div>
                    </div>
                    <div>
-                      <div className="text-[10px] text-zinc-400 font-mono mb-2">{post.date}</div>
-                      <h3 className="text-base font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors leading-snug mb-2">
+                      <div className="text-[10px] text-zinc-400 mb-2 tracking-[0.18em] uppercase">{post.date}</div>
+                      <h3 className="text-base font-semibold text-zinc-900 group-hover:text-emerald-600 transition-colors leading-snug mb-2">
                         {post.title}
                       </h3>
-                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed font-mono">
+                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
                         {post.desc}
                       </p>
                    </div>

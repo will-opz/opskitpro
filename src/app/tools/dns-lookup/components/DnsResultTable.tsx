@@ -55,7 +55,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
           )}
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-zinc-800">{result.domain}</span>
+              <span className="font-semibold text-zinc-800">{result.domain}</span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                 isError ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
               }`}>
@@ -107,7 +107,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-zinc-50 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+              <tr className="bg-zinc-50 text-left text-[10px] font-semibold text-zinc-500 tracking-[0.18em]">
                 <th className="px-6 py-3">Name</th>
                 <th className="px-6 py-3">Type</th>
                 <th className="px-6 py-3">TTL</th>
@@ -118,7 +118,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
             <tbody className="divide-y divide-zinc-100">
               {result.answers.map((answer, idx) => (
                 <tr key={idx} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-3 font-mono text-sm text-zinc-600">{answer.name}</td>
+                  <td className="px-6 py-3 text-sm text-zinc-600">{answer.name}</td>
                   <td className="px-6 py-3">
                     <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs font-bold">
                       {answer.type}
@@ -127,7 +127,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
                   <td className="px-6 py-3">
                     <span className="text-sm text-zinc-500">{formatTTL(answer.ttl)}</span>
                   </td>
-                  <td className="px-6 py-3 font-mono text-sm text-zinc-800 break-all max-w-md">
+                  <td className="px-6 py-3 text-sm text-zinc-800 break-all max-w-md">
                     {answer.priority !== undefined && (
                       <span className="text-purple-600 mr-2">[{answer.priority}]</span>
                     )}
@@ -163,10 +163,10 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
       {/* Authority Section (if no answers but has authority) */}
       {!hasAnswers && result.authority && result.authority.length > 0 && (
         <div className="px-6 py-4 bg-amber-50 border-t border-amber-100">
-          <div className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2">Authority Section</div>
+          <div className="text-[10px] font-semibold text-amber-600 tracking-[0.18em] mb-2">Authority Section</div>
           <div className="space-y-1">
             {result.authority.map((auth, idx) => (
-              <div key={idx} className="font-mono text-xs text-amber-800">
+              <div key={idx} className="text-xs text-amber-800">
                 {auth.name} → {auth.data}
               </div>
             ))}
@@ -178,7 +178,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
       {showRaw && (
         <div className="border-t border-zinc-100">
           <div className="px-6 py-3 bg-zinc-900 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Raw Response</span>
+            <span className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em]">Raw Response</span>
             <button
               onClick={() => copyToClipboard(JSON.stringify(result.raw, null, 2), 'raw')}
               className="flex items-center gap-1 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-zinc-300 transition-colors"
@@ -207,7 +207,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
         ].map(({ flag, active, label }) => (
           <span
             key={flag}
-            className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+            className={`px-2 py-0.5 rounded text-[9px] font-semibold tracking-[0.18em] ${
               active ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-200 text-zinc-400'
             }`}
             title={label}

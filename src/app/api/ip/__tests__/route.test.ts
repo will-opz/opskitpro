@@ -40,6 +40,25 @@ describe('GET /api/ip — IP detection', () => {
     const body = await res.json()
     expect(body.ip).toBe('11.22.33.44')
   })
+
+  it('returns a graceful fallback contract for target IP lookups when the upstream service fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new Error('upstream unavailable')
+    }))
+
+    const res = await GET(new Request('http://localhost/api/ip?q=172.67.176.41'))
+    expect(res.status).toBe(200)
+
+    const body = await res.json()
+    expect(body).toMatchObject({
+      ip: '172.67.176.41',
+      country_name: 'Unknown',
+      region: 'Unknown',
+      city: 'Unknown',
+      provider: 'External Lookup',
+      _source: 'external-lookup',
+    })
+  })
 })
 
 describe('GET /api/ip — Cloudflare geo data', () => {

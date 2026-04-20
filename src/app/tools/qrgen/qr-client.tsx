@@ -5,7 +5,10 @@ import { QrCode, Download, Info } from 'lucide-react'
 import Link from 'next/link'
 import { QRCodeSVG } from 'qrcode.react'
 
-export default function QRClient({ dict }: { dict: any }) {
+type Lang = 'zh' | 'en' | 'ja' | 'tw'
+
+export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
+  const isJapanese = lang === 'ja'
   const [text, setText] = useState('')
 
   const downloadQR = () => {
@@ -29,21 +32,21 @@ export default function QRClient({ dict }: { dict: any }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-4xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em] mb-5">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Visual Payload Builder
+          {dict.tools.qrgen_title}
         </div>
 
-        <div className="flex items-center gap-2 mb-8 text-[11px] font-mono uppercase tracking-widest text-zinc-500">
-          <Link href={`/`} className="hover:text-emerald-600 transition-colors">HOME</Link>
+        <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
+          <Link href={`/`} className="hover:text-emerald-600 transition-colors">{isJapanese ? 'ホーム' : 'Home'}</Link>
           <span className="text-zinc-300">/</span>
-          <Link href={`/services`} className="hover:text-emerald-600 transition-colors">MATRIX</Link>
+          <Link href={`/services`} className="hover:text-emerald-600 transition-colors">{isJapanese ? 'ツール' : 'Tools'}</Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-emerald-500/30 font-bold uppercase">OPSKIT-NODE</span>
+          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">{dict.tools.qrgen_title}</span>
         </div>
 
         <div className="flex items-center gap-4 mb-2">
@@ -51,10 +54,10 @@ export default function QRClient({ dict }: { dict: any }) {
             <QrCode className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3 italic">
+            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
               {dict.tools.qrgen_title}
             </h1>
-            <p className="text-zinc-600 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] mt-1 leading-relaxed">{dict.tools.qrgen_desc}</p>
+            <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed">{dict.tools.qrgen_desc}</p>
           </div>
         </div>
 
@@ -98,7 +101,7 @@ export default function QRClient({ dict }: { dict: any }) {
                 />
               ) : (
                   <div className="w-[256px] h-[256px] border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center text-zinc-600 italic text-center px-8">
-                  Enter content to preview QR.
+                  {isJapanese ? '内容を入力すると QR を表示できます。' : lang === 'zh' ? '输入内容后即可预览二维码。' : 'Enter content to preview QR.'}
                   </div>
                 )}
             </div>
