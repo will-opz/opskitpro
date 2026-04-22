@@ -49,11 +49,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   }
 
   const isToolArticle = post.actionKind === 'tool'
-  const formatHeading = (value: string) => value.replace(/^\d+\.\s*/, '')
   const relatedPosts = getBlogPosts(lang)
     .filter((entry) => post.related.includes(entry.slug))
     .slice(0, 3)
-  const previewSections = post.sections.slice(0, 3)
 
   return (
     <>
@@ -99,19 +97,19 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                   <BookOpen className="h-4 w-4" />
                   {isToolArticle
                     ? lang === 'ja'
-                      ? 'この記事では設計・実装・使い方をまとめ、ツール本体にもすぐ行けます。'
+                      ? 'この記事では設計・実装・使い方を通して読めます。下の本文からそのまま進めます。'
                       : lang === 'zh'
-                        ? '这篇文章会讲清设计、实现和用法，旁边也能直接打开工具。'
+                        ? '这篇文章按设计、实现和用法完整展开，可以直接往下读。'
                         : lang === 'tw'
-                          ? '這篇文章會講清設計、實作與用法，旁邊也能直接打開工具。'
-                          : 'This article covers design, implementation, and usage, with a direct link to the tool.'
+                          ? '這篇文章按設計、實作和用法完整展開，可以直接往下讀。'
+                          : 'This article reads through design, implementation, and usage in one flow.'
                     : lang === 'ja'
-                      ? '全文は KB にあります。ここは主站の軽量プレビューです。'
+                      ? '長文は KB にあります。ここは主站の整理版です。'
                       : lang === 'zh'
-                        ? '完整正文在 KB，这里是主站的轻量预览。'
+                        ? '完整长文在 KB，这里是主站的整理版。'
                         : lang === 'tw'
-                          ? '完整正文在 KB，這裡是主站的輕量預覽。'
-                          : 'The full article lives in KB. This is a lightweight preview on the main site.'}
+                          ? '完整長文在 KB，這裡是主站的整理版。'
+                          : 'The full article lives in KB. This is the organized version on the main site.'}
                 </div>
 
                 <a
@@ -155,135 +153,67 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </div>
           </div>
 
-          <div className="border-b border-zinc-100 px-6 py-8 sm:px-10">
-            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-              <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
-              {isToolArticle
-                ? lang === 'ja'
-                  ? '記事プレビュー'
-                  : lang === 'zh'
-                    ? '文章预览'
-                    : lang === 'tw'
-                      ? '文章預覽'
-                      : 'Article preview'
-                : lang === 'ja'
-                  ? '主站プレビュー'
-                  : lang === 'zh'
-                    ? '主站预览'
-                    : lang === 'tw'
-                      ? '主站預覽'
-                      : 'Main site preview'}
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              {previewSections.map((section, index) => (
-                <div key={section.heading} className="rounded-3xl border border-zinc-100 bg-zinc-50/70 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-                      {isToolArticle
-                        ? lang === 'ja'
-                          ? '記事'
-                          : lang === 'zh'
-                            ? '文章'
-                            : lang === 'tw'
-                              ? '文章'
-                              : 'Article'
-                        : lang === 'ja'
-                          ? 'KB 参照'
-                          : lang === 'zh'
-                            ? 'KB 参照'
-                            : lang === 'tw'
-                              ? 'KB 參照'
-                              : 'KB ref'}
-                    </span>
-                  </div>
-                  <h2 className="mt-4 text-xl font-black tracking-tighter text-zinc-900">{formatHeading(section.heading)}</h2>
-                  <p className="mt-3 text-sm leading-7 text-zinc-700">{section.paragraphs[0]}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="grid gap-10 px-6 py-8 sm:px-10 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div className="space-y-6">
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {lang === 'ja' ? '公開方針' : lang === 'zh' ? '发布方式' : lang === 'tw' ? '發佈方式' : 'Publishing'}
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+                  <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
+                  {lang === 'ja' ? '本文について' : lang === 'zh' ? '关于正文' : lang === 'tw' ? '關於正文' : 'About the article'}
                 </div>
                 <p className="mt-4 text-sm leading-7 text-zinc-700">
                   {isToolArticle
                     ? lang === 'ja'
-                      ? 'このページでは、各ツールの設計・実装・用途・使い方を主站でまとめています。'
+                      ? 'このページは、背景から実装、使い方までを一続きで読めるように整えています。'
                       : lang === 'zh'
-                        ? '这篇文章会在主站里直接讲清每个工具的设计、实现、用途和用法。'
+                        ? '这篇文章按完整正文来整理，从背景、实现到用法都可以连起来读。'
                         : lang === 'tw'
-                          ? '這篇文章會在主站裡直接講清每個工具的設計、實作、用途和用法。'
-                          : 'This page keeps the design, implementation, use, and usage notes directly on the main site.'
+                          ? '這篇文章按完整正文來整理，從背景、實作到用法都可以串起來讀。'
+                          : 'This page is organized as a full read-through, from background to implementation and usage.'
                     : lang === 'ja'
-                      ? '長文は KB にまとめ、主站は要点だけを残しています。'
+                      ? '長文は KB にまとめ、ここでは要点と構成を読みやすく整理しています。'
                       : lang === 'zh'
-                        ? '长文统一放到 KB，主站只保留要点和入口。'
+                        ? '长文统一放到 KB，这里只保留要点和结构，便于快速阅读。'
                         : lang === 'tw'
-                          ? '長文統一放到 KB，主站只保留要點與入口。'
-                          : 'Long-form writing lives in KB, while the main site keeps only the key points and entry points.'}
+                          ? '長文統一放到 KB，這裡只保留要點與結構，便於快速閱讀。'
+                          : 'Long-form writing lives in KB, while this page keeps the key points and structure easy to read.'}
                 </p>
-              </div>
-
-              <div className="rounded-[2rem] border border-zinc-100 bg-zinc-50/70 p-6">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {lang === 'ja' ? '文章構成' : lang === 'zh' ? '文章结构' : lang === 'tw' ? '文章結構' : 'Article outline'}
-                </div>
-                <div className="mt-4 grid gap-3">
-                  {post.sections.map((section, index) => (
-                    <div key={section.heading} className="rounded-2xl border border-zinc-100 bg-white px-4 py-3 text-sm leading-7 text-zinc-700">
-                      <span className="mr-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      {formatHeading(section.heading)}
-                    </div>
-                  ))}
-                </div>
               </div>
 
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {lang === 'ja' ? '本文プレビュー' : lang === 'zh' ? '正文预览' : lang === 'tw' ? '正文預覽' : 'Article body'}
+                  {lang === 'ja' ? '本文' : lang === 'zh' ? '正文' : lang === 'tw' ? '正文' : 'Article body'}
                 </div>
-                <div className="mt-5 space-y-5">
+                <div className="mt-6 space-y-10">
                   {post.sections.map((section, index) => (
-                    <section key={`${section.heading}-body`} className="rounded-3xl border border-zinc-100 bg-zinc-50/60 p-5">
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/8 px-3 py-1 text-[10px] font-semibold tracking-[0.24em] text-emerald-600">
+                    <section key={`${section.heading}-body`} className="border-b border-zinc-100 pb-8 last:border-b-0 last:pb-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h2 className="text-2xl font-black tracking-tight text-zinc-900">{section.heading}</h2>
+                        <span className="rounded-full border border-emerald-500/15 bg-emerald-500/8 px-2.5 py-1 text-[10px] font-semibold tracking-[0.22em] text-emerald-600">
                           {String(index + 1).padStart(2, '0')}
                         </span>
-                        <h3 className="text-lg font-black tracking-tight text-zinc-900">
-                          {formatHeading(section.heading)}
-                        </h3>
                       </div>
 
-                      <div className="mt-4 space-y-4">
+                      <div className="mt-5 space-y-5">
                         {section.paragraphs.map((paragraph, paragraphIndex) => (
-                          <p key={`${section.heading}-${paragraphIndex}`} className="text-sm leading-7 text-zinc-700">
+                          <p key={`${section.heading}-${paragraphIndex}`} className="text-[15px] leading-8 text-zinc-700">
                             {paragraph}
                           </p>
                         ))}
                       </div>
 
-                      {section.bullets?.length ? (
-                        <div className="mt-5 rounded-2xl border border-emerald-500/10 bg-white px-4 py-4">
-                          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
-                            {lang === 'ja' ? '補足ポイント' : lang === 'zh' ? '补充要点' : lang === 'tw' ? '補充要點' : 'Notes'}
-                          </div>
-                          <ul className="mt-3 space-y-2 text-sm leading-7 text-zinc-700">
-                            {section.bullets.map((bullet) => (
-                              <li key={bullet} className="flex gap-2">
-                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                                <span>{bullet}</span>
-                              </li>
-                            ))}
-                          </ul>
+                      {section.files?.length ? (
+                        <div className="mt-6 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-zinc-500">
+                            {lang === 'ja' ? '参考ファイル' : lang === 'zh' ? '参考文件' : lang === 'tw' ? '參考檔案' : 'Reference files'}
+                          </span>
+                          {section.files.map((file) => (
+                            <span
+                              key={file}
+                              className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] text-zinc-600"
+                            >
+                              {file}
+                            </span>
+                          ))}
                         </div>
                       ) : null}
                     </section>
