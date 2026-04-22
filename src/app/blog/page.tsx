@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { cookies } from 'next/headers'
 import {
   ArrowRight,
@@ -87,11 +88,9 @@ export default async function BlogPage() {
             const Icon = CARD_ICONS[idx % CARD_ICONS.length]
 
             return (
-              <a
+              <Link
                 key={post.slug}
-                href={post.kbUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`/blog/${post.slug}`}
                 className="group flex flex-col overflow-hidden rounded-[2rem] border border-black/5 bg-white shadow-sm transition-all hover:border-emerald-500/20 hover:shadow-2xl"
               >
                 <div className="relative h-44 overflow-hidden">
@@ -128,7 +127,7 @@ export default async function BlogPage() {
                     </div>
                   </div>
                 </div>
-              </a>
+              </Link>
             )
           })}
 

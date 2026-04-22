@@ -14,6 +14,7 @@ export type BlogPost = {
   tag: string
   accent: string
   kbUrl: string
+  actionKind: 'kb' | 'tool'
   coverImage: string
   titles: Record<Lang, string>
   summaries: Record<Lang, string>
@@ -29,6 +30,7 @@ const posts: BlogPost[] = [
     tag: '需求',
     accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/opskitpro-requirements',
+    actionKind: 'kb',
     coverImage: '/blog-covers/why-opskitpro.svg',
     titles: {
       zh: '为什么我做 OpsKitPro：从排障痛点到工具平台',
@@ -92,6 +94,7 @@ const posts: BlogPost[] = [
     tag: '设计',
     accent: 'from-sky-500/10 via-cyan-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/opskitpro-design-principles',
+    actionKind: 'kb',
     coverImage: '/blog-covers/design-principles.svg',
     titles: {
       zh: 'OpsKitPro 的设计原则：为什么我把 UI 做得更克制',
@@ -155,6 +158,7 @@ const posts: BlogPost[] = [
     tag: '实现',
     accent: 'from-emerald-500/10 via-lime-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/website-check-parallel-probes',
+    actionKind: 'kb',
     coverImage: '/blog-covers/website-check.svg',
     titles: {
       zh: '网站诊断模块是怎么做的：website-check 的实现拆解',
@@ -218,6 +222,7 @@ const posts: BlogPost[] = [
     tag: '模块',
     accent: 'from-indigo-500/10 via-sky-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/ip-lookup-structured-fallback',
+    actionKind: 'kb',
     coverImage: '/blog-covers/ip-dns.svg',
     titles: {
       zh: 'IP 与 DNS 模块：把查询结果变成可读的诊断结论',
@@ -281,6 +286,7 @@ const posts: BlogPost[] = [
     tag: '工程',
     accent: 'from-violet-500/10 via-fuchsia-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/services-standardization',
+    actionKind: 'kb',
     coverImage: '/blog-covers/services-standardization.svg',
     titles: {
       zh: '服务矩阵、国际化与 Cloudflare 部署：OpsKitPro 的工程收口',
@@ -335,7 +341,263 @@ const posts: BlogPost[] = [
         files: ['src/app/layout.tsx', 'wrangler.jsonc', 'open-next.config.ts', 'README.md', 'OpsKitPro_Backlog.md'],
       },
     ],
-    related: ['why-opskitpro', 'design-principles', 'ip-dns-module'],
+    related: ['why-opskitpro', 'design-principles', 'ip-dns-module', 'passgen-tool', 'qrgen-tool', 'json-tool', 'websocket-tool'],
+  },
+  {
+    slug: 'passgen-tool',
+    date: '2026-04-22',
+    readTime: '5 min',
+    tag: '工具',
+    accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
+    kbUrl: 'https://opskitpro.com/tools/passgen',
+    actionKind: 'tool',
+    coverImage: '/blog-covers/passgen-tool.svg',
+    titles: {
+      zh: '密码生成器怎么做：passgen 的设计、实现、用途和用法',
+      en: 'How the password generator works: design, implementation, use, and usage',
+      ja: 'パスワード生成ツール passgen の設計・実装・使い方',
+      tw: '密碼產生器怎麼做：passgen 的設計、實作、用途與用法',
+    },
+    summaries: {
+      zh: '从随机源、模式切换、强度提示到复制与历史记录，收口成一个很快的密码工具。',
+      en: 'From secure randomness and mode switching to strength hints, copy actions, and history, the tool stays fast.',
+      ja: '安全な乱数、モード切替、強度表示、コピー、履歴をまとめた高速な生成ツールです。',
+      tw: '從安全亂數、模式切換、強度提示到複製與歷史記錄，收斂成一個很快的密碼工具。',
+    },
+    sections: [
+      {
+        heading: '1. 这个工具解决什么问题',
+        paragraphs: [
+          'passgen 的目标很直接：让你在需要密码、UUID 或 PIN 的时候，不用去别的站点来回切换。很多时候，真正麻烦的不是生成本身，而是你还要决定格式、长度、是否能复制、是否要保留历史。',
+          '所以我把它做成一个很快的单页工具，打开就能生成，生成完就能复制，也能顺手保存最近几次结果。',
+        ],
+        bullets: [
+          '支持随机密码、UUID、6 位和 8 位 PIN。',
+          '生成后直接复制，不需要额外跳转。',
+          '保留最近 5 条历史，方便回看。',
+        ],
+        files: ['src/app/tools/passgen/pass-client.tsx', 'src/app/tools/passgen/page.tsx'],
+      },
+      {
+        heading: '2. 设计上为什么要“少一步”',
+        paragraphs: [
+          '密码工具最常见的问题，是把设置做得太多。字符集、长度、特殊模式、强度条都可以堆上去，但用户在现场要的往往不是功能，而是一个马上可用的结果。',
+          '所以我把模式分成两类：普通密码和特殊模式。UUID、PIN 与字符集模式互斥，避免用户选完以后又不知道自己生成了什么。',
+        ],
+        bullets: [
+          '普通密码与特殊模式互斥，逻辑更清楚。',
+          '强度条是即时反馈，不是装饰。',
+          '二维码按钮只是辅助，不改变主流程。',
+        ],
+        files: ['src/app/tools/passgen/pass-client.tsx', 'src/dictionaries/zh.json', 'src/dictionaries/ja.json'],
+      },
+      {
+        heading: '3. 实现和用法',
+        paragraphs: [
+          '实现上我用的是浏览器原生的 `crypto.randomUUID()` 和 `window.crypto.getRandomValues()`。这样做的好处是随机源可靠，而且不需要把敏感逻辑放到服务端。',
+          '用法也很简单：先选长度或特殊模式，再点“生成”，然后复制结果。如果你希望把临时密码展示给别人，也可以切出 QR 码。',
+        ],
+        bullets: [
+          'UUID 模式直接生成 v4 UUID。',
+          'PIN 模式用数字随机源生成固定长度数字串。',
+          '历史记录存在本地 localStorage 里，不上传服务器。',
+        ],
+        files: ['src/app/tools/passgen/pass-client.tsx', 'src/app/tools/passgen/__tests__/passgen.test.ts'],
+      },
+    ],
+    related: ['qrgen-tool', 'json-tool', 'services-deployment'],
+  },
+  {
+    slug: 'qrgen-tool',
+    date: '2026-04-22',
+    readTime: '4 min',
+    tag: '工具',
+    accent: 'from-cyan-500/10 via-sky-500/10 to-transparent',
+    kbUrl: 'https://opskitpro.com/tools/qrgen',
+    actionKind: 'tool',
+    coverImage: '/blog-covers/qrgen-tool.svg',
+    titles: {
+      zh: '二维码生成器怎么做：qrgen 的设计、实现、用途和用法',
+      en: 'How the QR generator works: design, implementation, use, and usage',
+      ja: 'QR 生成ツール qrgen の設計・実装・使い方',
+      tw: '二維碼產生器怎麼做：qrgen 的設計、實作、用途與用法',
+    },
+    summaries: {
+      zh: '输入文本就能立刻生成二维码预览，并可下载成 PNG，适合链接和短文本分享。',
+      en: 'Type text and instantly preview a QR code, then download it as PNG for links or short text sharing.',
+      ja: 'テキストを入力すると即座に QR を生成し、PNG でダウンロードできます。',
+      tw: '輸入文字即可即時預覽 QR Code，並可下載成 PNG，適合連結與短文本分享。',
+    },
+    sections: [
+      {
+        heading: '1. 这个工具解决什么问题',
+        paragraphs: [
+          'qrgen 的使用场景很简单：把一段链接、配置片段、文案或者联系方式，快速变成可扫描的二维码。很多时候你并不需要复杂设置，你只需要一个清楚的预览和稳定的导出。',
+          '因此这个页面的核心不是“花样很多”，而是“输入后马上能看见结果”。',
+        ],
+        bullets: [
+          '适合链接、邀请页、简短配置文本。',
+          '输入后实时预览，不需要额外提交。',
+          '可直接导出 PNG，方便拿去用。',
+        ],
+        files: ['src/app/tools/qrgen/qr-client.tsx', 'src/app/tools/qrgen/page.tsx'],
+      },
+      {
+        heading: '2. 设计上尽量保持单一主线',
+        paragraphs: [
+          '二维码工具如果做得太复杂，用户会困惑到底该调哪一项。我更希望它像一个“输入框 + 预览区”的二段式工具：左边输入，右边确认，按钮只保留下载这一件事。',
+          '这样既能让页面足够轻，也能让扫描结果在视觉上更稳，特别适合日常临时分享。',
+        ],
+        bullets: [
+          '左输入、右预览，结构非常明确。',
+          '空态提示清楚，避免用户误以为页面坏了。',
+          '高纠错等级保证二维码更稳。',
+        ],
+        files: ['src/app/tools/qrgen/qr-client.tsx', 'src/dictionaries/zh.json', 'src/dictionaries/ja.json'],
+      },
+      {
+        heading: '3. 实现和用法',
+        paragraphs: [
+          '实现上我直接用了 `qrcode.react` 的 `QRCodeSVG`，然后通过序列化 SVG 再转成 PNG 下载。这样生成过程完全在前端完成，不需要额外的后端依赖。',
+          '使用时只要把内容贴进去，右侧就会出现预览。确认没问题后点下载即可，适合快速把链接、临时说明或者访问地址发给别人。',
+        ],
+        bullets: [
+          '默认以高纠错等级生成，提升可扫描性。',
+          '导出按钮只在有内容时启用。',
+          '本地生成，不经过服务器。',
+        ],
+        files: ['src/app/tools/qrgen/qr-client.tsx'],
+      },
+    ],
+    related: ['passgen-tool', 'json-tool', 'services-deployment'],
+  },
+  {
+    slug: 'json-tool',
+    date: '2026-04-22',
+    readTime: '7 min',
+    tag: '工具',
+    accent: 'from-violet-500/10 via-fuchsia-500/10 to-transparent',
+    kbUrl: 'https://opskitpro.com/tools/json',
+    actionKind: 'tool',
+    coverImage: '/blog-covers/json-tool.svg',
+    titles: {
+      zh: 'JSON 整理器怎么做：json 的设计、实现、用途和用法',
+      en: 'How the JSON toolkit works: design, implementation, use, and usage',
+      ja: 'JSON 整形ツール json の設計・実装・使い方',
+      tw: 'JSON 整理器怎麼做：json 的設計、實作、用途與用法',
+    },
+    summaries: {
+      zh: '从校验、修复、格式化，到 jq、schema、对比与字段提取，一页完成。',
+      en: 'Validation, repair, formatting, jq, schema, diff, and field extraction all live on one page.',
+      ja: '検証、修復、整形、jq、schema、比較、抽出を 1 ページでまとめています。',
+      tw: '從校驗、修復、格式化，到 jq、schema、比對與欄位擷取，一頁完成。',
+    },
+    sections: [
+      {
+        heading: '1. 这个工具的目标是什么',
+        paragraphs: [
+          'JSON 工具最常见的使用场景，是把 API 返回、配置文件、日志片段或者抓到的对象先整理清楚。很多时候你不是想“写 JSON”，而是想“看懂 JSON”。',
+          '所以我把它做成一个多模式工作台：输入、修复、格式化、对比、转换和提取都放在同一页里。',
+        ],
+        bullets: [
+          '适合排障、写配置和处理接口返回。',
+          '默认先校验，避免把坏数据继续往下传。',
+          '多种视图并存，便于不同阶段使用。',
+        ],
+        files: ['src/app/tools/json/json-client.tsx', 'src/app/tools/json/page.tsx'],
+      },
+      {
+        heading: '2. 为什么要把功能分成几块',
+        paragraphs: [
+          'JSON 的处理其实是多个不同任务的组合：有时你要修坏 JSON，有时要格式化，有时要跑 jq，有时要生成 schema。把这些任务硬塞到一个按钮里，用户只会更乱。',
+          '所以我把它拆成编辑器、修复、转换、比较、校验、提取几个区块，用户可以按自己的节奏逐步推进。',
+        ],
+        bullets: [
+          '编辑器是主入口，其他能力围绕它展开。',
+          '修复、转换、比较都是在同一份输入上继续工作。',
+          '草稿和历史保存在本地，方便反复试验。',
+        ],
+        files: ['src/app/tools/json/components/FormatConverter.tsx', 'src/app/tools/json/components/JsonDiffPanel.tsx', 'src/app/tools/json/components/SchemaValidator.tsx'],
+      },
+      {
+        heading: '3. 实现和用法',
+        paragraphs: [
+          '实现上我把 JSON 修复、格式转换、jq 查询、schema 校验和字段提取都拆成了独立 hook / component。这样每个功能可以单独测试，也方便以后继续加新模式。',
+          '用法上最简单的流程是：粘贴 JSON，先看校验状态，再决定是格式化、修复、转 YAML/TOML，还是直接跑 jq。需要对比时再切到 diff，需要抽字段时再进提取器。',
+        ],
+        bullets: [
+          '支持 JSON/YAML/TOML 互转。',
+          '支持 jq 查询、diff、schema 验证、字段提取。',
+          '支持草稿保存和 URL 加载，适合排障记录。',
+        ],
+        files: ['src/app/tools/json/hooks/useFormatConvert.ts', 'src/app/tools/json/hooks/useJqQuery.ts', 'src/app/tools/json/hooks/useJsonRepair.ts', 'src/app/tools/json/hooks/useJsonStorage.ts'],
+      },
+    ],
+    related: ['passgen-tool', 'websocket-tool', 'services-deployment'],
+  },
+  {
+    slug: 'websocket-tool',
+    date: '2026-04-22',
+    readTime: '7 min',
+    tag: '工具',
+    accent: 'from-sky-500/10 via-cyan-500/10 to-transparent',
+    kbUrl: 'https://opskitpro.com/tools/websocket',
+    actionKind: 'tool',
+    coverImage: '/blog-covers/websocket-tool.svg',
+    titles: {
+      zh: 'WebSocket 调试器怎么做：websocket 的设计、实现、用途和用法',
+      en: 'How the WebSocket debugger works: design, implementation, use, and usage',
+      ja: 'WebSocket デバッガーの設計・実装・使い方',
+      tw: 'WebSocket 調試器怎麼做：websocket 的設計、實作、用途與用法',
+    },
+    summaries: {
+      zh: '多连接、消息模板、二进制发送、会话保存与日志检索，面向实际调试。',
+      en: 'Multi-connection tabs, message templates, binary sending, session saving, and log retrieval for real debugging.',
+      ja: '複数接続、テンプレート、バイナリ送信、セッション保存、ログ確認をまとめたデバッガーです。',
+      tw: '多連線、訊息模板、二進位傳送、會話保存與日誌檢索，面向實際調試。',
+    },
+    sections: [
+      {
+        heading: '1. 这个工具解决什么问题',
+        paragraphs: [
+          'WebSocket 调试的难点，不只是“能不能连上”，而是连上之后要怎么发消息、怎么看日志、怎么留存会话。很多时候你还要同时调多个连接，或者在文本、JSON、二进制之间切换。',
+          '所以我把它做成了一个多标签工作台，目标是让调试像开几个终端一样自然。',
+        ],
+        bullets: [
+          '支持多连接并行调试。',
+          '支持文本、JSON、二进制、Ping 等常见场景。',
+          '支持会话保存和回放，适合反复测试。',
+        ],
+        files: ['src/app/tools/websocket/WebsocketClient.tsx', 'src/app/tools/websocket/page.tsx'],
+      },
+      {
+        heading: '2. 设计上为什么要拆成几个面板',
+        paragraphs: [
+          '一个 WebSocket 工具如果只有一块大输入框，通常不够用。真正调试时，你会同时关心连接状态、消息模板、发送内容、日志列表、统计信息和二进制编码。',
+          '所以我把它拆成连接面板、消息编辑器、日志视图、统计面板、二进制构造器和会话管理几个部分。每块都小一点，组合起来反而更好用。',
+        ],
+        bullets: [
+          '状态、编辑、日志、统计各自独立。',
+          '文本与二进制发送方式分开，避免误操作。',
+          'Ping、模板、会话管理都能按需展开。',
+        ],
+        files: ['src/app/tools/websocket/components/ConnectionPanel.tsx', 'src/app/tools/websocket/components/MessageComposer.tsx', 'src/app/tools/websocket/components/LogViewer.tsx', 'src/app/tools/websocket/components/SessionManager.tsx'],
+      },
+      {
+        heading: '3. 实现和用法',
+        paragraphs: [
+          '实现上我用 `useWebSocket` 和 `useMultiConnection` 去管理连接状态、日志和发送逻辑。这样可以把连接生命周期、消息统计和会话切换拆开，避免一个巨大组件把所有事情都塞在一起。',
+          '用法很直接：先输入 WebSocket 地址，再选文本或二进制模式，连接后发消息、看日志，需要时保存会话。对调试 echo 服务、内部推送或者实时通知都很方便。',
+        ],
+        bullets: [
+          '支持多标签同时连接。',
+          '支持文本、二进制和 Ping 三种视图。',
+          '支持消息模板和日志过滤，便于定位问题。',
+        ],
+        files: ['src/app/tools/websocket/hooks/useWebSocket.ts', 'src/app/tools/websocket/hooks/useMultiConnection.ts', 'src/app/tools/websocket/hooks/useMessageTemplates.ts', 'src/app/tools/websocket/hooks/useMessageHistory.ts'],
+      },
+    ],
+    related: ['json-tool', 'qrgen-tool', 'services-deployment'],
   },
 ]
 
@@ -351,6 +613,7 @@ export function getBlogPosts(lang: Lang) {
     tag: post.tag,
     accent: post.accent,
     kbUrl: post.kbUrl,
+    actionKind: post.actionKind,
     coverImage: post.coverImage,
     title: localize(post.titles, lang) as string,
     summary: localize(post.summaries, lang) as string,
