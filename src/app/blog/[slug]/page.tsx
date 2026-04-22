@@ -2,16 +2,7 @@ import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Calendar,
-  Clock,
-  Code2,
-  Layers3,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Calendar, Clock } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
@@ -58,20 +49,21 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   const relatedPosts = getBlogPosts(lang)
     .filter((entry) => post.related.includes(entry.slug))
     .slice(0, 3)
+  const previewSections = post.sections.slice(0, 3)
 
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
 
-      <main className="flex-grow w-full max-w-6xl mx-auto px-6 mt-6 md:mt-8 mb-28 relative">
-        <div className={`absolute inset-x-0 top-0 h-[420px] bg-gradient-to-br ${post.accent} blur-3xl opacity-80 -z-10`} />
+      <main className="relative mx-auto mb-28 w-full max-w-6xl flex-grow px-6 pb-6 pt-6 md:pt-8">
+        <div className={`absolute inset-x-0 top-0 -z-10 h-[420px] bg-gradient-to-br ${post.accent} blur-3xl opacity-70`} />
 
         <div className="mb-8">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-4 py-2 text-[11px] font-medium tracking-[0.16em] text-zinc-600 transition-colors hover:border-emerald-500/30 hover:text-emerald-600"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             {lang === 'ja' ? 'ブログへ戻る' : lang === 'zh' ? '返回博客' : lang === 'tw' ? '返回部落格' : 'Back to blog'}
           </Link>
         </div>
@@ -83,128 +75,117 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 {post.tag}
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-zinc-400">
-                <Calendar className="w-3.5 h-3.5" />
+                <Calendar className="h-3.5 w-3.5" />
                 {post.date}
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-zinc-400">
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="h-3.5 w-3.5" />
                 {post.readTime}
               </span>
             </div>
 
-            <h1 className="mt-6 max-w-4xl text-4xl font-black tracking-tighter text-zinc-900 sm:text-5xl md:text-6xl leading-tight">
+            <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-6xl">
               {post.title}
             </h1>
-            <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-700">
-              {post.summary}
-            </p>
+            <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-700">{post.summary}</p>
+
+            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-700">
+              <BookOpen className="h-4 w-4" />
+              {lang === 'ja'
+                ? '全文は KB にあります。ここは主站の軽量プレビューです。'
+                : lang === 'zh'
+                  ? '完整正文在 KB，这里是主站的轻量预览。'
+                  : lang === 'tw'
+                    ? '完整正文在 KB，這裡是主站的輕量預覽。'
+                    : 'The full article lives in KB. This is a lightweight preview on the main site.'}
+            </div>
+
+            <a
+              href={post.kbUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+            >
+              {lang === 'ja' ? 'KB で全文を読む' : lang === 'zh' ? '在 KB 阅读全文' : lang === 'tw' ? '在 KB 閱讀全文' : 'Read full article on KB'}
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
 
-          <div className="grid gap-6 border-b border-zinc-100 px-6 py-8 sm:grid-cols-3 sm:px-10">
-            <div className="rounded-3xl border border-zinc-100 bg-zinc-50/70 p-5">
-              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                {lang === 'ja' ? '読みどころ' : lang === 'zh' ? '阅读重点' : lang === 'tw' ? '閱讀重點' : 'Highlights'}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-zinc-700">
-                {lang === 'ja'
-                  ? 'この文章は、需求、設計、実装の順で、OpsKitPro をどう組み立てたかをまとめています。'
-                  : lang === 'zh'
-                    ? '这篇文章按“需求 → 设计 → 实现”的顺序，拆解 OpsKitPro 的搭建思路。'
-                    : lang === 'tw'
-                      ? '這篇文章按照「需求 → 設計 → 實作」的順序，拆解 OpsKitPro 的搭建思路。'
-                      : 'This article follows the path from requirements to design to implementation.'}
-              </p>
+          <div className="border-b border-zinc-100 px-6 py-8 sm:px-10">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
+              <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
+              {lang === 'ja' ? '主站プレビュー' : lang === 'zh' ? '主站预览' : lang === 'tw' ? '主站預覽' : 'Main site preview'}
             </div>
-            <div className="rounded-3xl border border-zinc-100 bg-zinc-50/70 p-5">
-              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
-                {lang === 'ja' ? '補足' : lang === 'zh' ? '补充说明' : lang === 'tw' ? '補充說明' : 'Note'}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-zinc-700">
-                {lang === 'ja'
-                  ? '本文の本文は中国語で整理しています。タイトルと要約は、サイトの言語設定に合わせて切り替わります。'
-                  : lang === 'zh'
-                    ? '正文先以中文整理，标题和摘要会随站点语言切换。'
-                    : lang === 'tw'
-                      ? '正文先以中文整理，標題和摘要會隨站點語言切換。'
-                      : 'The body is currently written in Chinese-first form. Titles and summaries follow the site language.'}
-              </p>
-            </div>
-            <div className="rounded-3xl border border-zinc-100 bg-zinc-50/70 p-5">
-              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                <Layers3 className="w-3.5 h-3.5 text-emerald-500" />
-                {lang === 'ja' ? '関連ファイル' : lang === 'zh' ? '相关文件' : lang === 'tw' ? '相關文件' : 'Files'}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-zinc-700">
-                {lang === 'ja'
-                  ? 'README、UI、API、i18n、デプロイの各層にまたがる内容です。'
-                  : lang === 'zh'
-                    ? '内容覆盖 README、UI、API、i18n 与部署等多个层面。'
-                    : lang === 'tw'
-                      ? '內容覆蓋 README、UI、API、i18n 與部署等多個層面。'
-                      : 'The article spans README, UI, API, i18n, and deployment layers.'}
-              </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              {previewSections.map((section, index) => (
+                <div key={section.heading} className="rounded-3xl border border-zinc-100 bg-zinc-50/70 p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">
+                      {lang === 'ja' ? 'KB 参照' : lang === 'zh' ? 'KB 参照' : lang === 'tw' ? 'KB 參照' : 'KB ref'}
+                    </span>
+                  </div>
+                  <h2 className="mt-4 text-xl font-black tracking-tighter text-zinc-900">{section.heading}</h2>
+                  <p className="mt-3 text-sm leading-7 text-zinc-700">{section.paragraphs[0]}</p>
+                </div>
+              ))}
             </div>
           </div>
 
           <div className="grid gap-10 px-6 py-8 sm:px-10 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="space-y-10">
-              {post.sections.map((section, index) => (
-                <section key={index} className="space-y-4">
-                  <h2 className="text-2xl font-black tracking-tighter text-zinc-900">{section.heading}</h2>
-                  {section.paragraphs.map((paragraph, paragraphIndex) => (
-                    <p key={paragraphIndex} className="text-sm leading-8 text-zinc-700">
-                      {paragraph}
-                    </p>
-                  ))}
-                  {section.bullets?.length ? (
-                    <ul className="space-y-2 rounded-3xl border border-zinc-100 bg-zinc-50/60 p-5">
-                      {section.bullets.map((bullet) => (
-                        <li key={bullet} className="flex items-start gap-3 text-sm leading-7 text-zinc-700">
-                          <span className="mt-2 h-2 w-2 rounded-full bg-emerald-500" />
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {section.files?.length ? (
-                    <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">
-                      <div className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                        <Code2 className="w-3.5 h-3.5 text-emerald-500" />
-                        {lang === 'ja' ? 'コード参照' : lang === 'zh' ? '代码参考' : lang === 'tw' ? '程式碼參考' : 'Code references'}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {section.files.map((file) => (
-                          <span
-                            key={file}
-                            className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-mono text-zinc-700"
-                          >
-                            {file}
-                          </span>
-                        ))}
-                      </div>
+            <div className="space-y-6">
+              <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+                  {lang === 'ja' ? '公開方針' : lang === 'zh' ? '发布方式' : lang === 'tw' ? '發佈方式' : 'Publishing'}
+                </div>
+                <p className="mt-4 text-sm leading-7 text-zinc-700">
+                  {lang === 'ja'
+                    ? '長文は KB にまとめ、主站は要点だけを残しています。'
+                    : lang === 'zh'
+                      ? '长文统一放到 KB，主站只保留要点和入口。'
+                      : lang === 'tw'
+                        ? '長文統一放到 KB，主站只保留要點與入口。'
+                        : 'Long-form writing lives in KB, while the main site keeps only the key points and entry points.'}
+                </p>
+              </div>
+
+              <div className="rounded-[2rem] border border-zinc-100 bg-zinc-50/70 p-6">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+                  {lang === 'ja' ? '要点一覧' : lang === 'zh' ? '要点列表' : lang === 'tw' ? '要點列表' : 'Key points'}
+                </div>
+                <div className="mt-4 grid gap-3">
+                  {post.sections.map((section, index) => (
+                    <div key={section.heading} className="rounded-2xl border border-zinc-100 bg-white px-4 py-3 text-sm leading-7 text-zinc-700">
+                      <span className="mr-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      {section.heading}
                     </div>
-                  ) : null}
-                </section>
-              ))}
+                  ))}
+                </div>
+              </div>
             </div>
 
             <aside className="space-y-6">
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {lang === 'ja' ? 'シリーズ一覧' : lang === 'zh' ? '系列文章' : lang === 'tw' ? '系列文章' : 'Series'}
+                  {lang === 'ja' ? 'KB シリーズ' : lang === 'zh' ? 'KB 系列' : lang === 'tw' ? 'KB 系列' : 'KB series'}
                 </div>
                 <div className="mt-4 space-y-3">
                   {relatedPosts.map((item) => (
-                    <Link
+                    <a
                       key={item.slug}
-                      href={`/blog/${item.slug}`}
+                      href={item.kbUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="block rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 transition-colors hover:border-emerald-500/20 hover:bg-emerald-50/40"
                     >
                       <p className="text-xs font-semibold tracking-[0.16em] text-emerald-600">{item.tag}</p>
                       <p className="mt-2 text-sm font-semibold leading-6 text-zinc-900">{item.title}</p>
-                    </Link>
+                      <p className="mt-2 text-xs leading-6 text-zinc-500">{item.summary}</p>
+                    </a>
                   ))}
                 </div>
               </div>
@@ -215,20 +196,31 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 </div>
                 <p className="mt-4 text-sm leading-7 text-zinc-700">
                   {lang === 'ja'
-                    ? '必要なら、サービス矩阵や個別ツールの実装記事も続けて読めます。'
+                    ? '必要なら、サービスマトリクスや個別ツールの KB 記事を続けて読めます。'
                     : lang === 'zh'
-                      ? '如果想继续深入，可以接着看服务矩阵或各个工具模块的实现。'
+                      ? '如果想继续深入，可以接着看服务矩阵或各个工具模块的 KB 文章。'
                       : lang === 'tw'
-                        ? '如果想繼續深入，可以接著看服務矩陣或各個工具模組的實作。'
-                        : 'If you want to go deeper, continue with the service matrix or individual tool modules.'}
+                        ? '如果想繼續深入，可以接著看服務矩陣或各個工具模組的 KB 文章。'
+                        : 'If you want to go deeper, continue with the service matrix or individual KB articles.'}
                 </p>
-                <Link
-                  href="/blog"
-                  className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-                >
-                  {lang === 'ja' ? 'ブログ一覧へ' : lang === 'zh' ? '返回博客列表' : lang === 'tw' ? '返回部落格列表' : 'Back to blog'}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                <div className="mt-5 flex flex-col gap-3">
+                  <Link
+                    href="/blog"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:border-emerald-500/20 hover:text-emerald-600"
+                  >
+                    {lang === 'ja' ? 'ブログ一覧へ' : lang === 'zh' ? '返回博客列表' : lang === 'tw' ? '返回部落格列表' : 'Back to blog'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a
+                    href={post.kbUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                  >
+                    {lang === 'ja' ? 'KB の全文へ' : lang === 'zh' ? '去 KB 看全文' : lang === 'tw' ? '去 KB 看全文' : 'Open KB article'}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
             </aside>
           </div>

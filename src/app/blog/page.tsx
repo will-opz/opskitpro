@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import {
   ArrowRight,
   BookOpen,
@@ -87,9 +86,11 @@ export default async function BlogPage() {
             const Icon = CARD_ICONS[idx % CARD_ICONS.length]
 
             return (
-              <Link
+              <a
                 key={post.slug}
-                href={`/blog/${post.slug}`}
+                href={post.kbUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group flex flex-col bg-white border border-black/5 rounded-[2rem] p-7 shadow-sm hover:shadow-2xl hover:border-emerald-500/20 transition-all relative overflow-hidden min-h-[280px]"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-80`} />
@@ -119,7 +120,7 @@ export default async function BlogPage() {
                     </div>
                   </div>
                 </div>
-              </Link>
+              </a>
             )
           })}
 
@@ -159,4 +160,3 @@ export default async function BlogPage() {
     </>
   )
 }
-

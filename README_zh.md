@@ -44,22 +44,24 @@ kb.opskitpro.com (知识节点 — Quartz + Obsidian)
 - **首页**：多语言落地页，保留一个中心化的搜索动作，方便直接进入诊断。
 - **服务矩阵**：普通工具统一为标准卡片，Matrix 保留独立识别风格。
 - **工具页**：网站诊断、IP 查询、DNS 检测、JSON、WebSocket、二维码与密码生成。
-- **博客**：围绕需求、设计、模块实现与工程收口整理的项目笔记。
+- **博客**：主站只保留轻量索引卡片，完整长文放在 KB，并在主站中跳转阅读。
 - **关于页**：更聚焦运维设计、阅读体验和产品方向的项目说明。
 
 ---
 
 ## ✍️ 博客系列
 
-站点里已经补上了一组模块化文章，按项目推进顺序梳理了 OpsKitPro 的形成过程：
+主站现在只保留博客索引和轻量 relay 页，完整长文放在 KB 静态知识库里。这样主站更轻，长文也更适合独立维护：
 
-1. [为什么我做 OpsKitPro：从排障痛点到工具平台](https://opskitpro.com/blog/why-opskitpro)
-2. [OpsKitPro 的设计原则：为什么我把 UI 做得更克制](https://opskitpro.com/blog/design-principles)
-3. [网站诊断模块是怎么做的：website-check 的实现拆解](https://opskitpro.com/blog/website-check-module)
-4. [IP 与 DNS 模块：把查询结果变成可读的诊断结论](https://opskitpro.com/blog/ip-dns-module)
-5. [服务矩阵、国际化与 Cloudflare 部署：OpsKitPro 的工程收口](https://opskitpro.com/blog/services-deployment)
+1. [为什么我做 OpsKitPro：从排障痛点到工具平台](https://kb.opskitpro.com/02_Articles/opskitpro-requirements)
+2. [OpsKitPro 的设计原则：为什么我把 UI 做得更克制](https://kb.opskitpro.com/02_Articles/opskitpro-design-principles)
+3. [website-check 的实现拆解：为什么要做并行探测](https://kb.opskitpro.com/02_Articles/website-check-parallel-probes)
+4. [IP Lookup：为什么要返回结构化兜底结果](https://kb.opskitpro.com/02_Articles/ip-lookup-structured-fallback)
+5. [DNS Lookup：为什么要做多 resolver 交叉验证](https://kb.opskitpro.com/02_Articles/dns-lookup-multi-resolver)
+6. [服务矩阵标准化与 Cloudflare 部署路径](https://kb.opskitpro.com/02_Articles/services-standardization)
+7. [OpsKitPro 为什么最终跑在 Cloudflare Workers 上](https://kb.opskitpro.com/02_Articles/cloudflare-workers-deployment)
 
-> 这组文章正文目前以中文为主，站点侧会随语言切换标题和摘要。
+> KB 文章正文目前以中文为主，主站只保留多语言标题、摘要和入口。
 
 ---
 
