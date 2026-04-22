@@ -4,7 +4,7 @@
 
 方針:
 - 1 記事 1 トピック
-- 主站の紹介と KB の役割分担を明確にする
+- メインサイトの紹介と KB の役割分担を明確にする
 - 実装の話は「問題 -> 設計 -> 実装 -> 学び」の順で書く
 
 おすすめの投稿順:
@@ -15,6 +15,9 @@
 5. [04_kb-split.md](./04_kb-split.md)
 6. [05_cloudflare-workers.md](./05_cloudflare-workers.md)
 7. [06_services-standardization.md](./06_services-standardization.md)
+
+Cloudflare Workers 実装シリーズ:
+- [cloudflare-workers/README.md](./cloudflare-workers/README.md)
 
 補足:
 - KB 側の長文記事は `kb.opskitpro.com` へ誘導する前提で書いています。
