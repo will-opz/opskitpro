@@ -39,6 +39,30 @@ kb.opskitpro.com (Knowledge Node — Quartz + Obsidian)
 
 ---
 
+## 🧭 What’s in the site today
+
+- **Home**: multilingual landing page with a centered search action and quick entry into diagnostics.
+- **Services**: standardized tool matrix with one consistent card system, except for Matrix which keeps an independent identity.
+- **Tools**: website-check, IP lookup, DNS lookup, JSON, WebSocket, QR code, and password generation modules.
+- **Blog**: a growing set of project notes that explain requirements, design choices, and module-level implementation.
+- **About**: a condensed project overview focused on operational design, readability, and the product direction.
+
+---
+
+## ✍️ Blog Series
+
+The blog now includes a small modular series that documents how OpsKitPro was shaped:
+
+1. [Why I built OpsKitPro: from troubleshooting pain points to a tool platform](https://opskitpro.com/blog/why-opskitpro)
+2. [OpsKitPro design principles: why the UI became more restrained](https://opskitpro.com/blog/design-principles)
+3. [How the website-check module works: a breakdown of the implementation](https://opskitpro.com/blog/website-check-module)
+4. [IP and DNS modules: turning raw lookup data into readable conclusions](https://opskitpro.com/blog/ip-dns-module)
+5. [Service matrix, i18n, and Cloudflare deployment: OpsKitPro's engineering wrap-up](https://opskitpro.com/blog/services-deployment)
+
+> The articles are currently written Chinese-first, while the site shell keeps localized titles and summaries.
+
+---
+
 ## 🚀 Technical Stack
 
 | Layer | Technology |

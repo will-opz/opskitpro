@@ -39,6 +39,30 @@ kb.opskitpro.com (知识节点 — Quartz + Obsidian)
 
 ---
 
+## 🧭 当前站点包含什么
+
+- **首页**：多语言落地页，保留一个中心化的搜索动作，方便直接进入诊断。
+- **服务矩阵**：普通工具统一为标准卡片，Matrix 保留独立识别风格。
+- **工具页**：网站诊断、IP 查询、DNS 检测、JSON、WebSocket、二维码与密码生成。
+- **博客**：围绕需求、设计、模块实现与工程收口整理的项目笔记。
+- **关于页**：更聚焦运维设计、阅读体验和产品方向的项目说明。
+
+---
+
+## ✍️ 博客系列
+
+站点里已经补上了一组模块化文章，按项目推进顺序梳理了 OpsKitPro 的形成过程：
+
+1. [为什么我做 OpsKitPro：从排障痛点到工具平台](https://opskitpro.com/blog/why-opskitpro)
+2. [OpsKitPro 的设计原则：为什么我把 UI 做得更克制](https://opskitpro.com/blog/design-principles)
+3. [网站诊断模块是怎么做的：website-check 的实现拆解](https://opskitpro.com/blog/website-check-module)
+4. [IP 与 DNS 模块：把查询结果变成可读的诊断结论](https://opskitpro.com/blog/ip-dns-module)
+5. [服务矩阵、国际化与 Cloudflare 部署：OpsKitPro 的工程收口](https://opskitpro.com/blog/services-deployment)
+
+> 这组文章正文目前以中文为主，站点侧会随语言切换标题和摘要。
+
+---
+
 ## 🚀 技术栈
 
 | 层级 | 技术选型 |
