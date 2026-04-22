@@ -32,7 +32,7 @@
     "card4_title": "Ops Survival Kit",
     "card4_desc": "Industrial utilities for prod emergencies. WebSocket debugging, JSON audits, and password recovery.",
     "card5_title": "Technical Notes",
-    "card5_desc": "How to Fix Cloudflare 502 Errors. DNS Lookup Explained. Tactical field notes for SREs.",
+    "card5_desc": "Requirements, design, module implementation, and engineering wrap-up live here.",
     "quick_access": "Diagnose Website Now",
     "tool_passgen": "Passwords",
     "tool_qrgen": "QR Codes",
@@ -53,8 +53,8 @@
       "s3_desc": "Check if your DNS is correctly configured."
     },
     "blog_section": {
-      "title": "FEATURED_INTEL",
-      "subtitle": "SRE Field Notes & Tech Forensics",
+      "title": "Technical Notes",
+      "subtitle": "Practical implementation notes from the edge",
       "view_all": "View all articles",
       "posts": [
         {
@@ -79,7 +79,7 @@
           "tag": "NETWORK",
           "date": "2026-03-25",
           "title": "DNS Records Explained",
-          "desc": "Confused about DNS config? We explain A, MX, CNAME."
+          "desc": "Confused about DNS config? We break down A, MX, and CNAME records."
         }
       ]
     }

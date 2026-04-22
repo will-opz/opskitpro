@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { cookies } from 'next/headers'
 import {
   ArrowRight,
@@ -29,31 +30,31 @@ export default async function BlogPage() {
     <>
       <SiteHeader dict={dict} lang={lang} />
 
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 z-10 mt-6 md:mt-8 mb-28 relative">
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <main className="relative mx-auto mb-28 w-full max-w-7xl flex-grow px-6 pt-6 z-10 md:pt-8">
+        <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[600px] w-full max-w-[1000px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
 
-        <div className="mb-12 text-center md:text-left border-b border-zinc-100 pb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            {isJapanese ? '技術記事' : isZh ? '技术笔记' : 'Field Notes'}
+        <div className="mb-12 border-b border-zinc-100 pb-10 text-center md:text-left">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-600">
+            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+            {isJapanese ? '技術メモ' : isZh ? '技术笔记' : 'Technical Notes'}
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-zinc-900 tracking-tighter mb-6 leading-tight">
+          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-7xl">
             {dict.nav.blog}
           </h1>
-          <p className="text-sm sm:text-base text-zinc-700 max-w-xl font-medium leading-relaxed">
+          <p className="max-w-xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base">
             {isJapanese
-              ? '可観測性、サイト信頼性、エッジ基盤の現場メモをまとめています。'
+              ? '可観測性、サイト信頼性、エッジ基盤の技術メモをまとめています。'
               : isZh
-                ? '这里整理了 OpsKitPro 的需求定义、设计原则、模块实现与工程收口。'
-                : 'This section collects the product requirements, design choices, module implementations, and engineering wrap-up behind OpsKitPro.'}
+                ? '这里整理了 OpsKitPro 的技术笔记、需求、设计原则、模块实现与工程收口。'
+                : 'This section collects OpsKitPro technical notes, requirements, design choices, module implementations, and engineering wrap-up.'}
             <br />
-            <span className="opacity-40 mt-2 block">
+            <span className="mt-2 block opacity-40">
               {isJapanese ? 'OpsKitPro ナレッジベースと連携しています。' : 'Powered by OpsKitPro Content Engine.'}
             </span>
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-14">
+        <div className="mb-14 grid grid-cols-1 gap-4 md:grid-cols-3">
           {[
             {
               label: isJapanese ? '系列' : isZh ? '系列' : 'Series',
@@ -70,18 +71,18 @@ export default async function BlogPage() {
           ].map((item) => (
             <div
               key={item.label}
-              className="bg-white/80 backdrop-blur-md border border-black/5 rounded-2xl p-4 sm:p-5 shadow-sm flex items-start justify-between gap-4"
+              className="flex items-start justify-between gap-4 rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur-md sm:p-5"
             >
               <div>
-                <div className="text-[10px] font-semibold text-emerald-500 uppercase tracking-[0.28em]">{item.label}</div>
-                <div className="mt-2 text-sm text-zinc-700 leading-snug">{item.value}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald-500">{item.label}</div>
+                <div className="mt-2 text-sm leading-snug text-zinc-700">{item.value}</div>
               </div>
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1" />
+              <div className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post, idx) => {
             const Icon = CARD_ICONS[idx % CARD_ICONS.length]
 
@@ -91,32 +92,39 @@ export default async function BlogPage() {
                 href={post.kbUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col bg-white border border-black/5 rounded-[2rem] p-7 shadow-sm hover:shadow-2xl hover:border-emerald-500/20 transition-all relative overflow-hidden min-h-[280px]"
+                className="group flex flex-col overflow-hidden rounded-[2rem] border border-black/5 bg-white shadow-sm transition-all hover:border-emerald-500/20 hover:shadow-2xl"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-80`} />
-                <Icon className="absolute top-0 right-0 p-8 scale-150 opacity-[0.03] group-hover:opacity-10 transition-opacity" />
+                <div className="relative h-44 overflow-hidden">
+                  <Image
+                    src={post.coverImage}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
+                  <Icon className="absolute right-4 top-4 h-14 w-14 opacity-[0.08] transition-opacity group-hover:opacity-15" />
+                </div>
 
-                <div className="relative z-10 flex h-full flex-col">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase bg-white/80 text-emerald-600">
+                <div className="relative z-10 flex h-full flex-col p-6">
+                  <div className="mb-5 flex items-center justify-between">
+                    <span className="rounded-lg bg-white/90 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-600">
                       {post.tag}
                     </span>
                     <div className="flex items-center gap-2 text-[10px] text-zinc-400">
-                      <Clock className="w-3 h-3" /> {post.readTime}
+                      <Clock className="h-3 w-3" /> {post.readTime}
                     </div>
                   </div>
 
-                  <h3 className="text-lg sm:text-xl font-semibold text-zinc-900 group-hover:text-emerald-600 transition-colors leading-tight mb-3">
+                  <h3 className="mb-3 text-lg font-semibold leading-tight text-zinc-900 transition-colors group-hover:text-emerald-600 sm:text-xl">
                     {post.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 line-clamp-3 leading-relaxed opacity-80 mb-6">
-                    {post.summary}
-                  </p>
+                  <p className="mb-6 line-clamp-3 text-xs leading-relaxed text-zinc-500 opacity-80">{post.summary}</p>
 
-                  <div className="mt-auto pt-5 border-t border-zinc-50 flex items-center justify-between">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-[0.18em]">{post.date}</span>
-                    <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all transform group-hover:translate-x-1">
-                      <ArrowRight className="w-4 h-4" />
+                  <div className="mt-auto flex items-center justify-between border-t border-zinc-50 pt-5">
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">{post.date}</span>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-50 transition-all group-hover:translate-x-1 group-hover:bg-emerald-500 group-hover:text-white">
+                      <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>
                 </div>
@@ -124,18 +132,18 @@ export default async function BlogPage() {
             )
           })}
 
-          <div className="lg:col-span-1 bg-white border border-black/5 rounded-[2rem] p-8 text-zinc-900 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all relative overflow-hidden group min-h-[280px]">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-              <BookOpen className="w-16 h-16" />
+          <div className="group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[2rem] border border-black/5 bg-white p-8 text-zinc-900 shadow-sm transition-all hover:shadow-xl lg:col-span-1">
+            <div className="absolute right-0 top-0 p-8 opacity-[0.04] transition-opacity group-hover:opacity-10">
+              <BookOpen className="h-16 w-16" />
             </div>
             <div>
-              <h4 className="text-[10px] font-semibold text-emerald-500 uppercase tracking-[0.22em] mb-6 underline decoration-emerald-500/30 underline-offset-4">
+              <h4 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-500 underline decoration-emerald-500/30 underline-offset-4">
                 {isJapanese ? '関連リンク' : isZh ? '延伸阅读' : 'Further reading'}
               </h4>
-              <h3 className="text-2xl font-black tracking-tighter mb-4">
+              <h3 className="mb-4 text-2xl font-black tracking-tighter">
                 {isJapanese ? 'ナレッジベースで深掘りする' : isZh ? '去知识库继续深挖' : 'Keep digging in the knowledge base'}
               </h3>
-              <p className="text-[10px] text-zinc-400 leading-relaxed mb-8 opacity-80 uppercase tracking-[0.18em]">
+              <p className="mb-8 text-[10px] leading-relaxed uppercase tracking-[0.18em] text-zinc-400 opacity-80">
                 {isJapanese
                   ? '設計メモ、運用記録、実装ノートをまとめています。'
                   : isZh
@@ -147,10 +155,10 @@ export default async function BlogPage() {
               href="https://kb.opskitpro.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-2xl font-semibold text-base hover:scale-[1.02] transition-all flex items-center gap-3 group shadow-xl shadow-emerald-500/20"
+              className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] hover:from-emerald-400 hover:to-teal-500"
             >
               {isJapanese ? 'ナレッジを見る' : isZh ? '打开知识库' : 'Open knowledge base'}
-              <Radio className="w-5 h-5 group-hover:animate-pulse" />
+              <Radio className="h-5 w-5 group-hover:animate-pulse" />
             </a>
           </div>
         </div>

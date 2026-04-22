@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
@@ -31,6 +32,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title: post.title,
       description: post.summary,
       type: 'article',
+      images: [{ url: post.coverImage }],
     },
   }
 }
@@ -55,7 +57,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     <>
       <SiteHeader dict={dict} lang={lang} />
 
-      <main className="relative mx-auto mb-28 w-full max-w-6xl flex-grow px-6 pb-6 pt-6 md:pt-8">
+      <main className="relative mx-auto mb-28 w-full max-w-6xl flex-grow px-6 pt-6 pb-6 md:pt-8">
         <div className={`absolute inset-x-0 top-0 -z-10 h-[420px] bg-gradient-to-br ${post.accent} blur-3xl opacity-70`} />
 
         <div className="mb-8">
@@ -84,31 +86,49 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               </span>
             </div>
 
-            <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-6xl">
-              {post.title}
-            </h1>
-            <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-700">{post.summary}</p>
+            <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
+              <div>
+                <h1 className="max-w-4xl text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-6xl">
+                  {post.title}
+                </h1>
+                <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-700">{post.summary}</p>
 
-            <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-700">
-              <BookOpen className="h-4 w-4" />
-              {lang === 'ja'
-                ? '全文は KB にあります。ここは主站の軽量プレビューです。'
-                : lang === 'zh'
-                  ? '完整正文在 KB，这里是主站的轻量预览。'
-                  : lang === 'tw'
-                    ? '完整正文在 KB，這裡是主站的輕量預覽。'
-                    : 'The full article lives in KB. This is a lightweight preview on the main site.'}
+                <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-700">
+                  <BookOpen className="h-4 w-4" />
+                  {lang === 'ja'
+                    ? '全文は KB にあります。ここは主站の軽量プレビューです。'
+                    : lang === 'zh'
+                      ? '完整正文在 KB，这里是主站的轻量预览。'
+                      : lang === 'tw'
+                        ? '完整正文在 KB，這裡是主站的輕量預覽。'
+                        : 'The full article lives in KB. This is a lightweight preview on the main site.'}
+                </div>
+
+                <a
+                  href={post.kbUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                >
+                  {lang === 'ja' ? 'KB で全文を読む' : lang === 'zh' ? '在 KB 阅读全文' : lang === 'tw' ? '在 KB 閱讀全文' : 'Read full article on KB'}
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+
+              <figure className="overflow-hidden rounded-[2rem] border border-zinc-100 bg-zinc-950 shadow-sm">
+                <div className="relative aspect-[16/10]">
+                  <Image
+                    src={post.coverImage}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 420px"
+                    priority
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
+                </div>
+              </figure>
             </div>
-
-            <a
-              href={post.kbUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-            >
-              {lang === 'ja' ? 'KB で全文を読む' : lang === 'zh' ? '在 KB 阅读全文' : lang === 'tw' ? '在 KB 閱讀全文' : 'Read full article on KB'}
-              <ArrowRight className="h-4 w-4" />
-            </a>
           </div>
 
           <div className="border-b border-zinc-100 px-6 py-8 sm:px-10">

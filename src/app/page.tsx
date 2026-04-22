@@ -188,7 +188,7 @@ export default async function Home() {
                    {dict.home.blog_section?.title || "FEATURED_INTEL"}
                  </h2>
                  <p className="text-xs text-zinc-500 mt-1 tracking-[0.22em] uppercase">
-                   {dict.home.blog_section?.subtitle || "SRE Field Notes & Tech Forensics"}
+                   {dict.home.blog_section?.subtitle || "Technical Notes"}
                  </p>
               </div>
               <Link href="/blog" className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 group">

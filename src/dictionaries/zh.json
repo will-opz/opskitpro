@@ -31,8 +31,8 @@
     "card3_desc": "查询域名解析记录，检测 DNS 是否异常或被污染。支持多节点全球解析取证。",
     "card4_title": "运维应急包",
     "card4_desc": "生产环境应急工具集。包含 WebSocket 调试、JSON 审计与紧急密码重置。",
-    "card5_title": "技术笔记 / 博客",
-    "card5_desc": "Cloudflare 502 错误怎么解决？DNS 查询详解。深度 SRE 实战笔记。",
+    "card5_title": "技术笔记",
+    "card5_desc": "需求、设计、模块实现与工程收口，都整理在这里。",
     "quick_access": "立即检测你的网站",
     "tool_passgen": "密码生成",
     "tool_qrgen": "二维码转化",
@@ -53,8 +53,8 @@
       "s3_desc": "检查解析是否生效，防止域名被污染。"
     },
     "blog_section": {
-      "title": "技术取证笔记",
-      "subtitle": "来自边缘节点的实战记录与排障指南",
+      "title": "技术笔记",
+      "subtitle": "来自边缘节点的实践记录与排障笔记",
       "view_all": "查看全部笔记",
       "posts": [
         {
@@ -79,7 +79,7 @@
           "tag": "NETWORK",
           "date": "2026-03-25",
           "title": "DNS 记录类型全解析：A, MX, CNAME",
-          "desc": "搞不懂 DNS 配置？本文为你拨云见日。"
+          "desc": "搞不懂 DNS 配置？本文为你梳理常见记录类型。"
         }
       ]
     }

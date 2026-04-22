@@ -14,6 +14,7 @@ export type BlogPost = {
   tag: string
   accent: string
   kbUrl: string
+  coverImage: string
   titles: Record<Lang, string>
   summaries: Record<Lang, string>
   sections: BlogSection[]
@@ -28,6 +29,7 @@ const posts: BlogPost[] = [
     tag: '需求',
     accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/opskitpro-requirements',
+    coverImage: '/blog-covers/why-opskitpro.svg',
     titles: {
       zh: '为什么我做 OpsKitPro：从排障痛点到工具平台',
       en: 'Why I built OpsKitPro: from troubleshooting pain points to a tool platform',
@@ -90,6 +92,7 @@ const posts: BlogPost[] = [
     tag: '设计',
     accent: 'from-sky-500/10 via-cyan-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/opskitpro-design-principles',
+    coverImage: '/blog-covers/design-principles.svg',
     titles: {
       zh: 'OpsKitPro 的设计原则：为什么我把 UI 做得更克制',
       en: 'OpsKitPro design principles: why the UI became more restrained',
@@ -152,6 +155,7 @@ const posts: BlogPost[] = [
     tag: '实现',
     accent: 'from-emerald-500/10 via-lime-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/website-check-parallel-probes',
+    coverImage: '/blog-covers/website-check.svg',
     titles: {
       zh: '网站诊断模块是怎么做的：website-check 的实现拆解',
       en: 'How the website-check module works: a breakdown of the implementation',
@@ -214,6 +218,7 @@ const posts: BlogPost[] = [
     tag: '模块',
     accent: 'from-indigo-500/10 via-sky-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/ip-lookup-structured-fallback',
+    coverImage: '/blog-covers/ip-dns.svg',
     titles: {
       zh: 'IP 与 DNS 模块：把查询结果变成可读的诊断结论',
       en: 'IP and DNS modules: turning raw lookup data into readable conclusions',
@@ -276,6 +281,7 @@ const posts: BlogPost[] = [
     tag: '工程',
     accent: 'from-violet-500/10 via-fuchsia-500/10 to-transparent',
     kbUrl: 'https://kb.opskitpro.com/02_Articles/services-standardization',
+    coverImage: '/blog-covers/services-standardization.svg',
     titles: {
       zh: '服务矩阵、国际化与 Cloudflare 部署：OpsKitPro 的工程收口',
       en: "Service matrix, i18n, and Cloudflare deployment: OpsKitPro's engineering wrap-up",
@@ -345,6 +351,7 @@ export function getBlogPosts(lang: Lang) {
     tag: post.tag,
     accent: post.accent,
     kbUrl: post.kbUrl,
+    coverImage: post.coverImage,
     title: localize(post.titles, lang) as string,
     summary: localize(post.summaries, lang) as string,
     related: post.related,

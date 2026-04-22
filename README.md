@@ -30,7 +30,7 @@ opskitpro.com (Main Site — Next.js 14 on Cloudflare Workers)
 ├── /              Home — Hero + Forensic HUD
 ├── /services      Service Matrix (45+ tools, 12 categories)
 ├── /tools/        Forensic Suite (Website, IP, DNS)
-├── /blog          Field Notes (SRE Intel & Tutorials)
+├── /blog          Technical Notes (SRE Intel & Tutorials)
 └── /api/          Edge Forensic API (Diagnostic & IP)
 
 kb.opskitpro.com (Knowledge Node — Quartz + Obsidian)
