@@ -49,6 +49,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   }
 
   const isToolArticle = post.actionKind === 'tool'
+  const formatHeading = (value: string) => value.replace(/^\d+\.\s*/, '')
   const relatedPosts = getBlogPosts(lang)
     .filter((entry) => post.related.includes(entry.slug))
     .slice(0, 3)
@@ -198,7 +199,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                               : 'KB ref'}
                     </span>
                   </div>
-                  <h2 className="mt-4 text-xl font-black tracking-tighter text-zinc-900">{section.heading}</h2>
+                  <h2 className="mt-4 text-xl font-black tracking-tighter text-zinc-900">{formatHeading(section.heading)}</h2>
                   <p className="mt-3 text-sm leading-7 text-zinc-700">{section.paragraphs[0]}</p>
                 </div>
               ))}
@@ -232,7 +233,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
               <div className="rounded-[2rem] border border-zinc-100 bg-zinc-50/70 p-6">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {lang === 'ja' ? '要点一覧' : lang === 'zh' ? '要点列表' : lang === 'tw' ? '要點列表' : 'Key points'}
+                  {lang === 'ja' ? '文章構成' : lang === 'zh' ? '文章结构' : lang === 'tw' ? '文章結構' : 'Article outline'}
                 </div>
                 <div className="mt-4 grid gap-3">
                   {post.sections.map((section, index) => (
@@ -240,8 +241,52 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                       <span className="mr-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
                         {String(index + 1).padStart(2, '0')}
                       </span>
-                      {section.heading}
+                      {formatHeading(section.heading)}
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+                  {lang === 'ja' ? '本文プレビュー' : lang === 'zh' ? '正文预览' : lang === 'tw' ? '正文預覽' : 'Article body'}
+                </div>
+                <div className="mt-5 space-y-5">
+                  {post.sections.map((section, index) => (
+                    <section key={`${section.heading}-body`} className="rounded-3xl border border-zinc-100 bg-zinc-50/60 p-5">
+                      <div className="flex items-center gap-3">
+                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/8 px-3 py-1 text-[10px] font-semibold tracking-[0.24em] text-emerald-600">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <h3 className="text-lg font-black tracking-tight text-zinc-900">
+                          {formatHeading(section.heading)}
+                        </h3>
+                      </div>
+
+                      <div className="mt-4 space-y-4">
+                        {section.paragraphs.map((paragraph, paragraphIndex) => (
+                          <p key={`${section.heading}-${paragraphIndex}`} className="text-sm leading-7 text-zinc-700">
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+
+                      {section.bullets?.length ? (
+                        <div className="mt-5 rounded-2xl border border-emerald-500/10 bg-white px-4 py-4">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
+                            {lang === 'ja' ? '補足ポイント' : lang === 'zh' ? '补充要点' : lang === 'tw' ? '補充要點' : 'Notes'}
+                          </div>
+                          <ul className="mt-3 space-y-2 text-sm leading-7 text-zinc-700">
+                            {section.bullets.map((bullet) => (
+                              <li key={bullet} className="flex gap-2">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                                <span>{bullet}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </section>
                   ))}
                 </div>
               </div>
