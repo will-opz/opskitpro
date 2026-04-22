@@ -5,19 +5,11 @@ import {
   ArrowRight,
   BookOpen,
   Clock,
-  Eye,
-  Globe,
-  Radio,
-  ShieldCheck,
-  Terminal,
-  Zap,
 } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import { getBlogPosts } from '@/content/blog-posts'
-
-const CARD_ICONS = [Terminal, Zap, ShieldCheck, Globe, Eye]
 
 export default async function BlogPage() {
   const cookieStore = cookies()
@@ -26,6 +18,72 @@ export default async function BlogPage() {
   const isZh = lang === 'zh'
   const isJapanese = lang === 'ja'
   const posts = getBlogPosts(lang)
+  const postsBySlug = new Map(posts.map((post) => [post.slug, post]))
+
+  const articleGroups = [
+    {
+      title:
+        lang === 'ja'
+          ? 'プロジェクト概要'
+          : isZh
+            ? '项目说明'
+            : lang === 'tw'
+              ? '專案說明'
+              : 'Project overview',
+      subtitle:
+        lang === 'ja'
+          ? '需求、設計原則、工程收口をまとめた導入記事です。'
+          : isZh
+            ? '需求、设计原则和工程收口放在一起，先建立项目上下文。'
+            : lang === 'tw'
+              ? '需求、設計原則與工程收斂放在一起，先建立專案上下文。'
+              : 'Requirements, design principles, and engineering wrap-up in one place.',
+      slugs: ['why-opskitpro', 'design-principles', 'services-deployment'],
+    },
+    {
+      title:
+        lang === 'ja'
+          ? 'モジュール実装'
+          : isZh
+            ? '模块实现'
+            : lang === 'tw'
+              ? '模組實作'
+              : 'Module implementation',
+      subtitle:
+        lang === 'ja'
+          ? 'website-check と IP / DNS の設計を、単一の題材ごとに整理しています。'
+          : isZh
+            ? '把 website-check、IP、DNS 这几块按单一题目拆开讲。'
+            : lang === 'tw'
+              ? '把 website-check、IP、DNS 這幾塊按單一題目拆開講。'
+              : 'Breaks down website-check, IP, and DNS as separate implementation topics.',
+      slugs: ['website-check-module', 'ip-dns-module'],
+    },
+    {
+      title:
+        lang === 'ja'
+          ? 'ツール実装'
+          : isZh
+            ? '工具实现'
+            : lang === 'tw'
+              ? '工具實作'
+              : 'Tool implementation',
+      subtitle:
+        lang === 'ja'
+          ? 'passgen、qrgen、json、websocket を 1 テーマ 1 記事でまとめています。'
+          : isZh
+            ? 'passgen、qrgen、json、websocket 都按一个工具一篇文章来整理。'
+            : lang === 'tw'
+              ? 'passgen、qrgen、json、websocket 都按一個工具一篇文章來整理。'
+              : 'One article per tool: passgen, qrgen, json, and websocket.',
+      slugs: ['passgen-tool', 'qrgen-tool', 'json-tool', 'websocket-tool'],
+    },
+  ].map((group) => ({
+    ...group,
+    posts: group.slugs
+      .map((slug) => postsBySlug.get(slug))
+      .filter(Boolean) as typeof posts,
+  }))
 
   return (
     <>
@@ -42,123 +100,156 @@ export default async function BlogPage() {
           <h1 className="mb-6 text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-7xl">
             {dict.nav.blog}
           </h1>
-          <p className="max-w-xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base">
+          <p className="max-w-2xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base">
             {isJapanese
-              ? '可観測性、サイト信頼性、エッジ基盤の技術メモをまとめています。'
+              ? '可観測性、サイト信頼性、エッジ基盤の技術メモを、プロジェクト別に整理しています。'
               : isZh
-                ? '这里整理了 OpsKitPro 的技术笔记、需求、设计原则、模块实现与工程收口。'
-                : 'This section collects OpsKitPro technical notes, requirements, design choices, module implementations, and engineering wrap-up.'}
+                ? '这里把 OpsKitPro 的技术笔记按项目说明、模块实现和工具实现整理在一起。'
+                : 'This section groups OpsKitPro technical notes by project overview, module implementation, and tool implementation.'}
             <br />
             <span className="mt-2 block opacity-40">
-              {isJapanese ? 'OpsKitPro ナレッジベースと連携しています。' : 'Powered by OpsKitPro Content Engine.'}
+              {isJapanese
+                ? '長文は KB に残し、主站は索引と要点を保っています。'
+                : isZh
+                  ? '长文会继续保留在 KB，主站只放索引和要点。'
+                  : lang === 'tw'
+                    ? '長文會繼續保留在 KB，主站只放索引和要點。'
+                    : 'Long-form content stays in KB, while the main site keeps the index and key points.'}
             </span>
           </p>
         </div>
 
-        <div className="mb-14 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {[
-            {
-              label: isJapanese ? '系列' : isZh ? '系列' : 'Series',
-              value: isJapanese ? '需求、设计、实现、工程收口' : isZh ? '需求、设计、实现、工程收口' : 'Requirements, design, implementation, and delivery',
-            },
-            {
-              label: isJapanese ? '用途' : isZh ? '用途' : 'Use case',
-              value: isJapanese ? '排障与产品说明一起阅读' : isZh ? '既能看产品，也能看实现' : 'Read the product story together with the implementation',
-            },
-            {
-              label: isJapanese ? '连携' : isZh ? '连携' : 'Link',
-              value: isJapanese ? '知识库与博客同步更新' : isZh ? '知识库与博客同步更新' : 'Synced with the knowledge base',
-            },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-start justify-between gap-4 rounded-2xl border border-black/5 bg-white/80 p-4 shadow-sm backdrop-blur-md sm:p-5"
-            >
-              <div>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald-500">{item.label}</div>
-                <div className="mt-2 text-sm leading-snug text-zinc-700">{item.value}</div>
-              </div>
-              <div className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            </div>
-          ))}
+        <div className="mb-14 flex flex-col gap-4 rounded-[2rem] border border-emerald-500/15 bg-white/80 px-5 py-5 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p className="text-sm leading-7 text-zinc-700">
+            {isJapanese
+              ? '主站は短い導線だけを残し、長文・設計メモ・工程記録は KB に分離しています。'
+              : isZh
+                ? '主站只保留短导览，长文、设计笔记和工程记录都分离到 KB。'
+                : lang === 'tw'
+                  ? '主站只保留短導覽，長文、設計筆記和工程記錄都分離到 KB。'
+                  : 'The main site keeps short entry points, while long-form writing, design notes, and engineering logs live in KB.'}
+          </p>
+          <a
+            href="https://kb.opskitpro.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:border-emerald-500/20 hover:text-emerald-600"
+          >
+            <BookOpen className="h-4 w-4" />
+            {isJapanese ? 'KB を開く' : isZh ? '打开 KB' : lang === 'tw' ? '打開 KB' : 'Open KB'}
+          </a>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post, idx) => {
-            const Icon = CARD_ICONS[idx % CARD_ICONS.length]
+        <div className="space-y-14">
+          {articleGroups.map((group) => (
+            <section key={group.title}>
+              <div className="mb-6 border-b border-zinc-100 pb-4">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald-500">
+                  {String(group.posts.length).padStart(2, '0')} / {group.title}
+                </div>
+                <h2 className="mt-3 text-2xl font-black tracking-tighter text-zinc-900 sm:text-3xl">
+                  {group.title}
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-600">
+                  {group.subtitle}
+                </p>
+              </div>
 
-            return (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col overflow-hidden rounded-[2rem] border border-black/5 bg-white shadow-sm transition-all hover:border-emerald-500/20 hover:shadow-2xl"
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {group.posts.map((post) => (
+                  <Link
+                    key={post.slug}
+                    href={`/blog/${post.slug}`}
+                    className="group overflow-hidden rounded-[2rem] border border-black/5 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-2xl"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <Image
+                        src={post.coverImage}
+                        alt={post.title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
+                      <div className="absolute left-4 top-4 flex items-center gap-2">
+                        <span className="rounded-full bg-white/90 px-3 py-1 text-[9px] font-bold tracking-[0.22em] text-zinc-700 backdrop-blur-md">
+                          {post.tag}
+                        </span>
+                        <span className="rounded-full border border-white/20 bg-zinc-950/75 px-3 py-1 text-[9px] font-semibold tracking-[0.18em] text-white backdrop-blur-md">
+                          {post.actionKind === 'tool'
+                            ? isJapanese
+                              ? 'ツール'
+                              : isZh
+                                ? '工具'
+                                : lang === 'tw'
+                                  ? '工具'
+                                  : 'Tool'
+                            : isJapanese
+                              ? '筆記'
+                              : isZh
+                                ? '笔记'
+                                : lang === 'tw'
+                                  ? '筆記'
+                                  : 'Notes'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex h-full flex-col p-6">
+                      <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.18em] text-zinc-400">
+                        <span>{post.date}</span>
+                        <span className="inline-flex items-center gap-1 text-emerald-600">
+                          <Clock className="h-3 w-3" />
+                          {post.readTime}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-3 text-lg font-semibold leading-snug text-zinc-900 transition-colors group-hover:text-emerald-600">
+                        {post.title}
+                      </h3>
+                      <p className="mt-3 line-clamp-3 text-sm leading-7 text-zinc-500">
+                        {post.summary}
+                      </p>
+
+                      <div className="mt-6 flex items-center justify-between border-t border-zinc-50 pt-5">
+                        <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">
+                          {isJapanese ? '主站プレビュー' : isZh ? '主站预览' : lang === 'tw' ? '主站預覽' : 'Main site preview'}
+                        </span>
+                        <ArrowRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+
+          <div className="rounded-[2rem] border border-emerald-500/15 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-xl font-black tracking-tighter text-zinc-900">
+                  {isJapanese ? 'ナレッジベースで長文を読む' : isZh ? '长文请继续看知识库' : lang === 'tw' ? '長文請繼續看知識庫' : 'Read the long-form notes in KB'}
+                </h3>
+                <p className="mt-2 text-sm leading-7 text-zinc-600">
+                  {isJapanese
+                    ? '主站の技術メモは要点を残し、設計記録・運用記録は KB に整理しています。'
+                    : isZh
+                      ? '主站技术笔记只保留要点，设计记录和运维记录继续整理在 KB。'
+                      : lang === 'tw'
+                        ? '主站技術筆記只保留要點，設計記錄和運維記錄繼續整理在 KB。'
+                        : 'The main site keeps the key points, while design and operations records continue in KB.'}
+                </p>
+              </div>
+              <a
+                href="https://kb.opskitpro.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
-                <div className="relative h-44 overflow-hidden">
-                  <Image
-                    src={post.coverImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
-                  <Icon className="absolute right-4 top-4 h-14 w-14 opacity-[0.08] transition-opacity group-hover:opacity-15" />
-                </div>
-
-                <div className="relative z-10 flex h-full flex-col p-6">
-                  <div className="mb-5 flex items-center justify-between">
-                    <span className="rounded-lg bg-white/90 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-600">
-                      {post.tag}
-                    </span>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-400">
-                      <Clock className="h-3 w-3" /> {post.readTime}
-                    </div>
-                  </div>
-
-                  <h3 className="mb-3 text-lg font-semibold leading-tight text-zinc-900 transition-colors group-hover:text-emerald-600 sm:text-xl">
-                    {post.title}
-                  </h3>
-                  <p className="mb-6 line-clamp-3 text-xs leading-relaxed text-zinc-500 opacity-80">{post.summary}</p>
-
-                  <div className="mt-auto flex items-center justify-between border-t border-zinc-50 pt-5">
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">{post.date}</span>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-50 transition-all group-hover:translate-x-1 group-hover:bg-emerald-500 group-hover:text-white">
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
-
-          <div className="group relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[2rem] border border-black/5 bg-white p-8 text-zinc-900 shadow-sm transition-all hover:shadow-xl lg:col-span-1">
-            <div className="absolute right-0 top-0 p-8 opacity-[0.04] transition-opacity group-hover:opacity-10">
-              <BookOpen className="h-16 w-16" />
+                <BookOpen className="h-4 w-4" />
+                {isJapanese ? 'KB を開く' : isZh ? '打开 KB' : lang === 'tw' ? '打開 KB' : 'Open KB'}
+              </a>
             </div>
-            <div>
-              <h4 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-500 underline decoration-emerald-500/30 underline-offset-4">
-                {isJapanese ? '関連リンク' : isZh ? '延伸阅读' : 'Further reading'}
-              </h4>
-              <h3 className="mb-4 text-2xl font-black tracking-tighter">
-                {isJapanese ? 'ナレッジベースで深掘りする' : isZh ? '去知识库继续深挖' : 'Keep digging in the knowledge base'}
-              </h3>
-              <p className="mb-8 text-[10px] leading-relaxed uppercase tracking-[0.18em] text-zinc-400 opacity-80">
-                {isJapanese
-                  ? '設計メモ、運用記録、実装ノートをまとめています。'
-                  : isZh
-                    ? '设计笔记、运维记录、实现说明都会在这里继续整理。'
-                    : 'Design notes, operations logs, and implementation write-ups live there.'}
-              </p>
-            </div>
-            <a
-              href="https://kb.opskitpro.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] hover:from-emerald-400 hover:to-teal-500"
-            >
-              {isJapanese ? 'ナレッジを見る' : isZh ? '打开知识库' : 'Open knowledge base'}
-              <Radio className="h-5 w-5 group-hover:animate-pulse" />
-            </a>
           </div>
         </div>
       </main>

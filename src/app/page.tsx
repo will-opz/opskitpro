@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import Image from 'next/image'
 import Link from 'next/link'
 import { 
   Zap,
@@ -12,12 +13,17 @@ import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import HomeSearch from '@/components/HomeSearch'
+import { getBlogPosts } from '@/content/blog-posts'
 
 export default async function Home() {
   const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   const isJapanese = lang === 'ja'
+  const latestNotes = getBlogPosts(lang)
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 4)
   const heroBadge = isJapanese ? '運用向け診断' : dict.home.title_part1
   const heroSubtitle = isJapanese
     ? 'DNS・SSL・CDN・HTTP を、ひとつの画面で素早く確認できます。ログインは不要です。'
@@ -197,45 +203,60 @@ export default async function Home() {
               </Link>
            </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              {(dict.home.blog_section?.posts || []).map((post: any, idx: number) => {
-                const cardGradients = [
-                  'from-emerald-500/10 via-cyan-500/5 to-emerald-500/10',
-                  'from-purple-500/10 via-pink-500/5 to-purple-500/10',
-                  'from-orange-500/10 via-amber-500/5 to-orange-500/10',
-                ]
-                const gridPattern = [
-                  'radial-gradient(circle at 20% 80%, rgba(16,185,129,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(6,182,212,0.1) 0%, transparent 50%)',
-                  'radial-gradient(circle at 80% 80%, rgba(168,85,247,0.15) 0%, transparent 50%), radial-gradient(circle at 20% 20%, rgba(236,72,153,0.1) 0%, transparent 50%)',
-                  'radial-gradient(circle at 50% 20%, rgba(249,115,22,0.15) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(245,158,11,0.1) 0%, transparent 50%)',
-                ]
-                return (
-                <Link key={idx} href="/blog" className="group flex flex-col gap-4">
-                   <div className="aspect-[16/9] w-full rounded-[1.5rem] overflow-hidden border border-zinc-200/60 relative">
-                      <div className="absolute top-3 left-3 px-2 py-0.5 bg-white/80 backdrop-blur-md rounded text-[9px] font-semibold tracking-[0.22em] border border-black/5 z-10">
+           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {latestNotes.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="group overflow-hidden rounded-[1.75rem] border border-zinc-100 bg-white/90 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-xl"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
+                    <div className="absolute left-3 top-3 flex items-center gap-2">
+                      <span className="rounded-full border border-white/30 bg-white/85 px-2.5 py-1 text-[9px] font-bold tracking-[0.2em] text-zinc-700 backdrop-blur-md">
                         {post.tag}
-                      </div>
-                      <div
-                        className={`w-full h-full bg-gradient-to-br ${cardGradients[idx % 3]} group-hover:scale-105 transition-transform duration-700`}
-                        style={{ backgroundImage: gridPattern[idx % 3] }}
-                      >
-                        {/* Subtle dot grid overlay */}
-                        <div className="absolute inset-0 opacity-30"
-                          style={{ backgroundImage: 'radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-                      </div>
-                   </div>
-                   <div>
-                      <div className="text-[10px] text-zinc-400 mb-2 tracking-[0.18em] uppercase">{post.date}</div>
-                      <h3 className="text-base font-semibold text-zinc-900 group-hover:text-emerald-600 transition-colors leading-snug mb-2">
-                        {post.title}
-                      </h3>
-                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                        {post.desc}
-                      </p>
-                   </div>
+                      </span>
+                      <span className="rounded-full border border-white/20 bg-zinc-950/70 px-2.5 py-1 text-[9px] font-semibold tracking-[0.16em] text-white backdrop-blur-md">
+                        {post.actionKind === 'tool'
+                          ? isJapanese
+                            ? '工具'
+                            : lang === 'zh'
+                              ? '工具'
+                              : lang === 'tw'
+                                ? '工具'
+                                : 'Tool'
+                          : isJapanese
+                            ? '筆記'
+                            : lang === 'zh'
+                              ? '笔记'
+                              : lang === 'tw'
+                                ? '筆記'
+                                : 'Notes'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 sm:p-6">
+                    <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.18em] text-zinc-400">
+                      <span>{post.date}</span>
+                      <span className="text-emerald-600">{post.readTime}</span>
+                    </div>
+                    <h3 className="mt-3 text-base font-semibold leading-snug text-zinc-900 transition-colors group-hover:text-emerald-600 sm:text-[1.05rem]">
+                      {post.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-500">
+                      {post.summary}
+                    </p>
+                  </div>
                 </Link>
-                )}
-              )}
+              ))}
            </div>
         </div>
       </main>
