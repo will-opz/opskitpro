@@ -51,11 +51,6 @@ const posts: BlogPost[] = [
           '我最初想解决的，不是“再做一个好看的首页”，而是运维过程中反复出现的切换成本。查 DNS 要去一个站，查 IP 要去另一个站，看 SSL 又是第三个站，最后还要把结果拼在一起自己判断。',
           '问题不在于工具少，而在于信息太散。每次排障都要重新建立上下文，语言、格式、结果粒度都不统一，结论很难复用。',
         ],
-        bullets: [
-          '同一件事要反复在多个站点之间切换。',
-          '结果能看到，但很难被真正拿来做下一步判断。',
-          '多语言界面一旦不统一，阅读成本会立刻上升。',
-        ],
         files: ['src/app/page.tsx', 'src/app/tools/website-check/page.tsx', 'src/app/tools/ip-lookup/page.tsx'],
       },
       {
@@ -64,11 +59,6 @@ const posts: BlogPost[] = [
           'OpsKitPro 的第一原则，是先给结论，再给细节。首页、网站诊断、IP 查询、DNS 检测都尽量采用“摘要先行”的方式，让用户第一眼就知道发生了什么。',
           '这也是为什么我一直在收紧 loading、summary、detail 的层级：能在第一屏给出明确判断，就不要一上来把用户丢进长列表或大段 JSON 里。',
         ],
-        bullets: [
-          '页面先给可用结论，再让用户按需展开。',
-          '错误态和部分成功态比“空白失败”更有价值。',
-          '结果可复制、可分享、可继续排查。',
-        ],
         files: ['src/lib/api-contracts.ts', 'src/app/api/diagnostic/route.ts', 'src/app/api/ip/route.ts'],
       },
       {
@@ -76,11 +66,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '我没有把它做成大而全的平台。OpsKitPro 的目标很明确：围绕高频排障动作，做一个边缘可达、快速响应、可以直接拿来用的工具集合。',
           '所以我保留了服务矩阵、知识库和博客，但都围绕同一个主题展开：让运维动作更快、判断更清楚、文档更容易追踪。',
-        ],
-        bullets: [
-          '不追求“什么都能做”，只做高频动作。',
-          '工具、文档、博客保持同一套语言和口径。',
-          '工程结构要轻，但不能轻到没有边界。',
         ],
         files: ['README.md', 'README_zh.md', 'OpsKitPro_Backlog.md'],
       },
@@ -115,11 +100,6 @@ const posts: BlogPost[] = [
           '项目早期的视觉更偏“运维控制台”与“HUD 仪表盘”风格，强调科技感和冲击力。但在实际使用中，这种风格会让信息显得太重，尤其是在日本用户习惯里，页面越清楚、越克制，越容易被认为是“认真做事”的产品。',
           '所以我逐步把主视觉收成了浅色卡片、明确标题、较低噪音的层级结构，让页面不只是“酷”，而是“稳”。',
         ],
-        bullets: [
-          '更浅的背景，更清楚的文本。',
-          '更少的装饰，更明确的主次关系。',
-          '更少的视觉噪音，更高的信息密度。',
-        ],
         files: ['src/app/page.tsx', 'src/app/about/page.tsx', 'src/app/blog/page.tsx'],
       },
       {
@@ -128,11 +108,6 @@ const posts: BlogPost[] = [
           '真正把产品拉齐的，不是某个单独页面的炫技，而是卡片、badge、按钮、状态文案这些基础组件是否统一。我的目标是让用户不管进首页、服务矩阵还是工具页，都能立刻读懂这是同一个系统。',
           '这也是为什么后来我会反复收紧排版，减少中英混排里的“拼装感”，让页面语言和结构尽量一体化。',
         ],
-        bullets: [
-          '卡片样式要统一，内容层级也要统一。',
-          '状态词、按钮词、说明词不要东一套西一套。',
-          '多语言不是翻译一遍，而是重新对齐阅读习惯。',
-        ],
         files: ['src/components/SiteHeader.tsx', 'src/components/HomeSearch.tsx', 'src/components/SiteFooter.tsx', 'src/app/services/ServicesClient.tsx'],
       },
       {
@@ -140,11 +115,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '站点主要面向日本推广后，我更明确地把设计目标改成了“清楚、安定、轻量”。这意味着 hero 不要太吵、按钮不要太多、说明不要太虚，用户进入页面后应该先看到结论，再决定要不要继续看细节。',
           '所以你会看到首页、about、website-check、ip-lookup 这些页面的共同变化：更短的标题、更自然的文案、更低噪音的间距，以及更少的装饰性元素。',
-        ],
-        bullets: [
-          '标题更短，信息更直接。',
-          '副标题和说明更接近日式 SaaS 的阅读节奏。',
-          '交互更克制，但不会失去品牌感。',
         ],
         files: ['src/dictionaries/ja.json', 'src/app/tools/website-check/WebsiteCheckClient.tsx', 'src/app/tools/ip-lookup/IPLookupClient.tsx'],
       },
@@ -179,11 +149,6 @@ const posts: BlogPost[] = [
           'website-check 的第一步不是发请求，而是把输入规范化。用户可能输入域名、完整 URL、带路径的链接，甚至夹着多余的尾斜杠。前端和后端都需要把这些输入统一收成真正的主机名，否则同一个目标会被当成多个对象。',
           '这一层小逻辑非常重要，因为它决定了诊断结果是否稳定，也决定了缓存和测试能不能复用。',
         ],
-        bullets: [
-          '前端输入先归一化成 hostname。',
-          '后端也做同样的规范化，避免契约漂移。',
-          '能接受 URL、域名、路径片段等多种输入。',
-        ],
         files: ['src/app/tools/website-check/WebsiteCheckClient.tsx', 'src/app/api/diagnostic/route.ts'],
       },
       {
@@ -192,11 +157,6 @@ const posts: BlogPost[] = [
           '这类工具最常见的问题，是把 DNS、HTTP、SSL、CDN 拆成一条长流程，用户会先看见漫长的“第 1 步、第 2 步、第 3 步”。但真实的诊断更像并行工作：多个信号一起看，最后再汇总出结论。',
           '所以当前页面改成了摘要先行、明细折叠的结构。结果区先给出判断，再让用户根据需要展开 DNS、SSL、证书链或原始 JSON。',
         ],
-        bullets: [
-          '加载流程只保留必要阶段。',
-          '摘要卡比长流水线更适合快速判断。',
-          '细节默认折叠，减少初次阅读负担。',
-        ],
         files: ['src/app/tools/website-check/WebsiteCheckClient.tsx', 'src/app/tools/website-check/page.tsx'],
       },
       {
@@ -204,11 +164,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '在边缘环境里，外部服务不稳定是常态。与其让页面直接白屏或者返回一行错误，不如把能确认的部分先展示出来，再把不可用的部分明确标记为待确认。',
           '这也是我一直坚持“部分成功态”的原因：用户至少能知道 DNS、HTTP、SSL、CDN 中哪一环已经确认，接下来该往哪里看。',
-        ],
-        bullets: [
-          '错误信息要可读，而不是只抛异常码。',
-          '结果应该允许复制、导出和继续排查。',
-          'JSON 视图要默认隐藏，但需要时随时可见。',
         ],
         files: ['src/app/api/diagnostic/route.ts', 'src/lib/api-contracts.ts', 'src/app/tools/website-check/WebsiteCheckClient.tsx'],
       },
@@ -243,11 +198,6 @@ const posts: BlogPost[] = [
           'IP 页的重点不是输出一大堆字段，而是先回答三个问题：我是谁、我从哪里来、我现在是不是在代理后面。为了做到这一点，页面优先展示地理位置、ASN、ISP、代理线索和当前连接来源。',
           '当外部查询不可用时，页面也不会直接崩掉，而是返回结构化的部分结果。用户依然能继续往下看，也能知道哪些信息来自 Cloudflare Context，哪些信息来自外部回退。',
         ],
-        bullets: [
-          '优先展示“位置 + 接入环境 + 风险线索”。',
-          '支持空输入，查看当前访问上下文。',
-          '失败时返回结构化结果而不是硬错误。',
-        ],
         files: ['src/app/api/ip/route.ts', 'src/app/tools/ip-lookup/IPLookupClient.tsx', 'src/app/api/ip/__tests__/route.test.ts'],
       },
       {
@@ -256,11 +206,6 @@ const posts: BlogPost[] = [
           'DNS 工具最重要的不是“查得到”，而是“查得一致”。所以我给它接了多个 resolver，并且把本地联查和远端接口结果一起展示出来。这样用户就能一眼看出问题是出在解析本身，还是出在某个节点。',
           '同时，A、AAAA、CNAME、MX、NS、TXT、CAA 都被纳入标准记录类型里，避免“DNS 查询”只剩一个粗糙的 A 记录结果。',
         ],
-        bullets: [
-          '多 resolver 交叉确认，提高结论可信度。',
-          '支持常见记录类型，覆盖排障高频场景。',
-          '批量结果和历史记录都保留，方便重复检查。',
-        ],
         files: ['src/app/api/dns/route.ts', 'src/app/tools/dns-lookup/DnsClient.tsx', 'src/app/tools/dns-lookup/components/DnsBatchResult.tsx'],
       },
       {
@@ -268,11 +213,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '之前这两个模块最容易出问题的地方，是字段名和展示层口径不完全一致。后来我把 API 契约抽成了共享 schema，前端和后端都基于同一份类型来理解“结果应该长什么样”。',
           '这样一来，页面上复制按钮、JSON 区、状态标签、提示语就能统一收口，不需要每个页面自己猜字段，也不会再出现同一项在不同页上叫法不同的情况。',
-        ],
-        bullets: [
-          '共享契约减少前后端漂移。',
-          '复制、JSON、摘要三层结果都围绕同一套数据。',
-          '页面语言更轻，用户判断更快。',
         ],
         files: ['src/lib/api-contracts.ts', 'src/app/tools/dns-lookup/components/DnsResultTable.tsx', 'src/app/tools/dns-lookup/components/DnsHistory.tsx'],
       },
@@ -307,11 +247,6 @@ const posts: BlogPost[] = [
           '服务矩阵不是单纯的工具列表，它更像站点的中央目录：普通运维工具、密码管理、安全分析、自动化、云原生、零信任、AI 节点都能在这里被快速定位。',
           '我后来把大多数工具统一成标准卡片，只保留 Matrix 使用独立视觉，是因为服务矩阵本身必须稳定、可扫视，不能每一块都抢注意力。',
         ],
-        bullets: [
-          '普通工具统一为标准卡片。',
-          'Matrix 作为特殊入口保留独立风格。',
-          '侧边目录、搜索和状态展示服务于快速定位。',
-        ],
         files: ['src/app/services/ServicesClient.tsx', 'src/dictionaries/zh.json', 'src/dictionaries/ja.json', 'src/dictionaries/en.json', 'src/dictionaries/tw.json'],
       },
       {
@@ -320,11 +255,6 @@ const posts: BlogPost[] = [
           '项目的多语言不只是文案翻译，而是整个页面节奏都要重做一遍。日文更偏克制、中文更偏直接、英文更偏线性说明，标题长度、 badge 位置、行距和空白都需要跟着变。',
           '这也是为什么我一直在调整首页、about、blog、tools 的视觉密度：同一份信息，在不同语言里不应该有完全不同的阅读压力。',
         ],
-        bullets: [
-          '标题和说明要适应目标语言的阅读习惯。',
-          '按钮、状态、错误信息要统一命名。',
-          '国际化不只是字符串替换，而是信息设计。',
-        ],
         files: ['src/middleware.ts', 'src/components/LanguageToggle.tsx', 'src/dictionaries.ts'],
       },
       {
@@ -332,11 +262,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '整个站点最终跑在 Cloudflare Workers 上，通过 OpenNext 做 Next.js 的适配和边缘部署。这样做的好处很明显：边缘就近、诊断场景一致、部署流程单一，也更符合这个项目“运维工具要快”的定位。',
           '博客、README、Backlog 和实际页面一起更新，也是在强调一个点：这个项目不是先写文档再做产品，而是产品、文章和工程记录同步推进。',
-        ],
-        bullets: [
-          'OpenNext + Cloudflare Workers 负责最终交付。',
-          'README 和 Backlog 反映真实进度。',
-          'Logo、favicon、页面、博客一起收口，工程状态更清楚。',
         ],
         files: ['src/app/layout.tsx', 'wrangler.jsonc', 'open-next.config.ts', 'README.md', 'OpsKitPro_Backlog.md'],
       },
@@ -371,11 +296,6 @@ const posts: BlogPost[] = [
           'passgen 的目标很直接：让你在需要密码、UUID 或 PIN 的时候，不用去别的站点来回切换。很多时候，真正麻烦的不是生成本身，而是你还要决定格式、长度、是否能复制、是否要保留历史。',
           '所以我把它做成一个很快的单页工具，打开就能生成，生成完就能复制，也能顺手保存最近几次结果。',
         ],
-        bullets: [
-          '支持随机密码、UUID、6 位和 8 位 PIN。',
-          '生成后直接复制，不需要额外跳转。',
-          '保留最近 5 条历史，方便回看。',
-        ],
         files: ['src/app/tools/passgen/pass-client.tsx', 'src/app/tools/passgen/page.tsx'],
       },
       {
@@ -384,11 +304,6 @@ const posts: BlogPost[] = [
           '密码工具最常见的问题，是把设置做得太多。字符集、长度、特殊模式、强度条都可以堆上去，但用户在现场要的往往不是功能，而是一个马上可用的结果。',
           '所以我把模式分成两类：普通密码和特殊模式。UUID、PIN 与字符集模式互斥，避免用户选完以后又不知道自己生成了什么。',
         ],
-        bullets: [
-          '普通密码与特殊模式互斥，逻辑更清楚。',
-          '强度条是即时反馈，不是装饰。',
-          '二维码按钮只是辅助，不改变主流程。',
-        ],
         files: ['src/app/tools/passgen/pass-client.tsx', 'src/dictionaries/zh.json', 'src/dictionaries/ja.json'],
       },
       {
@@ -396,11 +311,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '实现上我用的是浏览器原生的 `crypto.randomUUID()` 和 `window.crypto.getRandomValues()`。这样做的好处是随机源可靠，而且不需要把敏感逻辑放到服务端。',
           '用法也很简单：先选长度或特殊模式，再点“生成”，然后复制结果。如果你希望把临时密码展示给别人，也可以切出 QR 码。',
-        ],
-        bullets: [
-          'UUID 模式直接生成 v4 UUID。',
-          'PIN 模式用数字随机源生成固定长度数字串。',
-          '历史记录存在本地 localStorage 里，不上传服务器。',
         ],
         files: ['src/app/tools/passgen/pass-client.tsx', 'src/app/tools/passgen/__tests__/passgen.test.ts'],
       },
@@ -435,11 +345,6 @@ const posts: BlogPost[] = [
           'qrgen 的使用场景很简单：把一段链接、配置片段、文案或者联系方式，快速变成可扫描的二维码。很多时候你并不需要复杂设置，你只需要一个清楚的预览和稳定的导出。',
           '因此这个页面的核心不是“花样很多”，而是“输入后马上能看见结果”。',
         ],
-        bullets: [
-          '适合链接、邀请页、简短配置文本。',
-          '输入后实时预览，不需要额外提交。',
-          '可直接导出 PNG，方便拿去用。',
-        ],
         files: ['src/app/tools/qrgen/qr-client.tsx', 'src/app/tools/qrgen/page.tsx'],
       },
       {
@@ -448,11 +353,6 @@ const posts: BlogPost[] = [
           '二维码工具如果做得太复杂，用户会困惑到底该调哪一项。我更希望它像一个“输入框 + 预览区”的二段式工具：左边输入，右边确认，按钮只保留下载这一件事。',
           '这样既能让页面足够轻，也能让扫描结果在视觉上更稳，特别适合日常临时分享。',
         ],
-        bullets: [
-          '左输入、右预览，结构非常明确。',
-          '空态提示清楚，避免用户误以为页面坏了。',
-          '高纠错等级保证二维码更稳。',
-        ],
         files: ['src/app/tools/qrgen/qr-client.tsx', 'src/dictionaries/zh.json', 'src/dictionaries/ja.json'],
       },
       {
@@ -460,11 +360,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '实现上我直接用了 `qrcode.react` 的 `QRCodeSVG`，然后通过序列化 SVG 再转成 PNG 下载。这样生成过程完全在前端完成，不需要额外的后端依赖。',
           '使用时只要把内容贴进去，右侧就会出现预览。确认没问题后点下载即可，适合快速把链接、临时说明或者访问地址发给别人。',
-        ],
-        bullets: [
-          '默认以高纠错等级生成，提升可扫描性。',
-          '导出按钮只在有内容时启用。',
-          '本地生成，不经过服务器。',
         ],
         files: ['src/app/tools/qrgen/qr-client.tsx'],
       },
@@ -499,11 +394,6 @@ const posts: BlogPost[] = [
           'JSON 工具最常见的使用场景，是把 API 返回、配置文件、日志片段或者抓到的对象先整理清楚。很多时候你不是想“写 JSON”，而是想“看懂 JSON”。',
           '所以我把它做成一个多模式工作台：输入、修复、格式化、对比、转换和提取都放在同一页里。',
         ],
-        bullets: [
-          '适合排障、写配置和处理接口返回。',
-          '默认先校验，避免把坏数据继续往下传。',
-          '多种视图并存，便于不同阶段使用。',
-        ],
         files: ['src/app/tools/json/json-client.tsx', 'src/app/tools/json/page.tsx'],
       },
       {
@@ -512,11 +402,6 @@ const posts: BlogPost[] = [
           'JSON 的处理其实是多个不同任务的组合：有时你要修坏 JSON，有时要格式化，有时要跑 jq，有时要生成 schema。把这些任务硬塞到一个按钮里，用户只会更乱。',
           '所以我把它拆成编辑器、修复、转换、比较、校验、提取几个区块，用户可以按自己的节奏逐步推进。',
         ],
-        bullets: [
-          '编辑器是主入口，其他能力围绕它展开。',
-          '修复、转换、比较都是在同一份输入上继续工作。',
-          '草稿和历史保存在本地，方便反复试验。',
-        ],
         files: ['src/app/tools/json/components/FormatConverter.tsx', 'src/app/tools/json/components/JsonDiffPanel.tsx', 'src/app/tools/json/components/SchemaValidator.tsx'],
       },
       {
@@ -524,11 +409,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '实现上我把 JSON 修复、格式转换、jq 查询、schema 校验和字段提取都拆成了独立 hook / component。这样每个功能可以单独测试，也方便以后继续加新模式。',
           '用法上最简单的流程是：粘贴 JSON，先看校验状态，再决定是格式化、修复、转 YAML/TOML，还是直接跑 jq。需要对比时再切到 diff，需要抽字段时再进提取器。',
-        ],
-        bullets: [
-          '支持 JSON/YAML/TOML 互转。',
-          '支持 jq 查询、diff、schema 验证、字段提取。',
-          '支持草稿保存和 URL 加载，适合排障记录。',
         ],
         files: ['src/app/tools/json/hooks/useFormatConvert.ts', 'src/app/tools/json/hooks/useJqQuery.ts', 'src/app/tools/json/hooks/useJsonRepair.ts', 'src/app/tools/json/hooks/useJsonStorage.ts'],
       },
@@ -563,11 +443,6 @@ const posts: BlogPost[] = [
           'WebSocket 调试的难点，不只是“能不能连上”，而是连上之后要怎么发消息、怎么看日志、怎么留存会话。很多时候你还要同时调多个连接，或者在文本、JSON、二进制之间切换。',
           '所以我把它做成了一个多标签工作台，目标是让调试像开几个终端一样自然。',
         ],
-        bullets: [
-          '支持多连接并行调试。',
-          '支持文本、JSON、二进制、Ping 等常见场景。',
-          '支持会话保存和回放，适合反复测试。',
-        ],
         files: ['src/app/tools/websocket/WebsocketClient.tsx', 'src/app/tools/websocket/page.tsx'],
       },
       {
@@ -576,11 +451,6 @@ const posts: BlogPost[] = [
           '一个 WebSocket 工具如果只有一块大输入框，通常不够用。真正调试时，你会同时关心连接状态、消息模板、发送内容、日志列表、统计信息和二进制编码。',
           '所以我把它拆成连接面板、消息编辑器、日志视图、统计面板、二进制构造器和会话管理几个部分。每块都小一点，组合起来反而更好用。',
         ],
-        bullets: [
-          '状态、编辑、日志、统计各自独立。',
-          '文本与二进制发送方式分开，避免误操作。',
-          'Ping、模板、会话管理都能按需展开。',
-        ],
         files: ['src/app/tools/websocket/components/ConnectionPanel.tsx', 'src/app/tools/websocket/components/MessageComposer.tsx', 'src/app/tools/websocket/components/LogViewer.tsx', 'src/app/tools/websocket/components/SessionManager.tsx'],
       },
       {
@@ -588,11 +458,6 @@ const posts: BlogPost[] = [
         paragraphs: [
           '实现上我用 `useWebSocket` 和 `useMultiConnection` 去管理连接状态、日志和发送逻辑。这样可以把连接生命周期、消息统计和会话切换拆开，避免一个巨大组件把所有事情都塞在一起。',
           '用法很直接：先输入 WebSocket 地址，再选文本或二进制模式，连接后发消息、看日志，需要时保存会话。对调试 echo 服务、内部推送或者实时通知都很方便。',
-        ],
-        bullets: [
-          '支持多标签同时连接。',
-          '支持文本、二进制和 Ping 三种视图。',
-          '支持消息模板和日志过滤，便于定位问题。',
         ],
         files: ['src/app/tools/websocket/hooks/useWebSocket.ts', 'src/app/tools/websocket/hooks/useMultiConnection.ts', 'src/app/tools/websocket/hooks/useMessageTemplates.ts', 'src/app/tools/websocket/hooks/useMessageHistory.ts'],
       },
