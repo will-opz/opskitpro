@@ -6,7 +6,10 @@ tags:
   - デザイン
   - SaaS
   - 運用
-published: false
+published: true
+published_at: "2026-04-23T09:02:01+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/c9add794dfdeb75f6230"
+qiita_id: "c9add794dfdeb75f6230"
 ---
 
 # OpsKitPro の UI をなぜ控えめにしたのか

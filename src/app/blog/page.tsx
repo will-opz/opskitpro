@@ -118,7 +118,7 @@ export default async function BlogPage() {
             <br />
             <span className="mt-2 block opacity-40">
               {isJapanese
-                ? '長文は主站の文章区に残し、主站は索引と要点を保っています。'
+                ? '長文はメインサイトの文章区に残し、メインサイトは索引と要点を保っています。'
                 : isZh
                   ? '长文会继续保留在主站文章区，主站只放索引和要点。'
                   : lang === 'tw'
@@ -249,7 +249,7 @@ export default async function BlogPage() {
 
                       <div className="mt-6 flex items-center justify-between border-t border-zinc-50 pt-5">
                         <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-                          {isJapanese ? '主站プレビュー' : isZh ? '主站预览' : lang === 'tw' ? '主站預覽' : 'Main site preview'}
+                          {isJapanese ? 'メインサイトプレビュー' : isZh ? '主站预览' : lang === 'tw' ? '主站預覽' : 'Main site preview'}
                         </span>
                         <ArrowRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
                       </div>
@@ -264,12 +264,12 @@ export default async function BlogPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-xl font-black tracking-tighter text-zinc-900">
-                  {isJapanese ? '主站アーカイブで長文を読む' : isZh ? '长文请继续看主站文章区' : lang === 'tw' ? '長文請繼續看主站文章區' : 'Read the long-form archive on the main site'}
+                  {isJapanese ? 'メインサイトアーカイブで長文を読む' : isZh ? '长文请继续看主站文章区' : lang === 'tw' ? '長文請繼續看主站文章區' : 'Read the long-form archive on the main site'}
 
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-zinc-600">
                   {isJapanese
-                    ? '主站の技術メモは要点を残し、設計記録・運用記録は主站の文章区画に整理しています。'
+                    ? 'メインサイトの技術メモは要点を残し、設計記録・運用記録はメインサイトの文章区画に整理しています。'
                     : isZh
                       ? '主站技术笔记只保留要点，设计记录和运维记录都整理在主站文章区。'
                       : lang === 'tw'

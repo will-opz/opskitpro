@@ -71,7 +71,7 @@ opskitpro.com (主站 — Next.js 14 on Cloudflare Workers)
 | **运行时** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
 | **样式** | [Tailwind CSS v3](https://tailwindcss.com/) (极简高级感设计) |
 | **图标** | [Lucide React](https://lucide.dev/) (SRE 优化图标库) |
-| **知识库** | [Quartz 4](https://quartz.jzhao.xyz/) (Obsidian 全面同步) |
+| **知识库** | [kb.opskitpro.com](https://kb.opskitpro.com)（Obsidian 编写，静态发布） |
 
 ---
 
@@ -93,8 +93,8 @@ npm run deploy
 
 ---
 
-## 📁 内容引擎 (Obsidian)
-本项目所有的技术笔记和工具指南均在 `/kb` 目录中通过 Obsidian 进行管理，并同步到主站 [opskitpro.com](https://opskitpro.com)。
+## 📁 知识库
+本项目所有的技术笔记和工具指南都在 Obsidian 中维护，并发布到 [kb.opskitpro.com](https://kb.opskitpro.com)。
 
 ---
 

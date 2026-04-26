@@ -72,7 +72,7 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 | **Runtime** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
 | **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) (Light/Premium UI) |
 | **Icons** | [Lucide React](https://lucide.dev/) (SRE Optimized Icons) |
-| **Knowledge Base** | [Quartz 4](https://quartz.jzhao.xyz/) (Obsidian Linked) |
+| **Knowledge Base** | [kb.opskitpro.com](https://kb.opskitpro.com) (Obsidian-authored knowledge base) |
 
 ---
 
@@ -94,8 +94,8 @@ npm run deploy
 
 ---
 
-## 📁 Content Engine (Obsidian)
-All technical field notes and tool guides are managed via Obsidian in the `/kb` directory and published on [opskitpro.com](https://opskitpro.com).
+## 📁 Knowledge Base
+All technical field notes and tool guides are authored in Obsidian and published at [kb.opskitpro.com](https://kb.opskitpro.com).
 
 ---
 

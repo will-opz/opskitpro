@@ -134,7 +134,7 @@ export default async function AboutPage() {
                 'CF Edge Runtime',
                 'Tailwind CSS v3',
                 'Lucide Icons',
-                'Quartz 4',
+                'Knowledge Base',
                 'i18n Strategy',
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 rounded-2xl border border-zinc-100 bg-zinc-50/70 px-4 py-3">

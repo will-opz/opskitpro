@@ -6,7 +6,10 @@ tags:
   - DNS
   - Cloudflare
   - API
-published: false
+published: true
+published_at: "2026-04-25T09:04:08+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/be413316bc01932fb5ac"
+qiita_id: "be413316bc01932fb5ac"
 ---
 
 # IP / DNS モジュールの作り方。結果を生データではなく結論に変える
