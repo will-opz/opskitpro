@@ -32,9 +32,6 @@ opskitpro.com (主站 — Next.js 14 on Cloudflare Workers)
 ├── /tools/        取证套件 (网站, IP, DNS)
 ├── /blog          技术笔记 (SRE 实战与教程)
 └── /api/          边缘取证 API (诊断与 IP 地理位置)
-
-kb.opskitpro.com (知识节点 — Quartz + Obsidian)
-└── Digital Garden (SRE 模式、知识图谱、技术文档)
 ```
 
 ---
@@ -44,24 +41,24 @@ kb.opskitpro.com (知识节点 — Quartz + Obsidian)
 - **首页**：多语言落地页，保留一个中心化的搜索动作，方便直接进入诊断。
 - **服务矩阵**：普通工具统一为标准卡片，Matrix 保留独立识别风格。
 - **工具页**：网站诊断、IP 查询、DNS 检测、JSON、WebSocket、二维码与密码生成。
-- **博客**：主站只保留轻量索引卡片，完整长文放在 KB，并在主站中跳转阅读。
+- **博客**：主站保留精选文章索引与摘要，完整内容直接在同站文章页中阅读。
 - **关于页**：更聚焦运维设计、阅读体验和产品方向的项目说明。
 
 ---
 
 ## ✍️ 博客系列
 
-主站现在只保留博客索引和轻量 relay 页，完整长文放在 KB 静态知识库里。这样主站更轻，长文也更适合独立维护：
+主站现在以工具为主，文章为辅；文章内容直接在同站整理，便于统一维护与阅读：
 
-1. [为什么我做 OpsKitPro：从排障痛点到工具平台](https://kb.opskitpro.com/02_Articles/opskitpro-requirements)
-2. [OpsKitPro 的设计原则：为什么我把 UI 做得更克制](https://kb.opskitpro.com/02_Articles/opskitpro-design-principles)
-3. [website-check 的实现拆解：为什么要做并行探测](https://kb.opskitpro.com/02_Articles/website-check-parallel-probes)
-4. [IP Lookup：为什么要返回结构化兜底结果](https://kb.opskitpro.com/02_Articles/ip-lookup-structured-fallback)
-5. [DNS Lookup：为什么要做多 resolver 交叉验证](https://kb.opskitpro.com/02_Articles/dns-lookup-multi-resolver)
-6. [服务矩阵标准化与 Cloudflare 部署路径](https://kb.opskitpro.com/02_Articles/services-standardization)
-7. [OpsKitPro 为什么最终跑在 Cloudflare Workers 上](https://kb.opskitpro.com/02_Articles/cloudflare-workers-deployment)
+1. [为什么我做 OpsKitPro：从排障痛点到工具平台](https://opskitpro.com/blog/why-opskitpro)
+2. [OpsKitPro 的设计原则：为什么我把 UI 做得更克制](https://opskitpro.com/blog/design-principles)
+3. [website-check 的实现拆解：为什么要做并行探测](https://opskitpro.com/blog/website-check-module)
+4. [IP Lookup：为什么要返回结构化兜底结果](https://opskitpro.com/blog/ip-lookup)
+5. [DNS Lookup：为什么要做多 resolver 交叉验证](https://opskitpro.com/blog/dns-lookup)
+6. [服务矩阵标准化与 Cloudflare 部署路径](https://opskitpro.com/blog/services-deployment)
+7. [OpsKitPro 为什么最终跑在 Cloudflare Workers 上](https://opskitpro.com/blog/cloudflare-workers-deployment)
 
-> KB 文章正文目前以中文为主，主站只保留多语言标题、摘要和入口。
+> 文章正文直接在主站中阅读，主站保留多语言标题、摘要和入口。
 
 ---
 
@@ -97,7 +94,7 @@ npm run deploy
 ---
 
 ## 📁 内容引擎 (Obsidian)
-本项目所有的技术笔记和工具指南均在 `/kb` 目录中通过 Obsidian 进行管理，并自动同步至 [kb.opskitpro.com](https://kb.opskitpro.com)。
+本项目所有的技术笔记和工具指南均在 `/kb` 目录中通过 Obsidian 进行管理，并同步到主站 [opskitpro.com](https://opskitpro.com)。
 
 ---
 

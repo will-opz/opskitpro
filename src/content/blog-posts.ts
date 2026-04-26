@@ -29,7 +29,7 @@ const posts: BlogPost[] = [
     readTime: '6 min',
     tag: '需求',
     accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
-    kbUrl: 'https://kb.opskitpro.com/02_Articles/opskitpro-requirements',
+    kbUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/why-opskitpro.svg',
     titles: {
@@ -78,7 +78,7 @@ const posts: BlogPost[] = [
     readTime: '5 min',
     tag: '设计',
     accent: 'from-sky-500/10 via-cyan-500/10 to-transparent',
-    kbUrl: 'https://kb.opskitpro.com/02_Articles/opskitpro-design-principles',
+    kbUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/design-principles.svg',
     titles: {
@@ -127,7 +127,7 @@ const posts: BlogPost[] = [
     readTime: '7 min',
     tag: '实现',
     accent: 'from-emerald-500/10 via-lime-500/10 to-transparent',
-    kbUrl: 'https://kb.opskitpro.com/02_Articles/website-check-parallel-probes',
+    kbUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/website-check.svg',
     titles: {
@@ -176,7 +176,7 @@ const posts: BlogPost[] = [
     readTime: '7 min',
     tag: '模块',
     accent: 'from-indigo-500/10 via-sky-500/10 to-transparent',
-    kbUrl: 'https://kb.opskitpro.com/02_Articles/ip-lookup-structured-fallback',
+    kbUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/ip-dns.svg',
     titles: {
@@ -225,7 +225,7 @@ const posts: BlogPost[] = [
     readTime: '6 min',
     tag: '工程',
     accent: 'from-violet-500/10 via-fuchsia-500/10 to-transparent',
-    kbUrl: 'https://kb.opskitpro.com/02_Articles/services-standardization',
+    kbUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/services-standardization.svg',
     titles: {

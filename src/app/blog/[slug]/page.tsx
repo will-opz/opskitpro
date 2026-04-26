@@ -104,12 +104,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                           ? '這篇文章按設計、實作和用法完整展開，可以直接往下讀。'
                           : 'This article reads through design, implementation, and usage in one flow.'
                     : lang === 'ja'
-                      ? '長文は KB にあります。ここは主站の整理版です。'
+                      ? '主站の整理版としてまとめています。必要なら下の一覧から他の記事も確認できます。'
                       : lang === 'zh'
-                        ? '完整长文在 KB，这里是主站的整理版。'
+                        ? '这里是主站的整理版，必要时可以回到下方文章列表继续看。'
                         : lang === 'tw'
-                          ? '完整長文在 KB，這裡是主站的整理版。'
-                          : 'The full article lives in KB. This is the organized version on the main site.'}
+                          ? '這裡是主站的整理版，必要時可以回到下方文章列表繼續看。'
+                          : 'This is the organized version on the main site. Use the article list below if you want to keep exploring.'}
                 </div>
 
                 <a
@@ -127,12 +127,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                           ? '開啟工具'
                           : 'Open tool'
                     : lang === 'ja'
-                      ? 'KB で全文を読む'
+                      ? '文章一覧を見る'
                       : lang === 'zh'
-                        ? '在 KB 阅读全文'
+                        ? '浏览文章列表'
                         : lang === 'tw'
-                          ? '在 KB 閱讀全文'
-                          : 'Read full article on KB'}
+                          ? '瀏覽文章列表'
+                          : 'Browse articles'}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
@@ -170,12 +170,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                           ? '這篇文章按完整正文來整理，從背景、實作到用法都可以串起來讀。'
                           : 'This page is organized as a full read-through, from background to implementation and usage.'
                     : lang === 'ja'
-                      ? '長文は KB にまとめ、ここでは要点と構成を読みやすく整理しています。'
+                      ? '主站の文章として、要点と構成を読みやすく整理しています。'
                       : lang === 'zh'
-                        ? '长文统一放到 KB，这里只保留要点和结构，便于快速阅读。'
+                        ? '这里按主站文章来整理，保留要点和结构，方便快速阅读。'
                         : lang === 'tw'
-                          ? '長文統一放到 KB，這裡只保留要點與結構，便於快速閱讀。'
-                          : 'Long-form writing lives in KB, while this page keeps the key points and structure easy to read.'}
+                          ? '這裡按主站文章來整理，保留要點與結構，方便快速閱讀。'
+                          : 'This page is organized as a main-site article, keeping the key points and structure easy to read.'}
                 </p>
               </div>
 
@@ -249,7 +249,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                               : lang === 'tw'
                                 ? '工具'
                                 : 'Tool'
-                          : 'KB'}
+                          : lang === 'ja'
+                            ? '記事'
+                            : lang === 'zh'
+                              ? '文章'
+                              : lang === 'tw'
+                                ? '文章'
+                                : 'Article'}
                       </p>
                       <p className="mt-2 text-sm font-semibold leading-6 text-zinc-900">{item.title}</p>
                       <p className="mt-2 text-xs leading-6 text-zinc-500">{item.summary}</p>
@@ -278,12 +284,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                           ? '可以先打開實際工具試一試，再回到相關文章繼續看。'
                           : 'Open the actual tool to try it, then come back to related articles if needed.'
                     : lang === 'ja'
-                      ? '必要なら、サービスマトリクスや個別ツールの KB 記事を続けて読めます。'
+                      ? '必要なら、サービスマトリクスや個別ツールの記事を続けて読めます。'
                       : lang === 'zh'
-                        ? '如果想继续深入，可以接着看服务矩阵或各个工具模块的 KB 文章。'
+                        ? '如果想继续深入，可以接着看服务矩阵或各个工具文章。'
                         : lang === 'tw'
-                          ? '如果想繼續深入，可以接著看服務矩陣或各個工具模組的 KB 文章。'
-                          : 'If you want to go deeper, continue with the service matrix or individual KB articles.'}
+                          ? '如果想繼續深入，可以接著看服務矩陣或各個工具文章。'
+                          : 'If you want to go deeper, continue with the service matrix or individual articles.'}
                 </p>
                 <div className="mt-5 flex flex-col gap-3">
                   <Link
@@ -313,13 +319,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                           : lang === 'tw'
                             ? '開啟工具'
                             : 'Open tool'
-                      : lang === 'ja'
-                        ? 'KB の全文へ'
-                        : lang === 'zh'
-                          ? '去 KB 看全文'
-                          : lang === 'tw'
-                            ? '去 KB 看全文'
-                            : 'Open KB article'}
+                    : lang === 'ja'
+                      ? '文章一覧を見る'
+                      : lang === 'zh'
+                        ? '浏览文章列表'
+                        : lang === 'tw'
+                          ? '瀏覽文章列表'
+                          : 'Browse articles'}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>

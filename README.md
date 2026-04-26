@@ -33,8 +33,6 @@ opskitpro.com (Main Site — Next.js 14 on Cloudflare Workers)
 ├── /blog          Technical Notes (SRE Intel & Tutorials)
 └── /api/          Edge Forensic API (Diagnostic & IP)
 
-kb.opskitpro.com (Knowledge Node — Quartz + Obsidian)
-└── Digital Garden (SRE patterns, knowledge graph, docs)
 ```
 
 ---
@@ -44,24 +42,24 @@ kb.opskitpro.com (Knowledge Node — Quartz + Obsidian)
 - **Home**: multilingual landing page with a centered search action and quick entry into diagnostics.
 - **Services**: standardized tool matrix with one consistent card system, except for Matrix which keeps an independent identity.
 - **Tools**: website-check, IP lookup, DNS lookup, JSON, WebSocket, QR code, and password generation modules.
-- **Blog**: lightweight index cards on the main site; the full long-form notes live in KB and are linked out from here.
+- **Blog**: lightweight article cards on the main site; the full long-form notes are read on the same site.
 - **About**: a condensed project overview focused on operational design, readability, and the product direction.
 
 ---
 
 ## ✍️ Blog Series
 
-The blog now acts as a lightweight index. The full long-form articles live in the KB site, while the main site keeps only summaries, entry points, and thin relay pages:
+The blog is intentionally secondary to the tool suite. Long-form articles are published directly on the main site so the navigation stays simple:
 
-1. [Why I built OpsKitPro: from troubleshooting pain points to a tool platform](https://kb.opskitpro.com/02_Articles/opskitpro-requirements)
-2. [OpsKitPro design principles: why the UI became more restrained](https://kb.opskitpro.com/02_Articles/opskitpro-design-principles)
-3. [How the website-check module works: a breakdown of the implementation](https://kb.opskitpro.com/02_Articles/website-check-parallel-probes)
-4. [IP lookup: returning structured fallback data instead of hard failure](https://kb.opskitpro.com/02_Articles/ip-lookup-structured-fallback)
-5. [DNS lookup: why multi-resolver cross-checking matters](https://kb.opskitpro.com/02_Articles/dns-lookup-multi-resolver)
-6. [Service matrix standardization and the Cloudflare deployment path](https://kb.opskitpro.com/02_Articles/services-standardization)
-7. [Why OpsKitPro runs on Cloudflare Workers](https://kb.opskitpro.com/02_Articles/cloudflare-workers-deployment)
+1. [Why I built OpsKitPro: from troubleshooting pain points to a tool platform](https://opskitpro.com/blog/why-opskitpro)
+2. [OpsKitPro design principles: why the UI became more restrained](https://opskitpro.com/blog/design-principles)
+3. [How the website-check module works: a breakdown of the implementation](https://opskitpro.com/blog/website-check-module)
+4. [IP lookup: returning structured fallback data instead of hard failure](https://opskitpro.com/blog/ip-lookup)
+5. [DNS lookup: why multi-resolver cross-checking matters](https://opskitpro.com/blog/dns-lookup)
+6. [Service matrix standardization and the Cloudflare deployment path](https://opskitpro.com/blog/services-deployment)
+7. [Why OpsKitPro runs on Cloudflare Workers](https://opskitpro.com/blog/cloudflare-workers-deployment)
 
-> The KB articles are written Chinese-first. The main site keeps localized titles, summaries, and entry points only.
+> The articles are read directly on the main site. The homepage keeps localized titles, summaries, and entry points only.
 
 ---
 
@@ -97,7 +95,7 @@ npm run deploy
 ---
 
 ## 📁 Content Engine (Obsidian)
-All technical field notes and tool guides are managed via Obsidian in the `/kb` directory and synchronized to [kb.opskitpro.com](https://kb.opskitpro.com). 
+All technical field notes and tool guides are managed via Obsidian in the `/kb` directory and published on [opskitpro.com](https://opskitpro.com).
 
 ---
 

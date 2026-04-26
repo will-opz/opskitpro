@@ -118,12 +118,12 @@ export default async function BlogPage() {
             <br />
             <span className="mt-2 block opacity-40">
               {isJapanese
-                ? '長文は KB に残し、主站は索引と要点を保っています。'
+                ? '長文は主站の文章区に残し、主站は索引と要点を保っています。'
                 : isZh
-                  ? '长文会继续保留在 KB，主站只放索引和要点。'
+                  ? '长文会继续保留在主站文章区，主站只放索引和要点。'
                   : lang === 'tw'
-                    ? '長文會繼續保留在 KB，主站只放索引和要點。'
-                    : 'Long-form content stays in KB, while the main site keeps the index and key points.'}
+                    ? '長文會繼續保留在主站文章區，主站只放索引和要點。'
+                    : 'Long-form content stays in the main-site article area, while the main site keeps the index and key points.'}
             </span>
           </p>
         </div>
@@ -264,26 +264,28 @@ export default async function BlogPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-xl font-black tracking-tighter text-zinc-900">
-                  {isJapanese ? 'ナレッジベースで長文を読む' : isZh ? '长文请继续看知识库' : lang === 'tw' ? '長文請繼續看知識庫' : 'Read the long-form notes in KB'}
+                  {isJapanese ? '主站アーカイブで長文を読む' : isZh ? '长文请继续看主站文章区' : lang === 'tw' ? '長文請繼續看主站文章區' : 'Read the long-form archive on the main site'}
+
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-zinc-600">
                   {isJapanese
-                    ? '主站の技術メモは要点を残し、設計記録・運用記録は KB に整理しています。'
+                    ? '主站の技術メモは要点を残し、設計記録・運用記録は主站の文章区画に整理しています。'
                     : isZh
-                      ? '主站技术笔记只保留要点，设计记录和运维记录继续整理在 KB。'
+                      ? '主站技术笔记只保留要点，设计记录和运维记录都整理在主站文章区。'
                       : lang === 'tw'
-                        ? '主站技術筆記只保留要點，設計記錄和運維記錄繼續整理在 KB。'
-                        : 'The main site keeps the key points, while design and operations records continue in KB.'}
+                        ? '主站技術筆記只保留要點，設計記錄和運維記錄都整理在主站文章區。'
+                        : 'The main site keeps the key points, while design and operations records are organized in the main-site article area.'}
                 </p>
               </div>
               <a
-                href="https://kb.opskitpro.com"
+                href="https://opskitpro.com/blog"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
                 <BookOpen className="h-4 w-4" />
-                {isJapanese ? 'KB を開く' : isZh ? '打开 KB' : lang === 'tw' ? '打開 KB' : 'Open KB'}
+                {isJapanese ? '記事一覧を開く' : isZh ? '打开文章列表' : lang === 'tw' ? '打開文章列表' : 'Open article list'}
+
               </a>
             </div>
           </div>

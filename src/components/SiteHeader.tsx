@@ -55,9 +55,6 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
         <Link href={`/blog`} className={`whitespace-nowrap hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/blog') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
           <FileText className={`w-4 h-4 ${isActive('/blog') ? 'text-emerald-500' : ''}`} /> {dict.nav.blog}
         </Link>
-        <a href="https://kb.opskitpro.com" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap text-zinc-500 hover:text-zinc-900 hover:-translate-y-0.5 transition-all flex items-center gap-2">
-          <BookOpen className="w-4 h-4" /> {dict.nav.kb}
-        </a>
         <Link href={`/about`} className={`whitespace-nowrap hover:-translate-y-0.5 transition-all flex items-center gap-2 ${isActive('/about') ? 'text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-900'}`}>
           <Fingerprint className={`w-4 h-4 ${isActive('/about') ? 'text-emerald-500' : ''}`} /> {dict.nav.about}
         </Link>
@@ -92,9 +89,6 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
             <Link href={`/blog`} onClick={() => setIsMenuOpen(false)} className="hover:text-zinc-900 flex items-center gap-3">
               <FileText className="w-5 h-5" /> {dict.nav.blog}
             </Link>
-            <a href="https://kb.opskitpro.com" target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)} className="hover:text-zinc-900 flex items-center gap-3">
-              <BookOpen className="w-5 h-5" /> {dict.nav.kb}
-            </a>
             <Link href={`/about`} onClick={() => setIsMenuOpen(false)} className="hover:text-zinc-900 flex items-center gap-3">
               <Fingerprint className="w-5 h-5" /> {dict.nav.about}
             </Link>
