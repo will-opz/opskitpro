@@ -160,15 +160,15 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
           <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">{dict.tools.time_title}</span>
         </nav>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-sm backdrop-blur-xl sm:p-8">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-600">
+        <section className="op-card rounded-[2rem] p-5 sm:p-8">
+          <div className="op-chip mb-5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             {t.badge}
           </div>
 
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3.5 shadow-sm">
+              <div className="op-icon-box h-16 w-16">
                 <Clock3 className="h-7 w-7 text-emerald-600" />
               </div>
               <div>
@@ -179,7 +179,7 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
             <button
               type="button"
               onClick={setNow}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-bold text-zinc-700 shadow-sm transition hover:border-emerald-500/30 hover:bg-emerald-50 hover:text-emerald-700"
+              className="op-action"
             >
               <RefreshCw className="h-4 w-4" />
               {t.now}
@@ -188,7 +188,7 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
         </section>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="rounded-[1.5rem] border border-zinc-100 bg-white/90 p-5 shadow-sm">
+          <div className="op-card rounded-[1.5rem] p-5">
             <label htmlFor="time-input" className="mb-3 block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">
               {t.input}
             </label>
@@ -218,7 +218,7 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
             )}
           </div>
 
-          <aside className="rounded-[1.5rem] border border-zinc-100 bg-white/90 p-5 shadow-sm">
+          <aside className="op-card rounded-[1.5rem] p-5">
             <div className="mb-4 flex items-center gap-2">
               <TimerReset className="h-4 w-4 text-emerald-600" />
               <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-700">{t.timezone}</h2>

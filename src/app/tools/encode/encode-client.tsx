@@ -168,14 +168,14 @@ export default function EncodeClient({ dict, lang }: { dict: any; lang: Lang }) 
           <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">{dict.tools.encode_title}</span>
         </nav>
 
-        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-sm backdrop-blur-xl sm:p-8">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-600">
+        <section className="op-card rounded-[2rem] p-5 sm:p-8">
+          <div className="op-chip mb-5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             {t.badge}
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3.5 shadow-sm">
+            <div className="op-icon-box h-16 w-16">
               <FileCode2 className="h-7 w-7 text-emerald-600" />
             </div>
             <div>
@@ -185,7 +185,7 @@ export default function EncodeClient({ dict, lang }: { dict: any; lang: Lang }) 
           </div>
         </section>
 
-        <section className="mt-6 rounded-[1.5rem] border border-zinc-100 bg-white/90 p-4 shadow-sm sm:p-5">
+        <section className="op-card rounded-[1.5rem] mt-6 p-4 sm:p-5">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {modes.map((item) => {
               const active = item.id === mode
@@ -208,7 +208,7 @@ export default function EncodeClient({ dict, lang }: { dict: any; lang: Lang }) 
         </section>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-zinc-100 bg-white/90 p-5 shadow-sm">
+          <div className="op-card rounded-[1.5rem] p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <label htmlFor="encode-input" className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">
                 {t.input}
@@ -231,7 +231,7 @@ export default function EncodeClient({ dict, lang }: { dict: any; lang: Lang }) 
             />
           </div>
 
-          <div className="rounded-[1.5rem] border border-zinc-100 bg-white/90 p-5 shadow-sm">
+          <div className="op-card rounded-[1.5rem] p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">
                 <Braces className="h-4 w-4 text-emerald-600" />

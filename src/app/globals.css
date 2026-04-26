@@ -7,6 +7,8 @@
   --color-surface: #ffffff;
   --color-accent: #10b981;
   --color-accent-hover: #059669;
+  --color-line: rgba(24, 24, 27, 0.08);
+  --shadow-soft: 0 14px 40px -28px rgba(24, 24, 27, 0.28);
 }
 
 @layer base {
@@ -14,8 +16,11 @@
     scroll-behavior: smooth;
   }
   body {
-    background-color: #fcfcfc;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(16, 185, 129, 0.08), transparent 34rem),
+      linear-gradient(180deg, #f8fffc 0%, #fcfcfc 18rem);
     color: #3f3f46;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -25,8 +30,8 @@
   max-width: 1200px;
   height: 800px;
   background: 
-    radial-gradient(circle at 30% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 70% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+    radial-gradient(circle at 30% 0%, rgba(16, 185, 129, 0.07) 0%, transparent 58%),
+    radial-gradient(circle at 70% 0%, rgba(6, 182, 212, 0.06) 0%, transparent 58%);
   top: -200px;
   left: 50%;
   transform: translateX(-50%);
@@ -53,4 +58,27 @@
 .ai-glow {
   color: #10b981;
   text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+@layer components {
+  .op-card {
+    @apply border border-zinc-100 bg-white/85 shadow-sm backdrop-blur-xl;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .op-card-soft {
+    @apply border border-zinc-100 bg-white/70 shadow-sm backdrop-blur-md;
+  }
+
+  .op-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-50 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600;
+  }
+
+  .op-icon-box {
+    @apply flex shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-600 shadow-sm;
+  }
+
+  .op-action {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-bold text-zinc-700 shadow-sm transition hover:border-emerald-500/30 hover:bg-emerald-50 hover:text-emerald-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50;
+  }
 }
