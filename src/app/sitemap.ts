@@ -14,6 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/qrgen',
     '/tools/json',
     '/tools/websocket',
+    '/tools/time',
+    '/tools/encode',
   ]
 
   const supportedLocales = ['en', 'zh', 'ja', 'tw']
@@ -38,4 +40,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   })
 }
-

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Zap, MessageSquare, Binary, Activity } from 'lucide-react'
+import { Activity, Binary, ChevronDown, MessageSquare, Settings2, Zap } from 'lucide-react'
 import { useMultiConnection } from './hooks'
 import { 
   ConnectionPanel, 
@@ -36,6 +36,7 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
   } = useMultiConnection()
 
   const [viewMode, setViewMode] = useState<ViewMode>('text')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const shellText = {
     zh: {
       badge: '实时传输实验室',
@@ -50,6 +51,8 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
       connecting: '连接中...',
       error: '连接异常',
       disconnected: '未连接',
+      advanced: '高级功能',
+      simpleHint: '连接端点、发送消息、查看流量日志。',
     },
     tw: {
       badge: '即時傳輸實驗室',
@@ -64,6 +67,8 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
       connecting: '連線中...',
       error: '連線異常',
       disconnected: '未連線',
+      advanced: '進階功能',
+      simpleHint: '連接端點、發送訊息、查看流量日誌。',
     },
     ja: {
       badge: 'リアルタイム通信',
@@ -78,6 +83,8 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
       connecting: '接続中...',
       error: 'エラー',
       disconnected: '未接続',
+      advanced: '詳細機能',
+      simpleHint: 'エンドポイントへ接続し、メッセージ送信とログ確認を行います。',
     },
     en: {
       badge: 'Real-Time Transport Lab',
@@ -92,6 +99,8 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
       connecting: 'Connecting...',
       error: 'Error',
       disconnected: 'Disconnected',
+      advanced: 'Advanced',
+      simpleHint: 'Connect an endpoint, send messages, and inspect traffic logs.',
     },
   }[lang]
 
@@ -122,7 +131,7 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
       <div className="absolute inset-0 bg-grid-zinc-900/[0.03] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-      <main className="w-full max-w-7xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-sans">
+      <main className="w-full max-w-6xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-sans">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href="/" className="hover:text-cyan-600 transition-colors">{shellText.home}</Link>
@@ -135,7 +144,7 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
         </nav>
 
         {/* Header */}
-        <header className="mb-8">
+        <header className="mb-6 rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-sm backdrop-blur-xl sm:p-7">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/8 border border-cyan-500/20 text-cyan-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
             {shellText.badge}
@@ -143,96 +152,98 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-                <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-lg shadow-cyan-500/10 group transition-all">
+                <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-sm group transition-all">
                   <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
                 </div>
                 <div>
                 <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight">
                   {shellText.title}
                 </h1>
-                <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed max-w-xl">
-                  {shellText.desc}
+                <p className="text-zinc-600 text-sm mt-2 leading-relaxed max-w-xl">
+                  {shellText.simpleHint}
                 </p>
               </div>
             </div>
 
-            {/* Session Manager */}
-            <SessionManager
-              currentUrl={activeTab.url}
-              currentLogs={activeTab.logs}
-              onLoadSession={handleLoadSession}
-            />
-          </div>
-        </header>
-
-        {/* Connection Tabs */}
-        <div className="mb-6">
-          <ConnectionTabs
-            tabs={tabs}
-            activeTabId={activeTabId}
-            onSelectTab={setActiveTabId}
-            onAddTab={addTab}
-            onRemoveTab={removeTab}
-            onRenameTab={renameTab}
-            canAddTab={canAddTab}
-          />
-        </div>
-
-        {/* Status Badge */}
-        <div className="flex items-center justify-between mb-6">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
-            activeTab.status === 'connected' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' :
-            activeTab.status === 'connecting' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 animate-pulse' :
-            activeTab.status === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-600' :
-            'bg-zinc-100 border-zinc-200 text-zinc-500'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${
-              activeTab.status === 'connected' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' :
-              activeTab.status === 'connecting' ? 'bg-amber-500' :
-              activeTab.status === 'error' ? 'bg-red-500' :
-              'bg-zinc-400'
-            }`} />
-            {activeTab.status === 'connected' ? shellText.connected :
-             activeTab.status === 'connecting' ? shellText.connecting :
-             activeTab.status === 'error' ? shellText.error : shellText.disconnected}
-          </div>
-
-          {/* View Mode Tabs */}
-          <div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-0.5">
+            <div className="flex flex-col items-start gap-3 md:items-end">
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                activeTab.status === 'connected' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' :
+                activeTab.status === 'connecting' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 animate-pulse' :
+                activeTab.status === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-600' :
+                'bg-zinc-100 border-zinc-200 text-zinc-500'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  activeTab.status === 'connected' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' :
+                  activeTab.status === 'connecting' ? 'bg-amber-500' :
+                  activeTab.status === 'error' ? 'bg-red-500' :
+                  'bg-zinc-400'
+                }`} />
+                {activeTab.status === 'connected' ? shellText.connected :
+                 activeTab.status === 'connecting' ? shellText.connecting :
+                 activeTab.status === 'error' ? shellText.error : shellText.disconnected}
+              </div>
               <button
-                onClick={() => setViewMode('text')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
-                  viewMode === 'text' ? 'bg-white text-cyan-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
-                }`}
+                type="button"
+                onClick={() => setShowAdvanced((value) => !value)}
+                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-bold text-zinc-600 shadow-sm transition hover:border-cyan-500/30 hover:bg-cyan-50 hover:text-cyan-700"
               >
-                <MessageSquare className="w-3.5 h-3.5" />
-              {shellText.text}
-              </button>
-              <button
-                onClick={() => setViewMode('binary')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
-                viewMode === 'binary' ? 'bg-white text-purple-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
-              }`}
-              >
-                <Binary className="w-3.5 h-3.5" />
-              {shellText.binary}
-              </button>
-              <button
-                onClick={() => setViewMode('ping')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
-                viewMode === 'ping' ? 'bg-white text-amber-600 shadow-sm' : 'text-zinc-400 hover:text-zinc-600'
-              }`}
-              >
-                <Activity className="w-3.5 h-3.5" />
-              {shellText.ping}
+                <Settings2 className="h-4 w-4" />
+                {shellText.advanced}
+                <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
               </button>
             </div>
           </div>
+        </header>
+
+        {showAdvanced && (
+          <section className="mb-6 rounded-2xl border border-zinc-100 bg-white/80 p-4 shadow-sm backdrop-blur-xl">
+            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <ConnectionTabs
+                tabs={tabs}
+                activeTabId={activeTabId}
+                onSelectTab={setActiveTabId}
+                onAddTab={addTab}
+                onRemoveTab={removeTab}
+                onRenameTab={renameTab}
+                canAddTab={canAddTab}
+              />
+              <SessionManager
+                currentUrl={activeTab.url}
+                currentLogs={activeTab.logs}
+                onLoadSession={handleLoadSession}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { mode: 'text' as ViewMode, label: shellText.text, icon: MessageSquare, tone: 'text-cyan-600' },
+                { mode: 'binary' as ViewMode, label: shellText.binary, icon: Binary, tone: 'text-purple-600' },
+                { mode: 'ping' as ViewMode, label: shellText.ping, icon: Activity, tone: 'text-amber-600' },
+              ].map((item) => {
+                const Icon = item.icon
+                const active = viewMode === item.mode
+                return (
+                  <button
+                    key={item.mode}
+                    type="button"
+                    onClick={() => setViewMode(item.mode)}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                      active ? `border-zinc-200 bg-white shadow-sm ${item.tone}` : 'border-transparent bg-zinc-50 text-zinc-400 hover:text-zinc-600'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Connection Panel */}
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-12">
             <ConnectionPanel
               status={activeTab.status}
               config={activeTab.config}
@@ -243,25 +254,27 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
           </div>
 
           {/* Stats Panel */}
-          <div className="lg:col-span-4">
-            <StatsPanel status={activeTab.status} stats={activeTab.stats} />
-          </div>
+          {showAdvanced && (
+            <div className="lg:col-span-12">
+              <StatsPanel status={activeTab.status} stats={activeTab.stats} />
+            </div>
+          )}
 
           {/* Message Composer based on view mode */}
           <div className="lg:col-span-12">
-            {viewMode === 'text' && (
+            {(!showAdvanced || viewMode === 'text') && (
               <MessageComposer
                 status={activeTab.status}
                 onSend={handleSend}
               />
             )}
-            {viewMode === 'binary' && (
+            {showAdvanced && viewMode === 'binary' && (
               <BinaryComposer
                 status={activeTab.status}
                 onSend={handleSend}
               />
             )}
-            {viewMode === 'ping' && (
+            {showAdvanced && viewMode === 'ping' && (
               <PingMonitor
                 status={activeTab.status}
                 onSendPing={handleSendPing}
