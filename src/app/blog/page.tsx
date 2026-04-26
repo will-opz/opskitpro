@@ -22,6 +22,7 @@ export default async function BlogPage() {
 
   const articleGroups = [
     {
+      id: 'project-overview',
       title:
         lang === 'ja'
           ? 'プロジェクト概要'
@@ -41,6 +42,7 @@ export default async function BlogPage() {
       slugs: ['why-opskitpro', 'design-principles', 'services-deployment'],
     },
     {
+      id: 'module-implementation',
       title:
         lang === 'ja'
           ? 'モジュール実装'
@@ -60,6 +62,7 @@ export default async function BlogPage() {
       slugs: ['website-check-module', 'ip-dns-module'],
     },
     {
+      id: 'tool-implementation',
       title:
         lang === 'ja'
           ? 'ツール実装'
@@ -83,6 +86,12 @@ export default async function BlogPage() {
     posts: group.slugs
       .map((slug) => postsBySlug.get(slug))
       .filter(Boolean) as typeof posts,
+  }))
+  const articleSeries = articleGroups.map((group) => ({
+    id: group.id,
+    title: group.title,
+    subtitle: group.subtitle,
+    count: group.posts.length,
   }))
 
   return (
@@ -119,33 +128,60 @@ export default async function BlogPage() {
           </p>
         </div>
 
-        <div className="mb-14 flex flex-col gap-4 rounded-[2rem] border border-emerald-500/15 bg-white/80 px-5 py-5 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className="text-sm leading-7 text-zinc-700">
-            {isJapanese
-              ? '主站は短い導線だけを残し、長文・設計メモ・工程記録は KB に分離しています。'
-              : isZh
-                ? '主站只保留短导览，长文、设计笔记和工程记录都分离到 KB。'
-                : lang === 'tw'
-                  ? '主站只保留短導覽，長文、設計筆記和工程記錄都分離到 KB。'
-                  : 'The main site keeps short entry points, while long-form writing, design notes, and engineering logs live in KB.'}
-          </p>
-          <a
-            href="https://kb.opskitpro.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:border-emerald-500/20 hover:text-emerald-600"
-          >
-            <BookOpen className="h-4 w-4" />
-            {isJapanese ? 'KB を開く' : isZh ? '打开 KB' : lang === 'tw' ? '打開 KB' : 'Open KB'}
-          </a>
+        <div className="mb-14 grid gap-4 md:grid-cols-3">
+          {articleSeries.map((series) => (
+            <a
+              key={series.id}
+              href={`#${series.id}`}
+              className="group rounded-[2rem] border border-zinc-100 bg-white/85 px-5 py-5 shadow-sm backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-lg"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
+                    {String(series.count).padStart(2, '0')} {isJapanese ? '本' : isZh ? '篇' : lang === 'tw' ? '篇' : 'posts'}
+                  </div>
+                  <h2 className="mt-2 text-xl font-black tracking-tighter text-zinc-900">{series.title}</h2>
+                </div>
+                <ArrowRight className="h-4 w-4 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
+              </div>
+              <p className="mt-3 text-sm leading-7 text-zinc-600">{series.subtitle}</p>
+            </a>
+          ))}
         </div>
 
         <div className="space-y-14">
           {articleGroups.map((group) => (
-            <section key={group.title}>
+            <section key={group.id} id={group.id} className="scroll-mt-24">
               <div className="mb-6 border-b border-zinc-100 pb-4">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald-500">
-                  {String(group.posts.length).padStart(2, '0')} / {group.title}
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-full border border-emerald-500/15 bg-emerald-500/8 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-emerald-600">
+                    {String(group.posts.length).padStart(2, '0')} {isJapanese ? '本' : isZh ? '篇' : lang === 'tw' ? '篇' : 'posts'}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
+                    {group.id === 'project-overview'
+                      ? isJapanese
+                        ? '概要'
+                        : isZh
+                          ? '总览'
+                          : lang === 'tw'
+                            ? '總覽'
+                            : 'Overview'
+                      : group.id === 'module-implementation'
+                        ? isJapanese
+                          ? '実装'
+                          : isZh
+                            ? '实现'
+                            : lang === 'tw'
+                              ? '實作'
+                              : 'Implementation'
+                        : isJapanese
+                          ? 'ツール'
+                          : isZh
+                            ? '工具'
+                            : lang === 'tw'
+                              ? '工具'
+                              : 'Tools'}
+                  </span>
                 </div>
                 <h2 className="mt-3 text-2xl font-black tracking-tighter text-zinc-900 sm:text-3xl">
                   {group.title}
