@@ -19,6 +19,9 @@
 Cloudflare Workers 実装シリーズ:
 - [cloudflare-workers/README.md](./cloudflare-workers/README.md)
 
+Tool Modules シリーズ:
+- [tool-modules/README.md](./tool-modules/README.md)
+
 補足:
 - KB 側の長文記事は `kb.opskitpro.com` へ誘導する前提で書いています。
 - ここにある文章は、そのまま Qiita に貼れることを意識していますが、必要に応じてトーンや長さを微調整してください。
