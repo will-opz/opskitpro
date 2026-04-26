@@ -17,10 +17,6 @@
 		{
 			"pattern": "opskitpro.com",
 			"custom_domain": true
-		},
-		{
-			"pattern": "www.opskitpro.com",
-			"custom_domain": true
 		}
 	],
 	"kv_namespaces": [
