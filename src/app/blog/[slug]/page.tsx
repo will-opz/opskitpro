@@ -113,7 +113,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 </div>
 
                 <a
-                  href={post.kbUrl}
+                  href={post.ctaUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
@@ -306,7 +306,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
-                    href={post.kbUrl}
+                    href={post.ctaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"

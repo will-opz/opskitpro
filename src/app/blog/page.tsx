@@ -277,16 +277,13 @@ export default async function BlogPage() {
                         : 'The main site keeps the key points, while design and operations records are organized in the main-site article area.'}
                 </p>
               </div>
-              <a
-                href="https://opskitpro.com/blog"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/"
                 className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
                 <BookOpen className="h-4 w-4" />
-                {isJapanese ? '記事一覧を開く' : isZh ? '打开文章列表' : lang === 'tw' ? '打開文章列表' : 'Open article list'}
-
-              </a>
+                {isJapanese ? 'ホームへ戻る' : isZh ? '返回首页' : lang === 'tw' ? '返回首頁' : 'Back to home'}
+              </Link>
             </div>
           </div>
         </div>

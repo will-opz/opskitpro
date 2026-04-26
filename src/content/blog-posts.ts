@@ -13,7 +13,7 @@ export type BlogPost = {
   readTime: string
   tag: string
   accent: string
-  kbUrl: string
+  ctaUrl: string
   actionKind: 'kb' | 'tool'
   coverImage: string
   titles: Record<Lang, string>
@@ -29,7 +29,7 @@ const posts: BlogPost[] = [
     readTime: '6 min',
     tag: '需求',
     accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/blog',
+    ctaUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/why-opskitpro.svg',
     titles: {
@@ -78,7 +78,7 @@ const posts: BlogPost[] = [
     readTime: '5 min',
     tag: '设计',
     accent: 'from-sky-500/10 via-cyan-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/blog',
+    ctaUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/design-principles.svg',
     titles: {
@@ -127,7 +127,7 @@ const posts: BlogPost[] = [
     readTime: '7 min',
     tag: '实现',
     accent: 'from-emerald-500/10 via-lime-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/blog',
+    ctaUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/website-check.svg',
     titles: {
@@ -176,7 +176,7 @@ const posts: BlogPost[] = [
     readTime: '7 min',
     tag: '模块',
     accent: 'from-indigo-500/10 via-sky-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/blog',
+    ctaUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/ip-dns.svg',
     titles: {
@@ -225,7 +225,7 @@ const posts: BlogPost[] = [
     readTime: '6 min',
     tag: '工程',
     accent: 'from-violet-500/10 via-fuchsia-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/blog',
+    ctaUrl: 'https://opskitpro.com/blog',
     actionKind: 'kb',
     coverImage: '/blog-covers/services-standardization.svg',
     titles: {
@@ -274,7 +274,7 @@ const posts: BlogPost[] = [
     readTime: '5 min',
     tag: '工具',
     accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/tools/passgen',
+    ctaUrl: 'https://opskitpro.com/tools/passgen',
     actionKind: 'tool',
     coverImage: '/blog-covers/passgen-tool.svg',
     titles: {
@@ -323,7 +323,7 @@ const posts: BlogPost[] = [
     readTime: '4 min',
     tag: '工具',
     accent: 'from-cyan-500/10 via-sky-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/tools/qrgen',
+    ctaUrl: 'https://opskitpro.com/tools/qrgen',
     actionKind: 'tool',
     coverImage: '/blog-covers/qrgen-tool.svg',
     titles: {
@@ -372,7 +372,7 @@ const posts: BlogPost[] = [
     readTime: '7 min',
     tag: '工具',
     accent: 'from-violet-500/10 via-fuchsia-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/tools/json',
+    ctaUrl: 'https://opskitpro.com/tools/json',
     actionKind: 'tool',
     coverImage: '/blog-covers/json-tool.svg',
     titles: {
@@ -421,7 +421,7 @@ const posts: BlogPost[] = [
     readTime: '7 min',
     tag: '工具',
     accent: 'from-sky-500/10 via-cyan-500/10 to-transparent',
-    kbUrl: 'https://opskitpro.com/tools/websocket',
+    ctaUrl: 'https://opskitpro.com/tools/websocket',
     actionKind: 'tool',
     coverImage: '/blog-covers/websocket-tool.svg',
     titles: {
@@ -477,7 +477,7 @@ export function getBlogPosts(lang: Lang) {
     readTime: post.readTime,
     tag: post.tag,
     accent: post.accent,
-    kbUrl: post.kbUrl,
+    ctaUrl: post.ctaUrl,
     actionKind: post.actionKind,
     coverImage: post.coverImage,
     title: localize(post.titles, lang) as string,
