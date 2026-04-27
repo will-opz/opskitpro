@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Github,
@@ -29,13 +28,12 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
     <header className="w-full max-w-6xl mx-auto px-6 py-6 md:py-8 flex justify-between items-center z-50 relative">
       <Link href={`/`} className="group flex items-center gap-3 no-underline outline-none relative z-50">
         <div className="relative group-hover:-rotate-6 transition-transform duration-500">
-          <Image 
-            src="/logo.png" 
-            alt="OpsKitPro Avatar" 
-            width={44} 
-            height={44} 
+          <img 
+            src="/logo.svg" 
+            alt="OpsKitPro logo" 
+            width={44}
+            height={44}
             className="rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] border border-white/5 bg-zinc-900" 
-            priority
           />
         </div>
         <span className="text-xl font-semibold tracking-tight text-zinc-900 group-hover:text-emerald-600 transition-colors">

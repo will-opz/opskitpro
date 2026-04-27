@@ -770,35 +770,40 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   // Memoize advice to avoid computing it twice in render
   const adviceList = useMemo(() => (result ? getAdvice(result) : []), [result])
+  const displayedTarget = result?.domain || domain || 'opskitpro.com'
 
   return (
-    <main className="w-full max-w-6xl mx-auto px-6 mt-12 mb-32 z-20 relative font-sans">
+    <main className="w-full max-w-6xl mx-auto px-6 mt-8 sm:mt-12 mb-28 z-20 relative font-sans">
       {/* Background Glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none -z-10"></div>
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/6 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
       {/* Hero Header */}
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.18em] mb-6">
+      <div className="text-center mb-12 sm:mb-14">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.18em] mb-6 shadow-sm backdrop-blur-md">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           {localeText.heroBadge}
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-semibold text-zinc-900 tracking-tighter mb-6 break-words">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-zinc-900 tracking-tighter mb-5 break-words">
            {result?.isVisitor
              ? localeText.heroTitles.visitor
              : result?.isActuallyIp
              ? localeText.heroTitles.ip
              : localeText.heroTitles.site}
         </h1>
-        <p className="max-w-2xl mx-auto mb-10 leading-relaxed text-zinc-600 text-sm sm:text-base font-medium tracking-normal">
+        <p className="max-w-2xl mx-auto mb-4 leading-relaxed text-zinc-600 text-sm sm:text-base font-medium tracking-normal">
            {localeText.heroSubtitle}
         </p>
+        <div className="mb-9 flex flex-wrap items-center justify-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+          <span className="rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1.5 shadow-sm">{localeText.heroModeLabel}</span>
+          <span className="hidden sm:inline rounded-full border border-zinc-200/80 bg-white/70 px-3 py-1.5 shadow-sm">{localeText.emptyHint}</span>
+        </div>
 
         {/* Input Bar */}
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="relative group">
             <div className="absolute inset-0 bg-emerald-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="relative flex items-center bg-white border border-black/5 p-2 rounded-2xl shadow-2xl focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-               <div className="w-12 h-12 flex items-center justify-center text-zinc-400">
+            <div className="relative flex items-center bg-white/95 border border-zinc-100 p-2 rounded-[1.35rem] shadow-xl shadow-zinc-200/70 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+               <div className="w-10 sm:w-12 h-12 flex items-center justify-center text-zinc-400">
                   <Globe className="w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
                </div>
                <input 
@@ -812,16 +817,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                    }
                  }}
                  placeholder={dict.home.diagnostics_placeholder}
-                 className="flex-grow bg-transparent border-none outline-none text-zinc-900 text-lg px-2"
+                 className="min-w-0 flex-grow bg-transparent border-none outline-none text-zinc-900 text-base sm:text-lg px-1 sm:px-2"
                />
                <button 
                  type="button"
                  onClick={() => runDiagnostic(undefined, true)}
                  disabled={loading}
-                 className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/30 disabled:opacity-50"
+                 className="shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-5 sm:px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/25 disabled:opacity-50"
                  >
                  {loading ? <Activity className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
-                 {loading ? localeText.analyzing : dict.home.diagnostics_btn}
+                 <span className="whitespace-nowrap text-sm sm:text-base">{loading ? localeText.analyzing : dict.home.diagnostics_btn}</span>
                </button>
             </div>
           </form>
@@ -892,9 +897,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
            
            {/* Overall Status Bar */}
-           <div className={`mb-10 p-6 sm:p-8 rounded-3xl border shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden ${result.http.success ? 'bg-white border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+           <div className={`mb-6 p-5 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5 relative overflow-hidden ${result.http.success ? 'bg-white/90 border-emerald-100/80' : 'bg-red-50 border-red-100'}`}>
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
-              <div className="flex items-center gap-6 z-10 w-full md:w-auto">
+              <div className="flex items-center gap-5 z-10 w-full min-w-0">
                  {/* Score Ring */}
                  {(() => {
                    const score = calculateScore(result)
@@ -914,24 +919,34 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                      </div>
                    )
                  })()}
-                 <div>
+                 <div className="min-w-0">
                    <h2 className="text-[10px] font-semibold text-zinc-400 mb-1 tracking-[0.18em]">{localeText.summaryScore}</h2>
                  <h1 className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${result.http.success && !result.whois?.status?.toLowerCase().includes('hold') ? 'text-zinc-900' : 'text-red-600'}`}>
                      {result.http.success && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
                    </h1>
+                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                     <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-zinc-500">
+                       <Monitor className="h-3 w-3 shrink-0 text-zinc-400" />
+                       <span className="truncate">{displayedTarget}</span>
+                     </span>
+                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${result.http.success ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-red-100 bg-red-50 text-red-600'}`}>
+                       <CheckCircle2 className="h-3 w-3" />
+                       {result.http.status_code || 'ERR'}
+                     </span>
+                   </div>
                  </div>
               </div>
-              <button onClick={copyResult} className="relative z-10 flex items-center justify-center gap-2 text-[10px] font-semibold text-zinc-400 hover:text-zinc-900 transition-colors tracking-[0.22em] bg-zinc-50 py-3 px-6 rounded-full border border-black/5 hover:bg-zinc-100 w-full md:w-auto shrink-0">
+              <button onClick={copyResult} className="relative z-10 flex items-center justify-center gap-2 text-[10px] font-semibold text-zinc-500 hover:text-zinc-900 transition-colors tracking-[0.22em] bg-zinc-50/90 py-3 px-6 rounded-full border border-zinc-200 hover:bg-zinc-100 w-full lg:w-auto shrink-0">
                 {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                 {copied ? localeText.copy.copied : localeText.copy.copy}
               </button>
            </div>
 
-           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
              {summaryFacts.slice(2).map((fact) => (
-               <div key={fact.label} className="rounded-2xl border border-black/5 bg-white/80 backdrop-blur-md px-4 py-3 shadow-sm">
-                 <div className="text-[10px] font-semibold tracking-[0.22em] text-zinc-400">{fact.label}</div>
-                 <div className={`mt-2 text-sm font-semibold ${
+               <div key={fact.label} className="rounded-2xl border border-zinc-100 bg-white/85 backdrop-blur-md px-4 py-3 shadow-sm">
+                 <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{fact.label}</div>
+                 <div className={`mt-2 truncate text-sm font-semibold ${
                    fact.tone === 'emerald'
                      ? 'text-emerald-600'
                      : fact.tone === 'orange'
@@ -946,8 +961,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
              ))}
            </div>
 
-           <div className="flex items-center justify-between gap-3 mb-6">
-             <p className="text-[10px] font-semibold text-zinc-400 tracking-[0.22em]">
+           <div className="flex items-center justify-between gap-3 mb-6 rounded-full border border-zinc-100 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-md">
+             <p className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em]">
                {localeText.detailsHint}
              </p>
              <button
