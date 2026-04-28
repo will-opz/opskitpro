@@ -2,7 +2,7 @@
   "nav": {
     "kb": "Knowledge Base",
     "services": "Matrix",
-    "blog": "Articles",
+    "blog": "Knowledge Base",
     "about": "About"
   },
   "home": {
@@ -31,8 +31,8 @@
     "card3_desc": "Query DNS records and detect resolution issues or misconfigurations. Global DNS auditing.",
     "card4_title": "Ops Survival Kit",
     "card4_desc": "Industrial utilities for prod emergencies. WebSocket debugging, JSON audits, and password recovery.",
-    "card5_title": "Technical Notes",
-    "card5_desc": "Requirements, design, module implementation, and engineering wrap-up live here.",
+    "card5_title": "Knowledge Base",
+    "card5_desc": "Public notes for requirements, design decisions, module implementation, and tool usage.",
     "quick_access": "Diagnose Website Now",
     "tool_passgen": "Passwords",
     "tool_qrgen": "QR Codes",
@@ -53,9 +53,9 @@
       "s3_desc": "Check if your DNS is correctly configured."
     },
     "blog_section": {
-      "title": "Technical Notes",
-      "subtitle": "Practical implementation notes from the edge",
-      "view_all": "View all articles",
+      "title": "Knowledge Base",
+      "subtitle": "Public notes for tools, operations, and implementation",
+      "view_all": "Open Knowledge Base",
       "posts": [
         {
           "tag": "SRE_INTEL",
@@ -118,6 +118,8 @@
     "time_desc": "Convert Unix timestamps, ISO time, and common time zones.",
     "encode_title": "Encoding Toolkit",
     "encode_desc": "Encode and decode Base64, URL strings, and JWT payloads locally.",
+    "prompt_builder_title": "Prompt Builder",
+    "prompt_builder_desc": "Generate scoped engineering prompts for AI coding agents with guardrails, checks, and public/private boundaries.",
     "dns_lookup_title": "DNS Lookup",
     "dns_lookup_desc": "Check DNS records and resolve anomalies.",
     "matrix_title": "Matrix Node",

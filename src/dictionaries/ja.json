@@ -2,7 +2,7 @@
   "nav": {
     "kb": "知識",
     "services": "ツール",
-    "blog": "記事",
+    "blog": "ナレッジ",
     "about": "運営"
   },
   "home": {
@@ -31,8 +31,8 @@
     "card3_desc": "DNS レコードを照会し、名前解決の異常を見つけます。",
     "card4_title": "運用ツール",
     "card4_desc": "WebSocket デバッグ、JSON 整形、パスワード生成など、日常運用で使う機能をまとめました。",
-    "card5_title": "技術メモ",
-    "card5_desc": "要件、設計、モジュール実装、工程整理をまとめています。",
+    "card5_title": "ナレッジベース",
+    "card5_desc": "ツール、設計判断、実装、運用メモを公開情報として整理しています。",
     "quick_access": "今すぐサイトを診断",
     "tool_passgen": "パスワード生成",
     "tool_qrgen": "QR コード",
@@ -53,9 +53,9 @@
       "s3_desc": "変更が正しく伝播しているかを確認できます。"
     },
     "blog_section": {
-      "title": "技術メモ",
-      "subtitle": "エッジ環境での実践的な運用記録",
-      "view_all": "記事一覧",
+      "title": "ナレッジベース",
+      "subtitle": "ツール、運用、実装の公開メモ",
+      "view_all": "ナレッジを見る",
       "posts": [
         {
           "tag": "SRE_INTEL",
@@ -118,6 +118,8 @@
     "time_desc": "Unix タイムスタンプ、ISO 時刻、主要タイムゾーンを変換します。",
     "encode_title": "エンコードツール",
     "encode_desc": "Base64、URL 文字列、JWT payload をローカルで変換します。",
+    "prompt_builder_title": "Prompt Builder",
+    "prompt_builder_desc": "制約、検証、公開/非公開境界を含む AI Coding Agent 向け prompt を生成します。",
     "dns_lookup_title": "DNS 確認",
     "dns_lookup_desc": "DNS レコードと解決状態を確認できます。",
     "matrix_title": "Matrix 連携",

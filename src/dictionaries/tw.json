@@ -2,7 +2,7 @@
   "nav": {
     "kb": "運維智能節點",
     "services": "服務矩陣",
-    "blog": "技術筆記",
+    "blog": "知識庫",
     "about": "關於我們"
   },
   "home": {
@@ -31,8 +31,8 @@
     "card3_desc": "查詢域名解析記錄，檢測 DNS 是否異常或被污染。支持多節點全球解析取證。",
     "card4_title": "運維應急包",
     "card4_desc": "生產環境應急工具集。包含 WebSocket 調試、JSON 審計與緊急密碼重置。",
-    "card5_title": "技術筆記",
-    "card5_desc": "需求、設計、模組實作與工程收斂都整理在這裡。",
+    "card5_title": "知識庫",
+    "card5_desc": "公開整理工具說明、設計決策、模組實作與運維筆記。",
     "quick_access": "立即檢測你的網站",
     "tool_passgen": "密碼生成",
     "tool_qrgen": "二維碼轉化",
@@ -53,9 +53,9 @@
       "s3_desc": "檢查解析是否生效，防止域名被污染。"
     },
     "blog_section": {
-      "title": "技術筆記",
-      "subtitle": "來自邊緣節點的實戰記錄與排障筆記",
-      "view_all": "查看全部筆記",
+      "title": "知識庫",
+      "subtitle": "工具、運維與實作細節的公開索引",
+      "view_all": "打開知識庫",
       "posts": [
         {
           "tag": "SRE_INTEL",
@@ -118,6 +118,8 @@
     "time_desc": "轉換 Unix 時間戳、ISO 時間和常用時區。",
     "encode_title": "編碼工具",
     "encode_desc": "本機處理 Base64、URL 編碼和 JWT payload 解碼。",
+    "prompt_builder_title": "Prompt Builder",
+    "prompt_builder_desc": "生成帶邊界、驗證和 public/private 約束的 AI Coding Agent 工程 prompt。",
     "dns_lookup_title": "DNS 檢測",
     "dns_lookup_desc": "檢查 DNS 記錄與解析異常。",
     "matrix_title": "Matrix 終端",

@@ -222,6 +222,15 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: Lang }
       ],
     },
     {
+      category: isJapanese ? 'AI エンジニアリング' : (lang === 'zh' ? 'AI 工程工作流' : lang === 'tw' ? 'AI 工程工作流' : 'AI Engineering'),
+      scene: 'ai',
+      tools: [
+        { name: dict.tools.prompt_builder_title, desc: dict.tools.prompt_builder_desc, icon: Sparkles, status: 'operational', url: '/tools/prompt-builder', scene: 'ai', tags: ['prompt', 'agent', 'local'], favorite: true, pinned: true, accent: 'emerald' },
+        { name: 'Vibe Coding Workflow', desc: isJapanese ? 'AI と進める実装を、計画・検証・記録まで含めて整理。' : (lang === 'zh' ? '把 AI 辅助开发整理成有边界、有测试、有记录的工程流程。' : lang === 'tw' ? '把 AI 輔助開發整理成有邊界、有測試、有記錄的工程流程。' : 'A guarded workflow for AI-assisted changes, checks, notes, and deployment.'), icon: Workflow, status: 'operational', url: '/blog/vibe-coding-workflow', scene: 'knowledge', tags: ['vibe', 'workflow', 'kb'], favorite: true, accent: 'zinc' },
+        { name: 'Review & Deploy Checklist', desc: isJapanese ? '公開境界、テスト、build、記録、deploy 前の確認項目。' : (lang === 'zh' ? '提交和部署前检查 public/private 边界、测试、构建和记录。' : lang === 'tw' ? '提交和部署前檢查 public/private 邊界、測試、構建和記錄。' : 'Public/private boundary, tests, build, notes, and deployment checks.'), icon: CheckCircle2, status: 'operational', url: '/blog/vibe-coding-workflow', scene: 'knowledge', tags: ['review', 'deploy', 'safety'], favorite: true, accent: 'emerald' },
+      ],
+    },
+    {
       category: isJapanese ? 'SRE ステータス' : (lang === 'zh' ? 'SRE 状态面板' : lang === 'tw' ? 'SRE 狀態面板' : 'SRE Status'),
       scene: 'ops',
       tools: [

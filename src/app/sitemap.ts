@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/websocket',
     '/tools/time',
     '/tools/encode',
+    '/tools/prompt-builder',
   ]
 
   const supportedLocales = ['en', 'zh', 'ja', 'tw']

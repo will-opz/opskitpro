@@ -19,6 +19,10 @@ export default async function BlogPage() {
   const isJapanese = lang === 'ja'
   const posts = getBlogPosts(lang)
   const postsBySlug = new Map(posts.map((post) => [post.slug, post]))
+  const totalPosts = posts.length
+  const kbLabel = isJapanese ? '公開ナレッジ' : isZh ? '公开知识库' : lang === 'tw' ? '公開知識庫' : 'Public Knowledge Base'
+  const publishedLabel = isJapanese ? '公開済み' : isZh ? '已公开' : lang === 'tw' ? '已公開' : 'Published'
+  const groupLabel = isJapanese ? '分類' : isZh ? '分类' : lang === 'tw' ? '分類' : 'Sections'
 
   const articleGroups = [
     {
@@ -81,6 +85,26 @@ export default async function BlogPage() {
               : 'One article per tool: passgen, qrgen, json, and websocket.',
       slugs: ['passgen-tool', 'qrgen-tool', 'json-tool', 'websocket-tool'],
     },
+    {
+      id: 'ai-engineering',
+      title:
+        lang === 'ja'
+          ? 'AI エンジニアリング'
+          : isZh
+            ? 'AI 工程工作流'
+            : lang === 'tw'
+              ? 'AI 工程工作流'
+              : 'AI engineering',
+      subtitle:
+        lang === 'ja'
+          ? 'Vibe Coding を、境界・検証・記録を含む安全な実装フローとして整理しています。'
+          : isZh
+            ? '把 Vibe Coding 整理成有边界、有验证、有记录的 AI 辅助工程流程。'
+            : lang === 'tw'
+              ? '把 Vibe Coding 整理成有邊界、有驗證、有記錄的 AI 輔助工程流程。'
+              : 'Turns vibe coding into a guarded workflow with scope, verification, notes, and deployment checks.',
+      slugs: ['vibe-coding-workflow'],
+    },
   ].map((group) => ({
     ...group,
     posts: group.slugs
@@ -102,30 +126,44 @@ export default async function BlogPage() {
         <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[600px] w-full max-w-[1000px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
 
         <div className="mb-12 border-b border-zinc-100 pb-10 text-center md:text-left">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/8 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-600">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-white/75 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-600 shadow-sm backdrop-blur-md">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-            {isJapanese ? '技術メモ' : isZh ? '技术笔记' : 'Technical Notes'}
+            {kbLabel}
           </div>
-          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-7xl">
+          <h1 className="mb-5 text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-7xl">
             {dict.nav.blog}
           </h1>
-          <p className="max-w-2xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base">
+          <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base md:mx-0">
             {isJapanese
-              ? '可観測性、サイト信頼性、エッジ基盤の技術メモを、プロジェクト別に整理しています。'
+              ? 'OpsKitPro の公開メモを、ツール、運用、実装の入口として整理しています。'
               : isZh
-                ? '这里把 OpsKitPro 的技术笔记按项目说明、模块实现和工具实现整理在一起。'
-                : 'This section groups OpsKitPro technical notes by project overview, module implementation, and tool implementation.'}
+                ? '这里整理 OpsKitPro 已公开的工具说明、运维笔记和实现记录。'
+                : lang === 'tw'
+                  ? '這裡整理 OpsKitPro 已公開的工具說明、運維筆記與實作記錄。'
+                  : 'A public hub for OpsKitPro tool notes, operations guides, and implementation records.'}
             <br />
             <span className="mt-2 block opacity-40">
               {isJapanese
-                ? '長文はメインサイトの文章区に残し、メインサイトは索引と要点を保っています。'
+                ? '草稿や内部記録ではなく、公開できる内容だけをここに置いています。'
                 : isZh
-                  ? '长文会继续保留在主站文章区，主站只放索引和要点。'
+                  ? '这里只放已整理、可公开复用的内容，不接入内部草稿。'
                   : lang === 'tw'
-                    ? '長文會繼續保留在主站文章區，主站只放索引和要點。'
-                    : 'Long-form content stays in the main-site article area, while the main site keeps the index and key points.'}
+                    ? '這裡只放已整理、可公開複用的內容，不接入內部草稿。'
+                    : 'Only cleaned, reusable public content lives here; private drafts stay outside the site build.'}
             </span>
           </p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {[
+              { label: publishedLabel, value: `${String(totalPosts).padStart(2, '0')} ${isJapanese ? '本' : isZh ? '篇' : lang === 'tw' ? '篇' : 'posts'}` },
+              { label: groupLabel, value: `${String(articleGroups.length).padStart(2, '0')} ${isJapanese ? '分類' : isZh ? '组' : lang === 'tw' ? '組' : 'sections'}` },
+              { label: isJapanese ? '範囲' : isZh ? '范围' : lang === 'tw' ? '範圍' : 'Scope', value: isJapanese ? '公開情報のみ' : isZh ? '仅公开内容' : lang === 'tw' ? '僅公開內容' : 'Public only' },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-zinc-100 bg-white/75 px-4 py-3 text-left shadow-sm backdrop-blur-md">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">{item.label}</div>
+                <div className="mt-1 text-sm font-semibold text-zinc-900">{item.value}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mb-14 grid gap-4 md:grid-cols-3">
@@ -144,7 +182,7 @@ export default async function BlogPage() {
                 </div>
                 <ArrowRight className="h-4 w-4 text-zinc-300 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
               </div>
-              <p className="mt-3 text-sm leading-7 text-zinc-600">{series.subtitle}</p>
+              <p className="mt-3 line-clamp-2 text-sm leading-7 text-zinc-600">{series.subtitle}</p>
             </a>
           ))}
         </div>
@@ -174,13 +212,15 @@ export default async function BlogPage() {
                             : lang === 'tw'
                               ? '實作'
                               : 'Implementation'
-                        : isJapanese
-                          ? 'ツール'
-                          : isZh
-                            ? '工具'
-                            : lang === 'tw'
+                        : group.id === 'ai-engineering'
+                          ? 'AI'
+                          : isJapanese
+                            ? 'ツール'
+                            : isZh
                               ? '工具'
-                              : 'Tools'}
+                              : lang === 'tw'
+                                ? '工具'
+                                : 'Tools'}
                   </span>
                 </div>
                 <h2 className="mt-3 text-2xl font-black tracking-tighter text-zinc-900 sm:text-3xl">
@@ -249,7 +289,7 @@ export default async function BlogPage() {
 
                       <div className="mt-6 flex items-center justify-between border-t border-zinc-50 pt-5">
                         <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-                          {isJapanese ? 'メインサイトプレビュー' : isZh ? '主站预览' : lang === 'tw' ? '主站預覽' : 'Main site preview'}
+                          {isJapanese ? '公開メモ' : isZh ? '公开笔记' : lang === 'tw' ? '公開筆記' : 'Public note'}
                         </span>
                         <ArrowRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
                       </div>
@@ -264,17 +304,17 @@ export default async function BlogPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-xl font-black tracking-tighter text-zinc-900">
-                  {isJapanese ? 'メインサイトアーカイブで長文を読む' : isZh ? '长文请继续看主站文章区' : lang === 'tw' ? '長文請繼續看主站文章區' : 'Read the long-form archive on the main site'}
+                  {isJapanese ? 'ツール中枢に戻る' : isZh ? '返回工具中枢' : lang === 'tw' ? '返回工具中樞' : 'Return to the tool hub'}
 
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-zinc-600">
                   {isJapanese
-                    ? 'メインサイトの技術メモは要点を残し、設計記録・運用記録はメインサイトの文章区画に整理しています。'
+                    ? 'ナレッジベースは公開情報だけを扱い、日常の診断や調査はツール中枢から始められます。'
                     : isZh
-                      ? '主站技术笔记只保留要点，设计记录和运维记录都整理在主站文章区。'
+                      ? '知识库只展示公开内容，日常诊断、排障和工具入口从工具中枢开始。'
                       : lang === 'tw'
-                        ? '主站技術筆記只保留要點，設計記錄和運維記錄都整理在主站文章區。'
-                        : 'The main site keeps the key points, while design and operations records are organized in the main-site article area.'}
+                        ? '知識庫只展示公開內容，日常診斷、排障和工具入口從工具中樞開始。'
+                        : 'The knowledge base stays public and reusable; daily diagnostics and workflows start from the tool hub.'}
                 </p>
               </div>
               <Link
