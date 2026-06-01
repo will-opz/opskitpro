@@ -5,10 +5,10 @@ tags:
   - json
   - JavaScript
   - 実装
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-11T00:01:51Z"
+qiita_url: "https://qiita.com/opskitpro/items/3f5698e7c09915cc6ada"
+qiita_id: "3f5698e7c09915cc6ada"
 ---
 
 # json の実装。修復・変換・diff・schema を分割する

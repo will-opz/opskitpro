@@ -5,10 +5,10 @@ tags:
   - websocket
   - 背景
   - 課題
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-13T09:02:09+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/0d87bbc8fac032af05b4"
+qiita_id: "0d87bbc8fac032af05b4"
 ---
 
 # websocket を作った理由。接続後の操作を楽にしたかった

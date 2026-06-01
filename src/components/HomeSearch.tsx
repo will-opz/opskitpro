@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Globe, ArrowRight, Zap, ShieldCheck } from 'lucide-react'
+import { Globe, ArrowRight, Zap, ShieldCheck } from 'lucide-react'
 
-export default function HomeSearch({ dict }: { dict: any }) {
+export default function HomeSearch({ dict, compact = false }: { dict: any; compact?: boolean }) {
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -23,43 +23,47 @@ export default function HomeSearch({ dict }: { dict: any }) {
   ]
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+    <div className={`${compact ? 'w-full' : 'mx-auto mb-10 w-full max-w-3xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 md:mb-12'}`}>
       <form onSubmit={handleSearch} className="relative group">
-        <div className="absolute inset-0 bg-emerald-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-        <div className="relative flex items-center bg-white/80 backdrop-blur-2xl border border-black/5 p-1.5 rounded-2xl shadow-2xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-          <div className="flex items-center justify-center w-12 h-12 text-zinc-400">
-            <Globe className="w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+        <div className="absolute inset-0 rounded-xl bg-emerald-500/10 blur-2xl opacity-0 transition-opacity duration-500 group-focus-within:opacity-100 group-hover:opacity-100"></div>
+        <div className={`ui-surface-elevated relative flex flex-col gap-2 overflow-hidden ${compact ? 'rounded-xl p-1.5' : 'rounded-2xl p-2'} sm:flex-row sm:items-center`}>
+          <div className="flex min-w-0 flex-1 items-center">
+            <div className={`${compact ? 'h-10 w-10' : 'h-12 w-12'} flex shrink-0 items-center justify-center text-[var(--text-muted)]`}>
+              <Globe className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} group-focus-within:text-[var(--accent-color)]`} />
+            </div>
+            <input 
+              type="text" 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={dict.home.diagnostics_placeholder}
+              className={`${compact ? 'min-h-10 text-sm' : 'min-h-12'} min-w-0 flex-grow border-none bg-transparent px-2 font-sans text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)]`}
+            />
           </div>
-          <input 
-            type="text" 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={dict.home.diagnostics_placeholder}
-            className="flex-grow bg-transparent border-none outline-none font-sans text-zinc-900 placeholder:text-zinc-400 px-2"
-          />
           <button 
             type="submit"
-            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/30"
+            className={`ui-button-primary shrink-0 ${compact ? 'min-h-10 rounded-lg px-4 text-xs' : 'min-h-12'}`}
           >
             {dict.home.diagnostics_btn}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </form>
-      
-      <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-        {quickChecks.map((item) => (
-          <div key={item.name} className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-[10px] font-semibold tracking-[0.18em] text-emerald-600 border border-emerald-100 select-none transition-all hover:bg-emerald-100 cursor-default">
-            <item.icon className="w-3 h-3" />
-            <span>{item.name}</span>
+      {!compact && (
+        <>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            {quickChecks.map((item) => (
+              <div key={item.name} className="ui-chip select-none">
+                <item.icon className="w-3 h-3" />
+                <span>{item.name}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Trust Footer */}
-      <div className="mt-8 text-[10px] tracking-[0.2em] text-zinc-400 opacity-60">
-        {dict.home.trust_footer}
-      </div>
+          <div className="ui-faint mt-6 text-[10px] tracking-[0.2em]">
+            {dict.home.trust_footer}
+          </div>
+        </>
+      )}
     </div>
   )
 }

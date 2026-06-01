@@ -136,7 +136,7 @@ export default function WebsocketClient({ dict, lang }: { dict: any; lang: Lang 
         <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href="/" className="hover:text-cyan-600 transition-colors">{shellText.home}</Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/services" className="hover:text-cyan-600 transition-colors">{shellText.tools}</Link>
+          <Link href="/tools" className="hover:text-cyan-600 transition-colors">{shellText.tools}</Link>
           <span className="text-zinc-300">/</span>
           <span className="text-zinc-900 border-b border-cyan-500/30 font-semibold">
             {dict.tools.websocket_title}

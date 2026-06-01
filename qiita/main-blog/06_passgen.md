@@ -5,10 +5,10 @@ tags:
   - passgen
   - ツール
   - 運用
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-04-27T09:02:25+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/5fbdc51d34aae5fee9f1"
+qiita_id: "5fbdc51d34aae5fee9f1"
 ---
 
 # passgen の設計、実装、用途、使い方

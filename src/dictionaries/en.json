@@ -1,7 +1,7 @@
 {
   "nav": {
     "kb": "Knowledge Base",
-    "services": "Matrix",
+    "services": "Tools",
     "blog": "Knowledge Base",
     "about": "About"
   },
@@ -9,7 +9,7 @@
     "meta_title": "Website Diagnostic Tool | IP Lookup | DNS Checker - OpsKitPro",
     "meta_desc": "OpsKitPro offers simple and efficient DevOps tools. Website not loading? Diagnose it instantly. DNS, CDN, SSL forensics for SREs.",
     "system_status": "System Core v2.4 operational",
-    "btn_chat": "Matrix Node",
+    "btn_chat": "Tools Node",
     "title_part1": "SRE Diagnostic Suite",
     "title_part2_pre": "DNS, IP & Site",
     "title_part2_ai": "Online",
@@ -85,10 +85,10 @@
     }
   },
   "services": {
-    "title_part1": "Service",
-    "title_part2": "Matrix (HUD).",
-    "subtitle": "Command center for infrastructure, observability, and delivery pipelines.",
-    "matrix_active": "Matrix Operational",
+    "title_part1": "Tools",
+    "title_part2": "Hub.",
+    "subtitle": "A unified entry point for DNS, website diagnostics, developer utilities, and ops workflows.",
+    "matrix_active": "Tools Operational",
     "status_operational": "Operational",
     "status_maintenance": "Maintenance",
     "cat_monitoring": "Monitoring & Observability",
@@ -122,7 +122,7 @@
     "prompt_builder_desc": "Generate scoped engineering prompts for AI coding agents with guardrails, checks, and public/private boundaries.",
     "dns_lookup_title": "DNS Lookup",
     "dns_lookup_desc": "Check DNS records and resolve anomalies.",
-    "matrix_title": "Matrix Node",
+    "matrix_title": "Tools Node",
     "matrix_desc": "Decentralized, secure real-time communication node.",
     "website_check": {
       "loading": "Diagnostic in progress...",

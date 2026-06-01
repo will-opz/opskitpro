@@ -5,10 +5,10 @@ tags:
   - passgen
   - 背景
   - 課題
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: 2026-05-01T00:02:50Z
+qiita_url: https://qiita.com/opskitpro/items/263cfda1f3c7c9b14c94
+qiita_id: 263cfda1f3c7c9b14c94
 ---
 
 # パスワード生成器 passgen を作った理由。必要なものをすぐ出せるようにしたかった

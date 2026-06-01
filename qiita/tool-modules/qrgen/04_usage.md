@@ -5,10 +5,10 @@ tags:
   - qrgen
   - 使い方
   - 共有
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-08T00:02:48.672780Z"
+qiita_url: "https://qiita.com/opskitpro/items/79dfd88b7b37f696eeb6"
+qiita_id: "79dfd88b7b37f696eeb6"
 ---
 
 # qrgen の使い方。リンクや短文をすぐ QR にする

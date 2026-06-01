@@ -220,6 +220,72 @@ const posts: BlogPost[] = [
     related: ['website-check-module', 'design-principles', 'services-deployment'],
   },
   {
+    slug: 'cloudflare-dual-stack',
+    date: '2026-05-24',
+    readTime: '6 min',
+    tag: '工程',
+    accent: 'from-cyan-500/10 via-sky-500/10 to-transparent',
+    ctaUrl: 'https://opskitpro.com/blog',
+    actionKind: 'kb',
+    coverImage: '/blog-covers/cloudflare-dual-stack.svg',
+    titles: {
+      zh: 'Cloudflare 双栈访问链路分层图：IPv6 开关该怎么判断',
+      en: 'Cloudflare dual-stack access layers: how to judge the IPv6 switch',
+      ja: 'Cloudflare のデュアルスタック経路を層で見る: IPv6 の切り替え判断',
+      tw: 'Cloudflare 雙棧存取鏈路分層圖：IPv6 開關該怎麼判斷',
+    },
+    summaries: {
+      zh: '把边缘、回源、客户端、解析和排障分开看，才能知道该开哪一层 IPv6。',
+      en: 'Separating edge, origin, client, DNS, and troubleshooting layers makes IPv6 decisions much clearer.',
+      ja: 'エッジ、オリジン、クライアント、DNS、切り分けを分けて見ると、IPv6 の判断がしやすくなります。',
+      tw: '把邊緣、回源、客戶端、解析與排障分開看，才能知道該開哪一層 IPv6。',
+    },
+    sections: [
+      {
+        heading: '先把链路分层，才知道该关哪一层',
+        paragraphs: [
+          'Cloudflare 的双栈不是一个开关控制所有事情，而是至少有三层：客户端到 Cloudflare 边缘、Cloudflare 到源站的回源、源站本身的双栈能力。很多排障把这三层混在一起，就会把“回源不支持 IPv6”误判成“边缘 IPv6 不能开”。',
+          '所以分析图最好先把 DNS、Edge、Origin、Client 分开，再看每层是否需要 IPv6。边缘是用户入口，回源是到源站，源站才决定你自己的基础设施能不能接住双栈。',
+        ],
+        files: ['src/app/api/diagnostic/route.ts', 'src/app/api/ip/route.ts', 'src/app/tools/website-check/WebsiteCheckClient.tsx'],
+      },
+      {
+        heading: 'Cloudflare IPv6 开关的决策表',
+        bullets: [
+          '公网站点 / SaaS / API：保留 IPv6。',
+          '移动端流量较多：保留 IPv6。',
+          '源站暂时不支持 IPv6：只关回源，不关边缘。',
+          '需要做临时排障：可临时关闭排查。',
+          '纯内网系统：按需决定。',
+          '合规要求单栈：按制度执行。',
+        ],
+        paragraphs: [
+          '最核心的一句话：默认保留 Cloudflare 边缘 IPv6，只按需控制源站是否 IPv6 回源。',
+          '如果你只记住一条规则，就记住“边缘和回源不是一个开关”。边缘决定外部用户能不能更容易连上你，回源决定你的源站基础设施是否准备好了双栈。',
+        ],
+        files: ['src/app/tools/ip-lookup/IPLookupClient.tsx', 'src/app/tools/dns-lookup/DnsClient.tsx'],
+      },
+      {
+        heading: '文章末尾可直接用的实操顺序',
+        paragraphs: [
+          '第一步：先别动边缘 IPv6。对于公网站点，Cloudflare 边缘 IPv6 默认保持开启。原因很简单：这能兼容更多移动端和双栈客户端，不会白白损失可达性。',
+          '第二步：如果源站不支持 IPv6，先只关闭回源链路的 IPv6，确认源站、WAF、负载均衡和回源地址都稳定后，再判断是否要恢复。',
+          '第三步：如果问题仍然存在，再看 DNS 记录、边缘状态和真实访问来源。很多“IPv6 问题”其实是解析、缓存、回源或防火墙问题，而不是边缘本身。',
+        ],
+        files: ['src/app/tools/website-check/WebsiteCheckClient.tsx', 'src/app/api/diagnostic/route.ts'],
+      },
+      {
+        heading: '什么时候才适合关掉边缘 IPv6',
+        paragraphs: [
+          '只有在你明确要做临时排障，或者制度要求单栈时，才考虑临时关掉边缘 IPv6。排障完成后，还是应该回到“边缘保留、回源按需控制”的默认策略。',
+          '如果站点面向公网，默认策略应该更保守：尽量不牺牲入口可达性，只控制最可能出问题的那一层。',
+        ],
+        files: ['src/app/tools/website-check/WebsiteCheckClient.tsx', 'src/app/api/diagnostic/route.ts', 'src/app/api/ip/route.ts'],
+      },
+    ],
+    related: ['website-check-module', 'ip-dns-module', 'services-deployment'],
+  },
+  {
     slug: 'services-deployment',
     date: '2026-04-22',
     readTime: '6 min',
@@ -235,17 +301,17 @@ const posts: BlogPost[] = [
       tw: '服務矩陣、國際化與 Cloudflare 部署：OpsKitPro 的工程收斂',
     },
     summaries: {
-      zh: '把普通工具统一成标准卡片，Matrix 保留独立风格，再把整站部署到 Cloudflare Workers。',
-      en: 'Standardize the regular tools into one card system, keep Matrix distinct, and deploy everything to Cloudflare Workers.',
-      ja: '通常ツールを標準カードへ揃え、Matrix は独立した表現を保ったまま Workers にデプロイしています。',
-      tw: '把普通工具統一成標準卡片，Matrix 保留獨立風格，再把整站部署到 Cloudflare Workers。',
+      zh: '把普通工具统一成标准卡片，Tools 保留独立风格，再把整站部署到 Cloudflare Workers。',
+      en: 'Standardize the regular tools into one card system, keep Tools distinct, and deploy everything to Cloudflare Workers.',
+      ja: '通常ツールを標準カードへ揃え、Tools は独立した表現を保ったまま Workers にデプロイしています。',
+      tw: '把普通工具統一成標準卡片，Tools 保留獨立風格，再把整站部署到 Cloudflare Workers。',
     },
     sections: [
       {
         heading: '服务矩阵是站点的“导航总览”',
         paragraphs: [
           '服务矩阵不是单纯的工具列表，它更像站点的中央目录：普通运维工具、密码管理、安全分析、自动化、云原生、零信任、AI 节点都能在这里被快速定位。',
-          '我后来把大多数工具统一成标准卡片，只保留 Matrix 使用独立视觉，是因为服务矩阵本身必须稳定、可扫视，不能每一块都抢注意力。',
+          '我后来把大多数工具统一成标准卡片，只保留 Tools 使用独立视觉，是因为服务矩阵本身必须稳定、可扫视，不能每一块都抢注意力。',
         ],
         files: ['src/app/services/ServicesClient.tsx', 'src/dictionaries/zh.json', 'src/dictionaries/ja.json', 'src/dictionaries/en.json', 'src/dictionaries/tw.json'],
       },

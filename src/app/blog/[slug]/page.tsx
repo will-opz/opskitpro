@@ -201,6 +201,17 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                         ))}
                       </div>
 
+                      {section.bullets?.length ? (
+                        <ul className="mt-6 space-y-3 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-5 text-[15px] leading-7 text-zinc-700">
+                          {section.bullets.map((bullet, bulletIndex) => (
+                            <li key={`${section.heading}-bullet-${bulletIndex}`} className="flex gap-3">
+                              <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                              <span>{bullet}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+
                       {section.files?.length ? (
                         <div className="mt-6 flex flex-wrap gap-2">
                           <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-zinc-500">
@@ -284,12 +295,12 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                           ? '可以先打開實際工具試一試，再回到相關文章繼續看。'
                           : 'Open the actual tool to try it, then come back to related articles if needed.'
                     : lang === 'ja'
-                      ? '必要なら、サービスマトリクスや個別ツールの記事を続けて読めます。'
+                      ? '必要なら、ツール一覧や個別ツールの記事を続けて読めます。'
                       : lang === 'zh'
-                        ? '如果想继续深入，可以接着看服务矩阵或各个工具文章。'
+                        ? '如果想继续深入，可以接着看工具列表或各个工具文章。'
                         : lang === 'tw'
-                          ? '如果想繼續深入，可以接著看服務矩陣或各個工具文章。'
-                          : 'If you want to go deeper, continue with the service matrix or individual articles.'}
+                          ? '如果想繼續深入，可以接著看工具列表或各個工具文章。'
+                          : 'If you want to go deeper, continue with Tools or individual articles.'}
                 </p>
                 <div className="mt-5 flex flex-col gap-3">
                   <Link

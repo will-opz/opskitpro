@@ -5,10 +5,10 @@ tags:
   - passgen
   - 使い方
   - 運用
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-05T00:02:34Z"
+qiita_url: "https://qiita.com/opskitpro/items/c9331d4e10cca86cc76e"
+qiita_id: "c9331d4e10cca86cc76e"
 ---
 
 # passgen の使い方。パスワード、UUID、PIN を素早く作る

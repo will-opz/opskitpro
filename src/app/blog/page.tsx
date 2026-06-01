@@ -63,7 +63,7 @@ export default async function BlogPage() {
             : lang === 'tw'
               ? '把 website-check、IP、DNS 這幾塊按單一題目拆開講。'
               : 'Breaks down website-check, IP, and DNS as separate implementation topics.',
-      slugs: ['website-check-module', 'ip-dns-module'],
+      slugs: ['website-check-module', 'ip-dns-module', 'cloudflare-dual-stack'],
     },
     {
       id: 'tool-implementation',
@@ -304,17 +304,17 @@ export default async function BlogPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-xl font-black tracking-tighter text-zinc-900">
-                  {isJapanese ? 'ツール中枢に戻る' : isZh ? '返回工具中枢' : lang === 'tw' ? '返回工具中樞' : 'Return to the tool hub'}
+                  {isJapanese ? 'ツールへ戻る' : isZh ? '返回工具' : lang === 'tw' ? '返回工具' : 'Return to Tools'}
 
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-zinc-600">
                   {isJapanese
-                    ? 'ナレッジベースは公開情報だけを扱い、日常の診断や調査はツール中枢から始められます。'
+                    ? 'ナレッジベースは公開情報だけを扱い、日常の診断や調査はツールから始められます。'
                     : isZh
-                      ? '知识库只展示公开内容，日常诊断、排障和工具入口从工具中枢开始。'
+                      ? '知识库只展示公开内容，日常诊断、排障和工具入口从工具开始。'
                       : lang === 'tw'
-                        ? '知識庫只展示公開內容，日常診斷、排障和工具入口從工具中樞開始。'
-                        : 'The knowledge base stays public and reusable; daily diagnostics and workflows start from the tool hub.'}
+                        ? '知識庫只展示公開內容，日常診斷、排障和工具入口從工具開始。'
+                        : 'The knowledge base stays public and reusable; daily diagnostics and workflows start from Tools.'}
                 </p>
               </div>
               <Link

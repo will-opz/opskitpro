@@ -374,7 +374,7 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
         <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href="/" className="hover:text-emerald-600 transition-colors">{ui.home}</Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/services" className="hover:text-emerald-600 transition-colors">{ui.tools}</Link>
+          <Link href="/tools" className="hover:text-emerald-600 transition-colors">{ui.tools}</Link>
           <span className="text-zinc-300">/</span>
           <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">{ui.title}</span>
         </nav>

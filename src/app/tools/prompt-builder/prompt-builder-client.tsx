@@ -24,7 +24,7 @@ const copy = {
     title: 'Prompt Builder',
     desc: '把任务目标、边界、验证方式整理成可直接交给 AI Coding Agent 的工程 prompt。所有内容只在本地生成。',
     goal: '任务目标',
-    goalPlaceholder: '例如：优化 /services 的 AI Engineering 区块，让入口更清晰。',
+    goalPlaceholder: '例如：优化 /tools 的 AI Engineering 区块，让入口更清晰。',
     scope: '目标页面 / 模块',
     scopePlaceholder: '例如：src/app/services/ServicesClient.tsx、/tools/prompt-builder',
     constraints: '必须遵守的约束',
@@ -47,7 +47,7 @@ const copy = {
     title: 'Prompt Builder',
     desc: 'Turn goals, scope, guardrails, and checks into a scoped prompt for AI coding agents. Everything runs locally.',
     goal: 'Task goal',
-    goalPlaceholder: 'Example: polish the AI Engineering section on /services.',
+    goalPlaceholder: 'Example: polish the AI Engineering section on /tools.',
     scope: 'Target page / module',
     scopePlaceholder: 'Example: src/app/services/ServicesClient.tsx, /tools/prompt-builder',
     constraints: 'Required constraints',
@@ -70,7 +70,7 @@ const copy = {
     title: 'Prompt Builder',
     desc: '目的、範囲、制約、検証を AI Coding Agent 向けの prompt に整理します。処理はすべてローカルです。',
     goal: 'タスクの目的',
-    goalPlaceholder: '例: /services の AI Engineering 区画を整理する。',
+    goalPlaceholder: '例: /tools の AI Engineering 区画を整理する。',
     scope: '対象ページ / モジュール',
     scopePlaceholder: '例: src/app/services/ServicesClient.tsx、/tools/prompt-builder',
     constraints: '必ず守る制約',
@@ -93,7 +93,7 @@ const copy = {
     title: 'Prompt Builder',
     desc: '把任務目標、邊界與驗證方式整理成可交給 AI Coding Agent 的工程 prompt。全部在本機生成。',
     goal: '任務目標',
-    goalPlaceholder: '例如：優化 /services 的 AI Engineering 區塊。',
+    goalPlaceholder: '例如：優化 /tools 的 AI Engineering 區塊。',
     scope: '目標頁面 / 模組',
     scopePlaceholder: '例如：src/app/services/ServicesClient.tsx、/tools/prompt-builder',
     constraints: '必須遵守的約束',
@@ -185,7 +185,7 @@ export default function PromptBuilderClient({ dict, lang }: { dict: any; lang: L
         <nav className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
           <Link href="/" className="transition-colors hover:text-emerald-600">{t.home}</Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/services" className="transition-colors hover:text-emerald-600">{t.tools}</Link>
+          <Link href="/tools" className="transition-colors hover:text-emerald-600">{t.tools}</Link>
           <span className="text-zinc-300">/</span>
           <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">{dict.tools.prompt_builder_title}</span>
         </nav>

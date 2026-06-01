@@ -5,12 +5,11 @@ tags:
   - passgen
   - UI
   - UX
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: 2026-05-02T00:02:27Z
+qiita_url: "https://qiita.com/opskitpro/items/1c3f1b4554908b642dc0"
+qiita_id: "1c3f1b4554908b642dc0"
 ---
-
 # passgen の UI 設計。少ない操作で迷わず使えるようにする
 
 passgen は、見た目の派手さよりも「何を押せばいいかがすぐ分かること」を優先して設計しています。

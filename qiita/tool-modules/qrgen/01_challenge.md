@@ -5,12 +5,11 @@ tags:
   - qrgen
   - 背景
   - 課題
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-03T09:01:12+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/2c959404740824926b40"
+qiita_id: "2c959404740824926b40"
 ---
-
 # qrgen を作った理由。入力したらすぐ見えることを優先した
 
 QR コードは、見せたい情報を一瞬で渡すのに便利です。

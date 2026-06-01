@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -13,8 +14,8 @@ const config: Config = {
           DEFAULT: '#10b981',
           hover: '#059669',
         },
-        surface: '#ffffff',
-        base: '#fcfcfc',
+        appSurface: '#ffffff',
+        appCanvas: '#f7f8f8',
       },
     },
   },

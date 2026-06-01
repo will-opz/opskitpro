@@ -5,10 +5,10 @@ tags:
   - json
   - ツール
   - 開発
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-04-29T09:02:03+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/48bda2a5922c378db860"
+qiita_id: "48bda2a5922c378db860"
 ---
 
 # json の設計、実装、用途、使い方

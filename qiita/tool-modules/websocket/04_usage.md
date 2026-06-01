@@ -5,12 +5,11 @@ tags:
   - websocket
   - 使い方
   - デバッグ
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-18T09:03:05+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/4b36fafd4a8a3ef9f10a"
+qiita_id: "4b36fafd4a8a3ef9f10a"
 ---
-
 # websocket の使い方。テキスト送信からバイナリ確認まで
 
 websocket は、接続して終わるツールではありません。

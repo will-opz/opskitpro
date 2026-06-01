@@ -5,10 +5,10 @@ tags:
   - websocket
   - ツール
   - デバッグ
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-04-30T09:01:43+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/adbbf8346be0084f482a"
+qiita_id: "adbbf8346be0084f482a"
 ---
 
 # websocket の設計、実装、用途、使い方

@@ -1,7 +1,7 @@
 {
   "nav": {
     "kb": "運維智能節點",
-    "services": "服務矩陣",
+    "services": "工具",
     "blog": "知識庫",
     "about": "關於我們"
   },
@@ -9,7 +9,7 @@
     "meta_title": "網站診斷工具 | IP查詢 | DNS檢測 - OpsKitPro",
     "meta_desc": "運維的未來由高效率定義。網站打不開？一鍵檢測原因。檢測 DNS、CDN、SSL 狀態，極簡、硬核、專為 SRE 打造。",
     "system_status": "系統內核 v2.4 運行中",
-    "btn_chat": "Matrix 節點",
+    "btn_chat": "工具節點",
     "title_part1": "SRE 排障利器",
     "title_part2_pre": "DNS·IP·網站",
     "title_part2_ai": "在線",
@@ -85,10 +85,10 @@
     }
   },
   "services": {
-    "title_part1": "服務",
-    "title_part2": "導航矩陣.",
-    "subtitle": "基礎設施管理、可觀測性鏈路與持續交付流水線的中央指揮台 (HUD)。",
-    "matrix_active": "矩陣已在線",
+    "title_part1": "工具",
+    "title_part2": "工具中心.",
+    "subtitle": "DNS、網站診斷、開發與維運工具的統一入口。",
+    "matrix_active": "工具已就緒",
     "status_operational": "運行健康",
     "status_maintenance": "系統維護",
     "cat_monitoring": "監控與可觀測性",
@@ -122,7 +122,7 @@
     "prompt_builder_desc": "生成帶邊界、驗證和 public/private 約束的 AI Coding Agent 工程 prompt。",
     "dns_lookup_title": "DNS 檢測",
     "dns_lookup_desc": "檢查 DNS 記錄與解析異常。",
-    "matrix_title": "Matrix 終端",
+    "matrix_title": "工具終端",
     "matrix_desc": "去中心化的安全即時通訊節點。",
     "website_check": {
       "loading": "正在診斷網站健康狀況...",

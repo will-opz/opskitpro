@@ -5,10 +5,10 @@ tags:
   - websocket
   - UI
   - UX
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-14T09:02:23+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/769fa0ed4e85a33abe7f"
+qiita_id: "769fa0ed4e85a33abe7f"
 ---
 
 # websocket の UI 設計。接続・送信・ログを分けて見せる

@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
 
 # next.js
 /.next/
@@ -46,3 +48,7 @@ next-env.d.ts
 # opennext
 .open-next
 .dev.vars
+
+# generated marketing outputs
+/marketing/generated/
+/marketing/history/*.json

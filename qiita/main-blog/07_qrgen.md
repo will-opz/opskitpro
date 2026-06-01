@@ -5,10 +5,10 @@ tags:
   - qrgen
   - ツール
   - 共有
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: 2026-04-28T09:02:15+09:00
+qiita_url: https://qiita.com/opskitpro/items/01933caf32f4c7d6b897
+qiita_id: 01933caf32f4c7d6b897
 ---
 
 # qrgen の設計、実装、用途、使い方

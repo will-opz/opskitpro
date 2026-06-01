@@ -5,10 +5,10 @@ tags:
   - qrgen
   - JavaScript
   - 実装
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: 2026-05-07T00:02:35.333867Z
+qiita_url: https://qiita.com/opskitpro/items/f75d5b79d0309e86a414
+qiita_id: f75d5b79d0309e86a414
 ---
 
 # qrgen の実装。SVG 生成から PNG ダウンロードまで

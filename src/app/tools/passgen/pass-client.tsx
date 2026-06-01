@@ -153,7 +153,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
             {isJapanese ? 'ホーム' : 'Home'}
           </Link>
           <span className="text-zinc-300">/</span>
-          <Link href={`/services`} className="hover:text-emerald-600 transition-colors">
+          <Link href={`/tools`} className="hover:text-emerald-600 transition-colors">
             {isJapanese ? 'ツール' : 'Tools'}
           </Link>
           <span className="text-zinc-300">/</span>

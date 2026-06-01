@@ -6,6 +6,17 @@ import { SiteFooter } from '@/components/SiteFooter'
 import Script from 'next/script'
 import './globals.css'
 
+const themeInitScript = `
+(function() {
+  try {
+    var stored = localStorage.getItem('opskit-theme');
+    var theme = stored === 'dark' ? 'dark' : 'light';
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.dataset.theme = theme;
+  } catch (_) {}
+})();
+`
+
 export async function generateMetadata(): Promise<Metadata> {
   const cookieStore = cookies();
   const headersList = headers();
@@ -92,15 +103,16 @@ export default async function RootLayout({
   const dict = await getDictionary(lang)
   
   return (
-    <html lang={lang} className="overflow-x-hidden">
+    <html lang={lang} className="overflow-x-hidden" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script 
           async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3793455361566383"
           crossOrigin="anonymous"
         ></script>
       </head>
-      <body className="min-h-screen flex flex-col font-sans antialiased text-zinc-900 bg-base selection:bg-emerald-100 selection:text-emerald-900 overflow-x-hidden w-full">
+      <body className="ui-shell selection:bg-emerald-500/20 selection:text-[var(--text-primary)]">
         {/* Dual Core tech background glow */}
         <div className="glow" />
         <div className="bg-grid-pattern absolute inset-0 opacity-[0.03] pointer-events-none" />

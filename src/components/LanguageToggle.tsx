@@ -34,20 +34,20 @@ export function LanguageToggle({ currentLang }: { currentLang: 'zh' | 'tw' | 'en
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 border border-zinc-200 rounded-full px-3 py-1.5 bg-zinc-100/80 hover:bg-zinc-200 transition-all focus:outline-none"
+        className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-1.5 hover:bg-[var(--surface-elevated)] focus:outline-none"
       >
-        <Globe className="w-3.5 h-3.5 text-zinc-600" />
-        <span className="text-xs font-bold text-zinc-800">{langNames[currentLang as keyof typeof langNames] || 'Language'}</span>
-        <ChevronDown className={`w-3 h-3 text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <Globe className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+        <span className="text-xs font-semibold text-[var(--text-primary)]">{langNames[currentLang as keyof typeof langNames] || 'Language'}</span>
+        <ChevronDown className={`w-3 h-3 text-[var(--text-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 py-2 w-32 bg-white rounded-xl shadow-xl border border-black/5 z-50 animate-in fade-in zoom-in-95 duration-200">
+        <div className="ui-surface-elevated absolute right-0 z-50 mt-2 w-32 rounded-xl py-2 animate-in fade-in zoom-in-95 duration-200">
           {(Object.keys(langNames) as Array<keyof typeof langNames>).map((l) => (
             <button
               key={l}
               onClick={() => switchLang(l)}
-              className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors hover:bg-emerald-50 hover:text-emerald-700 ${currentLang === l ? 'text-emerald-600 bg-emerald-50/50 font-bold' : 'text-zinc-600'}`}
+              className={`w-full px-4 py-2 text-left text-xs font-medium hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)] ${currentLang === l ? 'bg-[var(--accent-soft)] text-[var(--accent-color)] font-semibold' : 'text-[var(--text-muted)]'}`}
             >
               {langNames[l]}
             </button>

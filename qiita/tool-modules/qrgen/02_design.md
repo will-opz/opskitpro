@@ -5,10 +5,10 @@ tags:
   - qrgen
   - UI
   - UX
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: 2026-05-06T09:03:08+09:00
+qiita_url: https://qiita.com/opskitpro/items/d1ec94a8a17febaccd12
+qiita_id: d1ec94a8a17febaccd12
 ---
 
 # qrgen の UI 設計。入力とプレビューだけに絞る

@@ -73,7 +73,7 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
 
   const runLocalAudit = async (d: string) => {
     setLocalResolvers({})
-    const dnsMatrix = [
+    const dnsResolvers = [
       { id: 'system', name: 'SYSTEM DNS', url: `https://${d}/favicon.ico`, type: 'native' },
       { id: 'google', name: 'GOOGLE (LOCAL)', url: `https://dns.google/resolve?name=${d}&type=${selectedType}`, type: 'doh' },
       { id: 'cf', name: 'CLOUDFLARE (LOCAL)', url: `https://cloudflare-dns.com/dns-query?name=${d}&type=${selectedType}`, type: 'doh' },
@@ -81,7 +81,7 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
       { id: 'quad9', name: 'QUAD9 (LOCAL)', url: `https://dns.quad9.net/dns-query?name=${d}&type=${selectedType}`, type: 'doh' }
     ]
 
-    dnsMatrix.forEach(async (r) => {
+    dnsResolvers.forEach(async (r) => {
       const start = Date.now()
       try {
         if (r.type === 'native') {
@@ -259,7 +259,7 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                </div>
             </div>
 
-            {/* Answer Manifest Matrix */}
+            {/* Answer Manifest Grid */}
             <div className="bg-white border border-black/5 rounded-[2.5rem] overflow-hidden shadow-sm transition-all hover:shadow-xl">
                <div className="px-6 sm:px-10 py-6 bg-zinc-50 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <h3 className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em] flex items-center gap-3">

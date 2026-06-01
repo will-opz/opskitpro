@@ -1,0 +1,62 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="0.55" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="140" y1="120" x2="1080" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="180" y1="70" x2="1040" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A78BFA" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0.25"/>
+    </linearGradient>
+    <filter id="blur" x="0" y="0" width="1200" height="630" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" rx="48" fill="url(#bg)"/>
+  <circle cx="180" cy="110" r="130" fill="#22D3EE" fill-opacity="0.16" filter="url(#blur)"/>
+  <circle cx="1040" cy="520" r="170" fill="#60A5FA" fill-opacity="0.14" filter="url(#blur)"/>
+  <circle cx="920" cy="140" r="110" fill="#A78BFA" fill-opacity="0.16" filter="url(#blur)"/>
+
+  <rect x="70" y="70" width="1060" height="490" rx="34" fill="white" fill-opacity="0.04" stroke="white" stroke-opacity="0.08"/>
+
+  <g opacity="0.95">
+    <text x="96" y="132" fill="#E2E8F0" font-family="Inter, system-ui, sans-serif" font-size="58" font-weight="800" letter-spacing="-0.03em">Cloudflare</text>
+    <text x="96" y="194" fill="#F8FAFC" font-family="Inter, system-ui, sans-serif" font-size="42" font-weight="700" letter-spacing="-0.02em">双栈访问链路分层图</text>
+    <text x="96" y="242" fill="#94A3B8" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="500">IPv6 开关应该看边缘、回源、客户端，还是源站？</text>
+  </g>
+
+  <g transform="translate(102,302)">
+    <rect x="0" y="0" width="210" height="118" rx="26" fill="#0F172A" stroke="#22D3EE" stroke-opacity="0.55"/>
+    <text x="28" y="42" fill="#67E8F9" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700">Client</text>
+    <text x="28" y="77" fill="#E2E8F0" font-family="Inter, system-ui, sans-serif" font-size="30" font-weight="700">IPv6 / IPv4</text>
+  </g>
+
+  <g transform="translate(468,282)">
+    <rect x="0" y="0" width="264" height="160" rx="28" fill="#111827" stroke="url(#cyan)" stroke-width="2"/>
+    <text x="34" y="46" fill="#93C5FD" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="700">Cloudflare Edge</text>
+    <text x="34" y="87" fill="#F8FAFC" font-family="Inter, system-ui, sans-serif" font-size="34" font-weight="800">默认保留</text>
+    <text x="34" y="123" fill="#A5F3FC" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600">尽量不要先关</text>
+  </g>
+
+  <g transform="translate(822,302)">
+    <rect x="0" y="0" width="278" height="118" rx="26" fill="#0F172A" stroke="#A78BFA" stroke-opacity="0.55"/>
+    <text x="28" y="42" fill="#C4B5FD" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700">Origin</text>
+    <text x="28" y="77" fill="#E2E8F0" font-family="Inter, system-ui, sans-serif" font-size="30" font-weight="700">按需回源 IPv6</text>
+  </g>
+
+  <path d="M316 361H468" stroke="#38BDF8" stroke-width="6" stroke-linecap="round"/>
+  <path d="M732 361H822" stroke="#A78BFA" stroke-width="6" stroke-linecap="round"/>
+  <path d="M452 361L468 352V370L452 361Z" fill="#38BDF8"/>
+  <path d="M806 361L822 352V370L806 361Z" fill="#A78BFA"/>
+
+  <g transform="translate(96,468)">
+    <rect x="0" y="0" width="1008" height="62" rx="18" fill="white" fill-opacity="0.05" stroke="white" stroke-opacity="0.08"/>
+    <text x="24" y="40" fill="#CBD5E1" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600">结论：默认保留 Cloudflare 边缘 IPv6，只按需控制源站是否 IPv6 回源。</text>
+  </g>
+</svg>

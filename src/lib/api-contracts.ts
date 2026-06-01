@@ -73,6 +73,8 @@ export interface DiagnosticDnsSummary {
   resolved_ip: string
   latency: string
   success: boolean
+  all_ips?: string[]
+  ns?: string[]
   resolvers?: DiagnosticDnsResolverResult[]
 }
 
@@ -80,12 +82,21 @@ export interface DiagnosticHttpSummary {
   success: boolean
   status_code: number
   latency: string
+  is_https?: boolean
 }
 
 export interface DiagnosticSslSummary {
   valid: boolean
   issuer: string
   expiry: string
+  grade?: string
+  factors?: string[]
+  tls_version?: string
+  chain?: Array<{
+    level: string
+    name: string
+    status: string
+  }>
 }
 
 export interface DiagnosticCdnSummary {
@@ -111,6 +122,13 @@ export interface DiagnosticWhoisSummary {
   nameservers?: string[]
 }
 
+export interface DiagnosticMetaSummary {
+  checkedAt: string
+  totalMs: number
+  edgeColo: string
+  cacheStatus?: 'HIT' | 'MISS'
+}
+
 export interface DiagnosticSuccessResponse {
   domain: string
   status: 'success'
@@ -122,6 +140,7 @@ export interface DiagnosticSuccessResponse {
   cdn: DiagnosticCdnSummary
   geo: DiagnosticGeoSummary
   whois: DiagnosticWhoisSummary
+  meta?: DiagnosticMetaSummary
 }
 
 export interface DiagnosticPartialErrorResponse {
@@ -131,6 +150,7 @@ export interface DiagnosticPartialErrorResponse {
   isPrivate: boolean
   error: string
   dns: DiagnosticDnsSummary
+  meta?: DiagnosticMetaSummary
 }
 
 export interface DiagnosticErrorResponse {

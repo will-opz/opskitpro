@@ -5,10 +5,10 @@ tags:
   - websocket
   - React
   - 実装
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-15T09:03:27+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/15b9972203e85961e272"
+qiita_id: "15b9972203e85961e272"
 ---
 
 # websocket の実装。useWebSocket と複数接続の整理

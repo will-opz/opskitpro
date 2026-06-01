@@ -5,10 +5,10 @@ tags:
   - json
   - UI
   - UX
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-10T09:01:38+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/4ebf81d60df449d5ee05"
+qiita_id: "4ebf81d60df449d5ee05"
 ---
 
 # json の UI 設計。編集・修復・変換を 1 ページにまとめる

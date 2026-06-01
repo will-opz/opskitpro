@@ -5,10 +5,10 @@ tags:
   - passgen
   - JavaScript
   - 実装
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-04T09:03:31+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/671ba2b7b308b0a08e7e"
+qiita_id: "671ba2b7b308b0a08e7e"
 ---
 
 # passgen の実装。crypto と履歴で速さを保つ

@@ -27,7 +27,13 @@ import {
   Calendar,
   Database,
   HelpCircle,
-  LayoutGrid
+  LayoutGrid,
+  Download,
+  Star,
+  Trash2,
+  Link2,
+  FileText,
+  History
 } from 'lucide-react'
 
 const normalizeTargetInput = (value: string) => {
@@ -47,6 +53,137 @@ const normalizeTargetInput = (value: string) => {
   }
 }
 
+const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackError?: string) => {
+  const domain = data?.domain || fallbackDomain || 'opskitpro.com'
+  const isActuallyIp = Boolean(data?.isActuallyIp)
+  const isPrivate = Boolean(data?.isPrivate)
+
+  return {
+    domain,
+    status: data?.status || 'partial_error',
+    isActuallyIp,
+    isPrivate,
+    error: data?.error || fallbackError,
+    dns: {
+      resolved_ip: data?.dns?.resolved_ip || domain,
+      latency: data?.dns?.latency || '---',
+      success: Boolean(data?.dns?.success),
+      all_ips: data?.dns?.all_ips || [],
+      ns: data?.dns?.ns || [],
+      resolvers: data?.dns?.resolvers || [],
+    },
+    http: {
+      success: Boolean(data?.http?.success),
+      status_code: data?.http?.status_code ?? 0,
+      latency: data?.http?.latency || '---',
+      is_https: Boolean(data?.http?.is_https),
+    },
+    ssl: {
+      valid: Boolean(data?.ssl?.valid),
+      issuer: data?.ssl?.issuer || 'Unknown',
+      expiry: data?.ssl?.expiry || 'Unknown',
+      grade: data?.ssl?.grade || '—',
+      factors: data?.ssl?.factors || [],
+      tls_version: data?.ssl?.tls_version,
+      chain: data?.ssl?.chain || [],
+    },
+    cdn: {
+      is_provider: Boolean(data?.cdn?.is_provider),
+      provider: data?.cdn?.provider || 'Unknown',
+      server: data?.cdn?.server || 'Unknown',
+    },
+    geo: {
+      country: data?.geo?.country || 'Unknown',
+      isp: data?.geo?.isp || 'Unknown',
+      city: data?.geo?.city || 'Unknown',
+      asn: data?.geo?.asn || 'Unknown',
+    },
+    whois: {
+      registered: data?.whois?.registered || 'Unknown',
+      registrar: data?.whois?.registrar || 'Unknown',
+      status: data?.whois?.status || 'Unknown',
+      success: Boolean(data?.whois?.success),
+      expires: data?.whois?.expires || 'Unknown',
+      error: data?.whois?.error,
+      nameservers: data?.whois?.nameservers || [],
+    },
+    meta: {
+      checkedAt: data?.meta?.checkedAt || new Date().toISOString(),
+      totalMs: Number(data?.meta?.totalMs || 0),
+      edgeColo: data?.meta?.edgeColo || 'Unknown',
+      cacheStatus: data?.meta?.cacheStatus,
+    },
+  }
+}
+
+type StoredDiagnosticTarget = {
+  target: string
+  lastCheckedAt: string
+  pinned?: boolean
+}
+
+type BatchDiagnosticResult = {
+  target: string
+  result?: ReturnType<typeof createSafeDiagnosticResult>
+  error?: string
+}
+
+const historyStoreName = 'diagnostic-targets'
+const historyDbName = 'opskitpro-diagnostics'
+
+function openHistoryDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(historyDbName, 1)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains(historyStoreName)) {
+        db.createObjectStore(historyStoreName, { keyPath: 'target' })
+      }
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function readHistory(): Promise<StoredDiagnosticTarget[]> {
+  if (typeof indexedDB === 'undefined') return []
+  const db = await openHistoryDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(historyStoreName, 'readonly')
+    const request = tx.objectStore(historyStoreName).getAll()
+    request.onsuccess = () => {
+      resolve((request.result as StoredDiagnosticTarget[])
+        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || String(b.lastCheckedAt).localeCompare(a.lastCheckedAt))
+        .slice(0, 20))
+    }
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function upsertHistory(item: StoredDiagnosticTarget) {
+  if (typeof indexedDB === 'undefined') return
+  const existing = await readHistory()
+  const previous = existing.find((entry) => entry.target === item.target)
+  const db = await openHistoryDb()
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(historyStoreName, 'readwrite')
+    tx.objectStore(historyStoreName).put({ ...previous, ...item })
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+async function deleteHistoryTarget(target: string) {
+  if (typeof indexedDB === 'undefined') return
+  const db = await openHistoryDb()
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(historyStoreName, 'readwrite')
+    tx.objectStore(historyStoreName).delete(target)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
 export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const isAsianLanguage = lang !== 'en'
   const searchParams = useSearchParams()
@@ -60,6 +197,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const [showGradeInfo, setShowGradeInfo] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [localResolvers, setLocalResolvers] = useState<Record<string, any>>({})
+  const [history, setHistory] = useState<StoredDiagnosticTarget[]>([])
+  const [shareCopied, setShareCopied] = useState(false)
+  const [batchInput, setBatchInput] = useState('')
+  const [batchLoading, setBatchLoading] = useState(false)
+  const [batchResults, setBatchResults] = useState<BatchDiagnosticResult[]>([])
 
   const localeText = useMemo(() => {
     switch (lang) {
@@ -171,6 +313,40 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copied: 'コピー完了',
             copy: 'コピー',
           },
+          actions: {
+            copyJson: 'JSON をコピー',
+            copyMarkdown: 'Markdown をコピー',
+            exportJson: 'JSON 保存',
+            exportMarkdown: 'Markdown 保存',
+            share: '共有リンク',
+            shareCopied: 'リンクコピー済み',
+            favorite: '固定',
+            unfavorite: '固定解除',
+            history: '履歴 / 固定',
+            noHistory: 'まだ履歴はありません',
+            remove: '削除',
+          },
+          batch: {
+            title: '一括診断',
+            placeholder: 'example.com\napi.example.com\n1.1.1.1',
+            run: '一括診断',
+            running: '一括診断中',
+            copy: '表をコピー',
+            export: 'CSV 保存',
+            target: '対象',
+            http: 'HTTP',
+            dns: 'DNS',
+            ssl: 'SSL',
+            latency: '応答',
+            issue: '確認点',
+            empty: '最大 10 件まで改行・カンマ・スペース区切りで診断できます。',
+          },
+          meta: {
+            checkedAt: '確認時刻',
+            totalMs: '総時間',
+            edgeColo: 'Edge',
+            cache: 'Cache',
+          },
           emptyHint: 'Global Edge Probe • DNS 診断 • SSL 連鎖 • HTTP ヘッダー確認',
         }
       case 'zh':
@@ -280,6 +456,40 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           copy: {
             copied: '已复制',
             copy: '复制',
+          },
+          actions: {
+            copyJson: '复制 JSON',
+            copyMarkdown: '复制 Markdown',
+            exportJson: '导出 JSON',
+            exportMarkdown: '导出 Markdown',
+            share: '分享链接',
+            shareCopied: '链接已复制',
+            favorite: '收藏',
+            unfavorite: '取消收藏',
+            history: '历史 / 收藏',
+            noHistory: '暂无历史记录',
+            remove: '删除',
+          },
+          batch: {
+            title: '批量诊断',
+            placeholder: 'example.com\napi.example.com\n1.1.1.1',
+            run: '批量检测',
+            running: '批量检测中',
+            copy: '复制表格',
+            export: '导出 CSV',
+            target: '目标',
+            http: 'HTTP',
+            dns: 'DNS',
+            ssl: 'SSL',
+            latency: '响应',
+            issue: '检查点',
+            empty: '最多 10 个目标，支持换行、逗号或空格分隔。',
+          },
+          meta: {
+            checkedAt: '检查时间',
+            totalMs: '总耗时',
+            edgeColo: 'Edge',
+            cache: '缓存',
           },
           emptyHint: 'Global Edge Probe • DNS 诊断 • SSL 链路 • HTTP 头部分析',
         }
@@ -391,6 +601,40 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copied: '已複製',
             copy: '複製',
           },
+          actions: {
+            copyJson: '複製 JSON',
+            copyMarkdown: '複製 Markdown',
+            exportJson: '匯出 JSON',
+            exportMarkdown: '匯出 Markdown',
+            share: '分享連結',
+            shareCopied: '連結已複製',
+            favorite: '收藏',
+            unfavorite: '取消收藏',
+            history: '歷史 / 收藏',
+            noHistory: '暫無歷史紀錄',
+            remove: '刪除',
+          },
+          batch: {
+            title: '批次診斷',
+            placeholder: 'example.com\napi.example.com\n1.1.1.1',
+            run: '批次檢測',
+            running: '批次檢測中',
+            copy: '複製表格',
+            export: '匯出 CSV',
+            target: '目標',
+            http: 'HTTP',
+            dns: 'DNS',
+            ssl: 'SSL',
+            latency: '回應',
+            issue: '檢查點',
+            empty: '最多 10 個目標，支援換行、逗號或空格分隔。',
+          },
+          meta: {
+            checkedAt: '檢查時間',
+            totalMs: '總耗時',
+            edgeColo: 'Edge',
+            cache: '快取',
+          },
           emptyHint: 'Global Edge Probe • DNS 診斷 • SSL 鏈路 • HTTP 標頭分析',
         }
       default:
@@ -501,6 +745,40 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copied: 'COPIED',
             copy: 'COPY_AUDIT',
           },
+          actions: {
+            copyJson: 'Copy JSON',
+            copyMarkdown: 'Copy Markdown',
+            exportJson: 'Export JSON',
+            exportMarkdown: 'Export Markdown',
+            share: 'Share Link',
+            shareCopied: 'Link copied',
+            favorite: 'Pin',
+            unfavorite: 'Unpin',
+            history: 'History / Pins',
+            noHistory: 'No recent targets yet',
+            remove: 'Remove',
+          },
+          batch: {
+            title: 'Batch Check',
+            placeholder: 'example.com\napi.example.com\n1.1.1.1',
+            run: 'Run Batch',
+            running: 'Checking',
+            copy: 'Copy Table',
+            export: 'Export CSV',
+            target: 'Target',
+            http: 'HTTP',
+            dns: 'DNS',
+            ssl: 'SSL',
+            latency: 'Latency',
+            issue: 'Issue',
+            empty: 'Check up to 10 targets separated by new lines, commas, or spaces.',
+          },
+          meta: {
+            checkedAt: 'Checked At',
+            totalMs: 'Total Time',
+            edgeColo: 'Edge',
+            cache: 'Cache',
+          },
           emptyHint: 'Global_Edge_Probe • DNS_Forensics • SSL_Chain • HTTP_Header_Analytics',
         }
     }
@@ -513,6 +791,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     return loadingStages[index] ?? loadingStages[0]
   }, [currentStep, loadingStages])
 
+  const refreshHistory = useCallback(() => {
+    readHistory()
+      .then(setHistory)
+      .catch(() => setHistory([]))
+  }, [])
+
+  useEffect(() => {
+    refreshHistory()
+  }, [refreshHistory])
+
   function parseLatencyMs(latency: string | number): number {
     if (typeof latency === 'number') return latency
     return parseInt(String(latency).replace('ms', ''), 10) || 0
@@ -520,14 +808,14 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   function calculateScore(data: any) {
     let score = 100
-    if (!data.http.success) score -= 40
-    if (data.http.status_code >= 400) score -= 20
-    if (!data.ssl.valid) score -= 20
-    if (parseLatencyMs(data.dns.latency) > 300) score -= 10
-    if (!data.cdn.is_provider) score -= 5
+    if (!data?.http?.success) score -= 40
+    if ((data?.http?.status_code ?? 0) >= 400) score -= 20
+    if (!data?.ssl?.valid) score -= 20
+    if (parseLatencyMs(data?.dns?.latency ?? '0ms') > 300) score -= 10
+    if (!data?.cdn?.is_provider) score -= 5
     
     // Domain status penalty
-    const status = data.whois?.status?.toLowerCase() || ''
+    const status = data?.whois?.status?.toLowerCase() || ''
     if (status.includes('hold')) score -= 50
     
     return Math.max(0, score)
@@ -593,14 +881,14 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     
     const expectedStepCount = 3
 
-    const dnsMatrix = [
+    const dnsResolvers = [
       { id: 'system', name: 'SYSTEM DNS', url: d ? `https://${d}/favicon.ico` : 'https://google.com/favicon.ico', type: 'native' },
       { id: 'google', name: 'GOOGLE (LOCAL)', url: `https://dns.google/resolve?name=${d || 'google.com'}&type=A`, type: 'doh' },
       { id: 'cf', name: 'CLOUDFLARE (LOCAL)', url: `https://cloudflare-dns.com/dns-query?name=${d || 'google.com'}&type=A`, type: 'doh' },
       { id: 'ali', name: 'ALIDNS (LOCAL)', url: `https://dns.alidns.com/resolve?name=${d || 'google.com'}&type=A`, type: 'doh' }
     ]
 
-    dnsMatrix.forEach(async (r) => {
+    dnsResolvers.forEach(async (r) => {
       const start = Date.now()
       try {
         if (r.type === 'native') {
@@ -640,8 +928,24 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || `Diagnostic failed with status ${res.status}`)
+
+      if (data?.status === 'partial_error') {
+        const safeResult = createSafeDiagnosticResult(data, d, data.error)
+        setError(data.error || 'Partial diagnostic failure')
+        setResult(safeResult)
+        if (safeResult.domain) {
+          await upsertHistory({ target: safeResult.domain, lastCheckedAt: new Date().toISOString() }).catch(() => null)
+          refreshHistory()
+        }
+        return
+      }
       
-      setResult(data)
+      const safeResult = createSafeDiagnosticResult(data, d)
+      setResult(safeResult)
+      if (safeResult.domain) {
+        await upsertHistory({ target: safeResult.domain, lastCheckedAt: new Date().toISOString() }).catch(() => null)
+        refreshHistory()
+      }
     } catch (err: any) {
       console.error('Forensics Engine Error:', err)
       setError(err.message || 'Unknown forensic engine failure')
@@ -649,7 +953,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       clearInterval(stepInterval)
       setLoading(false)
     }
-  }, []) // Completely stable run function
+  }, [refreshHistory])
 
   // Tracks the last run query to avoid infinite loops in useEffect
   const lastProcessedQuery = React.useRef<string | undefined>(null as any)
@@ -669,11 +973,220 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
 
 
-  const copyResult = () => {
+  const buildMarkdownReport = useCallback(() => {
     if (!result) return
-    navigator.clipboard.writeText(JSON.stringify(result, null, 2))
+    const score = calculateScore(result)
+    const advice = getAdvice(result)
+    return [
+      `# OpsKitPro Diagnostic Report: ${result.domain}`,
+      '',
+      `- Verdict: ${result.http.success ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}`,
+      `- Score: ${score}/100`,
+      `- Checked at: ${result.meta?.checkedAt || new Date().toISOString()}`,
+      `- Total time: ${result.meta?.totalMs ? `${result.meta.totalMs}ms` : 'Unknown'}`,
+      `- Cloudflare Edge: ${result.meta?.edgeColo || 'Unknown'}`,
+      '',
+      '## DNS',
+      `- Resolved IP: ${result.dns.resolved_ip}`,
+      `- All IPs: ${result.dns.all_ips?.length ? result.dns.all_ips.join(', ') : result.dns.resolved_ip}`,
+      `- Nameservers: ${result.dns.ns?.length ? result.dns.ns.join(', ') : 'Unknown'}`,
+      `- Lookup latency: ${result.dns.latency}`,
+      '',
+      '## HTTP',
+      `- Reachable: ${result.http.success ? 'Yes' : 'No'}`,
+      `- Status: ${result.http.status_code || 'Error'}`,
+      `- Protocol: ${result.http.is_https ? 'HTTPS' : 'HTTP/TCP'}`,
+      `- Response time: ${result.http.latency}`,
+      '',
+      '## SSL',
+      `- Valid: ${result.ssl.valid ? 'Yes' : 'No'}`,
+      `- Grade: ${result.ssl.grade || 'Unknown'}`,
+      `- Expiry: ${result.ssl.expiry}`,
+      `- Issuer: ${result.ssl.issuer}`,
+      '',
+      '## CDN',
+      `- Provider: ${result.cdn.provider}`,
+      `- Server: ${result.cdn.server}`,
+      '',
+      '## Recommendations',
+      ...advice.map((item) => `- ${item}`),
+    ].join('\n')
+  }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, result])
+
+  const writeClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      return true
+    } catch {
+      const textarea = document.createElement('textarea')
+      textarea.value = value
+      textarea.setAttribute('readonly', 'true')
+      textarea.style.position = 'fixed'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      const copiedByFallback = document.execCommand('copy')
+      document.body.removeChild(textarea)
+      return copiedByFallback
+    }
+  }
+
+  const copyText = async (value: string) => {
+    await writeClipboard(value)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const copyResult = () => {
+    if (!result) return
+    copyText(JSON.stringify(result, null, 2))
+  }
+
+  const copyMarkdown = () => {
+    const report = buildMarkdownReport()
+    if (report) copyText(report)
+  }
+
+  const downloadText = (filename: string, content: string, type: string) => {
+    const blob = new Blob([content], { type })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportJson = () => {
+    if (!result) return
+    downloadText(`opskitpro-${result.domain}.json`, JSON.stringify(result, null, 2), 'application/json')
+  }
+
+  const exportMarkdown = () => {
+    const report = buildMarkdownReport()
+    if (!result || !report) return
+    downloadText(`opskitpro-${result.domain}.md`, report, 'text/markdown')
+  }
+
+  const copyShareLink = () => {
+    const target = result?.domain || normalizeTargetInput(domain)
+    if (!target) return
+    const url = new URL(window.location.href)
+    url.searchParams.set('q', target)
+    writeClipboard(url.toString()).then(() => {
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    })
+  }
+
+  const parseBatchTargets = (value: string) => {
+    return Array.from(new Set(
+      value
+        .split(/[\s,，]+/)
+        .map(normalizeTargetInput)
+        .filter(Boolean)
+    )).slice(0, 10)
+  }
+
+  const getPrimaryIssue = (data?: ReturnType<typeof createSafeDiagnosticResult>, fallback?: string) => {
+    if (!data) return fallback || 'Error'
+    if (!data.dns.success) return 'DNS'
+    if (!data.http.success) return data.http.status_code ? `HTTP ${data.http.status_code}` : 'HTTP'
+    if (!data.ssl.valid) return 'SSL'
+    if (data.ssl.grade === 'C') return 'SSL expiring'
+    if (data.whois?.status?.toLowerCase().includes('hold')) return 'Domain hold'
+    if (!data.cdn.is_provider) return 'No CDN'
+    return 'OK'
+  }
+
+  const buildBatchMarkdown = (items: BatchDiagnosticResult[]) => {
+    return [
+      `| ${localeText.batch.target} | ${localeText.batch.http} | ${localeText.batch.dns} | ${localeText.batch.ssl} | ${localeText.batch.latency} | ${localeText.batch.issue} |`,
+      '| --- | --- | --- | --- | --- | --- |',
+      ...items.map((item) => {
+        const row = item.result
+        return [
+          item.target,
+          row ? String(row.http.status_code || 'ERR') : 'ERR',
+          row ? row.dns.resolved_ip : '---',
+          row ? (row.ssl.grade || (row.ssl.valid ? 'OK' : 'ERR')) : '---',
+          row ? row.http.latency : '---',
+          getPrimaryIssue(row, item.error),
+        ].map((value) => String(value).replace(/\|/g, '/')).join(' | ')
+      }).map((line) => `| ${line} |`),
+    ].join('\n')
+  }
+
+  const buildBatchCsv = (items: BatchDiagnosticResult[]) => {
+    const rows = [
+      [localeText.batch.target, localeText.batch.http, localeText.batch.dns, localeText.batch.ssl, localeText.batch.latency, localeText.batch.issue],
+      ...items.map((item) => {
+        const row = item.result
+        return [
+          item.target,
+          row ? String(row.http.status_code || 'ERR') : 'ERR',
+          row ? row.dns.resolved_ip : '',
+          row ? (row.ssl.grade || (row.ssl.valid ? 'OK' : 'ERR')) : '',
+          row ? row.http.latency : '',
+          getPrimaryIssue(row, item.error),
+        ]
+      }),
+    ]
+
+    return rows
+      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+  }
+
+  const copyBatchTable = () => {
+    if (batchResults.length === 0) return
+    copyText(buildBatchMarkdown(batchResults))
+  }
+
+  const exportBatchCsv = () => {
+    if (batchResults.length === 0) return
+    downloadText('opskitpro-website-check-batch.csv', buildBatchCsv(batchResults), 'text/csv')
+  }
+
+  const runBatchDiagnostics = async () => {
+    const targets = parseBatchTargets(batchInput || domain)
+    if (targets.length === 0) return
+
+    setBatchLoading(true)
+    setBatchResults([])
+    try {
+      const settled = await Promise.all(targets.map(async (target) => {
+        try {
+          const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(target)}&_nocache=${Date.now()}`)
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`)
+          const safeResult = createSafeDiagnosticResult(data, target, data.error)
+          await upsertHistory({ target: safeResult.domain, lastCheckedAt: new Date().toISOString() }).catch(() => null)
+          return { target, result: safeResult }
+        } catch (err: any) {
+          return { target, error: err?.message || 'Unknown error' }
+        }
+      }))
+      setBatchResults(settled)
+      refreshHistory()
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
+  const toggleFavorite = async (target: string) => {
+    const current = history.find((entry) => entry.target === target)
+    await upsertHistory({
+      target,
+      lastCheckedAt: current?.lastCheckedAt || new Date().toISOString(),
+      pinned: !current?.pinned,
+    }).catch(() => null)
+    refreshHistory()
+  }
+
+  const removeHistory = async (target: string) => {
+    await deleteHistoryTarget(target).catch(() => null)
+    refreshHistory()
   }
 
   const getAdvice = (data: any) => {
@@ -773,7 +1286,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const displayedTarget = result?.domain || domain || 'opskitpro.com'
 
   return (
-    <main className="w-full max-w-6xl mx-auto px-6 mt-8 sm:mt-12 mb-28 z-20 relative font-sans">
+    <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 mt-6 sm:mt-12 mb-24 sm:mb-28 z-20 relative font-sans">
       {/* Background Glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/6 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
@@ -802,8 +1315,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         <div className="max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="relative group">
             <div className="absolute inset-0 bg-emerald-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="relative flex items-center bg-white/95 border border-zinc-100 p-2 rounded-[1.35rem] shadow-xl shadow-zinc-200/70 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
-               <div className="w-10 sm:w-12 h-12 flex items-center justify-center text-zinc-400">
+            <div className="relative flex flex-col sm:flex-row sm:items-center bg-white/95 border border-zinc-100 p-3 sm:p-2 rounded-[1.35rem] shadow-xl shadow-zinc-200/70 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all gap-3 sm:gap-0">
+               <div className="w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-center text-zinc-400 self-start sm:self-auto">
                   <Globe className="w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
                </div>
                <input 
@@ -817,19 +1330,157 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                    }
                  }}
                  placeholder={dict.home.diagnostics_placeholder}
-                 className="min-w-0 flex-grow bg-transparent border-none outline-none text-zinc-900 text-base sm:text-lg px-1 sm:px-2"
+                 className="min-w-0 w-full flex-grow bg-transparent border-none outline-none text-zinc-900 text-base sm:text-lg px-1 sm:px-2 py-1.5 sm:py-0"
                />
                <button 
                  type="button"
                  onClick={() => runDiagnostic(undefined, true)}
                  disabled={loading}
-                 className="shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-5 sm:px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+                 className="shrink-0 w-full sm:w-auto justify-center bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-5 sm:px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/25 disabled:opacity-50"
                  >
                  {loading ? <Activity className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
                  <span className="whitespace-nowrap text-sm sm:text-base">{loading ? localeText.analyzing : dict.home.diagnostics_btn}</span>
                </button>
             </div>
           </form>
+          <div className="mt-4 rounded-3xl border border-zinc-100 bg-white/75 p-3 shadow-sm backdrop-blur-md">
+            <div className="mb-2 flex items-center justify-between gap-3 px-1">
+              <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <History className="h-3.5 w-3.5 text-emerald-500" />
+                {localeText.actions.history}
+              </div>
+              {history.length === 0 && (
+                <span className="text-[10px] font-medium text-zinc-400">{localeText.actions.noHistory}</span>
+              )}
+            </div>
+            {history.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {history.map((entry) => (
+                  <div key={entry.target} className="flex shrink-0 items-center overflow-hidden rounded-full border border-zinc-200 bg-white shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDomain(entry.target)
+                        runDiagnostic(entry.target)
+                      }}
+                      className="max-w-[180px] truncate px-3 py-2 text-left text-xs font-semibold text-zinc-700 hover:text-emerald-600"
+                    >
+                      {entry.target}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleFavorite(entry.target)}
+                      className={`border-l border-zinc-100 px-2 py-2 ${entry.pinned ? 'text-amber-500' : 'text-zinc-300 hover:text-amber-500'}`}
+                      aria-label={entry.pinned ? localeText.actions.unfavorite : localeText.actions.favorite}
+                    >
+                      <Star className={`h-3.5 w-3.5 ${entry.pinned ? 'fill-current' : ''}`} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeHistory(entry.target)}
+                      className="border-l border-zinc-100 px-2 py-2 text-zinc-300 hover:text-red-500"
+                      aria-label={localeText.actions.remove}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="mt-4 rounded-3xl border border-zinc-100 bg-white/80 p-3 sm:p-4 shadow-sm backdrop-blur-md">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <LayoutGrid className="h-3.5 w-3.5 text-emerald-500" />
+                {localeText.batch.title}
+              </div>
+              <span className="text-left text-[10px] font-medium text-zinc-400 sm:text-right">{localeText.batch.empty}</span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr,auto]">
+              <textarea
+                value={batchInput}
+                onChange={(event) => setBatchInput(event.target.value)}
+                placeholder={localeText.batch.placeholder}
+                rows={3}
+                className="min-h-[88px] w-full resize-y rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/10"
+              />
+              <button
+                type="button"
+                onClick={runBatchDiagnostics}
+                disabled={batchLoading}
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-zinc-800 disabled:opacity-50"
+              >
+                {batchLoading ? <Activity className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                {batchLoading ? localeText.batch.running : localeText.batch.run}
+              </button>
+            </div>
+            {batchResults.length > 0 && (
+              <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-100 bg-white">
+                <div className="flex flex-col gap-2 border-b border-zinc-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{localeText.batch.title}</div>
+                  <div className="grid grid-cols-2 gap-2 sm:flex">
+                    <button
+                      type="button"
+                      onClick={copyBatchTable}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 px-3 py-2 text-[10px] font-semibold text-zinc-600 hover:text-zinc-900"
+                    >
+                      <Copy className="h-3 w-3" />
+                      {localeText.batch.copy}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportBatchCsv}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 px-3 py-2 text-[10px] font-semibold text-zinc-600 hover:text-zinc-900"
+                    >
+                      <Download className="h-3 w-3" />
+                      {localeText.batch.export}
+                    </button>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-[760px] w-full text-left text-xs">
+                    <thead className="bg-zinc-50 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+                      <tr>
+                        <th className="px-4 py-3">{localeText.batch.target}</th>
+                        <th className="px-4 py-3">{localeText.batch.http}</th>
+                        <th className="px-4 py-3">{localeText.batch.dns}</th>
+                        <th className="px-4 py-3">{localeText.batch.ssl}</th>
+                        <th className="px-4 py-3">{localeText.batch.latency}</th>
+                        <th className="px-4 py-3">{localeText.batch.issue}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      {batchResults.map((item) => {
+                        const row = item.result
+                        const issue = getPrimaryIssue(row, item.error)
+                        return (
+                          <tr key={item.target} className="text-zinc-700">
+                            <td className="px-4 py-3 font-semibold">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDomain(item.target)
+                                  if (row) setResult(row)
+                                }}
+                                className="max-w-[180px] truncate text-left hover:text-emerald-600"
+                              >
+                                {item.target}
+                              </button>
+                            </td>
+                            <td className={`px-4 py-3 font-semibold ${row?.http.success ? 'text-emerald-600' : 'text-red-500'}`}>{row ? row.http.status_code || 'ERR' : 'ERR'}</td>
+                            <td className="px-4 py-3 text-zinc-500">{row?.dns.resolved_ip || '---'}</td>
+                            <td className={`px-4 py-3 font-semibold ${row?.ssl.valid ? 'text-emerald-600' : 'text-red-500'}`}>{row?.ssl.grade || '---'}</td>
+                            <td className="px-4 py-3 text-zinc-500">{row?.http.latency || '---'}</td>
+                            <td className={`px-4 py-3 font-semibold ${issue === 'OK' ? 'text-emerald-600' : 'text-orange-500'}`}>{issue}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -897,7 +1548,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
            
            {/* Overall Status Bar */}
-           <div className={`mb-6 p-5 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5 relative overflow-hidden ${result.http.success ? 'bg-white/90 border-emerald-100/80' : 'bg-red-50 border-red-100'}`}>
+           <div className={`mb-6 p-4 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5 relative overflow-hidden ${result.http.success ? 'bg-white/90 border-emerald-100/80' : 'bg-red-50 border-red-100'}`}>
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
               <div className="flex items-center gap-5 z-10 w-full min-w-0">
                  {/* Score Ring */}
@@ -936,13 +1587,31 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                    </div>
                  </div>
               </div>
-              <button onClick={copyResult} className="relative z-10 flex items-center justify-center gap-2 text-[10px] font-semibold text-zinc-500 hover:text-zinc-900 transition-colors tracking-[0.22em] bg-zinc-50/90 py-3 px-6 rounded-full border border-zinc-200 hover:bg-zinc-100 w-full lg:w-auto shrink-0">
-                {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                {copied ? localeText.copy.copied : localeText.copy.copy}
-              </button>
+              <div className="relative z-10 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
+                <button onClick={copyMarkdown} className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
+                  {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <FileText className="h-3 w-3" />}
+                  {copied ? localeText.copy.copied : localeText.actions.copyMarkdown}
+                </button>
+                <button onClick={copyResult} className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
+                  {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                  {localeText.actions.copyJson}
+                </button>
+                <button onClick={copyShareLink} className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
+                  {shareCopied ? <Check className="h-3 w-3 text-emerald-500" /> : <Link2 className="h-3 w-3" />}
+                  {shareCopied ? localeText.actions.shareCopied : localeText.actions.share}
+                </button>
+                <button onClick={() => toggleFavorite(result.domain)} className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-[10px] font-semibold tracking-[0.16em] transition-colors ${
+                  history.find((entry) => entry.target === result.domain)?.pinned
+                    ? 'border-amber-200 bg-amber-50 text-amber-600'
+                    : 'border-zinc-200 bg-zinc-50/90 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                }`}>
+                  <Star className={`h-3 w-3 ${history.find((entry) => entry.target === result.domain)?.pinned ? 'fill-current' : ''}`} />
+                  {history.find((entry) => entry.target === result.domain)?.pinned ? localeText.actions.unfavorite : localeText.actions.favorite}
+                </button>
+              </div>
            </div>
 
-           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
              {summaryFacts.slice(2).map((fact) => (
                <div key={fact.label} className="rounded-2xl border border-zinc-100 bg-white/85 backdrop-blur-md px-4 py-3 shadow-sm">
                  <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{fact.label}</div>
@@ -961,7 +1630,32 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
              ))}
            </div>
 
-           <div className="flex items-center justify-between gap-3 mb-6 rounded-full border border-zinc-100 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-md">
+           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+             {[
+               { label: localeText.meta.totalMs, value: result.meta?.totalMs ? `${result.meta.totalMs}ms` : '---' },
+               { label: localeText.meta.edgeColo, value: result.meta?.edgeColo || 'Unknown' },
+               { label: localeText.meta.cache, value: result.meta?.cacheStatus || 'MISS' },
+               { label: localeText.meta.checkedAt, value: result.meta?.checkedAt ? new Date(result.meta.checkedAt).toLocaleString() : '---' },
+             ].map((item) => (
+               <div key={item.label} className="rounded-2xl border border-zinc-100 bg-white/80 px-4 py-3 shadow-sm">
+                 <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{item.label}</div>
+                 <div className="mt-2 truncate text-xs font-semibold text-zinc-800">{item.value}</div>
+               </div>
+             ))}
+           </div>
+
+           <div className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+             <button onClick={exportMarkdown} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:border-emerald-200 hover:text-emerald-700">
+               <Download className="h-4 w-4" />
+               {localeText.actions.exportMarkdown}
+             </button>
+             <button onClick={exportJson} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:border-emerald-200 hover:text-emerald-700">
+               <Download className="h-4 w-4" />
+               {localeText.actions.exportJson}
+             </button>
+           </div>
+
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 rounded-3xl sm:rounded-full border border-zinc-100 bg-white/70 px-4 py-3 sm:py-2 shadow-sm backdrop-blur-md">
              <p className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em]">
                {localeText.detailsHint}
              </p>

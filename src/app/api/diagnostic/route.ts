@@ -32,7 +32,15 @@ const normalizeTargetInput = (value: string) => {
   }
 }
 
+const ipv4Segment = '(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)'
+const ipv4Regex = new RegExp(`^(?:${ipv4Segment}\\.){3}${ipv4Segment}$`)
+const isIpAddress = (value: string) => {
+  if (ipv4Regex.test(value)) return true
+  return value.includes(':') && value.split(':').length >= 3 && /^[0-9a-fA-F:.]+$/.test(value)
+}
+
 export async function GET(request: NextRequest | Request) {
+  const requestStartedAt = Date.now()
   const requestUrl = (request as Request | undefined)?.url
 
   if (!requestUrl) {
@@ -46,9 +54,15 @@ export async function GET(request: NextRequest | Request) {
 
   const { searchParams } = new URL(requestUrl)
   const query = normalizeTargetInput(searchParams.get('domain') || searchParams.get('target') || '')
+  const cfRay = request.headers.get('cf-ray') || ''
+  const edgeColo = cfRay.includes('-') ? cfRay.split('-').pop()?.toUpperCase() || 'Unknown' : 'Unknown'
+  const buildMeta = (cacheStatus: 'HIT' | 'MISS' = 'MISS') => ({
+    checkedAt: new Date().toISOString(),
+    totalMs: Date.now() - requestStartedAt,
+    edgeColo,
+    cacheStatus,
+  })
   
-  // IP vs Domain distinction
-  const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/
   let domain = query.replace(/^https?:\/\//, '').split('/')[0]
   
   // If no query, default to visitor's own IP
@@ -74,7 +88,8 @@ export async function GET(request: NextRequest | Request) {
     try {
       const cached = await KV.get(cacheKey)
       if (cached) {
-      return NextResponse.json(JSON.parse(cached), {
+        const parsed = JSON.parse(cached)
+        return NextResponse.json({ ...parsed, meta: buildMeta('HIT') }, {
           headers: { 'X-Cache': 'HIT', 'Cache-Control': 'public, s-maxage=60' }
         })
       }
@@ -88,7 +103,7 @@ export async function GET(request: NextRequest | Request) {
   }
 
   try {
-    const isActuallyIp = ipRegex.test(domain)
+    const isActuallyIp = isIpAddress(domain)
     const privateIpRegex = /^(?:10\.|192\.168\.|172\.(?:1[6-9]|2[0-9]|3[01])\.|127\.)/
     const isPrivateIp = isActuallyIp && privateIpRegex.test(domain)
     
@@ -120,7 +135,8 @@ export async function GET(request: NextRequest | Request) {
     }).then(r => r.json()).catch(() => null)
 
     // HTTP, SSL, and WHOIS Promises
-    const targetUrl = query.startsWith('http') ? query : (isActuallyIp ? `http://${domain}` : `https://${domain}`)
+    const ipHost = isActuallyIp && domain.includes(':') ? `[${domain}]` : domain
+    const targetUrl = query.startsWith('http') ? query : (isActuallyIp ? `http://${ipHost}` : `https://${domain}`)
     const isHttps = targetUrl.startsWith('https')
 
     const httpPromise = (() => {
@@ -183,14 +199,30 @@ export async function GET(request: NextRequest | Request) {
         isActuallyIp,
         isPrivate: isPrivateIp,
         error: httpRes.message,
-        dns: { resolved_ip: domain, latency: `${dnsLatency}ms`, success: true }
+        dns: { resolved_ip: domain, latency: `${dnsLatency}ms`, success: true },
+        meta: buildMeta('MISS'),
       }
       return NextResponse.json(partialError)
     }
 
     const dnsMatch = dnsResults.find((r: any) => r.data?.Answer)
-    const ip = isActuallyIp ? domain : (dnsMatch?.data?.Answer?.[0]?.data || domain)
+    const allIps: string[] = isActuallyIp
+      ? [domain]
+      : Array.from(new Set<string>(
+          dnsResults.flatMap((r: any) =>
+            (r.data?.Answer || [])
+              .filter((answer: any) => answer?.type === 1 || answer?.type === 28)
+              .map((answer: any) => String(answer.data))
+          )
+        ))
+    const nsRecords: string[] = Array.from(new Set<string>(
+      (nsData?.Answer || [])
+        .filter((answer: any) => answer?.data)
+        .map((answer: any) => String(answer.data).replace(/\.$/, ''))
+    ))
+    const ip = isActuallyIp ? domain : (allIps[0] || dnsMatch?.data?.Answer?.[0]?.data || domain)
     const serverHeader = httpRes.headers.get('server') || 'Unknown'
+    const hstsEnabled = Boolean(httpRes.headers.get('strict-transport-security'))
 
     // Enhanced CDN Logic
     let provider = 'Origin'
@@ -222,17 +254,45 @@ export async function GET(request: NextRequest | Request) {
       } catch {}
     }
 
+    const certEntries = Array.isArray(crtData) ? crtData : []
+    const latestCert = certEntries
+      .filter((entry: any) => entry?.not_after)
+      .sort((a: any, b: any) => String(b.not_after).localeCompare(String(a.not_after)))[0]
+    const sslExpiry = latestCert?.not_after ? String(latestCert.not_after).split('T')[0].split(' ')[0] : 'Unknown'
+    const sslIssuer = latestCert?.issuer_name || 'Unknown'
+    const expiryDate = sslExpiry !== 'Unknown' ? new Date(sslExpiry) : null
+    const daysToExpiry = expiryDate ? Math.ceil((expiryDate.getTime() - Date.now()) / 86_400_000) : null
+    const certValid = isHttps && (daysToExpiry === null || daysToExpiry >= 0)
+    const sslFactors = [
+      isHttps ? 'HTTPS_ENABLED' : null,
+      certValid ? 'CERT_VALID' : null,
+      hstsEnabled ? 'HSTS_ENABLED' : null,
+      isCdn ? 'CDN_PRESENT' : null,
+    ].filter(Boolean) as string[]
+    const sslGrade = !isHttps || !certValid
+      ? 'F'
+      : daysToExpiry !== null && daysToExpiry <= 15
+        ? 'C'
+        : hstsEnabled
+          ? 'A+'
+          : 'B'
+    const certChain = [
+      { level: 'Leaf', name: domain, status: certValid ? 'Active' : 'Invalid' },
+      ...(sslIssuer !== 'Unknown' ? [{ level: 'Issuer', name: sslIssuer, status: 'Trusted' }] : []),
+    ]
+
     const responseData: DiagnosticSuccessResponse = {
       domain,
       status: 'success',
       isActuallyIp,
       isPrivate: isPrivateIp,
-      dns: { resolved_ip: ip, latency: `${dnsLatency}ms`, success: true, resolvers: dnsResults },
-      http: { success: httpRes.ok, status_code: httpRes.status, latency: `${httpLatency}ms` },
-      ssl: { valid: isHttps, issuer: 'Unknown', expiry: 'Unknown' },
+      dns: { resolved_ip: ip, all_ips: allIps, ns: nsRecords, latency: `${dnsLatency}ms`, success: true, resolvers: dnsResults },
+      http: { success: httpRes.ok, status_code: httpRes.status, latency: `${httpLatency}ms`, is_https: isHttps },
+      ssl: { valid: certValid, issuer: sslIssuer, expiry: sslExpiry, grade: sslGrade, factors: sslFactors, tls_version: isHttps ? 'TLS' : 'HTTP', chain: certChain },
       cdn: { is_provider: isCdn, provider, server: serverHeader },
       geo,
-      whois: whoisInfo
+      whois: whoisInfo,
+      meta: buildMeta('MISS'),
     }
 
     if (KV) await KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 3600 }).catch(() => null)

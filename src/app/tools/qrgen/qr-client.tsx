@@ -44,7 +44,7 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
         <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href={`/`} className="hover:text-emerald-600 transition-colors">{isJapanese ? 'ホーム' : 'Home'}</Link>
           <span className="text-zinc-300">/</span>
-          <Link href={`/services`} className="hover:text-emerald-600 transition-colors">{isJapanese ? 'ツール' : 'Tools'}</Link>
+          <Link href={`/tools`} className="hover:text-emerald-600 transition-colors">{isJapanese ? 'ツール' : 'Tools'}</Link>
           <span className="text-zinc-300">/</span>
           <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">{dict.tools.qrgen_title}</span>
         </div>

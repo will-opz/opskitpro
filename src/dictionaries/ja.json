@@ -9,7 +9,7 @@
     "meta_title": "DNS・IP・サイト診断 | OpsKitPro",
     "meta_desc": "OpsKitPro は、DNS・IP・サイトをまとめて診断し、DNS / SSL / CDN / HTTP の状態をログイン不要で素早く確認できる運用ツールです。",
     "system_status": "稼働中",
-    "btn_chat": "Matrix 連携",
+    "btn_chat": "ツール連携",
     "title_part1": "運用向け診断",
     "title_part2_pre": "DNS・IP・サイトを",
     "title_part2_ai": "まとめて",
@@ -85,10 +85,10 @@
     }
   },
   "services": {
-    "title_part1": "サービス",
+    "title_part1": "ツール",
     "title_part2": "一覧",
-    "subtitle": "インフラ管理、可観測性、継続的デリバリーをまとめて確認できる運用ダッシュボード。",
-    "matrix_active": "稼働中",
+    "subtitle": "DNS、サイト診断、開発、運用ツールをまとめた入口です。",
+    "matrix_active": "ツール稼働中",
     "status_operational": "稼働中",
     "status_maintenance": "メンテナンス中",
     "cat_monitoring": "監視・可観測性",
@@ -122,7 +122,7 @@
     "prompt_builder_desc": "制約、検証、公開/非公開境界を含む AI Coding Agent 向け prompt を生成します。",
     "dns_lookup_title": "DNS 確認",
     "dns_lookup_desc": "DNS レコードと解決状態を確認できます。",
-    "matrix_title": "Matrix 連携",
+    "matrix_title": "ツール連携",
     "matrix_desc": "分散型の安全なリアルタイム通信ノード。",
     "website_check": {
       "loading": "サイトの状態を確認しています...",

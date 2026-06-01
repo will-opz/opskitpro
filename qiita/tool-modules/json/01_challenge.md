@@ -5,12 +5,11 @@ tags:
   - json
   - 背景
   - 課題
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: "2026-05-09T09:01:35+09:00"
+qiita_url: "https://qiita.com/opskitpro/items/435e4c727738cf24b7ef"
+qiita_id: "435e4c727738cf24b7ef"
 ---
-
 # json を作った理由。読みたいのは“構造”だった
 
 API のレスポンス、設定ファイル、ログの断片など、JSON を見る場面は多いです。
