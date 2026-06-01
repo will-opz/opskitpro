@@ -1,14 +1,14 @@
 ---
-title: "8年前の自分は Git を低く見ていた。SVN から GitOps、そして AI Workflow まで"
+title: 8年前の自分は Git を低く見ていた。SVN から GitOps、そして AI Workflow まで
 tags:
   - OpsKitPro
   - Git
   - SRE
   - DevOps
-published: false
-published_at: null
-qiita_url: null
-qiita_id: null
+published: true
+published_at: '2026-06-01T14:51:23.309Z'
+qiita_url: https://qiita.com/opskitpro/items/450b22bdbe44dc96ad39
+qiita_id: 450b22bdbe44dc96ad39
 ---
 
 # 8年前の自分は Git を低く見ていた。SVN から GitOps、そして AI Workflow まで
