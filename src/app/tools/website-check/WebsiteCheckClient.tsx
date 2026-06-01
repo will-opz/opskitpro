@@ -78,6 +78,13 @@ const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackE
       latency: data?.http?.latency || '---',
       is_https: Boolean(data?.http?.is_https),
     },
+    securityHeaders: {
+      score: Number(data?.securityHeaders?.score ?? 0),
+      grade: data?.securityHeaders?.grade || '—',
+      passed: Number(data?.securityHeaders?.passed ?? 0),
+      total: Number(data?.securityHeaders?.total ?? 0),
+      checks: data?.securityHeaders?.checks || [],
+    },
     ssl: {
       valid: Boolean(data?.ssl?.valid),
       issuer: data?.ssl?.issuer || 'Unknown',
@@ -277,8 +284,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             success: '正常',
             failure: '到達不可',
           },
-          ssl: {
+          security: {
             step: '04',
+            title: 'Security Headers',
+            score: 'Header Score',
+            passed: '有効な項目',
+            missing: '不足',
+            recommendation: '推奨',
+          },
+          ssl: {
+            step: '05',
             title: 'SSL セキュリティ',
             certStatus: '証明書状態',
             expiry: '有効期限',
@@ -290,7 +305,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             chainUnavailable: 'チェーン情報なし',
           },
           cdn: {
-            step: '05',
+            step: '06',
             title: 'CDN',
             provider: '提供元インフラ',
             edge: 'エッジ経由',
@@ -421,8 +436,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             success: '正常',
             failure: '不可达',
           },
-          ssl: {
+          security: {
             step: '04',
+            title: '安全响应头',
+            score: '响应头评分',
+            passed: '已启用',
+            missing: '缺失项',
+            recommendation: '建议',
+          },
+          ssl: {
+            step: '05',
             title: 'SSL 安全',
             certStatus: '证书状态',
             expiry: '有效期限',
@@ -434,7 +457,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             chainUnavailable: '无链信息',
           },
           cdn: {
-            step: '05',
+            step: '06',
             title: 'CDN',
             provider: '提供商基础设施',
             edge: '边缘转发',
@@ -565,8 +588,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             success: '正常',
             failure: '無法連線',
           },
-          ssl: {
+          security: {
             step: '04',
+            title: '安全回應標頭',
+            score: '標頭評分',
+            passed: '已啟用',
+            missing: '缺失項',
+            recommendation: '建議',
+          },
+          ssl: {
+            step: '05',
             title: 'SSL 安全',
             certStatus: '憑證狀態',
             expiry: '有效期限',
@@ -578,7 +609,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             chainUnavailable: '無鏈資訊',
           },
           cdn: {
-            step: '05',
+            step: '06',
             title: 'CDN',
             provider: '提供商基礎設施',
             edge: '邊緣轉發',
@@ -709,8 +740,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             success: 'NOMINAL',
             failure: 'UNREACHABLE',
           },
-          ssl: {
+          security: {
             step: '04',
+            title: 'Security Headers',
+            score: 'Header Score',
+            passed: 'Enabled',
+            missing: 'Missing',
+            recommendation: 'Recommendation',
+          },
+          ssl: {
+            step: '05',
             title: 'SSL Security',
             certStatus: 'Cert Status',
             expiry: 'Expiry Date',
@@ -722,7 +761,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             chainUnavailable: 'Chain_Data_Unavailable',
           },
           cdn: {
-            step: '05',
+            step: '06',
             title: 'Edge CDN',
             provider: 'Provider Infrastructure',
             edge: 'Edge Routing',
@@ -813,6 +852,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     if (!data?.ssl?.valid) score -= 20
     if (parseLatencyMs(data?.dns?.latency ?? '0ms') > 300) score -= 10
     if (!data?.cdn?.is_provider) score -= 5
+    if ((data?.securityHeaders?.score ?? 100) < 70) score -= 10
     
     // Domain status penalty
     const status = data?.whois?.status?.toLowerCase() || ''
@@ -854,6 +894,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         label: localeText.ssl.title,
         value: result.ssl.grade || 'A',
         tone: result.ssl.valid ? 'emerald' : 'red',
+      },
+      {
+        label: localeText.security.title,
+        value: result.securityHeaders?.grade || '—',
+        tone: (result.securityHeaders?.score ?? 0) >= 75 ? 'emerald' : (result.securityHeaders?.score ?? 0) >= 55 ? 'orange' : 'red',
       },
       {
         label: localeText.cdn.title,
@@ -998,6 +1043,12 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       `- Protocol: ${result.http.is_https ? 'HTTPS' : 'HTTP/TCP'}`,
       `- Response time: ${result.http.latency}`,
       '',
+      '## Security Headers',
+      `- Grade: ${result.securityHeaders?.grade || 'Unknown'}`,
+      `- Score: ${result.securityHeaders?.score ?? 0}/100`,
+      `- Enabled: ${result.securityHeaders?.passed ?? 0}/${result.securityHeaders?.total ?? 0}`,
+      ...(result.securityHeaders?.checks || []).map((check: any) => `- ${check.present ? 'OK' : 'Missing'} ${check.label}${check.value ? `: ${check.value}` : ''}`),
+      '',
       '## SSL',
       `- Valid: ${result.ssl.valid ? 'Yes' : 'No'}`,
       `- Grade: ${result.ssl.grade || 'Unknown'}`,
@@ -1094,6 +1145,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     if (!data.http.success) return data.http.status_code ? `HTTP ${data.http.status_code}` : 'HTTP'
     if (!data.ssl.valid) return 'SSL'
     if (data.ssl.grade === 'C') return 'SSL expiring'
+    if ((data.securityHeaders?.score ?? 100) < 55) return 'Headers'
     if (data.whois?.status?.toLowerCase().includes('hold')) return 'Domain hold'
     if (!data.cdn.is_provider) return 'No CDN'
     return 'OK'
@@ -1199,6 +1251,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         sslExpired: 'SSL 証明書の有効性に問題があります。現在、ブラウザ側で警告が出る状態です。',
         sslSoon: '証明書の更新期限が近い可能性があります。15 日以内に更新計画を立ててください。',
         hsts: 'HSTS が無効です。Strict-Transport-Security を有効化すると SSL ストリップを防ぎやすくなります。',
+        csp: 'Content-Security-Policy が未設定です。XSS や外部スクリプト混入への耐性を高めるため CSP を追加してください。',
+        securityHeaders: '重要なセキュリティヘッダーが不足しています。HSTS、CSP、nosniff、frame 制御を優先してください。',
         cdn: 'エッジ CDN ではなく直接配信の可能性があります。遅延削減のため CDN 化を検討してください。',
         subdomains: 'サブドメイン数が多めです。検証用や放置された環境がないか確認すると安心です。',
         ok: '現時点では大きな問題は見当たりません。可用性・性能・セキュリティは良好です。',
@@ -1210,6 +1264,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         sslExpired: 'SSL 证书存在问题，当前会触发浏览器警告。',
         sslSoon: '证书可能即将到期，请在 15 天内安排更新。',
         hsts: 'HSTS 处于关闭状态。启用 Strict-Transport-Security 可减少 SSL Strip 风险。',
+        csp: 'Content-Security-Policy 未设置。建议添加 CSP，降低 XSS 与第三方脚本注入风险。',
+        securityHeaders: '关键安全响应头不足。建议优先补齐 HSTS、CSP、nosniff 与 frame 控制。',
         cdn: '当前可能是直连而非边缘 CDN。建议启用 CDN 以降低延迟。',
         subdomains: '子域名数量偏多，建议排查是否存在遗留的测试或临时环境。',
         ok: '目前没有明显问题，可用性、性能与安全性表现良好。',
@@ -1221,6 +1277,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         sslExpired: 'SSL 憑證存在問題，目前會觸發瀏覽器警告。',
         sslSoon: '憑證可能即將到期，請在 15 天內安排更新。',
         hsts: 'HSTS 目前關閉。啟用 Strict-Transport-Security 可降低 SSL Strip 風險。',
+        csp: 'Content-Security-Policy 未設定。建議加入 CSP，降低 XSS 與第三方腳本注入風險。',
+        securityHeaders: '關鍵安全回應標頭不足。建議優先補齊 HSTS、CSP、nosniff 與 frame 控制。',
         cdn: '目前可能是直連而非邊緣 CDN。建議啟用 CDN 以降低延遲。',
         subdomains: '子網域數量偏多，建議排查是否有遺留的測試或臨時環境。',
         ok: '目前沒有明顯問題，可用性、效能與安全性表現良好。',
@@ -1232,6 +1290,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         sslExpired: 'SSL certificate problem: browser warnings are likely right now.',
         sslSoon: 'Certificate expiring soon. Plan a renewal within 15 days.',
         hsts: 'HSTS is disabled. Enable Strict-Transport-Security to reduce SSL stripping risk.',
+        csp: 'Content-Security-Policy is missing. Add CSP to reduce XSS and third-party script injection risk.',
+        securityHeaders: 'Important security headers are missing. Prioritize HSTS, CSP, nosniff, and frame controls.',
         cdn: 'This looks like direct delivery, not edge CDN. Consider enabling CDN to reduce latency.',
         subdomains: 'A high subdomain count can hide forgotten staging or test environments.',
         ok: 'No major issues detected. Availability, performance, and security look healthy.',
@@ -1257,6 +1317,13 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     
     if (data.ssl.valid && !data.ssl.factors?.includes('HSTS_ENABLED')) {
       advice.push(copy.hsts)
+    }
+
+    const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
+    if (missingHeaders.some((check: any) => check.key === 'content-security-policy')) {
+      advice.push(copy.csp)
+    } else if ((data.securityHeaders?.score ?? 100) < 75) {
+      advice.push(copy.securityHeaders)
     }
 
     if (!data.cdn.is_provider) {
@@ -1880,7 +1947,53 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                 </div>
               </div>
 
-              {/* Step 4: SSL */}
+              {/* Step 4: Security Headers */}
+              <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
+                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">{localeText.security.step}</span>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className={`w-4 h-4 ${(result.securityHeaders?.score ?? 0) >= 75 ? 'text-emerald-500' : 'text-orange-500'}`} />
+                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">{localeText.security.title}</span>
+                  </div>
+                </div>
+                <div className="flex-grow">
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div>
+                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">{localeText.security.score}</p>
+                      <p className={`text-sm font-semibold ${(result.securityHeaders?.score ?? 0) >= 75 ? 'text-emerald-600' : (result.securityHeaders?.score ?? 0) >= 55 ? 'text-orange-500' : 'text-red-500'}`}>
+                        {result.securityHeaders?.grade || '—'} / {result.securityHeaders?.score ?? 0}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">{localeText.security.passed}</p>
+                      <p className="text-sm font-semibold text-zinc-900">{result.securityHeaders?.passed ?? 0}/{result.securityHeaders?.total ?? 0}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">{localeText.security.missing}</p>
+                      <p className="text-sm font-semibold text-zinc-700">
+                        {(result.securityHeaders?.checks || []).filter((check: any) => !check.present).map((check: any) => check.label).join(' / ') || 'OK'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 grid grid-cols-1 gap-2 lg:grid-cols-2">
+                    {(result.securityHeaders?.checks || []).map((check: any) => (
+                      <div key={check.key} className={`rounded-2xl border px-4 py-3 ${check.present ? 'border-emerald-100 bg-emerald-50/40' : 'border-orange-100 bg-orange-50/50'}`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className={`text-xs font-semibold ${check.present ? 'text-emerald-700' : 'text-orange-700'}`}>{check.label}</p>
+                            <p className="mt-1 truncate text-[10px] text-zinc-500" title={check.value || check.recommendation}>
+                              {check.present ? check.value || 'enabled' : check.recommendation}
+                            </p>
+                          </div>
+                          <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${check.present ? 'bg-emerald-500' : 'bg-orange-400'}`} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 5: SSL */}
               <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
                 <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
                   <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">{localeText.ssl.step}</span>

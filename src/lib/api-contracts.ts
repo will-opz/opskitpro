@@ -85,6 +85,23 @@ export interface DiagnosticHttpSummary {
   is_https?: boolean
 }
 
+export interface DiagnosticSecurityHeaderCheck {
+  key: string
+  label: string
+  present: boolean
+  value?: string
+  severity: 'critical' | 'warning' | 'info'
+  recommendation: string
+}
+
+export interface DiagnosticSecurityHeadersSummary {
+  score: number
+  grade: string
+  passed: number
+  total: number
+  checks: DiagnosticSecurityHeaderCheck[]
+}
+
 export interface DiagnosticSslSummary {
   valid: boolean
   issuer: string
@@ -136,6 +153,7 @@ export interface DiagnosticSuccessResponse {
   isPrivate: boolean
   dns: DiagnosticDnsSummary
   http: DiagnosticHttpSummary
+  securityHeaders?: DiagnosticSecurityHeadersSummary
   ssl: DiagnosticSslSummary
   cdn: DiagnosticCdnSummary
   geo: DiagnosticGeoSummary

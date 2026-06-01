@@ -39,6 +39,84 @@ const isIpAddress = (value: string) => {
   return value.includes(':') && value.split(':').length >= 3 && /^[0-9a-fA-F:.]+$/.test(value)
 }
 
+const truncateHeaderValue = (value: string | null) => {
+  if (!value) return undefined
+  return value.length > 180 ? `${value.slice(0, 177)}...` : value
+}
+
+const buildSecurityHeadersSummary = (headers: Headers) => {
+  const hsts = headers.get('strict-transport-security')
+  const csp = headers.get('content-security-policy')
+  const xFrameOptions = headers.get('x-frame-options')
+  const xContentTypeOptions = headers.get('x-content-type-options')
+  const referrerPolicy = headers.get('referrer-policy')
+  const permissionsPolicy = headers.get('permissions-policy')
+
+  const checks = [
+    {
+      key: 'strict-transport-security',
+      label: 'HSTS',
+      present: Boolean(hsts),
+      value: truncateHeaderValue(hsts),
+      severity: 'critical' as const,
+      recommendation: 'Enable Strict-Transport-Security after confirming HTTPS is stable.',
+    },
+    {
+      key: 'content-security-policy',
+      label: 'Content-Security-Policy',
+      present: Boolean(csp),
+      value: truncateHeaderValue(csp),
+      severity: 'critical' as const,
+      recommendation: 'Add a Content-Security-Policy to reduce XSS and content injection risk.',
+    },
+    {
+      key: 'x-frame-options',
+      label: 'X-Frame-Options',
+      present: Boolean(xFrameOptions),
+      value: truncateHeaderValue(xFrameOptions),
+      severity: 'warning' as const,
+      recommendation: 'Set DENY or SAMEORIGIN unless the site must be embedded.',
+    },
+    {
+      key: 'x-content-type-options',
+      label: 'X-Content-Type-Options',
+      present: xContentTypeOptions?.toLowerCase() === 'nosniff',
+      value: truncateHeaderValue(xContentTypeOptions),
+      severity: 'warning' as const,
+      recommendation: 'Set X-Content-Type-Options: nosniff.',
+    },
+    {
+      key: 'referrer-policy',
+      label: 'Referrer-Policy',
+      present: Boolean(referrerPolicy),
+      value: truncateHeaderValue(referrerPolicy),
+      severity: 'info' as const,
+      recommendation: 'Set a Referrer-Policy such as strict-origin-when-cross-origin.',
+    },
+    {
+      key: 'permissions-policy',
+      label: 'Permissions-Policy',
+      present: Boolean(permissionsPolicy),
+      value: truncateHeaderValue(permissionsPolicy),
+      severity: 'info' as const,
+      recommendation: 'Limit browser features with Permissions-Policy.',
+    },
+  ]
+
+  const weights = { critical: 22, warning: 16, info: 12 }
+  const penalty = checks.reduce((sum, check) => sum + (check.present ? 0 : weights[check.severity]), 0)
+  const score = Math.max(0, Math.min(100, 100 - penalty))
+  const grade = score >= 90 ? 'A' : score >= 75 ? 'B' : score >= 55 ? 'C' : score >= 35 ? 'D' : 'F'
+
+  return {
+    score,
+    grade,
+    passed: checks.filter((check) => check.present).length,
+    total: checks.length,
+    checks,
+  }
+}
+
 export async function GET(request: NextRequest | Request) {
   const requestStartedAt = Date.now()
   const requestUrl = (request as Request | undefined)?.url
@@ -223,6 +301,7 @@ export async function GET(request: NextRequest | Request) {
     const ip = isActuallyIp ? domain : (allIps[0] || dnsMatch?.data?.Answer?.[0]?.data || domain)
     const serverHeader = httpRes.headers.get('server') || 'Unknown'
     const hstsEnabled = Boolean(httpRes.headers.get('strict-transport-security'))
+    const securityHeaders = buildSecurityHeadersSummary(httpRes.headers)
 
     // Enhanced CDN Logic
     let provider = 'Origin'
@@ -288,6 +367,7 @@ export async function GET(request: NextRequest | Request) {
       isPrivate: isPrivateIp,
       dns: { resolved_ip: ip, all_ips: allIps, ns: nsRecords, latency: `${dnsLatency}ms`, success: true, resolvers: dnsResults },
       http: { success: httpRes.ok, status_code: httpRes.status, latency: `${httpLatency}ms`, is_https: isHttps },
+      securityHeaders,
       ssl: { valid: certValid, issuer: sslIssuer, expiry: sslExpiry, grade: sslGrade, factors: sslFactors, tls_version: isHttps ? 'TLS' : 'HTTP', chain: certChain },
       cdn: { is_provider: isCdn, provider, server: serverHeader },
       geo,
