@@ -13,3 +13,5 @@
 7. [07_qrgen.md](./07_qrgen.md)
 8. [08_json.md](./08_json.md)
 9. [09_websocket.md](./09_websocket.md)
+10. [10_security-headers.md](./10_security-headers.md)
+11. [11_underestimating-git.md](./11_underestimating-git.md)

@@ -26,6 +26,26 @@ export default async function BlogPage() {
 
   const articleGroups = [
     {
+      id: 'ops-reflection',
+      title:
+        lang === 'ja'
+          ? '運用の振り返り'
+          : isZh
+            ? '运维复盘'
+            : lang === 'tw'
+              ? '維運復盤'
+              : 'Ops reflection',
+      subtitle:
+        lang === 'ja'
+          ? '過去の判断、ツールの変化、運用現場で残った原則を公開メモとして整理します。'
+          : isZh
+            ? '把过去的判断、工具演进和排障经验整理成可复用的公开笔记。'
+            : lang === 'tw'
+              ? '把過去的判斷、工具演進與排障經驗整理成可複用的公開筆記。'
+              : 'Reusable public notes on past decisions, tool shifts, and operations lessons.',
+      slugs: ['underestimating-git'],
+    },
+    {
       id: 'project-overview',
       title:
         lang === 'ja'
@@ -166,7 +186,7 @@ export default async function BlogPage() {
           </div>
         </div>
 
-        <div className="mb-14 grid gap-4 md:grid-cols-3">
+        <div className="mb-14 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {articleSeries.map((series) => (
             <a
               key={series.id}
@@ -196,7 +216,15 @@ export default async function BlogPage() {
                     {String(group.posts.length).padStart(2, '0')} {isJapanese ? '本' : isZh ? '篇' : lang === 'tw' ? '篇' : 'posts'}
                   </span>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                    {group.id === 'project-overview'
+                    {group.id === 'ops-reflection'
+                      ? isJapanese
+                        ? '振り返り'
+                        : isZh
+                          ? '复盘'
+                          : lang === 'tw'
+                            ? '復盤'
+                            : 'Reflection'
+                      : group.id === 'project-overview'
                       ? isJapanese
                         ? '概要'
                         : isZh
