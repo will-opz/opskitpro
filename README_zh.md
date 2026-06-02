@@ -98,6 +98,15 @@ npm run deploy
 - push 到 `main`：安装依赖、测试、构建并部署到 Cloudflare
 - 需要配置的 GitHub Secrets：`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`
 
+运行时环境变量：
+
+```bash
+OPSKITPRO_ADMIN_PASSWORD=
+OPSKITPRO_ADMIN_SECRET=
+```
+
+这些变量用于 `/tools` 导航页的单用户管理员登录。真实值请配置在 Cloudflare Worker 环境变量或 secret 中，不要提交到 Git。
+
 ---
 
 ## 仓库边界

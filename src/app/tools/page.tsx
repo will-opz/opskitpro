@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
-import ServicesClient from '../services/ServicesClient'
+import ToolsNavigatorClient from './ToolsNavigatorClient'
 
 export default async function ToolsPage() {
   const cookieStore = cookies()
@@ -12,7 +12,7 @@ export default async function ToolsPage() {
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <ServicesClient dict={dict} lang={lang} />
+      <ToolsNavigatorClient lang={lang} />
       <SiteFooter dict={dict} />
     </>
   )

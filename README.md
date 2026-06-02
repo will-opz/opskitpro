@@ -98,6 +98,15 @@ The repository also includes GitHub Actions CI/CD:
 - pushes to `main`: install, test, build, and deploy to Cloudflare
 - required GitHub secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`
 
+Runtime environment variables:
+
+```bash
+OPSKITPRO_ADMIN_PASSWORD=
+OPSKITPRO_ADMIN_SECRET=
+```
+
+These variables enable the single-user admin login for the `/tools` navigation editor. Keep real values in Cloudflare Worker environment variables or secrets, not in Git.
+
 ---
 
 ## Repository Boundary
