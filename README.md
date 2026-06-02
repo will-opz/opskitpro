@@ -1,38 +1,35 @@
-# OpsKitPro (Ops + Kit + Professional) — Industrial-Grade SRE Forensic Toolchain
+# OpsKitPro (Ops + Kit + Professional) — Lightweight SRE Diagnostic Toolbox
 
 [English](./README.md) | [简体中文](./README_zh.md)
 
-**OpsKitPro** is a minimalist, hardcore, and data-driven operations infrastructure built for SREs and Network Engineers. Designed for real-time forensics and high-precision diagnostics, it is optimized for the **Cloudflare Edge Runtime** to achieve near-zero latency worldwide.
+**OpsKitPro** is a lightweight, practical diagnostic toolbox for SREs, DevOps engineers, and developers who need quick browser-based checks during incidents and day-to-day troubleshooting. It focuses on fast website diagnostics, DNS/IP inspection, JSON/WebSocket utilities, and field notes distilled from real operations work.
 
 > [!IMPORTANT]
-> This project runs on **Cloudflare Workers** via [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare). The entire forensic engine is deployed on the edge, ensuring accurate global reachability testing.
+> The public repository contains the main site, tools, articles, and Cloudflare deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live in a separate private repository: `opskitpro-ops`.
 
 ---
 
-## 🏛️ Core Forensic Suite
+## Core Tool Suite
 
-1.  **🔍 Website Check (`/tools/website-check`)**
-    *   **Forensics**: Deep SSL/TLS audit, CDN edge detection (Cloudflare, Akamai, etc.), and health scoring.
-    *   **Intelligence**: Automated mitigation suggestions for 502/SSL errors.
-2.  **🌍 IP Lookup (`/tools/ip-lookup`)**
-    *   **Forensics**: BGP Autonomous System (ASN) sensing, Proxy/VPN detection, and geolocation matrix.
-    *   **Visualization**: Real-time HUD Radar Scanner for geographic targeting.
-3.  **📡 DNS Lookup (`/tools/dns-lookup`)**
-    *   **Forensics**: Multi-node (Cloudflare/Google) DOH resolution comparison.
-    *   **Auditing**: Full RDATA manifest support for A, MX, CNAME, TXT, and CAA records.
+- **Website Check** (`/tools/website-check`): HTTP status, SSL/TLS, DNS, CDN, headers, performance, and security header diagnostics.
+- **DNS Lookup** (`/tools/dns-lookup`): A / AAAA / CNAME / MX / NS / TXT / CAA lookup with multi-resolver comparison.
+- **IP Lookup** (`/tools/ip-lookup`): IP geolocation, network metadata, and structured fallback behavior.
+- **JSON Tools** (`/tools/json`): format, repair, diff, schema validation, extraction, and jq-style querying.
+- **WebSocket Tester** (`/tools/websocket`): connection testing, message history, templates, ping monitoring, and multi-session workflows.
+- **Utility Tools**: QR generation, password generation, time tools, encoding tools, and prompt builder.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 opskitpro.com (Main Site — Next.js 14 on Cloudflare Workers)
-├── /              Home — Hero + Forensic HUD
-├── /services      Service Matrix (45+ tools, 12 categories)
-├── /tools/        Forensic Suite (Website, IP, DNS)
-├── /blog          Technical Notes (SRE Intel & Tutorials)
-└── /api/          Edge Forensic API (Diagnostic & IP)
-
+├── /              Home and quick diagnostic entry
+├── /tools         Toolbox index
+├── /tools/*       Website, DNS, IP, JSON, WebSocket, and utility modules
+├── /blog          Engineering notes and operating reflections
+├── /services      Curated external service matrix
+└── /api           Edge diagnostic APIs
 ```
 
 ---
@@ -40,10 +37,10 @@ opskitpro.com (Main Site — Next.js 14 on Cloudflare Workers)
 ## 🧭 What’s in the site today
 
 - **Home**: multilingual landing page with a centered search action and quick entry into diagnostics.
-- **Services**: standardized tool matrix with one consistent card system, except for Matrix which keeps an independent identity.
-- **Tools**: website-check, IP lookup, DNS lookup, JSON, WebSocket, QR code, and password generation modules.
-- **Blog**: lightweight article cards on the main site; the full long-form notes are read on the same site.
-- **About**: a condensed project overview focused on operational design, readability, and the product direction.
+- **Tools**: website-check, DNS lookup, IP lookup, JSON, WebSocket, QR code, password generation, time, encode, and prompt-builder modules.
+- **Blog**: engineering notes about Cloudflare, troubleshooting, tool design, and operations experience.
+- **Services**: curated external service matrix for common DevOps/SRE workflows.
+- **About**: a condensed project overview focused on operational design, maintainability, and product direction.
 
 ---
 
@@ -58,6 +55,7 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 5. [DNS lookup: why multi-resolver cross-checking matters](https://opskitpro.com/blog/dns-lookup)
 6. [Service matrix standardization and the Cloudflare deployment path](https://opskitpro.com/blog/services-deployment)
 7. [Why OpsKitPro runs on Cloudflare Workers](https://opskitpro.com/blog/cloudflare-workers-deployment)
+8. [Looking back at SVN, Git, and the shift toward modern engineering workflows](https://opskitpro.com/blog/underestimating-git)
 
 > The articles are read directly on the main site. The homepage keeps localized titles, summaries, and entry points only.
 
@@ -70,8 +68,10 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 | **Framework** | [Next.js 14](https://nextjs.org/) (App Router + standalone build) |
 | **Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
 | **Runtime** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
-| **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) (Light/Premium UI) |
-| **Icons** | [Lucide React](https://lucide.dev/) (SRE Optimized Icons) |
+| **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
+| **Icons** | [Lucide React](https://lucide.dev/) |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
+| **CI/CD** | GitHub Actions → Cloudflare Workers |
 | **Knowledge Base** | [kb.opskitpro.com](https://kb.opskitpro.com) (Obsidian-authored knowledge base) |
 
 ---
@@ -92,6 +92,31 @@ npm run dev
 npm run deploy
 ```
 
+The repository also includes GitHub Actions CI/CD:
+
+- pull requests to `main`: install, test, and build
+- pushes to `main`: install, test, build, and deploy to Cloudflare
+- required GitHub secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`
+
+---
+
+## Repository Boundary
+
+This public repository intentionally contains only the product-facing project:
+
+- main website and tool code
+- public blog/Qiita article drafts
+- tests and CI/CD workflow
+- Cloudflare Worker configuration without secrets
+
+Private operations data is kept out of this repository. The private `opskitpro-ops` workspace contains:
+
+- Cloudflare/X analytics automation
+- generated daily reports and history snapshots
+- Qiita/X publishing helpers
+- local read-only ops dashboard
+- promotion planning and private backlog signals
+
 ---
 
 ## 📁 Knowledge Base
@@ -100,7 +125,7 @@ All technical field notes and tool guides are authored in Obsidian and published
 ---
 
 ## 📬 Contact / Intelligence
-- **Twitter / X**: [@deopsai](https://x.com/deopsai)
+- **Twitter / X**: [@OpsKitPro](https://x.com/OpsKitPro)
 - **Email**: [admin@opskitpro.com](mailto:admin@opskitpro.com)
 - **Status**: [Operational Matrix](https://opskitpro.com/services)
 
