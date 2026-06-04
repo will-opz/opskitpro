@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useAdminSession } from '@/components/AdminSessionProvider'
 import {
   Activity,
   Braces,
@@ -268,13 +269,11 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
   const labels = categoryLabels[lang] || categoryLabels.zh
   const searchParams = useSearchParams()
   const adminMode = searchParams.get('admin') === '1'
+  const { authenticated, openLogin, logout } = useAdminSession()
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<NavCategory | 'all' | 'pinned'>('pinned')
   const [customItems, setCustomItems] = useState<NavItem[]>([])
   const [storageReady, setStorageReady] = useState(false)
-  const [authenticated, setAuthenticated] = useState(false)
-  const [authConfigured, setAuthConfigured] = useState(true)
-  const [loginOpen, setLoginOpen] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<NavItem | null>(null)
 
@@ -287,14 +286,6 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
     } finally {
       setStorageReady(true)
     }
-
-    fetch('/api/admin/session')
-      .then((res) => res.json())
-      .then((data) => {
-        setAuthenticated(Boolean(data.authenticated))
-        setAuthConfigured(Boolean(data.configured))
-      })
-      .catch(() => setAuthConfigured(false))
   }, [])
 
   useEffect(() => {
@@ -333,11 +324,6 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
       return categoryMatches && queryMatches
     })
   }, [activeCategory, allItems, query])
-
-  const handleLogout = async () => {
-    await fetch('/api/admin/session', { method: 'DELETE' })
-    setAuthenticated(false)
-  }
 
   const openNewEditor = () => {
     setEditingItem(null)
@@ -395,13 +381,13 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
                     <Plus className="h-4 w-4" />
                     {t.add}
                   </button>
-                  <button type="button" onClick={handleLogout} className="ui-button-ghost rounded-xl border border-[var(--border-subtle)]">
+                  <button type="button" onClick={() => void logout()} className="ui-button-ghost rounded-xl border border-[var(--border-subtle)]">
                     <LogOut className="h-4 w-4" />
                     {t.logout}
                   </button>
                 </>
               ) : adminMode ? (
-                <button type="button" onClick={() => setLoginOpen(true)} className="ui-button-primary rounded-xl px-4 py-2.5">
+                <button type="button" onClick={() => openLogin('/tools?admin=1')} className="ui-button-primary rounded-xl px-4 py-2.5">
                   <Lock className="h-4 w-4" />
                   {t.login}
                 </button>
@@ -484,18 +470,6 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
           </div>
         )}
       </section>
-
-      {loginOpen && (
-        <LoginDialog
-          t={t}
-          configured={authConfigured}
-          onClose={() => setLoginOpen(false)}
-          onLogin={() => {
-            setAuthenticated(true)
-            setLoginOpen(false)
-          }}
-        />
-      )}
 
       {editorOpen && (
         <EditorDialog
@@ -596,74 +570,6 @@ function NavCard({
         </div>
       </div>
     </article>
-  )
-}
-
-function LoginDialog({
-  t,
-  configured,
-  onClose,
-  onLogin,
-}: {
-  t: Record<string, string>
-  configured: boolean
-  onClose: () => void
-  onLogin: () => void
-}) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError('')
-    setLoading(true)
-
-    const response = await fetch('/api/admin/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    })
-
-    setLoading(false)
-
-    if (response.ok) {
-      onLogin()
-      return
-    }
-
-    setError(response.status === 503 ? t.notConfigured : t.loginFailed)
-  }
-
-  return (
-    <Modal onClose={onClose}>
-      <form onSubmit={submit} className="w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-5 shadow-2xl">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-black">{t.loginTitle}</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{configured ? t.loginHelp : t.notConfigured}</p>
-          </div>
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <label className="block text-sm font-semibold">
-          {t.password}
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="mt-2 h-11 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 text-sm outline-none focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10"
-            autoFocus
-          />
-        </label>
-        {error && <p className="mt-3 text-sm font-semibold text-red-500">{error}</p>}
-        <div className="mt-5 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="ui-button-ghost border border-[var(--border-subtle)]">{t.cancel}</button>
-          <button type="submit" disabled={loading || !configured} className="ui-button-primary">{t.login}</button>
-        </div>
-      </form>
-    </Modal>
   )
 }
 

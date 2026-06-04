@@ -4,6 +4,7 @@ import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import Script from 'next/script'
+import { AdminSessionProvider } from '@/components/AdminSessionProvider'
 import './globals.css'
 
 const themeInitScript = `
@@ -117,7 +118,9 @@ export default async function RootLayout({
         <div className="glow" />
         <div className="bg-grid-pattern absolute inset-0 opacity-[0.03] pointer-events-none" />
         
-        {children}
+        <AdminSessionProvider lang={lang}>
+          {children}
+        </AdminSessionProvider>
       </body>
     </html>
   )

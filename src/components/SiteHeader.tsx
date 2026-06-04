@@ -10,14 +10,30 @@ import {
   FileText,
   Menu,
   X,
-  Fingerprint
+  Fingerprint,
+  CircleUserRound
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { useAdminSession } from '@/components/AdminSessionProvider'
 
 export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isAccountOpen, setIsAccountOpen] = useState(false)
   const pathname = usePathname()
+  const { authenticated, loading, openLogin, logout } = useAdminSession()
+  const loginLabel = {
+    zh: '登录',
+    tw: '登入',
+    en: 'Sign in',
+    ja: 'ログイン',
+  }[lang]
+  const accountCopy = {
+    zh: { admin: '管理员', dashboard: '管理后台', editTools: '编辑导航', logout: '退出登录' },
+    tw: { admin: '管理員', dashboard: '管理後台', editTools: '編輯導航', logout: '登出' },
+    en: { admin: 'Admin', dashboard: 'Dashboard', editTools: 'Edit navigation', logout: 'Sign out' },
+    ja: { admin: '管理者', dashboard: '管理画面', editTools: 'ナビを編集', logout: 'ログアウト' },
+  }[lang]
 
   const isActive = (path: string) => {
     const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, '') || '/'
@@ -62,6 +78,31 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           <ThemeToggle />
         </div>
 
+        <div className="relative ml-1">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => authenticated ? setIsAccountOpen((open) => !open) : openLogin('/admin')}
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] hover:-translate-y-0.5 hover:border-emerald-500/25 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)] disabled:opacity-50"
+            aria-expanded={authenticated ? isAccountOpen : undefined}
+          >
+            <CircleUserRound className="h-4 w-4" />
+            {authenticated ? accountCopy.admin : loginLabel}
+          </button>
+          {authenticated && isAccountOpen && (
+            <div className="ui-surface-elevated absolute right-0 top-[calc(100%+10px)] z-50 w-44 rounded-xl p-1.5 shadow-xl">
+              <Link href="/admin" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+                {accountCopy.dashboard}
+              </Link>
+              <Link href="/tools?admin=1" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+                {accountCopy.editTools}
+              </Link>
+              <button type="button" onClick={() => void logout()} className="mt-1 w-full border-t border-[var(--border-subtle)] px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-500/5">
+                {accountCopy.logout}
+              </button>
+            </div>
+          )}
+        </div>
         <Link href="https://github.com/will-opz/opskitpro" target="_blank" className="ml-1 flex items-center gap-2 text-[var(--text-muted)] hover:-translate-y-0.5 hover:text-[var(--text-primary)]">
           <Github className="w-5 h-5" />
         </Link>
@@ -71,6 +112,15 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
       </nav>
 
       <div className="relative z-50 flex items-center gap-2 md:hidden">
+        <button
+          type="button"
+          aria-label={loginLabel}
+          title={loginLabel}
+          onClick={() => authenticated ? setIsMenuOpen(true) : openLogin('/admin')}
+          className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)]"
+        >
+          <CircleUserRound className="h-5 w-5" />
+        </button>
         <ThemeToggle />
         <button 
           className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
@@ -103,6 +153,19 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
               <Link href={`/about`} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 <Fingerprint className="h-4 w-4" /> {dict.nav.about}
               </Link>
+              {authenticated && (
+                <>
+                  <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]">
+                    <CircleUserRound className="h-4 w-4" /> {accountCopy.dashboard}
+                  </Link>
+                  <Link href="/tools?admin=1" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+                    <TerminalSquare className="h-4 w-4" /> {accountCopy.editTools}
+                  </Link>
+                  <button type="button" onClick={() => void logout()} className="flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-red-500 hover:bg-red-500/5">
+                    <CircleUserRound className="h-4 w-4" /> {accountCopy.logout}
+                  </button>
+                </>
+              )}
 
               <div className="mt-2 flex items-center justify-between border-t border-[var(--border-subtle)] px-1 pt-3">
                 <LanguageToggle currentLang={lang} />

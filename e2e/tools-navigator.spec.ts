@@ -17,6 +17,7 @@ test('tools navigator searches default links', async ({ page }) => {
   await page.goto('/tools')
 
   await expect(page.getByRole('heading', { name: 'Tool Navigator' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in to edit' })).not.toBeVisible()
   await expect(page.getByRole('heading', { name: 'Website Check' })).toBeVisible()
 
@@ -24,6 +25,21 @@ test('tools navigator searches default links', async ({ page }) => {
 
   await expect(page.getByRole('searchbox')).toHaveValue('cloudflare')
   await expect(page.getByRole('heading', { name: 'Cloudflare Dashboard' })).toBeVisible()
+})
+
+test('global sign-in opens the shared admin dialog', async ({ page }) => {
+  await page.goto('/blog')
+  await page.getByRole('button', { name: 'Sign in' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Admin sign in' })).toBeVisible()
+  await expect(page.getByLabel('Admin password')).toBeVisible()
+})
+
+test('admin pages redirect unauthenticated visitors', async ({ page }) => {
+  await page.goto('/admin')
+
+  await expect(page).toHaveURL(/\/tools\?admin=1$/)
+  await expect(page.getByRole('heading', { name: 'Tool Navigator' })).toBeVisible()
 })
 
 test('single-user editor can add a custom local link', async ({ page }) => {
@@ -49,7 +65,7 @@ test('single-user editor can add a custom local link', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Sign in to edit' }).click()
   await page.getByLabel('Admin password').fill('test-password')
-  await page.locator('form').getByRole('button', { name: 'Sign in to edit' }).click()
+  await page.locator('form').getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('button', { name: 'Add link' })).toBeVisible()
   await page.getByRole('button', { name: 'Add link' }).click()
