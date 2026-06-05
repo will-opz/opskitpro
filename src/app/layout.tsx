@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
 import { cookies, headers } from 'next/headers'
 import { getDictionary } from '@/dictionaries'
-import { SiteHeader } from '@/components/SiteHeader'
-import { SiteFooter } from '@/components/SiteFooter'
-import Script from 'next/script'
 import { AdminSessionProvider } from '@/components/AdminSessionProvider'
 import './globals.css'
 

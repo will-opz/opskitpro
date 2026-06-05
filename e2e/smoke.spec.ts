@@ -92,15 +92,16 @@ test('home page exposes core navigation and tool entry points', async ({ page })
   await expect(page.getByRole('link', { name: /Knowledge Base/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Website Diagnostic/i })).toBeVisible()
   await expect(page.getByRole('link', { name: /IP Lookup/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /DNS Lookup/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open DNS lookup' })).toBeVisible()
 })
 
 test('services dashboard can search first-party tools', async ({ page }) => {
   await page.goto('/services')
 
-  await expect(page.getByRole('heading', { name: /OpsKitPro Dashboard/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Tool Navigator/i })).toBeVisible()
+  await page.getByRole('button', { name: 'All' }).click()
   await page.getByRole('searchbox').fill('encode')
-  await expect(page.getByRole('link', { name: /Encoding Toolkit/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Encode Tool/i })).toBeVisible()
 })
 
 test('json formatter beautifies valid JSON', async ({ page }) => {
