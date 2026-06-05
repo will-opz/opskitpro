@@ -21,12 +21,24 @@ function makeFetchStub() {
         ? input.toString()
         : (input as Request).url
 
+    if (url.includes('cloudflare-dns.com/dns-query?name=example.com&type=AAAA')) {
+      return jsonResponse({ Status: 0, Answer: [{ name: 'example.com', type: 28, TTL: 300, data: '2606:2800:220:1:248:1893:25c8:1946' }] })
+    }
+
     if (url.includes('cloudflare-dns.com/dns-query?name=example.com&type=A')) {
       return jsonResponse({ Status: 0, Answer: [{ name: 'example.com', type: 1, TTL: 300, data: '93.184.216.34' }] })
     }
 
+    if (url.includes('dns.google/resolve?name=example.com&type=AAAA')) {
+      return jsonResponse({ Status: 0, Answer: [{ name: 'example.com', type: 28, TTL: 300, data: '2606:2800:220:1:248:1893:25c8:1946' }] })
+    }
+
     if (url.includes('dns.google/resolve?name=example.com&type=A')) {
       return jsonResponse({ Status: 0, Answer: [{ name: 'example.com', type: 1, TTL: 300, data: '93.184.216.34' }] })
+    }
+
+    if (url.includes('dns.alidns.com/resolve?name=example.com&type=AAAA')) {
+      return jsonResponse({ Status: 0, Answer: [{ name: 'example.com', type: 28, TTL: 300, data: '2606:2800:220:1:248:1893:25c8:1946' }] })
     }
 
     if (url.includes('dns.alidns.com/resolve?name=example.com&type=A')) {
@@ -138,6 +150,23 @@ describe('API contract integration', () => {
       },
     })
     expect(body.dns.resolved_ip).toBe('93.184.216.34')
+    expect(body.dns.ipv4).toEqual(['93.184.216.34'])
+    expect(body.dns.ipv6).toEqual(['2606:2800:220:1:248:1893:25c8:1946'])
+    expect(body.dns.dual_stack).toBe(true)
+    expect(body.dns.resolvers).toHaveLength(3)
+    expect(body.dns.resolvers[0]).toMatchObject({
+      resolver: 'Cloudflare',
+      status: 'OK',
+      records: {
+        A: ['93.184.216.34'],
+        AAAA: ['2606:2800:220:1:248:1893:25c8:1946'],
+      },
+    })
+    expect(body.meta).toMatchObject({
+      cacheStatus: 'MISS',
+    })
+    expect(body.meta.coreMs).toBeTypeOf('number')
+    expect(body.meta.enrichmentMs).toBeTypeOf('number')
     expect(body.geo.country).toBe('United States')
   })
 

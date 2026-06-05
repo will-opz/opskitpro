@@ -67,6 +67,12 @@ export interface DiagnosticHealthResponse {
 export interface DiagnosticDnsResolverResult {
   resolver: string
   data: unknown
+  latencyMs?: number
+  status?: 'OK' | 'FAILED'
+  records?: {
+    A: string[]
+    AAAA: string[]
+  }
 }
 
 export interface DiagnosticDnsSummary {
@@ -74,6 +80,9 @@ export interface DiagnosticDnsSummary {
   latency: string
   success: boolean
   all_ips?: string[]
+  ipv4?: string[]
+  ipv6?: string[]
+  dual_stack?: boolean
   ns?: string[]
   resolvers?: DiagnosticDnsResolverResult[]
 }
@@ -141,7 +150,12 @@ export interface DiagnosticWhoisSummary {
 
 export interface DiagnosticMetaSummary {
   checkedAt: string
+  servedAt?: string
   totalMs: number
+  coreMs?: number
+  enrichmentMs?: number
+  cacheLookupMs?: number
+  cacheAgeSeconds?: number
   edgeColo: string
   cacheStatus?: 'HIT' | 'MISS'
 }

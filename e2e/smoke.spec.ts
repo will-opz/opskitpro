@@ -9,7 +9,16 @@ const diagnosticResult = {
     success: true,
     resolved_ip: '104.21.1.1',
     latency: '42ms',
-    resolvers: [{ resolver: 'Cloudflare', data: { Status: 0 } }],
+    ipv4: ['104.21.1.1'],
+    ipv6: ['2606:4700:3030::6815:101'],
+    dual_stack: true,
+    resolvers: [{
+      resolver: 'Cloudflare',
+      status: 'OK',
+      latencyMs: 42,
+      records: { A: ['104.21.1.1'], AAAA: ['2606:4700:3030::6815:101'] },
+      data: { Status: 0 },
+    }],
   },
   http: {
     success: true,
@@ -31,6 +40,13 @@ const diagnosticResult = {
     provider: 'Cloudflare',
     server: 'cloudflare',
   },
+  securityHeaders: {
+    score: 100,
+    grade: 'A',
+    passed: 6,
+    total: 6,
+    checks: [],
+  },
   geo: {
     country: 'United States',
     city: 'San Francisco',
@@ -44,6 +60,14 @@ const diagnosticResult = {
     status: 'active',
     expires: '2027-01-01',
     nameservers: ['ns1.example.com'],
+  },
+  meta: {
+    checkedAt: '2026-06-04T00:00:00.000Z',
+    totalMs: 320,
+    coreMs: 120,
+    enrichmentMs: 200,
+    cacheStatus: 'MISS',
+    edgeColo: 'NRT',
   },
 }
 
@@ -118,9 +142,11 @@ test('website diagnostics renders mocked result without external network depende
   await page.getByPlaceholder(/Enter domain/i).fill('opskitpro.com')
   await page.getByRole('button', { name: /Analyze/i }).click()
 
-  await expect(page.getByText('opskitpro.com', { exact: true })).toBeVisible()
+  await expect(page.getByPlaceholder(/Enter domain/i)).toHaveValue('opskitpro.com')
   await expect(page.getByText(/All Systems Green/i)).toBeVisible()
   await expect(page.getByText('Cloudflare').first()).toBeVisible()
+  await expect(page.getByText('Core Probe')).toBeVisible()
+  await expect(page.getByText('Full Check')).toBeVisible()
 })
 
 test('time converter parses a Unix timestamp', async ({ page }) => {

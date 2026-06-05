@@ -69,6 +69,9 @@ const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackE
       latency: data?.dns?.latency || '---',
       success: Boolean(data?.dns?.success),
       all_ips: data?.dns?.all_ips || [],
+      ipv4: data?.dns?.ipv4 || [],
+      ipv6: data?.dns?.ipv6 || [],
+      dual_stack: Boolean(data?.dns?.dual_stack),
       ns: data?.dns?.ns || [],
       resolvers: data?.dns?.resolvers || [],
     },
@@ -116,7 +119,12 @@ const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackE
     },
     meta: {
       checkedAt: data?.meta?.checkedAt || new Date().toISOString(),
+      servedAt: data?.meta?.servedAt,
       totalMs: Number(data?.meta?.totalMs || 0),
+      coreMs: Number(data?.meta?.coreMs || 0),
+      enrichmentMs: Number(data?.meta?.enrichmentMs || 0),
+      cacheLookupMs: Number(data?.meta?.cacheLookupMs || 0),
+      cacheAgeSeconds: Number(data?.meta?.cacheAgeSeconds || 0),
       edgeColo: data?.meta?.edgeColo || 'Unknown',
       cacheStatus: data?.meta?.cacheStatus,
     },
@@ -358,7 +366,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           },
           meta: {
             checkedAt: '確認時刻',
-            totalMs: '総時間',
+            totalMs: '完全診断',
+            coreMs: 'コア診断',
+            cacheAge: 'キャッシュ経過',
             edgeColo: 'Edge',
             cache: 'Cache',
           },
@@ -510,7 +520,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           },
           meta: {
             checkedAt: '检查时间',
-            totalMs: '总耗时',
+            totalMs: '完整检测',
+            coreMs: '核心探测',
+            cacheAge: '缓存时间',
             edgeColo: 'Edge',
             cache: '缓存',
           },
@@ -662,7 +674,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           },
           meta: {
             checkedAt: '檢查時間',
-            totalMs: '總耗時',
+            totalMs: '完整檢測',
+            coreMs: '核心探測',
+            cacheAge: '快取時間',
             edgeColo: 'Edge',
             cache: '快取',
           },
@@ -814,7 +828,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           },
           meta: {
             checkedAt: 'Checked At',
-            totalMs: 'Total Time',
+            totalMs: 'Full Check',
+            coreMs: 'Core Probe',
+            cacheAge: 'Cache Age',
             edgeColo: 'Edge',
             cache: 'Cache',
           },
@@ -851,8 +867,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     if ((data?.http?.status_code ?? 0) >= 400) score -= 20
     if (!data?.ssl?.valid) score -= 20
     if (parseLatencyMs(data?.dns?.latency ?? '0ms') > 300) score -= 10
+    if (parseLatencyMs(data?.http?.latency ?? '0ms') > 2000) score -= 10
+    else if (parseLatencyMs(data?.http?.latency ?? '0ms') > 1000) score -= 5
     if (!data?.cdn?.is_provider) score -= 5
-    if ((data?.securityHeaders?.score ?? 100) < 70) score -= 10
+    if ((data?.securityHeaders?.score ?? 100) < 35) score -= 20
+    else if ((data?.securityHeaders?.score ?? 100) < 70) score -= 10
     
     // Domain status penalty
     const status = data?.whois?.status?.toLowerCase() || ''
@@ -865,7 +884,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     if (!result) return []
 
     const score = calculateScore(result)
-    const verdict = result.http.success && !result.whois?.status?.toLowerCase().includes('hold')
+    const verdict = result.http.success
+      && (result.securityHeaders?.score ?? 100) >= 55
+      && !result.whois?.status?.toLowerCase().includes('hold')
       ? dict.tools.website_check.summary_good
       : dict.tools.website_check.summary_bad
 
@@ -1025,17 +1046,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     return [
       `# OpsKitPro Diagnostic Report: ${result.domain}`,
       '',
-      `- Verdict: ${result.http.success ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}`,
+      `- Verdict: ${result.http.success && (result.securityHeaders?.score ?? 100) >= 55 && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}`,
       `- Score: ${score}/100`,
       `- Checked at: ${result.meta?.checkedAt || new Date().toISOString()}`,
-      `- Total time: ${result.meta?.totalMs ? `${result.meta.totalMs}ms` : 'Unknown'}`,
+      `- Core probe: ${result.meta?.coreMs ? `${result.meta.coreMs}ms` : 'Unknown'}`,
+      `- Full check: ${result.meta?.totalMs ? `${result.meta.totalMs}ms` : 'Unknown'}`,
+      `- Cache: ${result.meta?.cacheStatus || 'MISS'}${result.meta?.cacheAgeSeconds ? ` (${result.meta.cacheAgeSeconds}s old)` : ''}`,
       `- Cloudflare Edge: ${result.meta?.edgeColo || 'Unknown'}`,
       '',
       '## DNS',
       `- Resolved IP: ${result.dns.resolved_ip}`,
       `- All IPs: ${result.dns.all_ips?.length ? result.dns.all_ips.join(', ') : result.dns.resolved_ip}`,
+      `- IPv4: ${result.dns.ipv4?.length ? result.dns.ipv4.join(', ') : 'None'}`,
+      `- IPv6: ${result.dns.ipv6?.length ? result.dns.ipv6.join(', ') : 'None'}`,
+      `- Dual stack: ${result.dns.dual_stack ? 'Yes' : 'No'}`,
       `- Nameservers: ${result.dns.ns?.length ? result.dns.ns.join(', ') : 'Unknown'}`,
       `- Lookup latency: ${result.dns.latency}`,
+      ...(result.dns.resolvers || []).map((resolver: any) => `- ${resolver.resolver}: ${resolver.status || 'Unknown'} · ${resolver.latencyMs ?? '—'}ms`),
       '',
       '## HTTP',
       `- Reachable: ${result.http.success ? 'Yes' : 'No'}`,
@@ -1639,8 +1666,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                  })()}
                  <div className="min-w-0">
                    <h2 className="text-[10px] font-semibold text-zinc-400 mb-1 tracking-[0.18em]">{localeText.summaryScore}</h2>
-                 <h1 className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${result.http.success && !result.whois?.status?.toLowerCase().includes('hold') ? 'text-zinc-900' : 'text-red-600'}`}>
-                     {result.http.success && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
+                  <h1 className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${result.http.success && (result.securityHeaders?.score ?? 100) >= 55 && !result.whois?.status?.toLowerCase().includes('hold') ? 'text-zinc-900' : 'text-red-600'}`}>
+                     {result.http.success && (result.securityHeaders?.score ?? 100) >= 55 && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
                    </h1>
                    <div className="mt-3 flex flex-wrap items-center gap-2">
                      <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-zinc-500">
@@ -1697,9 +1724,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
              ))}
            </div>
 
-           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
              {[
+               { label: localeText.meta.coreMs, value: result.meta?.coreMs ? `${result.meta.coreMs}ms` : '---' },
                { label: localeText.meta.totalMs, value: result.meta?.totalMs ? `${result.meta.totalMs}ms` : '---' },
+               {
+                 label: localeText.meta.cacheAge,
+                 value: result.meta?.cacheStatus === 'HIT'
+                   ? `${result.meta.cacheAgeSeconds || 0}s`
+                   : 'Live',
+               },
                { label: localeText.meta.edgeColo, value: result.meta?.edgeColo || 'Unknown' },
                { label: localeText.meta.cache, value: result.meta?.cacheStatus || 'MISS' },
                { label: localeText.meta.checkedAt, value: result.meta?.checkedAt ? new Date(result.meta.checkedAt).toLocaleString() : '---' },
@@ -1864,6 +1898,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                             ? result.dns.all_ips.join(' / ')
                             : result.dns.resolved_ip}
                      </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] ${
+                        result.dns.ipv4?.length ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-zinc-200 bg-zinc-50 text-zinc-400'
+                      }`}>
+                        IPv4 {result.dns.ipv4?.length ? `${result.dns.ipv4.length} OK` : 'None'}
+                      </span>
+                      <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] ${
+                        result.dns.ipv6?.length ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-zinc-200 bg-zinc-50 text-zinc-400'
+                      }`}>
+                        IPv6 {result.dns.ipv6?.length ? `${result.dns.ipv6.length} OK` : 'None'}
+                      </span>
+                      <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] ${
+                        result.dns.dual_stack ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-amber-200 bg-amber-50 text-amber-700'
+                      }`}>
+                        {result.dns.dual_stack ? 'Dual stack' : 'Single stack'}
+                      </span>
+                    </div>
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-4 mt-4 pt-4 border-t border-zinc-50/50">
                         {/* REGIONAL LOCAL NODES (Client Perspective) - Deduped by Map */}
                         {Object.values(localResolvers).map((node: any) => (
@@ -1884,9 +1935,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                         {/* GLOBAL CLOUD NODES (Worker Perspective) */}
                         <div className="w-full flex flex-wrap items-center gap-4 mt-1">
                           {result.dns.resolvers?.map((r: any) => (
-                           <div key={r.name} className="flex items-center gap-1.5" title={`${r.name}: ${r.status}`}>
+                           <div key={r.resolver} className="flex items-center gap-1.5" title={`${r.resolver}: ${r.status || 'Unknown'} · ${r.latencyMs ?? '—'}ms`}>
                               <div className={`w-1.5 h-1.5 rounded-full ${r.status === 'OK' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
-                              <span className="text-[9px] font-semibold text-zinc-400 tracking-[0.18em]">{r.name}</span>
+                              <span className="text-[9px] font-semibold text-zinc-400 tracking-[0.12em]">{r.resolver} {r.latencyMs ?? '—'}ms</span>
                            </div>
                         ))}
                         </div>

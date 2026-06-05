@@ -44,6 +44,11 @@ const truncateHeaderValue = (value: string | null) => {
   return value.length > 180 ? `${value.slice(0, 177)}...` : value
 }
 
+const extractDnsRecords = (data: any, type: 1 | 28) =>
+  (data?.Answer || [])
+    .filter((answer: any) => answer?.type === type && answer?.data)
+    .map((answer: any) => String(answer.data))
+
 const buildSecurityHeadersSummary = (headers: Headers) => {
   const hsts = headers.get('strict-transport-security')
   const csp = headers.get('content-security-policy')
@@ -134,9 +139,14 @@ export async function GET(request: NextRequest | Request) {
   const query = normalizeTargetInput(searchParams.get('domain') || searchParams.get('target') || '')
   const cfRay = request.headers.get('cf-ray') || ''
   const edgeColo = cfRay.includes('-') ? cfRay.split('-').pop()?.toUpperCase() || 'Unknown' : 'Unknown'
-  const buildMeta = (cacheStatus: 'HIT' | 'MISS' = 'MISS') => ({
+  const buildMeta = (
+    cacheStatus: 'HIT' | 'MISS' = 'MISS',
+    timings: { coreMs?: number; enrichmentMs?: number } = {},
+  ) => ({
     checkedAt: new Date().toISOString(),
+    servedAt: new Date().toISOString(),
     totalMs: Date.now() - requestStartedAt,
+    ...timings,
     edgeColo,
     cacheStatus,
   })
@@ -148,7 +158,7 @@ export async function GET(request: NextRequest | Request) {
     domain = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
   }
 
-  const cacheKey = `diag:${domain}`
+  const cacheKey = `diag:v2:${domain}`
   
   // --- Robust KV Discovery ---
   let KV: any = (process.env as any).KV;
@@ -167,7 +177,24 @@ export async function GET(request: NextRequest | Request) {
       const cached = await KV.get(cacheKey)
       if (cached) {
         const parsed = JSON.parse(cached)
-        return NextResponse.json({ ...parsed, meta: buildMeta('HIT') }, {
+        const servedAt = new Date().toISOString()
+        const checkedAt = parsed.meta?.checkedAt || servedAt
+        const checkedAtMs = new Date(checkedAt).getTime()
+        const cacheAgeSeconds = Number.isFinite(checkedAtMs)
+          ? Math.max(0, Math.floor((Date.now() - checkedAtMs) / 1000))
+          : 0
+        return NextResponse.json({
+          ...parsed,
+          meta: {
+            ...parsed.meta,
+            checkedAt,
+            servedAt,
+            cacheStatus: 'HIT',
+            cacheLookupMs: Date.now() - requestStartedAt,
+            cacheAgeSeconds,
+            edgeColo,
+          },
+        }, {
           headers: { 'X-Cache': 'HIT', 'Cache-Control': 'public, s-maxage=60' }
         })
       }
@@ -197,13 +224,33 @@ export async function GET(request: NextRequest | Request) {
       : (() => {
           const t0 = Date.now()
           return Promise.all(
-            dnsResolvers.map(r => 
-              fetch(r.url, { headers: r.headers, signal: AbortSignal.timeout(4000) })
-                .then(res => res.json())
-                .then(data => ({ resolver: r.name, data }))
-                .catch(() => ({ resolver: r.name, data: null }))
-            )
-          ).then(results => [results, Date.now() - t0] as [any, number])
+            dnsResolvers.map(async (r) => {
+              const resolverStartedAt = Date.now()
+              const [aData, aaaaData] = await Promise.all([
+                fetch(r.url, { headers: r.headers, signal: AbortSignal.timeout(3000) })
+                  .then(res => res.json())
+                  .catch(() => null),
+                fetch(r.url.replace('type=A', 'type=AAAA'), { headers: r.headers, signal: AbortSignal.timeout(3000) })
+                  .then(res => res.json())
+                  .catch(() => null),
+              ])
+              const ipv4 = extractDnsRecords(aData, 1)
+              const ipv6 = extractDnsRecords(aaaaData, 28)
+              return {
+                resolver: r.name,
+                data: aData,
+                latencyMs: Date.now() - resolverStartedAt,
+                status: aData || aaaaData ? 'OK' : 'FAILED',
+                records: { A: ipv4, AAAA: ipv6 },
+              }
+            })
+          ).then(results => {
+            const successfulLatencies = results
+              .filter(result => result.status === 'OK')
+              .map(result => result.latencyMs)
+            const fastestLatency = successfulLatencies.length > 0 ? Math.min(...successfulLatencies) : Date.now() - t0
+            return [results, fastestLatency] as [any, number]
+          })
         })()
 
     // 1b. NS Lookup
@@ -230,24 +277,24 @@ export async function GET(request: NextRequest | Request) {
     })()
 
     const sslPromise = (isActuallyIp || !isHttps) ? Promise.resolve(null) : fetch(`https://crt.sh/?q=${domain}&output=json`, {
-      signal: AbortSignal.timeout(6000)
+      signal: AbortSignal.timeout(3000)
     }).then(r => r.json()).catch(() => null)
 
     const whoisPromise = (() => {
       const rdapUrl = isActuallyIp ? `https://rdap.org/ip/${domain}` : `https://rdap.org/domain/${domain}`
       return fetch(rdapUrl, {
         headers: { 'Accept': 'application/rdap+json', 'User-Agent': 'OpsKitPro-Diagnostic/1.0' },
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(3000)
       }).then(r => r.ok ? r.json() : null).catch(() => null)
     })()
 
-    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency], crtData, rdapData, nsData] = await Promise.all([
+    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency], nsData] = await Promise.all([
       dnsPromise,
       httpPromise,
-      sslPromise,
-      whoisPromise,
       nsPromise
     ])
+    const coreMs = Date.now() - requestStartedAt
+    const [crtData, rdapData] = await Promise.all([sslPromise, whoisPromise])
 
     const httpRes = httpResRaw as Response | { error: true; message: string }
     let whoisInfo: any = {
@@ -284,15 +331,15 @@ export async function GET(request: NextRequest | Request) {
     }
 
     const dnsMatch = dnsResults.find((r: any) => r.data?.Answer)
+    const ipv4: string[] = isActuallyIp && !domain.includes(':')
+      ? [domain]
+      : Array.from(new Set<string>(dnsResults.flatMap((result: any) => result.records?.A || [])))
+    const ipv6: string[] = isActuallyIp && domain.includes(':')
+      ? [domain]
+      : Array.from(new Set<string>(dnsResults.flatMap((result: any) => result.records?.AAAA || [])))
     const allIps: string[] = isActuallyIp
       ? [domain]
-      : Array.from(new Set<string>(
-          dnsResults.flatMap((r: any) =>
-            (r.data?.Answer || [])
-              .filter((answer: any) => answer?.type === 1 || answer?.type === 28)
-              .map((answer: any) => String(answer.data))
-          )
-        ))
+      : [...ipv4, ...ipv6]
     const nsRecords: string[] = Array.from(new Set<string>(
       (nsData?.Answer || [])
         .filter((answer: any) => answer?.data)
@@ -323,7 +370,7 @@ export async function GET(request: NextRequest | Request) {
       geo = { country: 'Local Network', isp: 'Private Intranet', city: 'Intranet', asn: 'N/A' }
     } else {
       try {
-        const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(4000) }).then(r => r.json())
+        const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, { signal: AbortSignal.timeout(1800) }).then(r => r.json())
         geo = {
           country: geoRes.country_name || 'Unknown',
           city: geoRes.city || 'Unknown',
@@ -365,14 +412,27 @@ export async function GET(request: NextRequest | Request) {
       status: 'success',
       isActuallyIp,
       isPrivate: isPrivateIp,
-      dns: { resolved_ip: ip, all_ips: allIps, ns: nsRecords, latency: `${dnsLatency}ms`, success: true, resolvers: dnsResults },
+      dns: {
+        resolved_ip: ip,
+        all_ips: allIps,
+        ipv4,
+        ipv6,
+        dual_stack: ipv4.length > 0 && ipv6.length > 0,
+        ns: nsRecords,
+        latency: `${dnsLatency}ms`,
+        success: allIps.length > 0,
+        resolvers: dnsResults,
+      },
       http: { success: httpRes.ok, status_code: httpRes.status, latency: `${httpLatency}ms`, is_https: isHttps },
       securityHeaders,
       ssl: { valid: certValid, issuer: sslIssuer, expiry: sslExpiry, grade: sslGrade, factors: sslFactors, tls_version: isHttps ? 'TLS' : 'HTTP', chain: certChain },
       cdn: { is_provider: isCdn, provider, server: serverHeader },
       geo,
       whois: whoisInfo,
-      meta: buildMeta('MISS'),
+      meta: buildMeta('MISS', {
+        coreMs,
+        enrichmentMs: Math.max(0, Date.now() - requestStartedAt - coreMs),
+      }),
     }
 
     if (KV) await KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 3600 }).catch(() => null)
