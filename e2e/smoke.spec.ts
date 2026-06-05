@@ -148,6 +148,8 @@ test('website diagnostics renders mocked result without external network depende
   await expect(page.getByText('Cloudflare').first()).toBeVisible()
   await expect(page.getByText('Core Probe')).toBeVisible()
   await expect(page.getByText('Full Check')).toBeVisible()
+  await expect(page.getByText('Key Findings')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Copy Summary/i })).toBeVisible()
 })
 
 test('time converter parses a Unix timestamp', async ({ page }) => {

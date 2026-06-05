@@ -209,6 +209,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const [error, setError] = useState<string | null>(null)
   const [showJson, setShowJson] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [copiedAction, setCopiedAction] = useState<string | null>(null)
   const [showGradeInfo, setShowGradeInfo] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [localResolvers, setLocalResolvers] = useState<Record<string, any>>({})
@@ -337,6 +338,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copy: 'コピー',
           },
           actions: {
+            copySummary: '要約をコピー',
             copyJson: 'JSON をコピー',
             copyMarkdown: 'Markdown をコピー',
             exportJson: 'JSON 保存',
@@ -348,6 +350,24 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             history: '履歴 / 固定',
             noHistory: 'まだ履歴はありません',
             remove: '削除',
+          },
+          report: {
+            keyFindings: '重要な所見',
+            nextSteps: '次の対応',
+            ok: '正常',
+            warning: '注意',
+            error: '要対応',
+            noIssues: '重大な問題は見つかりませんでした。',
+            dnsOk: 'DNS は応答しています。',
+            dnsBad: 'DNS 解決に失敗しています。NS と A/AAAA レコードを確認してください。',
+            httpOk: 'HTTP は到達可能です。',
+            httpBad: 'HTTP 到達性に問題があります。源站、Firewall、CDN 設定を確認してください。',
+            sslOk: 'SSL 証明書は有効です。',
+            sslBad: 'SSL 証明書またはチェーンに問題があります。',
+            headersOk: '主要なセキュリティヘッダーは揃っています。',
+            headersBad: '不足しているセキュリティヘッダーがあります。',
+            cdnOk: 'CDN/Edge 経由で配信されています。',
+            cdnBad: 'CDN が検出されません。必要に応じて Edge 配信を検討してください。',
           },
           batch: {
             title: '一括診断',
@@ -491,6 +511,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copy: '复制',
           },
           actions: {
+            copySummary: '复制摘要',
             copyJson: '复制 JSON',
             copyMarkdown: '复制 Markdown',
             exportJson: '导出 JSON',
@@ -502,6 +523,24 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             history: '历史 / 收藏',
             noHistory: '暂无历史记录',
             remove: '删除',
+          },
+          report: {
+            keyFindings: '关键发现',
+            nextSteps: '下一步建议',
+            ok: '正常',
+            warning: '警告',
+            error: '异常',
+            noIssues: '未发现明显高优先级问题。',
+            dnsOk: 'DNS 已正常响应。',
+            dnsBad: 'DNS 解析失败，请检查 NS 与 A/AAAA 记录。',
+            httpOk: 'HTTP 可正常访问。',
+            httpBad: 'HTTP 可达性异常，请检查源站、防火墙或 CDN 配置。',
+            sslOk: 'SSL 证书有效。',
+            sslBad: 'SSL 证书或证书链存在问题。',
+            headersOk: '关键安全响应头已启用。',
+            headersBad: '存在缺失的安全响应头。',
+            cdnOk: '检测到 CDN / Edge 分发。',
+            cdnBad: '未检测到 CDN，如需降低延迟可考虑启用边缘分发。',
           },
           batch: {
             title: '批量诊断',
@@ -645,6 +684,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copy: '複製',
           },
           actions: {
+            copySummary: '複製摘要',
             copyJson: '複製 JSON',
             copyMarkdown: '複製 Markdown',
             exportJson: '匯出 JSON',
@@ -656,6 +696,24 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             history: '歷史 / 收藏',
             noHistory: '暫無歷史紀錄',
             remove: '刪除',
+          },
+          report: {
+            keyFindings: '關鍵發現',
+            nextSteps: '下一步建議',
+            ok: '正常',
+            warning: '警告',
+            error: '異常',
+            noIssues: '未發現明顯高優先級問題。',
+            dnsOk: 'DNS 已正常回應。',
+            dnsBad: 'DNS 解析失敗，請檢查 NS 與 A/AAAA 記錄。',
+            httpOk: 'HTTP 可正常訪問。',
+            httpBad: 'HTTP 可達性異常，請檢查源站、防火牆或 CDN 設定。',
+            sslOk: 'SSL 憑證有效。',
+            sslBad: 'SSL 憑證或憑證鏈存在問題。',
+            headersOk: '關鍵安全回應標頭已啟用。',
+            headersBad: '存在缺失的安全回應標頭。',
+            cdnOk: '檢測到 CDN / Edge 分發。',
+            cdnBad: '未檢測到 CDN，如需降低延遲可考慮啟用邊緣分發。',
           },
           batch: {
             title: '批次診斷',
@@ -799,6 +857,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             copy: 'COPY_AUDIT',
           },
           actions: {
+            copySummary: 'Copy Summary',
             copyJson: 'Copy JSON',
             copyMarkdown: 'Copy Markdown',
             exportJson: 'Export JSON',
@@ -810,6 +869,24 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             history: 'History / Pins',
             noHistory: 'No recent targets yet',
             remove: 'Remove',
+          },
+          report: {
+            keyFindings: 'Key Findings',
+            nextSteps: 'Next Steps',
+            ok: 'OK',
+            warning: 'Warning',
+            error: 'Action Needed',
+            noIssues: 'No high-priority issues detected.',
+            dnsOk: 'DNS is responding.',
+            dnsBad: 'DNS resolution failed. Check NS and A/AAAA records.',
+            httpOk: 'HTTP is reachable.',
+            httpBad: 'HTTP reachability failed. Check origin, firewall, or CDN settings.',
+            sslOk: 'SSL certificate is valid.',
+            sslBad: 'SSL certificate or chain has a problem.',
+            headersOk: 'Core security headers are enabled.',
+            headersBad: 'Some security headers are missing.',
+            cdnOk: 'CDN / Edge delivery detected.',
+            cdnBad: 'No CDN detected. Consider edge delivery if latency matters.',
           },
           batch: {
             title: 'Batch Check',
@@ -1043,6 +1120,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     if (!result) return
     const score = calculateScore(result)
     const advice = getAdvice(result)
+    const findings = buildDiagnosticFindings(result)
     return [
       `# OpsKitPro Diagnostic Report: ${result.domain}`,
       '',
@@ -1053,6 +1131,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       `- Full check: ${result.meta?.totalMs ? `${result.meta.totalMs}ms` : 'Unknown'}`,
       `- Cache: ${result.meta?.cacheStatus || 'MISS'}${result.meta?.cacheAgeSeconds ? ` (${result.meta.cacheAgeSeconds}s old)` : ''}`,
       `- Cloudflare Edge: ${result.meta?.edgeColo || 'Unknown'}`,
+      '',
+      '## Key Findings',
+      ...findings.map((item) => `- ${item.status.toUpperCase()} ${item.title}: ${item.description}`),
       '',
       '## DNS',
       `- Resolved IP: ${result.dns.resolved_ip}`,
@@ -1091,6 +1172,79 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     ].join('\n')
   }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, result])
 
+  const buildDiagnosticFindings = (data: any) => {
+    const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
+    const findings = [
+      {
+        key: 'dns',
+        title: localeText.dns.title,
+        status: data.dns.success ? 'ok' : 'error',
+        description: data.dns.success ? localeText.report.dnsOk : localeText.report.dnsBad,
+      },
+      {
+        key: 'http',
+        title: localeText.http.title,
+        status: data.http.success ? 'ok' : 'error',
+        description: data.http.success ? `${localeText.report.httpOk} HTTP ${data.http.status_code || 'ERR'} · ${data.http.latency}` : localeText.report.httpBad,
+      },
+      {
+        key: 'ssl',
+        title: localeText.ssl.title,
+        status: data.ssl.valid ? 'ok' : 'error',
+        description: data.ssl.valid ? `${localeText.report.sslOk} ${data.ssl.grade || 'OK'} · ${data.ssl.expiry}` : localeText.report.sslBad,
+      },
+      {
+        key: 'headers',
+        title: localeText.security.title,
+        status: (data.securityHeaders?.score ?? 0) >= 75 ? 'ok' : (data.securityHeaders?.score ?? 0) >= 55 ? 'warning' : 'error',
+        description: missingHeaders.length
+          ? `${localeText.report.headersBad} ${missingHeaders.map((check: any) => check.label).join(' / ')}`
+          : localeText.report.headersOk,
+      },
+      {
+        key: 'cdn',
+        title: localeText.cdn.title,
+        status: data.cdn.is_provider ? 'ok' : 'warning',
+        description: data.cdn.is_provider ? `${localeText.report.cdnOk} ${data.cdn.provider}` : localeText.report.cdnBad,
+      },
+    ]
+
+    return findings
+  }
+
+  const buildPlainSummary = useCallback(() => {
+    if (!result) return ''
+    const score = calculateScore(result)
+    const verdict = result.http.success
+      && (result.securityHeaders?.score ?? 100) >= 55
+      && !result.whois?.status?.toLowerCase().includes('hold')
+      ? dict.tools.website_check.summary_good
+      : dict.tools.website_check.summary_bad
+    const findings = buildDiagnosticFindings(result)
+    const advice = getAdvice(result)
+
+    return [
+      `OpsKitPro Website Check: ${result.domain}`,
+      `Verdict: ${verdict}`,
+      `Score: ${score}/100`,
+      `DNS: ${result.dns.success ? 'OK' : 'FAIL'} · ${result.dns.latency} · ${result.dns.resolved_ip}`,
+      `HTTP: ${result.http.success ? 'OK' : 'FAIL'} · ${result.http.status_code || 'ERR'} · ${result.http.latency}`,
+      `SSL: ${result.ssl.valid ? 'OK' : 'FAIL'} · ${result.ssl.grade || 'Unknown'} · ${result.ssl.expiry}`,
+      `Security Headers: ${result.securityHeaders?.passed ?? 0}/${result.securityHeaders?.total ?? 0} · ${result.securityHeaders?.grade || 'Unknown'}`,
+      `CDN: ${result.cdn.is_provider ? result.cdn.provider : 'Not detected'}`,
+      `Checked at: ${result.meta?.checkedAt || new Date().toISOString()}`,
+      '',
+      'Key findings:',
+      ...findings
+        .filter((item) => item.status !== 'ok')
+        .map((item) => `- ${item.title}: ${item.description}`),
+      findings.every((item) => item.status === 'ok') ? `- ${localeText.report.noIssues}` : '',
+      '',
+      'Next steps:',
+      ...advice.map((item) => `- ${item}`),
+    ].filter(Boolean).join('\n')
+  }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, localeText, result])
+
   const writeClipboard = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value)
@@ -1109,20 +1263,29 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     }
   }
 
-  const copyText = async (value: string) => {
+  const copyText = async (value: string, action: string = 'default') => {
     await writeClipboard(value)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopiedAction(action)
+    setTimeout(() => {
+      setCopied(false)
+      setCopiedAction(null)
+    }, 2000)
   }
 
   const copyResult = () => {
     if (!result) return
-    copyText(JSON.stringify(result, null, 2))
+    copyText(JSON.stringify(result, null, 2), 'json')
   }
 
   const copyMarkdown = () => {
     const report = buildMarkdownReport()
-    if (report) copyText(report)
+    if (report) copyText(report, 'markdown')
+  }
+
+  const copySummary = () => {
+    const summary = buildPlainSummary()
+    if (summary) copyText(summary, 'summary')
   }
 
   const downloadText = (filename: string, content: string, type: string) => {
@@ -1377,6 +1540,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   // Memoize advice to avoid computing it twice in render
   const adviceList = useMemo(() => (result ? getAdvice(result) : []), [result])
+  const diagnosticFindings = useMemo(() => (result ? buildDiagnosticFindings(result) : []), [result])
   const displayedTarget = result?.domain || domain || 'opskitpro.com'
 
   return (
@@ -1682,13 +1846,17 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                  </div>
               </div>
               <div className="relative z-10 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
+                <button onClick={copySummary} className="flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-900">
+                  {copiedAction === 'summary' ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                  {copiedAction === 'summary' ? localeText.copy.copied : localeText.actions.copySummary}
+                </button>
                 <button onClick={copyMarkdown} className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
-                  {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <FileText className="h-3 w-3" />}
-                  {copied ? localeText.copy.copied : localeText.actions.copyMarkdown}
+                  {copiedAction === 'markdown' ? <Check className="h-3 w-3 text-emerald-500" /> : <FileText className="h-3 w-3" />}
+                  {copiedAction === 'markdown' ? localeText.copy.copied : localeText.actions.copyMarkdown}
                 </button>
                 <button onClick={copyResult} className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
-                  {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                  {localeText.actions.copyJson}
+                  {copiedAction === 'json' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                  {copiedAction === 'json' ? localeText.copy.copied : localeText.actions.copyJson}
                 </button>
                 <button onClick={copyShareLink} className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
                   {shareCopied ? <Check className="h-3 w-3 text-emerald-500" /> : <Link2 className="h-3 w-3" />}
@@ -1754,6 +1922,67 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                <Download className="h-4 w-4" />
                {localeText.actions.exportJson}
              </button>
+           </div>
+
+           <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr,0.85fr]">
+             <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-5 shadow-sm sm:p-6">
+               <div className="mb-4 flex items-center justify-between gap-3">
+                 <div>
+                   <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{localeText.report.keyFindings}</p>
+                   <h3 className="mt-1 text-lg font-semibold text-zinc-900">{displayedTarget}</h3>
+                 </div>
+                 <div className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${
+                   diagnosticFindings.some((item: any) => item.status === 'error')
+                     ? 'border-red-100 bg-red-50 text-red-600'
+                     : diagnosticFindings.some((item: any) => item.status === 'warning')
+                     ? 'border-orange-100 bg-orange-50 text-orange-600'
+                     : 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                 }`}>
+                   {diagnosticFindings.some((item: any) => item.status === 'error')
+                     ? localeText.report.error
+                     : diagnosticFindings.some((item: any) => item.status === 'warning')
+                     ? localeText.report.warning
+                     : localeText.report.ok}
+                 </div>
+               </div>
+               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                 {diagnosticFindings.map((item: any) => (
+                   <div key={item.key} className={`rounded-2xl border px-4 py-3 ${
+                     item.status === 'ok'
+                       ? 'border-emerald-100 bg-emerald-50/40'
+                       : item.status === 'warning'
+                       ? 'border-orange-100 bg-orange-50/50'
+                       : 'border-red-100 bg-red-50/60'
+                   }`}>
+                     <div className="flex items-start gap-3">
+                       <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                         item.status === 'ok' ? 'bg-emerald-500' : item.status === 'warning' ? 'bg-orange-400' : 'bg-red-500'
+                       }`} />
+                       <div className="min-w-0">
+                         <p className={`text-xs font-semibold ${
+                           item.status === 'ok' ? 'text-emerald-700' : item.status === 'warning' ? 'text-orange-700' : 'text-red-700'
+                         }`}>
+                           {item.title}
+                         </p>
+                         <p className="mt-1 text-xs leading-5 text-zinc-600">{item.description}</p>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </section>
+
+             <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-5 shadow-sm sm:p-6">
+               <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{localeText.report.nextSteps}</p>
+               <div className="mt-4 space-y-3">
+                 {adviceList.slice(0, 3).map((advice, index) => (
+                   <div key={index} className="flex gap-3 rounded-2xl border border-zinc-100 bg-zinc-50/80 px-4 py-3">
+                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+                     <p className="text-xs leading-5 text-zinc-700">{advice}</p>
+                   </div>
+                 ))}
+               </div>
+             </section>
            </div>
 
            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 rounded-3xl sm:rounded-full border border-zinc-100 bg-white/70 px-4 py-3 sm:py-2 shadow-sm backdrop-blur-md">
