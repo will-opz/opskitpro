@@ -246,6 +246,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           heroModeLabel: 'SRE 向け統合診断',
           analyzing: '診断中',
           errorTitle: '診断エラー',
+          fault: {
+            likelyCause: '想定原因',
+            evidence: '根拠',
+            nextAction: '次の対応',
+            retry: '再診断',
+            copy: '障害要約をコピー',
+            dnsTitle: 'DNS 解決エラー',
+            dnsCause: 'NS または A/AAAA レコードが正しく解決できていない可能性があります。',
+            timeoutTitle: '接続タイムアウト',
+            timeoutCause: 'オリジン、Firewall、CDN 経路のどこかで応答が止まっている可能性があります。',
+            cloudflareTitle: 'Cloudflare / Origin エラー',
+            cloudflareCause: 'Cloudflare からオリジンへ到達できていない、または Origin DNS が不正な可能性があります。',
+            sslTitle: 'SSL / TLS エラー',
+            sslCause: '証明書、SNI、証明書チェーン、TLS 設定に問題がある可能性があります。',
+            genericTitle: '到達性エラー',
+            genericCause: 'ネットワーク、オリジン、HTTP 設定のいずれかで診断が失敗しました。',
+          },
           loading: {
             title: '診断フロー',
             headline: '進行中',
@@ -435,6 +452,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           heroModeLabel: '面向 SRE 的统一诊断',
           analyzing: '诊断中',
           errorTitle: '诊断错误',
+          fault: {
+            likelyCause: '可能原因',
+            evidence: '证据',
+            nextAction: '下一步动作',
+            retry: '重新检测',
+            copy: '复制故障摘要',
+            dnsTitle: 'DNS 解析异常',
+            dnsCause: 'NS 或 A/AAAA 记录可能未正确解析。',
+            timeoutTitle: '连接超时',
+            timeoutCause: '源站、防火墙或 CDN 链路中可能存在响应阻塞。',
+            cloudflareTitle: 'Cloudflare / 源站异常',
+            cloudflareCause: 'Cloudflare 可能无法访问源站，或 Origin DNS 配置异常。',
+            sslTitle: 'SSL / TLS 异常',
+            sslCause: '证书、SNI、证书链或 TLS 配置可能存在问题。',
+            genericTitle: '可达性异常',
+            genericCause: '网络、源站或 HTTP 配置导致诊断失败。',
+          },
           loading: {
             title: '诊断流程',
             headline: '进行中',
@@ -624,6 +658,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           heroModeLabel: '面向 SRE 的統一診斷',
           analyzing: '診斷中',
           errorTitle: '診斷錯誤',
+          fault: {
+            likelyCause: '可能原因',
+            evidence: '證據',
+            nextAction: '下一步動作',
+            retry: '重新檢測',
+            copy: '複製故障摘要',
+            dnsTitle: 'DNS 解析異常',
+            dnsCause: 'NS 或 A/AAAA 記錄可能未正確解析。',
+            timeoutTitle: '連線逾時',
+            timeoutCause: '源站、防火牆或 CDN 鏈路中可能存在回應阻塞。',
+            cloudflareTitle: 'Cloudflare / 源站異常',
+            cloudflareCause: 'Cloudflare 可能無法訪問源站，或 Origin DNS 設定異常。',
+            sslTitle: 'SSL / TLS 異常',
+            sslCause: '憑證、SNI、憑證鏈或 TLS 設定可能存在問題。',
+            genericTitle: '可達性異常',
+            genericCause: '網路、源站或 HTTP 設定導致診斷失敗。',
+          },
           loading: {
             title: '診斷流程',
             headline: '進行中',
@@ -813,6 +864,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           heroModeLabel: 'Unified Diagnostics for SREs',
           analyzing: 'ANALYZING',
           errorTitle: 'SYSTEM_FAULT_DETECTED',
+          fault: {
+            likelyCause: 'Likely Cause',
+            evidence: 'Evidence',
+            nextAction: 'Next Action',
+            retry: 'Retry Check',
+            copy: 'Copy Fault Summary',
+            dnsTitle: 'DNS Resolution Fault',
+            dnsCause: 'NS or A/AAAA records may not be resolving correctly.',
+            timeoutTitle: 'Connection Timeout',
+            timeoutCause: 'The origin, firewall, or CDN path may be blocking the response.',
+            cloudflareTitle: 'Cloudflare / Origin Fault',
+            cloudflareCause: 'Cloudflare may not be able to reach the origin, or Origin DNS is misconfigured.',
+            sslTitle: 'SSL / TLS Fault',
+            sslCause: 'Certificate, SNI, chain, or TLS settings may be invalid.',
+            genericTitle: 'Reachability Fault',
+            genericCause: 'Network, origin, or HTTP configuration caused the diagnostic to fail.',
+          },
           loading: {
             title: 'Diagnostic Flow',
             headline: 'In Progress',
@@ -1342,6 +1410,45 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     }
   }
 
+  const buildFaultGuide = useCallback((message: string, data?: any) => {
+    const normalized = `${message || ''} ${data?.http?.status_code || ''}`.toLowerCase()
+    const faultCopy = localeText.fault
+    let title = faultCopy.genericTitle
+    let cause = faultCopy.genericCause
+
+    if (/nxdomain|enotfound|dns|name_not_resolved/.test(normalized) || data?.dns?.success === false) {
+      title = faultCopy.dnsTitle
+      cause = faultCopy.dnsCause
+    } else if (/530|origin dns|cloudflare/.test(normalized) || data?.http?.status_code === 530) {
+      title = faultCopy.cloudflareTitle
+      cause = faultCopy.cloudflareCause
+    } else if (/ssl|tls|cert|certificate|handshake/.test(normalized)) {
+      title = faultCopy.sslTitle
+      cause = faultCopy.sslCause
+    } else if (/timeout|abort|aborted|timed out|fetch failed|network/.test(normalized)) {
+      title = faultCopy.timeoutTitle
+      cause = faultCopy.timeoutCause
+    }
+
+    const evidence = [
+      `Target: ${data?.domain || result?.domain || domain || 'opskitpro.com'}`,
+      `Error: ${message || data?.error || 'Unknown error'}`,
+      data?.dns?.latency ? `DNS latency: ${data.dns.latency}` : '',
+      data?.dns?.resolved_ip ? `Resolved IP: ${data.dns.resolved_ip}` : '',
+      data?.http?.status_code ? `HTTP status: ${data.http.status_code}` : '',
+      data?.meta?.checkedAt ? `Checked at: ${data.meta.checkedAt}` : '',
+    ].filter(Boolean)
+
+    const nextAction = getAdvice(data || {
+      http: { success: false, status_code: 0 },
+      ssl: { valid: true, factors: [] },
+      securityHeaders: { score: 100, checks: [] },
+      cdn: { is_provider: true },
+    }).slice(0, 3)
+
+    return { title, cause, evidence, nextAction }
+  }, [domain, localeText.fault, result])
+
   const buildPlainSummary = useCallback(() => {
     if (!result) return ''
     const score = calculateScore(result)
@@ -1421,6 +1528,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const copySummary = () => {
     const summary = buildPlainSummary()
     if (summary) copyText(summary, 'summary')
+  }
+
+  const copyFaultSummary = () => {
+    if (!error) return
+    const guide = buildFaultGuide(error, result)
+    copyText([
+      `OpsKitPro Website Check Fault: ${result?.domain || domain || 'opskitpro.com'}`,
+      '',
+      'Likely Cause:',
+      guide.cause,
+      '',
+      'Evidence:',
+      ...guide.evidence.map((item: string) => `- ${item}`),
+      '',
+      'Next Action:',
+      ...guide.nextAction.map((item: string) => `- ${item}`),
+    ].join('\n'), 'fault')
   }
 
   const downloadText = (filename: string, content: string, type: string) => {
@@ -1676,6 +1800,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   // Memoize advice to avoid computing it twice in render
   const adviceList = useMemo(() => (result ? getAdvice(result) : []), [result])
   const diagnosticFindings = useMemo(() => (result ? buildDiagnosticFindings(result) : []), [result])
+  const faultGuide = useMemo(() => (error ? buildFaultGuide(error, result) : null), [buildFaultGuide, error, result])
   const displayedTarget = result?.domain || domain || 'opskitpro.com'
 
   return (
@@ -1926,12 +2051,54 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       )}
 
       {/* Error State */}
-      {error && !loading && (
-        <div className="max-w-2xl mx-auto p-10 bg-red-50 border border-red-100 rounded-[2.5rem] text-red-600 flex items-start gap-6 animate-in fade-in slide-in-from-top-4">
-           <AlertCircle className="w-10 h-10 shrink-0" />
-           <div>
-               <h3 className="text-xl font-semibold tracking-tight mb-2">{localeText.errorTitle}</h3>
-               <p className="text-sm opacity-80 leading-relaxed">{error}</p>
+      {error && !loading && faultGuide && (
+        <div className="mx-auto max-w-4xl rounded-[2.5rem] border border-red-100 bg-red-50/80 p-6 text-red-700 shadow-sm animate-in fade-in slide-in-from-top-4 sm:p-8">
+           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-red-100 bg-white text-red-500 shadow-sm">
+               <AlertCircle className="h-6 w-6" />
+             </div>
+             <div className="min-w-0 flex-1">
+               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                 <div>
+                   <p className="text-[10px] font-semibold tracking-[0.18em] text-red-400">{localeText.errorTitle}</p>
+                   <h3 className="mt-1 text-xl font-semibold tracking-tight text-red-700">{faultGuide.title}</h3>
+                 </div>
+                 <div className="flex flex-wrap gap-2">
+                   <button onClick={() => runDiagnostic(result?.domain || domain, true)} className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-4 py-2 text-[10px] font-semibold tracking-[0.14em] text-red-600 transition-colors hover:bg-red-50">
+                     <Activity className="h-3.5 w-3.5" />
+                     {localeText.fault.retry}
+                   </button>
+                   <button onClick={copyFaultSummary} className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-4 py-2 text-[10px] font-semibold tracking-[0.14em] text-red-600 transition-colors hover:bg-red-50">
+                     {copiedAction === 'fault' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                     {copiedAction === 'fault' ? localeText.copy.copied : localeText.fault.copy}
+                   </button>
+                 </div>
+               </div>
+
+               <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr,1.1fr]">
+                 <div className="rounded-2xl border border-red-100 bg-white/80 p-4">
+                   <p className="text-[10px] font-semibold tracking-[0.16em] text-red-400">{localeText.fault.likelyCause}</p>
+                   <p className="mt-2 text-sm leading-6 text-zinc-800">{faultGuide.cause}</p>
+                 </div>
+                 <div className="rounded-2xl border border-red-100 bg-white/80 p-4">
+                   <p className="text-[10px] font-semibold tracking-[0.16em] text-red-400">{localeText.fault.evidence}</p>
+                   <div className="mt-2 space-y-1.5">
+                     {faultGuide.evidence.map((item: string) => (
+                       <p key={item} className="break-all text-xs leading-5 text-zinc-700">- {item}</p>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+
+               <div className="mt-3 rounded-2xl border border-red-100 bg-white/80 p-4">
+                 <p className="text-[10px] font-semibold tracking-[0.16em] text-red-400">{localeText.fault.nextAction}</p>
+                 <div className="mt-2 space-y-2">
+                   {faultGuide.nextAction.map((item: string) => (
+                     <p key={item} className="text-xs leading-5 text-zinc-700">- {item}</p>
+                   ))}
+                 </div>
+               </div>
+             </div>
            </div>
         </div>
       )}

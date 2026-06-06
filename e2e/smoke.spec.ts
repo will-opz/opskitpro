@@ -192,6 +192,61 @@ test('website diagnostics renders mocked result without external network depende
   await expect(page.getByText('https://opskitpro.com/').first()).toBeVisible()
 })
 
+test('website diagnostics explains partial failures with next actions', async ({ page }) => {
+  await page.addInitScript(() => {
+    ;(window as any).__copiedText = ''
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (value: string) => {
+          ;(window as any).__copiedText = value
+        },
+      },
+    })
+  })
+
+  await page.route('**/api/diagnostic**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        domain: 'down.example.com',
+        status: 'partial_error',
+        isActuallyIp: false,
+        isPrivate: false,
+        error: 'fetch failed',
+        dns: {
+          resolved_ip: '203.0.113.10',
+          latency: '44ms',
+          success: true,
+          all_ips: ['203.0.113.10'],
+          ipv4: ['203.0.113.10'],
+          ipv6: [],
+          dual_stack: false,
+          ns: ['ns1.example.com'],
+        },
+        meta: {
+          checkedAt: '2026-06-04T00:00:00.000Z',
+          totalMs: 900,
+          cacheStatus: 'MISS',
+          edgeColo: 'NRT',
+        },
+      }),
+    }),
+  )
+
+  await page.goto('/tools/website-check')
+  await page.getByPlaceholder(/Enter domain/i).fill('down.example.com')
+  await page.getByRole('button', { name: /Analyze/i }).click()
+
+  await expect(page.getByText('Connection Timeout')).toBeVisible()
+  await expect(page.getByText('Likely Cause')).toBeVisible()
+  await expect(page.getByText('Next Action')).toBeVisible()
+  await page.getByRole('button', { name: /Copy Fault Summary/i }).click()
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Likely Cause:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Evidence:')
+})
+
 test('time converter parses a Unix timestamp', async ({ page }) => {
   await page.goto('/tools/time')
 
