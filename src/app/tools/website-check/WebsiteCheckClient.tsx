@@ -73,6 +73,15 @@ const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackE
       ipv6: data?.dns?.ipv6 || [],
       dual_stack: Boolean(data?.dns?.dual_stack),
       ns: data?.dns?.ns || [],
+      records: {
+        A: data?.dns?.records?.A || data?.dns?.ipv4 || [],
+        AAAA: data?.dns?.records?.AAAA || data?.dns?.ipv6 || [],
+        CNAME: data?.dns?.records?.CNAME || [],
+        MX: data?.dns?.records?.MX || [],
+        TXT: data?.dns?.records?.TXT || [],
+        CAA: data?.dns?.records?.CAA || [],
+        SOA: data?.dns?.records?.SOA || [],
+      },
       resolvers: data?.dns?.resolvers || [],
     },
     http: {
@@ -80,6 +89,10 @@ const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackE
       status_code: data?.http?.status_code ?? 0,
       latency: data?.http?.latency || '---',
       is_https: Boolean(data?.http?.is_https),
+      final_url: data?.http?.final_url || '',
+      redirect_chain: data?.http?.redirect_chain || [],
+      redirect_count: Number(data?.http?.redirect_count || 0),
+      redirect_warning: data?.http?.redirect_warning,
     },
     securityHeaders: {
       score: Number(data?.securityHeaders?.score ?? 0),
@@ -282,6 +295,17 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             nameservers: 'ネームサーバー',
             unknown: '不明',
             restricted: '制限あり',
+            recordOverview: 'DNS レコード全覧',
+            noRecords: '該当レコードなし',
+            recordNotes: {
+              A: 'IPv4 の到達先です。',
+              AAAA: 'IPv6 の到達先です。',
+              CNAME: '別名転送。チェーンが長いと遅延要因になります。',
+              MX: 'メール配送用。Web 表示には直接影響しません。',
+              TXT: 'SPF/DKIM や所有権確認で使われます。',
+              CAA: '証明書を発行できる CA を制限します。',
+              SOA: 'DNS ゾーンの権威情報です。',
+            },
           },
           http: {
             step: '03',
@@ -292,6 +316,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             responseTime: '応答速度',
             success: '正常',
             failure: '到達不可',
+            redirects: 'リダイレクトチェーン',
+            finalUrl: '最終 URL',
+            noRedirects: 'リダイレクトなし',
+            redirectHint: 'HTTP から HTTPS、www 有無、ループを確認できます。',
+            redirectWarning: '注意',
           },
           security: {
             step: '04',
@@ -455,6 +484,17 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             nameservers: '名称服务器',
             unknown: '未知',
             restricted: '受限',
+            recordOverview: 'DNS 记录全览',
+            noRecords: '暂无记录',
+            recordNotes: {
+              A: 'IPv4 访问入口。',
+              AAAA: 'IPv6 访问入口。',
+              CNAME: '别名跳转，链路过长可能增加解析耗时。',
+              MX: '邮件投递使用，不直接影响网站访问。',
+              TXT: '常用于 SPF/DKIM 或站点所有权验证。',
+              CAA: '限制哪些 CA 可以签发证书。',
+              SOA: 'DNS Zone 的权威信息。',
+            },
           },
           http: {
             step: '03',
@@ -465,6 +505,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             responseTime: '响应速度',
             success: '正常',
             failure: '不可达',
+            redirects: '重定向链',
+            finalUrl: '最终 URL',
+            noRedirects: '无重定向',
+            redirectHint: '用于检查 HTTP 到 HTTPS、www 规范化与循环跳转。',
+            redirectWarning: '注意',
           },
           security: {
             step: '04',
@@ -628,6 +673,17 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             nameservers: '名稱伺服器',
             unknown: '未知',
             restricted: '受限',
+            recordOverview: 'DNS 記錄全覽',
+            noRecords: '暫無記錄',
+            recordNotes: {
+              A: 'IPv4 訪問入口。',
+              AAAA: 'IPv6 訪問入口。',
+              CNAME: '別名跳轉，鏈路過長可能增加解析耗時。',
+              MX: '郵件投遞使用，不直接影響網站訪問。',
+              TXT: '常用於 SPF/DKIM 或站點所有權驗證。',
+              CAA: '限制哪些 CA 可以簽發憑證。',
+              SOA: 'DNS Zone 的權威資訊。',
+            },
           },
           http: {
             step: '03',
@@ -638,6 +694,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             responseTime: '回應速度',
             success: '正常',
             failure: '無法連線',
+            redirects: '重定向鏈',
+            finalUrl: '最終 URL',
+            noRedirects: '無重定向',
+            redirectHint: '用於檢查 HTTP 到 HTTPS、www 正規化與循環跳轉。',
+            redirectWarning: '注意',
           },
           security: {
             step: '04',
@@ -801,6 +862,17 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             nameservers: 'Nameservers',
             unknown: 'Unknown',
             restricted: 'CORS_RESTRICTED',
+            recordOverview: 'DNS Records',
+            noRecords: 'No records found',
+            recordNotes: {
+              A: 'IPv4 entry points.',
+              AAAA: 'IPv6 entry points.',
+              CNAME: 'Alias chain. Long chains can add lookup latency.',
+              MX: 'Mail routing. It does not directly affect website reachability.',
+              TXT: 'Used for SPF/DKIM and ownership verification.',
+              CAA: 'Limits which CAs can issue certificates.',
+              SOA: 'Authority data for the DNS zone.',
+            },
           },
           http: {
             step: '03',
@@ -811,6 +883,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
             responseTime: 'Response Time',
             success: 'NOMINAL',
             failure: 'UNREACHABLE',
+            redirects: 'Redirect Chain',
+            finalUrl: 'Final URL',
+            noRedirects: 'No redirects',
+            redirectHint: 'Checks HTTP to HTTPS, www normalization, and redirect loops.',
+            redirectWarning: 'Warning',
           },
           security: {
             step: '04',
@@ -1143,6 +1220,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       `- Dual stack: ${result.dns.dual_stack ? 'Yes' : 'No'}`,
       `- Nameservers: ${result.dns.ns?.length ? result.dns.ns.join(', ') : 'Unknown'}`,
       `- Lookup latency: ${result.dns.latency}`,
+      `- CNAME: ${result.dns.records?.CNAME?.length ? result.dns.records.CNAME.join(', ') : 'None'}`,
+      `- MX: ${result.dns.records?.MX?.length ? result.dns.records.MX.join(', ') : 'None'}`,
+      `- TXT: ${result.dns.records?.TXT?.length ? `${result.dns.records.TXT.length} record(s)` : 'None'}`,
+      `- CAA: ${result.dns.records?.CAA?.length ? result.dns.records.CAA.join(', ') : 'None'}`,
+      `- SOA: ${result.dns.records?.SOA?.length ? result.dns.records.SOA.join(', ') : 'None'}`,
       ...(result.dns.resolvers || []).map((resolver: any) => `- ${resolver.resolver}: ${resolver.status || 'Unknown'} · ${resolver.latencyMs ?? '—'}ms`),
       '',
       '## HTTP',
@@ -1150,6 +1232,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       `- Status: ${result.http.status_code || 'Error'}`,
       `- Protocol: ${result.http.is_https ? 'HTTPS' : 'HTTP/TCP'}`,
       `- Response time: ${result.http.latency}`,
+      `- Final URL: ${result.http.final_url || 'Unknown'}`,
+      `- Redirects: ${result.http.redirect_count ?? 0}${result.http.redirect_warning ? ` (${result.http.redirect_warning})` : ''}`,
+      ...(result.http.redirect_chain || []).map((hop: any, index: number) => `- Hop ${index + 1}: ${hop.status} ${hop.url}${hop.location ? ` -> ${hop.location}` : ''}`),
       '',
       '## Security Headers',
       `- Grade: ${result.securityHeaders?.grade || 'Unknown'}`,
@@ -1212,6 +1297,51 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     return findings
   }
 
+  const buildTicketSummarySections = (data: any, findings: ReturnType<typeof buildDiagnosticFindings>, advice: string[]) => {
+    const criticalFindings = findings.filter((item) => item.status === 'error')
+    const warningFindings = findings.filter((item) => item.status === 'warning')
+    const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
+    const redirectCount = data.http.redirect_count ?? 0
+
+    const impact = criticalFindings.length > 0
+      ? 'User-facing availability or trust may be affected.'
+      : warningFindings.length > 0
+      ? 'Service is reachable, but configuration risk or performance drift exists.'
+      : 'No immediate user impact detected.'
+
+    let suspectedCause = 'No obvious fault. Continue normal monitoring.'
+    if (!data.dns.success) {
+      suspectedCause = 'DNS resolution failure or missing A/AAAA records.'
+    } else if (!data.http.success) {
+      suspectedCause = `HTTP reachability issue${data.http.status_code ? `, status ${data.http.status_code}` : ''}.`
+    } else if (data.http.redirect_warning) {
+      suspectedCause = data.http.redirect_warning
+    } else if (!data.ssl.valid) {
+      suspectedCause = 'Invalid, expired, or incomplete SSL certificate chain.'
+    } else if (missingHeaders.length > 0) {
+      suspectedCause = `Security header hardening gap: ${missingHeaders.map((check: any) => check.label).join(', ')}.`
+    } else if (!data.cdn.is_provider) {
+      suspectedCause = 'Direct origin delivery; CDN/Edge layer not detected.'
+    }
+
+    const evidence = [
+      `DNS: ${data.dns.success ? 'OK' : 'FAIL'} · ${data.dns.latency} · ${data.dns.resolved_ip}`,
+      `DNS Records: A ${data.dns.records?.A?.length || 0}, AAAA ${data.dns.records?.AAAA?.length || 0}, CNAME ${data.dns.records?.CNAME?.length || 0}, MX ${data.dns.records?.MX?.length || 0}, TXT ${data.dns.records?.TXT?.length || 0}, CAA ${data.dns.records?.CAA?.length || 0}`,
+      `HTTP: ${data.http.success ? 'OK' : 'FAIL'} · ${data.http.status_code || 'ERR'} · ${data.http.latency}`,
+      `Redirects: ${redirectCount} · final ${data.http.final_url || 'Unknown'}`,
+      `SSL: ${data.ssl.valid ? 'OK' : 'FAIL'} · ${data.ssl.grade || 'Unknown'} · expires ${data.ssl.expiry}`,
+      `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || 'Unknown'}`,
+      `CDN: ${data.cdn.is_provider ? data.cdn.provider : 'Not detected'} · server ${data.cdn.server || 'Unknown'}`,
+    ]
+
+    return {
+      impact,
+      suspectedCause,
+      evidence,
+      nextAction: advice.length ? advice : [localeText.report.noIssues],
+    }
+  }
+
   const buildPlainSummary = useCallback(() => {
     if (!result) return ''
     const score = calculateScore(result)
@@ -1222,26 +1352,31 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       : dict.tools.website_check.summary_bad
     const findings = buildDiagnosticFindings(result)
     const advice = getAdvice(result)
+    const ticket = buildTicketSummarySections(result, findings, advice)
+    const notableFindings = findings
+      .filter((item) => item.status !== 'ok')
+      .map((item) => `- ${item.title}: ${item.description}`)
 
     return [
       `OpsKitPro Website Check: ${result.domain}`,
       `Verdict: ${verdict}`,
       `Score: ${score}/100`,
-      `DNS: ${result.dns.success ? 'OK' : 'FAIL'} · ${result.dns.latency} · ${result.dns.resolved_ip}`,
-      `HTTP: ${result.http.success ? 'OK' : 'FAIL'} · ${result.http.status_code || 'ERR'} · ${result.http.latency}`,
-      `SSL: ${result.ssl.valid ? 'OK' : 'FAIL'} · ${result.ssl.grade || 'Unknown'} · ${result.ssl.expiry}`,
-      `Security Headers: ${result.securityHeaders?.passed ?? 0}/${result.securityHeaders?.total ?? 0} · ${result.securityHeaders?.grade || 'Unknown'}`,
-      `CDN: ${result.cdn.is_provider ? result.cdn.provider : 'Not detected'}`,
       `Checked at: ${result.meta?.checkedAt || new Date().toISOString()}`,
       '',
-      'Key findings:',
-      ...findings
-        .filter((item) => item.status !== 'ok')
-        .map((item) => `- ${item.title}: ${item.description}`),
-      findings.every((item) => item.status === 'ok') ? `- ${localeText.report.noIssues}` : '',
+      'Impact:',
+      ticket.impact,
       '',
-      'Next steps:',
-      ...advice.map((item) => `- ${item}`),
+      'Suspected Cause:',
+      ticket.suspectedCause,
+      '',
+      'Evidence:',
+      ...ticket.evidence.map((item) => `- ${item}`),
+      '',
+      'Key Findings:',
+      ...(notableFindings.length ? notableFindings : [`- ${localeText.report.noIssues}`]),
+      '',
+      'Next Action:',
+      ...ticket.nextAction.map((item) => `- ${item}`),
     ].filter(Boolean).join('\n')
   }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, localeText, result])
 
@@ -2189,6 +2324,45 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                         }
                     </div>
                   </div>
+                  <details className="col-span-2 lg:col-span-4 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 group">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        <h4 className="truncate text-[10px] font-semibold tracking-[0.18em] text-zinc-500">{localeText.dns.recordOverview}</h4>
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                      {(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'CAA', 'SOA'] as const).map((recordType) => {
+                        const values = result.dns.records?.[recordType] || []
+                        return (
+                          <div key={recordType} className="rounded-2xl border border-white bg-white/90 px-4 py-3 shadow-sm">
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                              <p className="text-xs font-semibold text-zinc-900">{recordType}</p>
+                              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                                values.length ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-400'
+                              }`}>
+                                {values.length}
+                              </span>
+                            </div>
+                            <p className="mb-3 text-[10px] leading-4 text-zinc-500">{localeText.dns.recordNotes[recordType]}</p>
+                            <div className="space-y-1.5">
+                              {values.length ? values.slice(0, 8).map((value: string) => (
+                                <p key={value} className="rounded-lg bg-zinc-50 px-2.5 py-1.5 font-mono text-[10px] leading-4 text-zinc-700 break-all">
+                                  {value}
+                                </p>
+                              )) : (
+                                <p className="rounded-lg bg-zinc-50 px-2.5 py-1.5 text-[10px] font-semibold text-zinc-400">{localeText.dns.noRecords}</p>
+                              )}
+                              {values.length > 8 && (
+                                <p className="text-[10px] font-semibold text-zinc-400">+{values.length - 8}</p>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </details>
                 </div>
               </div>
 
@@ -2224,6 +2398,53 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                       <Zap className="w-3 h-3 text-emerald-500" /> {result.http.latency}
                      </p>
                   </div>
+                  <details className="col-span-2 lg:col-span-4 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 group">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Link2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        <div className="min-w-0">
+                          <h4 className="truncate text-[10px] font-semibold tracking-[0.18em] text-zinc-500">{localeText.http.redirects}</h4>
+                          <p className="mt-1 truncate text-[10px] text-zinc-400">
+                            {(result.http.redirect_count ?? 0) > 0 ? `${result.http.redirect_count} hop(s)` : localeText.http.noRedirects}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="mt-4 space-y-3">
+                      <p className="text-[10px] leading-4 text-zinc-500">{localeText.http.redirectHint}</p>
+                      {result.http.redirect_warning && (
+                        <div className="flex items-start gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2 text-[10px] text-orange-700">
+                          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          <span><span className="font-semibold">{localeText.http.redirectWarning}:</span> {result.http.redirect_warning}</span>
+                        </div>
+                      )}
+                      <div className="rounded-2xl border border-white bg-white/90 p-3 shadow-sm">
+                        <p className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-zinc-400">{localeText.http.finalUrl}</p>
+                        <p className="break-all font-mono text-[10px] leading-4 text-zinc-700">{result.http.final_url || 'Unknown'}</p>
+                      </div>
+                      <div className="space-y-2">
+                        {(result.http.redirect_chain || []).length ? (result.http.redirect_chain || []).map((hop: any, index: number) => (
+                          <div key={`${hop.url}-${index}`} className="rounded-2xl border border-white bg-white/90 px-3 py-2 shadow-sm">
+                            <div className="mb-1 flex items-center gap-2">
+                              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                                hop.status >= 300 && hop.status < 400 ? 'bg-orange-50 text-orange-700' : hop.status < 400 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                              }`}>
+                                {hop.status}
+                              </span>
+                              <span className="text-[9px] font-semibold tracking-[0.14em] text-zinc-400">HOP {index + 1}</span>
+                            </div>
+                            <p className="break-all font-mono text-[10px] leading-4 text-zinc-700">{hop.url}</p>
+                            {hop.location && (
+                              <p className="mt-1 break-all font-mono text-[10px] leading-4 text-zinc-400">→ {hop.location}</p>
+                            )}
+                          </div>
+                        )) : (
+                          <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-zinc-400">{localeText.http.noRedirects}</p>
+                        )}
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
 

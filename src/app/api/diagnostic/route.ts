@@ -44,10 +44,78 @@ const truncateHeaderValue = (value: string | null) => {
   return value.length > 180 ? `${value.slice(0, 177)}...` : value
 }
 
-const extractDnsRecords = (data: any, type: 1 | 28) =>
+const dnsTypeCodes = {
+  A: 1,
+  NS: 2,
+  CNAME: 5,
+  SOA: 6,
+  MX: 15,
+  TXT: 16,
+  AAAA: 28,
+  CAA: 257,
+} as const
+
+const extractDnsRecordsByType = (data: any, type: number): string[] =>
   (data?.Answer || [])
     .filter((answer: any) => answer?.type === type && answer?.data)
     .map((answer: any) => String(answer.data))
+
+const extractDnsRecords = (data: any, type: 1 | 28) => extractDnsRecordsByType(data, type)
+
+const normalizeDnsRecordValue = (type: keyof typeof dnsTypeCodes, value: string) => {
+  if (type === 'CNAME' || type === 'NS') return value.replace(/\.$/, '')
+  return value
+}
+
+const fetchDnsJson = async (domain: string, type: keyof typeof dnsTypeCodes, timeoutMs = 4000) =>
+  fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=${type}`, {
+    headers: { accept: 'application/dns-json' },
+    signal: AbortSignal.timeout(timeoutMs),
+  })
+    .then((response) => response.json())
+    .catch(() => null)
+
+const redirectStatuses = new Set([301, 302, 303, 307, 308])
+
+const traceRedirects = async (startUrl: string, maxHops = 6) => {
+  const chain: Array<{ url: string; status: number; location?: string }> = []
+  const seen = new Set<string>()
+  let currentUrl = startUrl
+  let warning: string | undefined
+
+  for (let hop = 0; hop <= maxHops; hop += 1) {
+    if (seen.has(currentUrl)) {
+      warning = 'Redirect loop detected.'
+      break
+    }
+    seen.add(currentUrl)
+
+    const response = await fetch(currentUrl, {
+      method: 'GET',
+      redirect: 'manual',
+      headers: { 'User-Agent': 'OpsKitPro-Diagnostic/1.0' },
+      signal: AbortSignal.timeout(5000),
+    })
+    const location = response.headers.get('location') || undefined
+    chain.push({ url: currentUrl, status: response.status, location })
+
+    if (!location || !redirectStatuses.has(response.status)) break
+    if (hop === maxHops) {
+      warning = 'Too many redirects.'
+      break
+    }
+
+    currentUrl = new URL(location, currentUrl).toString()
+  }
+
+  return {
+    chain,
+    finalUrl: chain.length ? chain[chain.length - 1].url : startUrl,
+    warning,
+  }
+}
+
+type RedirectTrace = Awaited<ReturnType<typeof traceRedirects>>
 
 const buildSecurityHeadersSummary = (headers: Headers) => {
   const hsts = headers.get('strict-transport-security')
@@ -253,27 +321,41 @@ export async function GET(request: NextRequest | Request) {
           })
         })()
 
-    // 1b. NS Lookup
-    const nsPromise = isActuallyIp ? Promise.resolve(null) : fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=NS`, {
-      headers: { 'accept': 'application/dns-json' },
-      signal: AbortSignal.timeout(4000)
-    }).then(r => r.json()).catch(() => null)
+    // 1b. DNS record overview from a stable edge resolver.
+    const dnsRecordTypes = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'CAA', 'SOA', 'NS'] as const
+    const recordsPromise = isActuallyIp
+      ? Promise.resolve(null)
+      : Promise.all(
+          dnsRecordTypes.map(async (type) => {
+            const data = await fetchDnsJson(domain, type)
+            const records = extractDnsRecordsByType(data, dnsTypeCodes[type])
+              .map((value) => normalizeDnsRecordValue(type, value))
+            return [type, Array.from(new Set(records))] as const
+          }),
+        ).then((entries) => Object.fromEntries(entries) as Record<typeof dnsRecordTypes[number], string[]>)
 
     // HTTP, SSL, and WHOIS Promises
     const ipHost = isActuallyIp && domain.includes(':') ? `[${domain}]` : domain
     const targetUrl = query.startsWith('http') ? query : (isActuallyIp ? `http://${ipHost}` : `https://${domain}`)
     const isHttps = targetUrl.startsWith('https')
 
-    const httpPromise = (() => {
+    const httpPromise: Promise<[Response | { error: true; message: string }, number, RedirectTrace | undefined]> = (() => {
       const t0 = Date.now()
-      return fetch(targetUrl, {
-        method: 'GET',
-        redirect: 'follow',
-        headers: { 'User-Agent': 'OpsKitPro-Diagnostic/1.0' },
-        signal: AbortSignal.timeout(8000)
-      })
-        .then(res => [res, Date.now() - t0] as [Response, number])
-        .catch((e: Error) => [{ error: true as const, message: e.message }, Date.now() - t0])
+      return Promise.all([
+        fetch(targetUrl, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'User-Agent': 'OpsKitPro-Diagnostic/1.0' },
+          signal: AbortSignal.timeout(8000)
+        }),
+        traceRedirects(targetUrl).catch(() => ({
+          chain: [],
+          finalUrl: targetUrl,
+          warning: 'Redirect trace unavailable.',
+        })),
+      ])
+        .then(([res, redirectTrace]) => [res, Date.now() - t0, redirectTrace] as [Response, number, RedirectTrace])
+        .catch((e: Error) => [{ error: true as const, message: e.message }, Date.now() - t0, undefined] as [{ error: true; message: string }, number, undefined])
     })()
 
     const sslPromise = (isActuallyIp || !isHttps) ? Promise.resolve(null) : fetch(`https://crt.sh/?q=${domain}&output=json`, {
@@ -288,10 +370,10 @@ export async function GET(request: NextRequest | Request) {
       }).then(r => r.ok ? r.json() : null).catch(() => null)
     })()
 
-    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency], nsData] = await Promise.all([
+    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency, redirectTrace], dnsRecordsData] = await Promise.all([
       dnsPromise,
       httpPromise,
-      nsPromise
+      recordsPromise
     ])
     const coreMs = Date.now() - requestStartedAt
     const [crtData, rdapData] = await Promise.all([sslPromise, whoisPromise])
@@ -340,11 +422,16 @@ export async function GET(request: NextRequest | Request) {
     const allIps: string[] = isActuallyIp
       ? [domain]
       : [...ipv4, ...ipv6]
-    const nsRecords: string[] = Array.from(new Set<string>(
-      (nsData?.Answer || [])
-        .filter((answer: any) => answer?.data)
-        .map((answer: any) => String(answer.data).replace(/\.$/, ''))
-    ))
+    const nsRecords: string[] = dnsRecordsData?.NS || []
+    const dnsRecords = {
+      A: dnsRecordsData?.A?.length ? dnsRecordsData.A : ipv4,
+      AAAA: dnsRecordsData?.AAAA?.length ? dnsRecordsData.AAAA : ipv6,
+      CNAME: dnsRecordsData?.CNAME || [],
+      MX: dnsRecordsData?.MX || [],
+      TXT: dnsRecordsData?.TXT || [],
+      CAA: dnsRecordsData?.CAA || [],
+      SOA: dnsRecordsData?.SOA || [],
+    }
     const ip = isActuallyIp ? domain : (allIps[0] || dnsMatch?.data?.Answer?.[0]?.data || domain)
     const serverHeader = httpRes.headers.get('server') || 'Unknown'
     const hstsEnabled = Boolean(httpRes.headers.get('strict-transport-security'))
@@ -419,11 +506,21 @@ export async function GET(request: NextRequest | Request) {
         ipv6,
         dual_stack: ipv4.length > 0 && ipv6.length > 0,
         ns: nsRecords,
+        records: dnsRecords,
         latency: `${dnsLatency}ms`,
         success: allIps.length > 0,
         resolvers: dnsResults,
       },
-      http: { success: httpRes.ok, status_code: httpRes.status, latency: `${httpLatency}ms`, is_https: isHttps },
+      http: {
+        success: httpRes.ok,
+        status_code: httpRes.status,
+        latency: `${httpLatency}ms`,
+        is_https: isHttps,
+        final_url: redirectTrace?.finalUrl || httpRes.url || targetUrl,
+        redirect_chain: redirectTrace?.chain || [],
+        redirect_count: Math.max(0, (redirectTrace?.chain?.length || 1) - 1),
+        redirect_warning: redirectTrace?.warning,
+      },
       securityHeaders,
       ssl: { valid: certValid, issuer: sslIssuer, expiry: sslExpiry, grade: sslGrade, factors: sslFactors, tls_version: isHttps ? 'TLS' : 'HTTP', chain: certChain },
       cdn: { is_provider: isCdn, provider, server: serverHeader },

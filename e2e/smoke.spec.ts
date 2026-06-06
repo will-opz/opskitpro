@@ -12,6 +12,16 @@ const diagnosticResult = {
     ipv4: ['104.21.1.1'],
     ipv6: ['2606:4700:3030::6815:101'],
     dual_stack: true,
+    ns: ['augustus.ns.cloudflare.com', 'hadlee.ns.cloudflare.com'],
+    records: {
+      A: ['104.21.1.1'],
+      AAAA: ['2606:4700:3030::6815:101'],
+      CNAME: [],
+      MX: ['10 mail.example.com.'],
+      TXT: ['v=spf1 include:_spf.example.com ~all'],
+      CAA: ['0 issue "letsencrypt.org"'],
+      SOA: ['augustus.ns.cloudflare.com. dns.cloudflare.com. 1 10000 2400 604800 1800'],
+    },
     resolvers: [{
       resolver: 'Cloudflare',
       status: 'OK',
@@ -25,6 +35,12 @@ const diagnosticResult = {
     status_code: 200,
     latency: '118ms',
     is_https: true,
+    final_url: 'https://opskitpro.com/',
+    redirect_count: 1,
+    redirect_chain: [
+      { url: 'http://opskitpro.com/', status: 301, location: 'https://opskitpro.com/' },
+      { url: 'https://opskitpro.com/', status: 200 },
+    ],
   },
   ssl: {
     valid: true,
@@ -131,6 +147,18 @@ test('encoding toolkit transforms and copies output', async ({ context, page, br
 })
 
 test('website diagnostics renders mocked result without external network dependency', async ({ page }) => {
+  await page.addInitScript(() => {
+    ;(window as any).__copiedText = ''
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (value: string) => {
+          ;(window as any).__copiedText = value
+        },
+      },
+    })
+  })
+
   await page.route('**/api/diagnostic**', (route) =>
     route.fulfill({
       status: 200,
@@ -150,6 +178,18 @@ test('website diagnostics renders mocked result without external network depende
   await expect(page.getByText('Full Check')).toBeVisible()
   await expect(page.getByText('Key Findings')).toBeVisible()
   await expect(page.getByRole('button', { name: /Copy Summary/i })).toBeVisible()
+  await page.getByRole('button', { name: /Copy Summary/i }).click()
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Impact:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Suspected Cause:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Evidence:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Next Action:')
+  await page.getByRole('button', { name: /Show Details/i }).click()
+  await expect(page.getByRole('heading', { name: 'DNS Records' })).toBeVisible()
+  await page.getByRole('heading', { name: 'DNS Records' }).click()
+  await expect(page.getByText('v=spf1 include:_spf.example.com ~all')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Redirect Chain' })).toBeVisible()
+  await page.getByRole('heading', { name: 'Redirect Chain' }).click()
+  await expect(page.getByText('https://opskitpro.com/').first()).toBeVisible()
 })
 
 test('time converter parses a Unix timestamp', async ({ page }) => {

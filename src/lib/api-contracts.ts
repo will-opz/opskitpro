@@ -75,6 +75,16 @@ export interface DiagnosticDnsResolverResult {
   }
 }
 
+export interface DiagnosticDnsRecordsSummary {
+  A: string[]
+  AAAA: string[]
+  CNAME: string[]
+  MX: string[]
+  TXT: string[]
+  CAA: string[]
+  SOA: string[]
+}
+
 export interface DiagnosticDnsSummary {
   resolved_ip: string
   latency: string
@@ -84,6 +94,7 @@ export interface DiagnosticDnsSummary {
   ipv6?: string[]
   dual_stack?: boolean
   ns?: string[]
+  records?: DiagnosticDnsRecordsSummary
   resolvers?: DiagnosticDnsResolverResult[]
 }
 
@@ -92,6 +103,14 @@ export interface DiagnosticHttpSummary {
   status_code: number
   latency: string
   is_https?: boolean
+  final_url?: string
+  redirect_chain?: Array<{
+    url: string
+    status: number
+    location?: string
+  }>
+  redirect_count?: number
+  redirect_warning?: string
 }
 
 export interface DiagnosticSecurityHeaderCheck {
