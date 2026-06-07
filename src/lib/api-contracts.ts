@@ -258,3 +258,71 @@ export interface IpLookupResponse {
   provider: string
   _source: IpLookupSource
 }
+
+// ─── Network Check ──────────────────────────────────────────────────────────
+
+export interface NetworkInfoResponse {
+  ip: string
+  ipv6: string | null
+  asn: number | string | null
+  org: string
+  country: string
+  city: string
+  colo: string
+  timezone: string
+  ua: string
+  trace: {
+    http: string
+    tls: string
+    warp: string
+    ip: string
+    colo: string
+  } | null
+  _source: 'cloudflare-context' | 'fallback'
+}
+
+export interface PingResult {
+  min: number
+  avg: number
+  max: number
+  jitter: number
+  samples: number[]
+}
+
+export interface SpeedResult {
+  downloadMbps: number | null
+  uploadMbps: number | null
+  downloadDurationMs: number
+  uploadDurationMs: number
+  downloadBytes: number
+  uploadBytes: number
+}
+
+export interface DnsPerfResult {
+  dnsMs: number | null
+  tcpMs: number | null
+  tlsMs: number | null
+  ttfbMs: number | null
+}
+
+export interface ReachabilityItem {
+  url: string
+  label: string
+  reachable: boolean
+  latencyMs: number | null
+  status: 'ok' | 'slow' | 'failed'
+}
+
+export interface ReachabilityResponse {
+  results: ReachabilityItem[]
+}
+
+export interface NetworkAnalysis {
+  score: number
+  grade: 'A' | 'B' | 'C' | 'D' | 'F'
+  ipVersion: 'dual-stack' | 'ipv4-only' | 'ipv6-only'
+  summary: string
+  suitableFor: string[]
+  potentialIssues: string[]
+  recommendations: string[]
+}

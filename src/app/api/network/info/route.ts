@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
+import type { NetworkInfoResponse } from '@/lib/api-contracts'
+
+// Removed runtime='edge' to avoid 500 errors on OpenNext Node.js runtime
+export const dynamic = 'force-dynamic'
+
+async function fetchCfTrace(origin: string): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${origin}/cdn-cgi/trace`, {
+      signal: AbortSignal.timeout(2500),
+      headers: { 'User-Agent': 'OpsKitPro-NetworkCheck/1.0' },
+    })
+    const text = await res.text()
+    return Object.fromEntries(
+      text
+        .trim()
+        .split('\n')
+        .map((line) => line.split('='))
+        .filter((parts) => parts.length === 2)
+        .map(([k, v]) => [k.trim(), v.trim()])
+    )
+  } catch {
+    return {}
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    '127.0.0.1'
+
+  const ua = request.headers.get('user-agent') || 'Unknown'
+
+  // --- CF metadata with 3-level fallback ---
+  let cfData: any = (request as any).cf
+
+  if (!cfData || Object.keys(cfData).length === 0) {
+    try {
+      const { cf } = await getCloudflareContext()
+      if (cf && Object.keys(cf).length > 0) cfData = cf
+    } catch {
+      cfData = (globalThis as any).__cf || null
+    }
+  }
+
+  // Cloudflare Trace
+  const origin = request.nextUrl.origin
+  const trace = await fetchCfTrace(origin)
+
+  const response: NetworkInfoResponse = {
+    ip,
+    ipv6: ip.includes(':') ? ip : null,
+    asn: cfData?.asn ?? null,
+    org: cfData?.asOrganization || 'Unknown',
+    country: cfData?.country || trace.loc || 'Unknown',
+    city: cfData?.city || 'Unknown',
+    colo: cfData?.colo || trace.colo || 'Unknown',
+    timezone: cfData?.timezone || 'UTC',
+    ua,
+    trace:
+      Object.keys(trace).length > 0
+        ? {
+            http: trace.http || 'Unknown',
+            tls: trace.tls || 'Unknown',
+            warp: trace.warp || 'off',
+            ip: trace.ip || ip,
+            colo: trace.colo || 'Unknown',
+          }
+        : null,
+    _source: cfData ? 'cloudflare-context' : 'fallback',
+  }
+
+  return NextResponse.json(response, {
+    headers: { 'Cache-Control': 'no-store, no-cache' },
+  })
+}

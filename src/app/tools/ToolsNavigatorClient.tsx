@@ -221,6 +221,7 @@ const copy = {
 } satisfies Record<Lang, Record<string, string>>
 
 const defaultItems: NavItem[] = [
+  { id: 'network-check', title: 'Network Check', description: 'Speed, latency, IPv6 and reachability test', url: '/tools/network-check', category: 'core', tags: ['network', 'speed', 'ipv6', 'ping'], kind: 'builtin', pinned: true },
   { id: 'website-check', title: 'Website Check', description: 'DNS, SSL, CDN, HTTP health diagnostics', url: '/tools/website-check', category: 'core', tags: ['dns', 'ssl', 'cdn'], kind: 'builtin', pinned: true },
   { id: 'dns-lookup', title: 'DNS Lookup', description: 'DNS records and resolution checks', url: '/tools/dns-lookup', category: 'core', tags: ['dns', 'record'], kind: 'builtin', pinned: true },
   { id: 'ip-lookup', title: 'IP Lookup', description: 'ASN, ISP, geo and network hints', url: '/tools/ip-lookup', category: 'core', tags: ['ip', 'asn'], kind: 'builtin', pinned: true },
