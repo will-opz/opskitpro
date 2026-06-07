@@ -1,4 +1,4 @@
-# OpsKitPro (Ops + Kit + Professional) — Lightweight SRE Diagnostic Toolbox
+# OpsKitPro (Ops + Kit + Professional) — Cloudflare & DNS Diagnostics Hub
 
 [English](./README.md) | [简体中文](./README_zh.md)
 

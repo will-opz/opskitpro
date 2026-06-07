@@ -29,15 +29,32 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const supportedLocales = ['en', 'zh', 'ja', 'tw']
 
+  const lowPriorityTools = [
+    '/tools/passgen',
+    '/tools/qrgen',
+    '/tools/json',
+    '/tools/websocket',
+    '/tools/time',
+    '/tools/encode',
+    '/tools/prompt-builder',
+  ]
+
   return routes.map((route) => {
     // Construct the canonical URL (naked or default locale)
     const url = `${baseUrl}${route}`
+    
+    let priority = 0.7
+    if (route === '') priority = 1.0
+    else if (route.startsWith('/errors/')) priority = 0.8
+    else if (route.startsWith('/tools/')) {
+      priority = lowPriorityTools.includes(route) ? 0.6 : 0.9
+    }
     
     return {
       url,
       lastModified: new Date(),
       changeFrequency: route === '' ? 'daily' : 'weekly',
-      priority: route === '' ? 1.0 : route.startsWith('/tools/') ? 0.9 : route.startsWith('/errors/') ? 0.8 : 0.7,
+      priority,
       alternates: {
         languages: Object.fromEntries(
           supportedLocales.map((locale) => [

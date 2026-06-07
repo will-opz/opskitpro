@@ -1,22 +1,33 @@
-# OpsKitPro (Ops + Kit + Professional) — 轻量 SRE 运维诊断工具箱
+# OpsKitPro (Ops + Kit + Professional) — Cloudflare 与 DNS 诊断中枢
 
 [English](./README.md) | [简体中文](./README_zh.md)
 
-**OpsKitPro** 是面向 SRE、DevOps 工程师和开发者的轻量在线诊断工具箱。它聚焦日常排障和事故响应中最常见的浏览器内检查：网站诊断、DNS/IP 查询、JSON/WebSocket 工具，以及从真实运维经验中整理出来的工程笔记。
+**OpsKitPro** 是一个面向 SRE、DevOps 工程师和站长的 **综合诊断中枢 (Diagnostics Hub)**。它已经从一个简单的工具箱，进化为了一套闭环的诊断引擎，能够快速发现、解释并解决边缘网络及 DNS 故障。
 
 > [!IMPORTANT]
-> 这个 public 仓库只保留主站、工具代码、公开文章和 Cloudflare 部署流程。私有运营自动化、访问分析日报、发布脚本和内部 dashboard 已拆分到 private 仓库 `opskitpro-ops`。
+> 此公开仓库包含主站、诊断工具、百科文章以及 Cloudflare 部署配置。私有运营自动化脚本、数据分析报告以及内部控制台代码存放于独立的私有仓库：`opskitpro-ops`。
 
 ---
 
-## 核心工具
+## 🔍 核心诊断链路
 
-- **网站诊断** (`/tools/website-check`)：HTTP 状态、SSL/TLS、DNS、CDN、响应头、性能和安全头检查。
-- **DNS 查询** (`/tools/dns-lookup`)：A / AAAA / CNAME / MX / NS / TXT / CAA，多 resolver 对比。
-- **IP 查询** (`/tools/ip-lookup`)：IP 地理位置、网络信息和结构化兜底结果。
-- **JSON 工具** (`/tools/json`)：格式化、修复、比较、Schema 校验、字段提取和 jq 风格查询。
-- **WebSocket 测试** (`/tools/websocket`)：连接测试、消息历史、模板、Ping 监控和多会话管理。
-- **实用工具**：二维码、密码生成、时间工具、编码工具和 Prompt Builder。
+OpsKitPro 围绕着无缝排障漏斗进行设计：
+1. **发现 (Discover)**：从 `Website Check` 起步，自动探测隐藏的 CDN/DNS 故障。
+2. **解释 (Explain)**：遇到 522 Timeout 等报错时，智能引导至 `Cloudflare 错误百科` 提供深度排障分析。
+3. **验证 (Verify)**：使用 `Cloudflare Trace` 分析边缘连接状态，或切换至 `DNS 安全审计` 评估 SPF/DMARC/CAA 健康度。
+4. **导出 (Report)**：支持一键导出 Markdown 格式的完整诊断与审计报告。
+
+---
+
+## 核心工具矩阵
+
+- **Website Check** (`/tools/website-check`)：支持 HTTP 状态、SSL/TLS、DNS 与 CDN 探底。发现异常时可自动弹出对应百科和审计入口。
+- **DNS Lookup & 安全审计** (`/tools/dns-lookup`)：支持 A/CNAME/MX 解析，同时主动对域名的安全记录（SPF/DMARC/CAA）进行打分并支持 Markdown 导出。
+- **Cloudflare Trace** (`/tools/cloudflare-trace`)：绕过本地缓存直接探测边缘节点路径（Colo、TLS 版本、SNI）。
+- **Cloudflare 错误百科** (`/errors/*`)：结构化、SEO 友好的错误指南，详细讲解 522、1020 等常见报错及根因排查方案。
+- **IP Lookup** (`/tools/ip-lookup`)：提供 IP 归属地与网络元数据。
+- **JSON 与 WebSocket** (`/tools/json`、`/tools/websocket`)：JSON 格式化校验及 WebSocket 实时连接调试工具。
+- **常用小工具**：密码生成、时间转换、编解码及提示词构建工具。
 
 ---
 

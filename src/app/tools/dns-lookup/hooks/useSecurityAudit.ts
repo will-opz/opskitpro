@@ -154,7 +154,7 @@ export function useSecurityAudit() {
         domain: cleanDomain,
         score,
         spf: { status: spfStatus, records: spfRecords, message: spfMessage },
-        dmarc: { status: dmarcStatus === 'info' ? 'warning' : dmarcStatus, record: dmarcRecord, message: dmarcMessage, hasRua, hasRuf },
+        dmarc: { status: dmarcStatus, record: dmarcRecord, message: dmarcMessage, hasRua, hasRuf },
         caa: { status: caaStatus, records: caaRecords, message: caaMessage }
       })
       
