@@ -5,7 +5,7 @@
 **OpsKitPro** 是一个面向 SRE、DevOps 工程师和站长的 **综合诊断中枢 (Diagnostics Hub)**。它已经从一个简单的工具箱，进化为了一套闭环的诊断引擎，能够快速发现、解释并解决边缘网络及 DNS 故障。
 
 > [!IMPORTANT]
-> 此公开仓库包含主站、诊断工具、百科文章以及 Cloudflare 部署配置。私有运营自动化脚本、数据分析报告以及内部控制台代码存放于独立的私有仓库：`opskitpro-ops`。
+> 此公开仓库包含主站、诊断工具、百科文章以及 Cloudflare 部署配置。私有运营自动化脚本、数据分析报告以及内部控制台代码存放于独立环境。
 
 ---
 
@@ -129,7 +129,7 @@ OPSKITPRO_ADMIN_SECRET=
 - 测试与 CI/CD workflow
 - 不含密钥的 Cloudflare Worker 配置
 
-私有运营数据不放在这里。private 仓库 `opskitpro-ops` 包含：
+私有运营数据不放在这里。private 仓库包含：
 
 - Cloudflare / X 数据分析自动化
 - 每日运营报告和历史快照

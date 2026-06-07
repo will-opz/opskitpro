@@ -5,7 +5,7 @@
 **OpsKitPro** is a comprehensive **Diagnostics Hub** for SREs, DevOps engineers, and webmasters. It has evolved from a simple developer toolbox into a closed-loop diagnostic engine designed to quickly identify, explain, and resolve edge networking and DNS issues.
 
 > [!IMPORTANT]
-> The public repository contains the main site, tools, articles, and Cloudflare deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live in a separate private repository: `opskitpro-ops`.
+> The public repository contains the main site, tools, articles, and Cloudflare deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live outside this repository.
 
 ---
 
@@ -129,7 +129,7 @@ This public repository intentionally contains only the product-facing project:
 - tests and CI/CD workflow
 - Cloudflare Worker configuration without secrets
 
-Private operations data is kept out of this repository. The private `opskitpro-ops` workspace contains:
+Private operations data is kept out of this repository. The private workspace contains:
 
 - Cloudflare/X analytics automation
 - generated daily reports and history snapshots

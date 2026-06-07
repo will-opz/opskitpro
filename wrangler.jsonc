@@ -22,11 +22,11 @@
 	"kv_namespaces": [
 		{
 			"binding": "KV",
-			"id": "a611da5c720e44cca926c068473799b5"
+			"id": "your-kv-namespace-id"
 		}
 	],
 	"preview_urls": true,
 	"vars": {
-		"DEBUG_MODE": "true"
+		"DEBUG_MODE": "false"
 	}
 }
