@@ -76,6 +76,9 @@ const STATUS_CODES: Record<number, string> = {
   5: 'REFUSED'
 }
 
+// Allow _ for DMARC records like _dmarc.example.com
+const DOMAIN_REGEX = /^(?:[a-zA-Z0-9_](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const domain = searchParams.get('domain') || searchParams.get('target')
@@ -90,8 +93,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Validate domain format
-  const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
-  if (!domainRegex.test(domain)) {
+  if (!DOMAIN_REGEX.test(domain)) {
     return NextResponse.json(
       { error: 'Invalid domain format' },
       { status: 400 }
@@ -191,6 +193,13 @@ export async function POST(request: NextRequest) {
     if (!domain) {
       return NextResponse.json(
         { error: 'Domain is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!DOMAIN_REGEX.test(domain)) {
+      return NextResponse.json(
+        { error: 'Invalid domain format' },
         { status: 400 }
       )
     }

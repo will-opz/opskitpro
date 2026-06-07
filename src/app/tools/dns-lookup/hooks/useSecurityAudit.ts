@@ -40,10 +40,17 @@ export function useSecurityAudit() {
 
     try {
       // Run the 3 queries concurrently
+      const fetchApi = async (url: string) => {
+        const res = await fetch(url)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'DNS lookup failed')
+        return data
+      }
+
       const [spfRes, dmarcRes, caaRes] = await Promise.all([
-        fetch(`/api/dns?domain=${encodeURIComponent(cleanDomain)}&type=TXT`).then(r => r.json()),
-        fetch(`/api/dns?domain=_dmarc.${encodeURIComponent(cleanDomain)}&type=TXT`).then(r => r.json()),
-        fetch(`/api/dns?domain=${encodeURIComponent(cleanDomain)}&type=CAA`).then(r => r.json())
+        fetchApi(`/api/dns?domain=${encodeURIComponent(cleanDomain)}&type=TXT`),
+        fetchApi(`/api/dns?domain=_dmarc.${encodeURIComponent(cleanDomain)}&type=TXT`),
+        fetchApi(`/api/dns?domain=${encodeURIComponent(cleanDomain)}&type=CAA`)
       ])
 
       // 1. Parse SPF
@@ -146,9 +153,7 @@ export function useSecurityAudit() {
         score = 'C'
       }
 
-      if (score === 'A' && caaStatus !== 'pass') {
-        // slight bump down or keep A? Let's keep A, CAA is minor
-      }
+
 
       setResult({
         domain: cleanDomain,

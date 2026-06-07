@@ -64,9 +64,12 @@ export default function CloudflareTraceClient({
     setTargetErrorMsg('')
     try {
       const res = await fetch(`/api/trace?domain=${encodeURIComponent(cleanDomain)}`)
-      const data = await res.json().catch(() => null)
+      const text = await res.text()
       
       if (!res.ok) {
+        let data: any = null
+        try { data = JSON.parse(text) } catch { /* ignore */ }
+
         if (res.status === 404 && data?.error?.includes('Could not verify')) {
           setTargetPhase('not_cf')
         } else {
@@ -76,8 +79,6 @@ export default function CloudflareTraceClient({
         return
       }
 
-      // In success case, the API directly returns text (not json)
-      const text = await fetch(`/api/trace?domain=${encodeURIComponent(cleanDomain)}`).then(r => r.text())
       setTargetTrace(parseTraceText(text))
       setTargetPhase('done')
     } catch {

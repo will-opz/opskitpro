@@ -45,7 +45,15 @@ export async function GET(request: NextRequest) {
         'User-Agent': 'OpsKitPro-Trace-Client/1.0',
       },
       signal: AbortSignal.timeout(5000), // 5s timeout
+      redirect: 'manual', // Prevent SSRF via 302 redirects
     })
+
+    if (response.status >= 300 && response.status < 400) {
+      return NextResponse.json(
+        { error: 'Target redirected; Cloudflare Trace not available on this path' },
+        { status: 400 }
+      )
+    }
 
     const text = await response.text()
     const isCloudflare = response.headers.get('server')?.toLowerCase().includes('cloudflare') || false
