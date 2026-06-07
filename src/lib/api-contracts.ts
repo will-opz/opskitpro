@@ -291,11 +291,8 @@ export interface PingResult {
 
 export interface SpeedResult {
   downloadMbps: number | null
-  uploadMbps: number | null
   downloadDurationMs: number
-  uploadDurationMs: number
   downloadBytes: number
-  uploadBytes: number
 }
 
 export interface DnsPerfResult {

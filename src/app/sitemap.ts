@@ -8,6 +8,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/blog',
     '/about',
     '/tools/website-check',
+    '/tools/network-check',
+    '/tools/cloudflare-trace',
     '/tools/ip-lookup',
     '/tools/dns-lookup',
     '/tools/passgen',

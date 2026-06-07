@@ -81,24 +81,14 @@ function analyzeNetwork(
     else if (ping.avg < 300) score += 8
   }
 
-  // Download (25 pts)
+  // Download (40 pts)
   if (speed?.downloadMbps != null) {
     const dl = speed.downloadMbps
-    if (dl > 100) score += 25
-    else if (dl > 50) score += 20
-    else if (dl > 20) score += 14
-    else if (dl > 5) score += 8
+    if (dl > 100) score += 40
+    else if (dl > 50) score += 30
+    else if (dl > 20) score += 20
+    else if (dl > 5) score += 10
     else score += 2
-  }
-
-  // Upload (15 pts)
-  if (speed?.uploadMbps != null) {
-    const ul = speed.uploadMbps
-    if (ul > 50) score += 15
-    else if (ul > 20) score += 12
-    else if (ul > 5) score += 8
-    else if (ul > 1) score += 4
-    else score += 1
   }
 
   // Jitter (15 pts)
@@ -233,7 +223,6 @@ function analyzeNetwork(
   if (ping && ping.avg > 150) potentialIssues.push(im.highLatency)
   if (ping && ping.jitter > 20) potentialIssues.push(im.highJitter)
   if (speed?.downloadMbps != null && speed.downloadMbps < 10) potentialIssues.push(im.slowDl)
-  if (speed?.uploadMbps != null && speed.uploadMbps < 5) potentialIssues.push(im.slowUl)
   if (!hasIPv6) potentialIssues.push(im.noIPv6)
   const unreachableCount = reachability.filter((r) => !r.reachable).length
   if (unreachableCount > 2) potentialIssues.push(im.lowReach)
@@ -454,7 +443,6 @@ export default function NetworkCheckClient({
   const [speedPhase, setSpeedPhase] = useState<CardPhase>('idle')
   const [selectedSizeMb, setSelectedSizeMb] = useState<1 | 10 | 50>(10)
   const [dlProgress, setDlProgress] = useState(0)
-  const [ulProgress, setUlProgress] = useState(0)
 
   const [dnsPerfResult, setDnsPerfResult] = useState<DnsPerfResult | null>(null)
   const [dnsPerfPhase, setDnsPerfPhase] = useState<CardPhase>('idle')
@@ -525,23 +513,7 @@ export default function NetworkCheckClient({
     []
   )
 
-  const runUpload = useCallback(async (): Promise<{ mbps: number; bytes: number; durationMs: number }> => {
-    setUlProgress(0)
-    const buf = new Uint8Array(UPLOAD_SIZE_BYTES)
-    crypto.getRandomValues(buf)
-    const blob = new Blob([buf])
-    const t0 = performance.now()
-    await fetch('/api/network/ping', {
-      method: 'POST',
-      body: blob,
-      cache: 'no-store',
-      headers: { 'Content-Type': 'application/octet-stream' },
-    })
-    const durationMs = performance.now() - t0
-    const mbps = (UPLOAD_SIZE_BYTES * 8) / (durationMs / 1000) / 1_000_000
-    setUlProgress(100)
-    return { mbps, bytes: UPLOAD_SIZE_BYTES, durationMs }
-  }, [])
+
 
   const getDnsPerf = useCallback((): DnsPerfResult => {
     try {
@@ -573,7 +545,6 @@ export default function NetworkCheckClient({
     setSpeedResult(null)
     setSpeedPhase('idle')
     setDlProgress(0)
-    setUlProgress(0)
     setDnsPerfResult(null)
     setDnsPerfPhase('idle')
     setReachability([])
@@ -616,15 +587,12 @@ export default function NetworkCheckClient({
       setPingPhase('error')
     }
 
-    // Step 4 — Download + Upload
+    // Step 4 — Download
     setCurrentStep(nc.speed_title)
     setSpeedPhase('loading')
     let dlMbps: number | null = null
-    let ulMbps: number | null = null
     let dlBytes = 0
     let dlDuration = 0
-    let ulBytes = 0
-    let ulDuration = 0
 
     try {
       const dl = await runDownload(selectedSizeMb)
@@ -635,25 +603,13 @@ export default function NetworkCheckClient({
       // ignore
     }
 
-    try {
-      const ul = await runUpload()
-      ulMbps = parseFloat(ul.mbps.toFixed(2))
-      ulBytes = ul.bytes
-      ulDuration = ul.durationMs
-    } catch {
-      // ignore
-    }
-
     finalSpeed = {
       downloadMbps: dlMbps,
-      uploadMbps: ulMbps,
       downloadDurationMs: dlDuration,
-      uploadDurationMs: ulDuration,
       downloadBytes: dlBytes,
-      uploadBytes: ulBytes,
     }
     setSpeedResult(finalSpeed)
-    setSpeedPhase(dlMbps !== null || ulMbps !== null ? 'done' : 'error')
+    setSpeedPhase(dlMbps !== null ? 'done' : 'error')
 
     // Step 5 — Reachability
     setCurrentStep(nc.reach_title)
@@ -681,7 +637,7 @@ export default function NetworkCheckClient({
           .map((l) => l.split('='))
           .filter((p) => p.length === 2)
           .map(([k, v]) => [k.trim(), v.trim()])
-      ) as CfTrace
+      ) as unknown as CfTrace
       setCfTrace(parsed)
       setTracePhase('done')
     } catch {
@@ -695,7 +651,7 @@ export default function NetworkCheckClient({
 
     setCurrentStep('')
     setPhase('done')
-  }, [nc, selectedSizeMb, lang, runPing, runDownload, runUpload, getDnsPerf])
+  }, [nc, selectedSizeMb, lang, runPing, runDownload, getDnsPerf])
 
   // ── Metric quality helpers ─────────────────────────────────────────────────
 
@@ -989,24 +945,7 @@ export default function NetworkCheckClient({
                 )}
               </div>
 
-              {/* Upload */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-teal-500" />
-                    <span className="text-xs font-semibold text-[var(--text-secondary)]">{nc.speed_upload}</span>
-                  </div>
-                  {speedResult?.uploadMbps != null ? (
-                    <span className={`text-lg font-black ${speedQuality(speedResult.uploadMbps) === 'good' ? 'text-emerald-500' : speedQuality(speedResult.uploadMbps) === 'ok' ? 'text-amber-500' : 'text-red-400'}`}>
-                      {speedResult.uploadMbps.toFixed(1)}
-                      <span className="text-xs font-semibold text-[var(--text-muted)] ml-1">Mbps</span>
-                    </span>
-                  ) : speedPhase === 'loading' && dlProgress === 100 ? (
-                    <span className="text-xs text-[var(--text-muted)] animate-pulse">{nc.speed_testing_ul}</span>
-                  ) : null}
-                </div>
-                <SpeedBar value={speedResult?.uploadMbps ?? null} max={100} />
-              </div>
+
             </div>
           </SectionCard>
 
@@ -1215,7 +1154,7 @@ export default function NetworkCheckClient({
         <section className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-16">
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: <Wifi className="w-5 h-5" />, label: lang === 'zh' ? '下载 / 上传速度' : 'Download / Upload', desc: lang === 'zh' ? '实时速度测量' : 'Real-time speed measurement' },
+              { icon: <Wifi className="w-5 h-5" />, label: lang === 'zh' ? '下载速度' : 'Download', desc: lang === 'zh' ? '实时速度测量' : 'Real-time speed measurement' },
               { icon: <Activity className="w-5 h-5" />, label: lang === 'zh' ? '延迟 & 抖动' : 'Latency & Jitter', desc: lang === 'zh' ? '10次采样精准测量' : '10-sample precision ping' },
               { icon: <Shield className="w-5 h-5" />, label: lang === 'zh' ? 'IPv6 & 安全' : 'IPv6 & Security', desc: lang === 'zh' ? '网络配置全面检测' : 'Full network configuration audit' },
               { icon: <Globe className="w-5 h-5" />, label: lang === 'zh' ? '可达性检测' : 'Reachability', desc: lang === 'zh' ? '8个全球站点探测' : '8 global site probes' },

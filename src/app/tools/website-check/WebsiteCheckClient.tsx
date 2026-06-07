@@ -36,197 +36,20 @@ import {
   History
 } from 'lucide-react'
 
-const normalizeTargetInput = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-
-  try {
-    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
-    const parsed = new URL(withScheme)
-    return parsed.hostname.replace(/\.$/, '')
-  } catch {
-    return trimmed
-      .replace(/^https?:\/\//i, '')
-      .replace(/\/.*$/, '')
-      .replace(/\.$/, '')
-      .trim()
-  }
-}
-
-const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackError?: string) => {
-  const domain = data?.domain || fallbackDomain || 'opskitpro.com'
-  const isActuallyIp = Boolean(data?.isActuallyIp)
-  const isPrivate = Boolean(data?.isPrivate)
-
-  return {
-    domain,
-    status: data?.status || 'partial_error',
-    isActuallyIp,
-    isPrivate,
-    error: data?.error || fallbackError,
-    dns: {
-      resolved_ip: data?.dns?.resolved_ip || domain,
-      latency: data?.dns?.latency || '---',
-      success: Boolean(data?.dns?.success),
-      all_ips: data?.dns?.all_ips || [],
-      ipv4: data?.dns?.ipv4 || [],
-      ipv6: data?.dns?.ipv6 || [],
-      dual_stack: Boolean(data?.dns?.dual_stack),
-      ns: data?.dns?.ns || [],
-      records: {
-        A: data?.dns?.records?.A || data?.dns?.ipv4 || [],
-        AAAA: data?.dns?.records?.AAAA || data?.dns?.ipv6 || [],
-        CNAME: data?.dns?.records?.CNAME || [],
-        MX: data?.dns?.records?.MX || [],
-        TXT: data?.dns?.records?.TXT || [],
-        CAA: data?.dns?.records?.CAA || [],
-        SOA: data?.dns?.records?.SOA || [],
-      },
-      resolvers: data?.dns?.resolvers || [],
-    },
-    http: {
-      success: Boolean(data?.http?.success),
-      status_code: data?.http?.status_code ?? 0,
-      latency: data?.http?.latency || '---',
-      is_https: Boolean(data?.http?.is_https),
-      final_url: data?.http?.final_url || '',
-      redirect_chain: data?.http?.redirect_chain || [],
-      redirect_count: Number(data?.http?.redirect_count || 0),
-      redirect_warning: data?.http?.redirect_warning,
-    },
-    securityHeaders: {
-      score: Number(data?.securityHeaders?.score ?? 0),
-      grade: data?.securityHeaders?.grade || '—',
-      passed: Number(data?.securityHeaders?.passed ?? 0),
-      total: Number(data?.securityHeaders?.total ?? 0),
-      checks: data?.securityHeaders?.checks || [],
-    },
-    ssl: {
-      valid: Boolean(data?.ssl?.valid),
-      issuer: data?.ssl?.issuer || 'Unknown',
-      expiry: data?.ssl?.expiry || 'Unknown',
-      grade: data?.ssl?.grade || '—',
-      factors: data?.ssl?.factors || [],
-      tls_version: data?.ssl?.tls_version,
-      chain: data?.ssl?.chain || [],
-    },
-    cdn: {
-      is_provider: Boolean(data?.cdn?.is_provider),
-      provider: data?.cdn?.provider || 'Unknown',
-      server: data?.cdn?.server || 'Unknown',
-    },
-    geo: {
-      country: data?.geo?.country || 'Unknown',
-      isp: data?.geo?.isp || 'Unknown',
-      city: data?.geo?.city || 'Unknown',
-      asn: data?.geo?.asn || 'Unknown',
-    },
-    whois: {
-      registered: data?.whois?.registered || 'Unknown',
-      registrar: data?.whois?.registrar || 'Unknown',
-      status: data?.whois?.status || 'Unknown',
-      success: Boolean(data?.whois?.success),
-      expires: data?.whois?.expires || 'Unknown',
-      error: data?.whois?.error,
-      nameservers: data?.whois?.nameservers || [],
-    },
-    meta: {
-      checkedAt: data?.meta?.checkedAt || new Date().toISOString(),
-      servedAt: data?.meta?.servedAt,
-      totalMs: Number(data?.meta?.totalMs || 0),
-      coreMs: Number(data?.meta?.coreMs || 0),
-      enrichmentMs: Number(data?.meta?.enrichmentMs || 0),
-      cacheLookupMs: Number(data?.meta?.cacheLookupMs || 0),
-      cacheAgeSeconds: Number(data?.meta?.cacheAgeSeconds || 0),
-      edgeColo: data?.meta?.edgeColo || 'Unknown',
-      cacheStatus: data?.meta?.cacheStatus,
-    },
-  }
-}
-
-type StoredDiagnosticTarget = {
-  target: string
-  lastCheckedAt: string
-  pinned?: boolean
-}
-
-type BatchDiagnosticResult = {
-  target: string
-  result?: ReturnType<typeof createSafeDiagnosticResult>
-  error?: string
-}
-
-const historyStoreName = 'diagnostic-targets'
-const historyDbName = 'opskitpro-diagnostics'
-
-function openHistoryDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(historyDbName, 1)
-    request.onupgradeneeded = () => {
-      const db = request.result
-      if (!db.objectStoreNames.contains(historyStoreName)) {
-        db.createObjectStore(historyStoreName, { keyPath: 'target' })
-      }
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-}
-
-async function readHistory(): Promise<StoredDiagnosticTarget[]> {
-  if (typeof indexedDB === 'undefined') return []
-  const db = await openHistoryDb()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(historyStoreName, 'readonly')
-    const request = tx.objectStore(historyStoreName).getAll()
-    request.onsuccess = () => {
-      resolve((request.result as StoredDiagnosticTarget[])
-        .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || String(b.lastCheckedAt).localeCompare(a.lastCheckedAt))
-        .slice(0, 20))
-    }
-    request.onerror = () => reject(request.error)
-  })
-}
-
-async function upsertHistory(item: StoredDiagnosticTarget) {
-  if (typeof indexedDB === 'undefined') return
-  const existing = await readHistory()
-  const previous = existing.find((entry) => entry.target === item.target)
-  const db = await openHistoryDb()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(historyStoreName, 'readwrite')
-    tx.objectStore(historyStoreName).put({ ...previous, ...item })
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
-}
-
-async function deleteHistoryTarget(target: string) {
-  if (typeof indexedDB === 'undefined') return
-  const db = await openHistoryDb()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(historyStoreName, 'readwrite')
-    tx.objectStore(historyStoreName).delete(target)
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
-}
+import { useDiagnosticHistory } from './_hooks/useDiagnosticHistory'
+import { useWebsiteCheck } from './_hooks/useWebsiteCheck'
+import { calculateScore, normalizeTargetInput, BatchDiagnosticResult, createSafeDiagnosticResult } from './_hooks/helpers'
 
 export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const isAsianLanguage = lang !== 'en'
   const searchParams = useSearchParams()
-  const [domain, setDomain] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { history, upsertHistory, deleteHistory, togglePin } = useDiagnosticHistory()
+  const { domain, setDomain, loading, currentStep, result, setResult, error, localResolvers, runDiagnostic } = useWebsiteCheck()
   const [showJson, setShowJson] = useState(false)
   const [copied, setCopied] = useState(false)
   const [copiedAction, setCopiedAction] = useState<string | null>(null)
   const [showGradeInfo, setShowGradeInfo] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
-  const [localResolvers, setLocalResolvers] = useState<Record<string, any>>({})
-  const [history, setHistory] = useState<StoredDiagnosticTarget[]>([])
   const [shareCopied, setShareCopied] = useState(false)
   const [batchInput, setBatchInput] = useState('')
   const [batchLoading, setBatchLoading] = useState(false)
@@ -1068,39 +891,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     return loadingStages[index] ?? loadingStages[0]
   }, [currentStep, loadingStages])
 
-  const refreshHistory = useCallback(() => {
-    readHistory()
-      .then(setHistory)
-      .catch(() => setHistory([]))
-  }, [])
 
-  useEffect(() => {
-    refreshHistory()
-  }, [refreshHistory])
-
-  function parseLatencyMs(latency: string | number): number {
-    if (typeof latency === 'number') return latency
-    return parseInt(String(latency).replace('ms', ''), 10) || 0
-  }
-
-  function calculateScore(data: any) {
-    let score = 100
-    if (!data?.http?.success) score -= 40
-    if ((data?.http?.status_code ?? 0) >= 400) score -= 20
-    if (!data?.ssl?.valid) score -= 20
-    if (parseLatencyMs(data?.dns?.latency ?? '0ms') > 300) score -= 10
-    if (parseLatencyMs(data?.http?.latency ?? '0ms') > 2000) score -= 10
-    else if (parseLatencyMs(data?.http?.latency ?? '0ms') > 1000) score -= 5
-    if (!data?.cdn?.is_provider) score -= 5
-    if ((data?.securityHeaders?.score ?? 100) < 35) score -= 20
-    else if ((data?.securityHeaders?.score ?? 100) < 70) score -= 10
-    
-    // Domain status penalty
-    const status = data?.whois?.status?.toLowerCase() || ''
-    if (status.includes('hold')) score -= 50
-    
-    return Math.max(0, score)
-  }
 
   const summaryFacts = useMemo(() => {
     if (!result) return []
@@ -1151,97 +942,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     ]
   }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, localeText, result])
 
-  // Use a ref to keep runDiagnostic stable while still being able to access the latest domain state
-  const domainRef = React.useRef(domain)
-  useEffect(() => {
-    domainRef.current = domain
-  }, [domain])
 
-  const runDiagnostic = useCallback(async (target?: string, skipCache: boolean = false) => {
-    // Determine the query target: prioritized passed target > state domain > empty (Who Am I)
-    const d = normalizeTargetInput(target !== undefined ? target : domainRef.current)
-    
-    setLoading(true)
-    setError(null)
-    setShowDetails(false)
-    setCurrentStep(1)
-    setLocalResolvers({})
-    
-    const expectedStepCount = 3
-
-    const dnsResolvers = [
-      { id: 'system', name: 'SYSTEM DNS', url: d ? `https://${d}/favicon.ico` : 'https://google.com/favicon.ico', type: 'native' },
-      { id: 'google', name: 'GOOGLE (LOCAL)', url: `https://dns.google/resolve?name=${d || 'google.com'}&type=A`, type: 'doh' },
-      { id: 'cf', name: 'CLOUDFLARE (LOCAL)', url: `https://cloudflare-dns.com/dns-query?name=${d || 'google.com'}&type=A`, type: 'doh' },
-      { id: 'ali', name: 'ALIDNS (LOCAL)', url: `https://dns.alidns.com/resolve?name=${d || 'google.com'}&type=A`, type: 'doh' }
-    ]
-
-    dnsResolvers.forEach(async (r) => {
-      const start = Date.now()
-      try {
-        if (r.type === 'native') {
-           const controller = new AbortController()
-           const tid = setTimeout(() => controller.abort(), 3000)
-           try {
-             await fetch(r.url, { mode: 'no-cors', signal: controller.signal })
-             setLocalResolvers(prev => ({ ...prev, [r.id]: { ...r, ip: 'Native_OK', latency: `${Date.now() - start}ms`, status: 'OK' }}))
-           } catch {
-             setLocalResolvers(prev => ({ ...prev, [r.id]: { ...r, ip: 'No_Link', latency: '---', status: 'FAILED' }}))
-           } finally { clearTimeout(tid) }
-           return
-        }
-
-        const res = await fetch(r.url, { 
-          headers: { 'accept': 'application/dns-json' }, 
-          signal: AbortSignal.timeout(5000) 
-        })
-        const data = await res.json()
-        const ip = data.Answer?.find((a: any) => a.type === 1)?.data || data.answer?.find((a: any) => a.type === 1)?.data || null
-        setLocalResolvers(prev => ({ ...prev, [r.id]: { ...r, ip, latency: `${Date.now() - start}ms`, status: ip ? 'OK' : 'EMPTY' }}))
-      } catch (e) {
-        setLocalResolvers(prev => ({ ...prev, [r.id]: { ...r, ip: null, latency: 'ERR', status: 'FAILED' }}))
-      }
-    })
-
-    const stepInterval = setInterval(() => {
-      setCurrentStep(prev => (prev < expectedStepCount ? prev + 1 : prev))
-    }, 800)
-
-    try {
-      const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(d || '')}${skipCache ? '&_nocache=' + Date.now() : ''}`)
-      const contentType = res.headers.get('content-type') || ''
-      if (!contentType.includes('application/json')) {
-        throw new Error(`Platform error (${res.status}): Received non-JSON response from server.`)
-      }
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || `Diagnostic failed with status ${res.status}`)
-
-      if (data?.status === 'partial_error') {
-        const safeResult = createSafeDiagnosticResult(data, d, data.error)
-        setError(data.error || 'Partial diagnostic failure')
-        setResult(safeResult)
-        if (safeResult.domain) {
-          await upsertHistory({ target: safeResult.domain, lastCheckedAt: new Date().toISOString() }).catch(() => null)
-          refreshHistory()
-        }
-        return
-      }
-      
-      const safeResult = createSafeDiagnosticResult(data, d)
-      setResult(safeResult)
-      if (safeResult.domain) {
-        await upsertHistory({ target: safeResult.domain, lastCheckedAt: new Date().toISOString() }).catch(() => null)
-        refreshHistory()
-      }
-    } catch (err: any) {
-      console.error('Forensics Engine Error:', err)
-      setError(err.message || 'Unknown forensic engine failure')
-    } finally {
-      clearInterval(stepInterval)
-      setLoading(false)
-    }
-  }, [refreshHistory])
 
   // Tracks the last run query to avoid infinite loops in useEffect
   const lastProcessedQuery = React.useRef<string | undefined>(null as any)
@@ -1662,14 +1363,13 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           const data = await res.json()
           if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`)
           const safeResult = createSafeDiagnosticResult(data, target, data.error)
-          await upsertHistory({ target: safeResult.domain, lastCheckedAt: new Date().toISOString() }).catch(() => null)
+          await upsertHistory(safeResult.domain, false).catch(() => null)
           return { target, result: safeResult }
         } catch (err: any) {
           return { target, error: err?.message || 'Unknown error' }
         }
       }))
       setBatchResults(settled)
-      refreshHistory()
     } finally {
       setBatchLoading(false)
     }
@@ -1677,17 +1377,15 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   const toggleFavorite = async (target: string) => {
     const current = history.find((entry) => entry.target === target)
-    await upsertHistory({
-      target,
-      lastCheckedAt: current?.lastCheckedAt || new Date().toISOString(),
-      pinned: !current?.pinned,
-    }).catch(() => null)
-    refreshHistory()
+    if (current) {
+      await togglePin(current)
+    } else {
+      await upsertHistory(target, true)
+    }
   }
 
   const removeHistory = async (target: string) => {
-    await deleteHistoryTarget(target).catch(() => null)
-    refreshHistory()
+    await deleteHistory(target)
   }
 
   const getAdvice = (data: any) => {
