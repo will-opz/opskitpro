@@ -45,6 +45,12 @@ export function SecurityAuditPanel({
 
   const handleExport = () => {
     setExporting(true)
+    try {
+      const payload = JSON.stringify({ event: 'dns_audit_export', page: window.location.pathname, target: result.domain })
+      if (navigator.sendBeacon) navigator.sendBeacon('/api/event', new Blob([payload], { type: 'application/json' }))
+      else fetch('/api/event', { method: 'POST', body: payload, keepalive: true }).catch(() => null)
+    } catch {}
+
     const dateStr = new Date().toISOString().split('T')[0]
     const mdContent = `# Domain Security Audit Report
 **Domain:** \`${result.domain}\`

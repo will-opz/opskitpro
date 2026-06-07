@@ -35,6 +35,7 @@ import {
   FileText,
   History
 } from 'lucide-react'
+import { TrackedLink } from '@/components/TrackedLink'
 
 import { useDiagnosticHistory } from './_hooks/useDiagnosticHistory'
 import { useWebsiteCheck } from './_hooks/useWebsiteCheck'
@@ -1879,10 +1880,10 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                      <p className="text-xs font-medium text-emerald-600/80 mt-0.5">We detected MX/TXT records. Audit your SPF, DMARC, and CAA configurations.</p>
                    </div>
                  </div>
-                 <Link href={`/tools/dns-lookup?tab=security&domain=${encodeURIComponent(result.target)}`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
+                 <TrackedLink eventName="website_check_to_dns_audit" targetName={result.target} href={`/tools/dns-lookup?tab=security&domain=${encodeURIComponent(result.target)}`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
                    Run Security Audit
                    <ArrowRight className="h-4 w-4" />
-                 </Link>
+                 </TrackedLink>
                </div>
              )
            })()}
@@ -1903,10 +1904,10 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                      <p className="text-xs font-medium text-sky-600/80 mt-0.5">This domain is routed through Cloudflare's global network.</p>
                    </div>
                  </div>
-                 <Link href={`/tools/cloudflare-trace`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
+                 <TrackedLink eventName="website_check_to_trace" targetName={result.target} href={`/tools/cloudflare-trace`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
                    Analyze Cloudflare Trace
                    <ArrowRight className="h-4 w-4" />
-                 </Link>
+                 </TrackedLink>
                </div>
              )
            })()}

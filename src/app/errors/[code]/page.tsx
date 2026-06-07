@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronRight, Info, Wrench, ShieldAlert, Activity, Globe, Ar
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
+import { TrackedLink } from '@/components/TrackedLink'
 import { getCloudflareErrors, getCloudflareError, localize } from '@/content/cloudflare-errors'
 
 export function generateStaticParams() {
@@ -257,14 +258,15 @@ export default async function ErrorDetailPage({ params }: { params: { code: stri
                 {isJapanese ? '診断ツール' : isZh ? '诊断工具' : isTw ? '診斷工具' : 'Diagnostics'}
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link
+                <TrackedLink
                   href="/tools/website-check"
+                  eventName="error_page_to_website_check"
                   className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-white p-5 text-center shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
                 >
                   <Globe className="h-6 w-6 text-emerald-600 mb-1 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-bold text-zinc-900">{isJapanese ? 'サイトを診断する' : isZh ? '诊断你的站点' : isTw ? '診斷你的站點' : 'Diagnose Your Site'}</span>
                   <span className="text-xs text-zinc-500 font-medium">Website Check</span>
-                </Link>
+                </TrackedLink>
                 <Link
                   href="/tools/cloudflare-trace"
                   className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white p-5 text-center shadow-sm transition-all hover:border-sky-500 hover:shadow-md"
