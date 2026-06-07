@@ -34,25 +34,8 @@ export async function POST(request: NextRequest) {
       ts: Date.now()
     }))
 
-    // Best-effort approximate KV counter (optional, not strictly consistent)
-    let KV: any = (process.env as any).KV
-    if (!KV) {
-      try {
-        const { env } = require('cloudflare:sockets')
-        KV = (env as any)?.KV || (globalThis as any).KV
-      } catch {
-        KV = (globalThis as any).KV
-      }
-    }
-
-    if (KV) {
-      const key = `analytics:daily:${today}:${event}`
-      // Fire and forget read/modify/write
-      KV.get(key).then((val: string | null) => {
-        const count = parseInt(val || '0') + 1
-        return KV.put(key, count.toString())
-      }).catch(() => null)
-    }
+    // Log is the source of truth.
+    // KV counter intentionally disabled to avoid build/runtime coupling.
 
     return NextResponse.json(
       { ok: true },
