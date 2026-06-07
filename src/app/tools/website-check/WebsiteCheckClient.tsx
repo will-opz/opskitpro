@@ -1495,6 +1495,39 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     runDiagnostic(normalized)
   }
 
+  const detectCloudflareErrorMatch = (data: any) => {
+    if (!data?.http) return null
+    const status = data.http.status_code
+    const cfRay = data.http.cf_ray
+    const isCfCdn = data.cdn?.provider === 'Cloudflare' || String(data.cdn?.server || '').toLowerCase().includes('cloudflare')
+    const pageTitle = data.http.page_title?.toLowerCase() || ''
+
+    let code: string | null = null
+
+    if (status >= 520 && status <= 530 && (cfRay || isCfCdn || pageTitle.includes('cloudflare'))) {
+      code = String(status)
+    } else if (status === 403 && (cfRay || isCfCdn)) {
+      if (pageTitle.includes('access denied') || pageTitle.includes('1020')) code = '1020'
+      if (pageTitle.includes('1006')) code = '1006'
+    } else if (status === 429 && (cfRay || isCfCdn)) {
+      if (pageTitle.includes('rate limit') || pageTitle.includes('1015')) code = '1015'
+    }
+
+    if (!code && pageTitle) {
+      if (pageTitle.includes('error 522')) code = '522'
+      else if (pageTitle.includes('error 520')) code = '520'
+      else if (pageTitle.includes('error 521')) code = '521'
+      else if (pageTitle.includes('error 523')) code = '523'
+      else if (pageTitle.includes('error 524')) code = '524'
+      else if (pageTitle.includes('error 525')) code = '525'
+      else if (pageTitle.includes('error 526')) code = '526'
+      else if (pageTitle.includes('error 1020')) code = '1020'
+      else if (pageTitle.includes('error 1015')) code = '1015'
+      else if (pageTitle.includes('error 1006')) code = '1006'
+    }
+    return code
+  }
+
   // Memoize advice to avoid computing it twice in render
   const adviceList = useMemo(() => (result ? getAdvice(result) : []), [result])
   const diagnosticFindings = useMemo(() => (result ? buildDiagnosticFindings(result) : []), [result])
@@ -1805,6 +1838,79 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       {result && !loading && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
            
+           {/* Cloudflare Error Banner */}
+           {(() => {
+             const cfErrorMatch = detectCloudflareErrorMatch(result)
+             if (!cfErrorMatch) return null;
+             return (
+               <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+                 <div className="flex items-center gap-3 relative z-10">
+                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                     <AlertCircle className="h-5 w-5" />
+                   </div>
+                   <div>
+                     <h3 className="text-sm font-bold text-red-800">Cloudflare Error {cfErrorMatch} Detected</h3>
+                     <p className="text-xs font-medium text-red-600/80 mt-0.5">We found a matching troubleshooting guide in our knowledge base.</p>
+                   </div>
+                 </div>
+                 <Link href={`/errors/${cfErrorMatch}`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
+                   Read {cfErrorMatch} Troubleshooting Guide
+                   <ArrowRight className="h-4 w-4" />
+                 </Link>
+               </div>
+             )
+           })()}
+
+           {/* DNS Security Banner */}
+           {(() => {
+             const records = result.dns?.records || {}
+             const hasDnsSecurityRecords = (records.MX && records.MX.length > 0) || (records.TXT && records.TXT.length > 0)
+             if (!hasDnsSecurityRecords) return null;
+             return (
+               <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+                 <div className="flex items-center gap-3 relative z-10">
+                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                     <ShieldCheck className="h-5 w-5" />
+                   </div>
+                   <div>
+                     <h3 className="text-sm font-bold text-emerald-800">Email & DNS Security Validation Available</h3>
+                     <p className="text-xs font-medium text-emerald-600/80 mt-0.5">We detected MX/TXT records. Audit your SPF, DMARC, and CAA configurations.</p>
+                   </div>
+                 </div>
+                 <Link href={`/tools/dns-lookup?tab=security&domain=${encodeURIComponent(result.target)}`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
+                   Run Security Audit
+                   <ArrowRight className="h-4 w-4" />
+                 </Link>
+               </div>
+             )
+           })()}
+
+           {/* Cloudflare CDN Banner */}
+           {(() => {
+             const isCfCdn = result.cdn?.provider === 'Cloudflare' || String(result.cdn?.server || '').toLowerCase().includes('cloudflare') || !!result.meta?.cfRay
+             if (!isCfCdn) return null;
+             return (
+               <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+                 <div className="flex items-center gap-3 relative z-10">
+                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                     <Zap className="h-5 w-5" />
+                   </div>
+                   <div>
+                     <h3 className="text-sm font-bold text-sky-800">Cloudflare Edge Detected</h3>
+                     <p className="text-xs font-medium text-sky-600/80 mt-0.5">This domain is routed through Cloudflare's global network.</p>
+                   </div>
+                 </div>
+                 <Link href={`/tools/cloudflare-trace`} className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm">
+                   Analyze Cloudflare Trace
+                   <ArrowRight className="h-4 w-4" />
+                 </Link>
+               </div>
+             )
+           })()}
+
            {/* Overall Status Bar */}
            <div className={`mb-6 p-4 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5 relative overflow-hidden ${result.http.success ? 'bg-white/90 border-emerald-100/80' : 'bg-red-50 border-red-100'}`}>
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>

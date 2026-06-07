@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
+import { RelatedTools } from '@/components/RelatedTools'
 import WebsiteCheckClient from './WebsiteCheckClient'
 import type { Metadata } from 'next'
 
@@ -11,24 +12,85 @@ export async function generateMetadata(): Promise<Metadata> {
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang);
   
+  const title = `${dict.home.card1_title} | OpsKitPro`;
+  const description = dict.home.card1_desc;
+
   return {
-    title: dict.home.card1_title,
-    description: dict.home.card1_desc,
+    title,
+    description,
     openGraph: {
-      title: `${dict.home.card1_title} | OpsKitPro`,
-      description: dict.home.card1_desc,
+      title,
+      description,
+      type: 'website',
+      url: 'https://opskitpro.com/tools/website-check',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
     }
   }
 }
-
 
 export default async function DiagnosticPage() {
   const cookieStore = cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "zh") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://opskitpro.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Tools', item: 'https://opskitpro.com/services' },
+      { '@type': 'ListItem', position: 3, name: dict.home.card1_title, item: 'https://opskitpro.com/tools/website-check' },
+    ],
+  }
+
+  const jsonLdWebApp = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: dict.home.card1_title,
+    description: dict.home.card1_desc,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Any',
+    url: 'https://opskitpro.com/tools/website-check',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+  }
+
+  const jsonLdFAQ = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What does this website check tool diagnose?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'It performs a comprehensive health check, testing DNS resolution, ping/latency, SSL/TLS certificates, security headers, server connection, and Cloudflare routing.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can it detect Cloudflare errors?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. It accurately identifies common Cloudflare edge errors (e.g., 522 Connection Timeout, 1020 Access Denied) and links to detailed troubleshooting guides.',
+        },
+      },
+    ],
+  }
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }} />
+      
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense fallback={
@@ -46,6 +108,7 @@ export default async function DiagnosticPage() {
         }>
           <WebsiteCheckClient dict={dict} lang={lang} />
         </Suspense>
+        <RelatedTools currentTool="website-check" lang={lang} />
       </div>
       <SiteFooter dict={dict} />
     </>

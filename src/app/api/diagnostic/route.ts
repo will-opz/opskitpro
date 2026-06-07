@@ -339,7 +339,7 @@ export async function GET(request: NextRequest | Request) {
     const targetUrl = query.startsWith('http') ? query : (isActuallyIp ? `http://${ipHost}` : `https://${domain}`)
     const isHttps = targetUrl.startsWith('https')
 
-    const httpPromise: Promise<[Response | { error: true; message: string }, number, RedirectTrace | undefined]> = (() => {
+    const httpPromise: Promise<[Response | { error: true; message: string }, number, RedirectTrace | undefined, string?]> = (() => {
       const t0 = Date.now()
       return Promise.all([
         fetch(targetUrl, {
@@ -347,6 +347,22 @@ export async function GET(request: NextRequest | Request) {
           redirect: 'follow',
           headers: { 'User-Agent': 'OpsKitPro-Diagnostic/1.0' },
           signal: AbortSignal.timeout(8000)
+        }).then(async (res) => {
+          let title: string | undefined = undefined
+          try {
+            const clone = res.clone()
+            const contentType = clone.headers.get('content-type') || ''
+            if (contentType.includes('text/html')) {
+              const text = await clone.text().then(t => t.slice(0, 8192)).catch(() => '')
+              const match = text.match(/<title[^>]*>([^<]+)<\/title>/i)
+              if (match && match[1]) {
+                title = match[1].trim().replace(/\s+/g, ' ')
+              }
+            }
+          } catch (e) {}
+          // @ts-ignore attach title to response object temporarily
+          res._page_title = title
+          return res
         }),
         traceRedirects(targetUrl).catch(() => ({
           chain: [],
@@ -354,8 +370,8 @@ export async function GET(request: NextRequest | Request) {
           warning: 'Redirect trace unavailable.',
         })),
       ])
-        .then(([res, redirectTrace]) => [res, Date.now() - t0, redirectTrace] as [Response, number, RedirectTrace])
-        .catch((e: Error) => [{ error: true as const, message: e.message }, Date.now() - t0, undefined] as [{ error: true; message: string }, number, undefined])
+        .then(([res, redirectTrace]) => [res, Date.now() - t0, redirectTrace, (res as any)._page_title] as [Response, number, RedirectTrace, string?])
+        .catch((e: Error) => [{ error: true as const, message: e.message }, Date.now() - t0, undefined, undefined] as [{ error: true; message: string }, number, undefined, undefined])
     })()
 
     const sslPromise = (isActuallyIp || !isHttps) ? Promise.resolve(null) : fetch(`https://crt.sh/?q=${domain}&output=json`, {
@@ -370,7 +386,7 @@ export async function GET(request: NextRequest | Request) {
       }).then(r => r.ok ? r.json() : null).catch(() => null)
     })()
 
-    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency, redirectTrace], dnsRecordsData] = await Promise.all([
+    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency, redirectTrace, pageTitle], dnsRecordsData] = await Promise.all([
       dnsPromise,
       httpPromise,
       recordsPromise
@@ -520,6 +536,8 @@ export async function GET(request: NextRequest | Request) {
         redirect_chain: redirectTrace?.chain || [],
         redirect_count: Math.max(0, (redirectTrace?.chain?.length || 1) - 1),
         redirect_warning: redirectTrace?.warning,
+        cf_ray: httpRes.headers.get('cf-ray') || undefined,
+        page_title: pageTitle,
       },
       securityHeaders,
       ssl: { valid: certValid, issuer: sslIssuer, expiry: sslExpiry, grade: sslGrade, factors: sslFactors, tls_version: isHttps ? 'TLS' : 'HTTP', chain: certChain },

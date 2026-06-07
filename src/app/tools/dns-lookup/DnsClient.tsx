@@ -24,7 +24,8 @@ import {
   Cpu,
   Monitor
 } from 'lucide-react'
-import { useDnsLookup, type DnsRecordType, type DnsProvider } from './hooks'
+import { useDnsLookup, useSecurityAudit, type DnsRecordType, type DnsProvider } from './hooks'
+import { SecurityAuditPanel } from './components/SecurityAuditPanel'
 
 export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const { 
@@ -37,14 +38,25 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
 
   const searchParams = useSearchParams()
   const isJapanese = lang === 'ja'
+  const isZh = lang === 'zh'
+  const isTw = lang === 'tw'
   
   const [domain, setDomain] = useState('')
   const [selectedType, setSelectedType] = useState<DnsRecordType>('A')
   const [selectedProvider, setSelectedProvider] = useState<DnsProvider>('cloudflare')
+  const [activeTab, setActiveTab] = useState<'standard' | 'security'>('standard')
+
   // dict passed via props
   const [showJson, setShowJson] = useState(false)
   const [copied, setCopied] = useState(false)
   const [localResolvers, setLocalResolvers] = useState<Record<string, any>>({})
+
+  const {
+    loading: auditLoading,
+    result: auditResult,
+    error: auditError,
+    runAudit
+  } = useSecurityAudit()
 
   const recordTypes: DnsRecordType[] = ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT', 'CAA']
   const providers: { id: DnsProvider; name: string }[] = [
@@ -56,10 +68,20 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
 
   useEffect(() => {
     const q = searchParams.get('q') || searchParams.get('domain')
+    const tabParam = searchParams.get('tab')
+    
+    if (tabParam === 'security') {
+      setActiveTab('security')
+    }
+
     if (q) {
       setDomain(q)
-      lookup(q, selectedType, selectedProvider)
-      runLocalAudit(q)
+      if (tabParam === 'security') {
+        runAudit(q)
+      } else {
+        lookup(q, selectedType, selectedProvider)
+        runLocalAudit(q)
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]) // intentionally run only on URL param change
@@ -67,8 +89,12 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!domain) return
-    lookup(domain, selectedType, selectedProvider)
-    runLocalAudit(domain)
+    if (activeTab === 'standard') {
+      lookup(domain, selectedType, selectedProvider)
+      runLocalAudit(domain)
+    } else {
+      runAudit(domain)
+    }
   }
 
   const runLocalAudit = async (d: string) => {
@@ -130,13 +156,38 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
        </nav>
 
        {/* Header */}
-       <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
+       <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
           <div className="text-center md:text-left">
              <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-zinc-900 tracking-tighter mb-4 leading-none break-words">
                 {dict.tools.dns_lookup_title}
              </h1>
              <p className="text-sm text-zinc-500 leading-relaxed max-w-2xl">{dict.tools.dns_lookup_desc}</p>
           </div>
+       </div>
+
+       {/* Tabs */}
+       <div className="inline-flex rounded-xl bg-zinc-100 p-1 mb-8 border border-zinc-200">
+         <button
+           onClick={() => setActiveTab('standard')}
+           className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+             activeTab === 'standard' 
+               ? 'bg-white text-zinc-900 shadow-sm' 
+               : 'text-zinc-500 hover:text-zinc-900'
+           }`}
+         >
+           {isJapanese ? '標準検索' : isZh ? '标准查询' : isTw ? '標準查詢' : 'Standard Lookup'}
+         </button>
+         <button
+           onClick={() => setActiveTab('security')}
+           className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+             activeTab === 'security' 
+               ? 'bg-white text-emerald-600 shadow-sm' 
+               : 'text-zinc-500 hover:text-zinc-900'
+           }`}
+         >
+           <ShieldCheck className="w-4 h-4" />
+           {isJapanese ? 'セキュリティ監査' : isZh ? '安全审计' : isTw ? '安全審計' : 'Security Audit'}
+         </button>
        </div>
 
        {/* Control Center */}
@@ -153,52 +204,62 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
                 />
              </div>
              
-             <div className="flex flex-wrap items-center gap-4 p-3 bg-zinc-50 rounded-[2rem] border border-zinc-100">
-                <div className="flex items-center gap-3 px-4 border-r border-zinc-200">
-                   <Filter className="w-4 h-4 text-zinc-400" />
-                   <select 
-                     value={selectedType}
-                     onChange={(e) => setSelectedType(e.target.value as DnsRecordType)}
-                     className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-zinc-600 appearance-none tracking-[0.18em]"
-                   >
-                      {recordTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                   </select>
-                </div>
-                <div className="flex items-center gap-3 px-4">
-                   <Server className="w-4 h-4 text-zinc-400" />
-                   <select 
-                     value={selectedProvider}
-                     onChange={(e) => setSelectedProvider(e.target.value as DnsProvider)}
-                     className="bg-transparent text-[10px] font-semibold outline-none cursor-pointer text-zinc-500 appearance-none tracking-[0.16em]"
-                   >
-                      {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                   </select>
-                   <ChevronDown className="w-3 h-3 text-zinc-300" />
-                </div>
-             </div>
+             {activeTab === 'standard' && (
+               <div className="flex flex-wrap items-center gap-4 p-3 bg-zinc-50 rounded-[2rem] border border-zinc-100">
+                  <div className="flex items-center gap-3 px-4 border-r border-zinc-200">
+                     <Filter className="w-4 h-4 text-zinc-400" />
+                     <select 
+                       value={selectedType}
+                       onChange={(e) => setSelectedType(e.target.value as DnsRecordType)}
+                       className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-zinc-600 appearance-none tracking-[0.18em]"
+                     >
+                        {recordTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                     </select>
+                  </div>
+                  <div className="flex items-center gap-3 px-4">
+                     <Server className="w-4 h-4 text-zinc-400" />
+                     <select 
+                       value={selectedProvider}
+                       onChange={(e) => setSelectedProvider(e.target.value as DnsProvider)}
+                       className="bg-transparent text-[10px] font-semibold outline-none cursor-pointer text-zinc-500 appearance-none tracking-[0.16em]"
+                     >
+                        {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                     </select>
+                     <ChevronDown className="w-3 h-3 text-zinc-300" />
+                  </div>
+               </div>
+             )}
 
              <button 
                type="submit"
-               disabled={loading}
-               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 sm:px-10 py-4 sm:py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-semibold shadow-lg shadow-emerald-500/20 disabled:opacity-50 group/btn"
+               disabled={activeTab === 'standard' ? loading : auditLoading}
+               className={`text-white px-6 sm:px-10 py-4 sm:py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-semibold shadow-lg disabled:opacity-50 group/btn ${activeTab === 'security' ? 'bg-zinc-900 hover:bg-zinc-800' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-500/20'}`}
              >
-                {loading ? <Activity className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
-                <span className="tracking-[0.18em]">{dict.tools.dns.btn}</span>
+                {(activeTab === 'standard' ? loading : auditLoading) ? <Activity className="w-5 h-5 animate-spin" /> : activeTab === 'security' ? <ShieldCheck className="w-5 h-5" /> : <Zap className="w-5 h-5 fill-current" />}
+                <span className="tracking-[0.18em]">{activeTab === 'security' ? (isJapanese ? '監査開始' : isZh ? '开始审计' : isTw ? '開始審計' : 'Run Audit') : dict.tools.dns.btn}</span>
              </button>
           </form>
        </div>
 
-       {error && (
+       {(activeTab === 'standard' ? error : auditError) && (
          <div className="mb-12 p-10 bg-red-50 border border-red-100 rounded-[2.5rem] text-red-600 flex items-start gap-6 animate-in fade-in slide-in-from-top-4">
             <AlertCircle className="w-8 h-8 shrink-0" />
             <div>
                <h3 className="text-xl font-semibold tracking-tight mb-2">{isJapanese ? '診断エラー' : lang === 'zh' ? '查询异常' : lang === 'tw' ? '查詢異常' : 'Lookup error'}</h3>
-               <p className="text-sm opacity-80 leading-relaxed">{error}</p>
+               <p className="text-sm opacity-80 leading-relaxed">{activeTab === 'standard' ? error : auditError}</p>
             </div>
          </div>
        )}
 
-       {result && (
+       {/* Security Audit Results */}
+       {activeTab === 'security' && auditResult && (
+         <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+           <SecurityAuditPanel result={auditResult} lang={lang} />
+         </div>
+       )}
+
+       {/* Standard Lookup Results */}
+       {activeTab === 'standard' && result && (
          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Local Perspective Audit Panel */}
             <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2.5rem] p-8 sm:p-10 mb-8">
@@ -338,7 +399,7 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
        )}
 
        {/* Forensics History Section */}
-       {!result && !loading && history.length > 0 && (
+       {activeTab === 'standard' && !result && !loading && history.length > 0 && (
           <div className="animate-in fade-in duration-1000 mt-24">
              <div className="flex items-center justify-between mb-10 border-b border-zinc-100 pb-6">
                 <div>
@@ -372,11 +433,11 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
        )}
 
        {/* Hero Empty State View */}
-       {!result && !loading && (
+       {!result && !auditResult && !loading && !auditLoading && (
        <div className="max-w-2xl mx-auto mt-16 sm:mt-24 p-10 sm:p-20 rounded-[3.5rem] border border-dashed border-zinc-200 bg-white/60 text-center animate-in fade-in duration-1000">
               <Cpu className="w-16 h-16 text-zinc-100 mx-auto mb-8 animate-pulse text-orange-500/20" />
               <p className="text-zinc-500 text-[10px] leading-relaxed tracking-[0.18em] opacity-40">
-                {isJapanese ? 'A・AAAA・CNAME・MX・NS・TXT・CAA をまとめて確認できます。' : 'A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines'}
+                {activeTab === 'standard' ? (isJapanese ? 'A・AAAA・CNAME・MX・NS・TXT・CAA をまとめて確認できます。' : 'A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines') : (isJapanese ? 'ドメインの SPF・DMARC・CAA レコードをまとめて診断します。' : 'DMARC • SPF • CAA Security Diagnostics')}
               </p>
           </div>
       )}

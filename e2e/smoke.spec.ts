@@ -103,11 +103,11 @@ test.beforeEach(async ({ context, page }) => {
 test('home page exposes core navigation and tool entry points', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: /DNS, IP & Site/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Tools/i }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: /Knowledge Base/i }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: /Website Diagnostic/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /IP Lookup/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /DNS, IP & Site|DNS·IP·网站|DNS・IP・サイトを|DNS·IP·網站/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Tools|工具|ツール/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Knowledge Base|知识库|知識庫|ナレッジベース/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Website Diagnostic|网站综合诊断|網站綜合診斷|Webサイト診断/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /IP Lookup|IP 归属查询|IP 歸屬查詢|IP アドレス検索/i })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Open DNS lookup' })).toBeVisible()
 })
 
@@ -296,3 +296,112 @@ test('mobile menu opens and exposes primary navigation', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Knowledge Base', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'About', exact: true })).toBeVisible()
 })
+
+test('website diagnostics detects Cloudflare errors and links to encyclopedia', async ({ page }) => {
+  await page.route('**/api/diagnostic**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        domain: 'cloudflare-error.example.com',
+        status: 'success',
+        isActuallyIp: false,
+        isPrivate: false,
+        dns: {
+          resolved_ip: '104.21.1.1',
+          latency: '42ms',
+          success: true,
+          ipv4: ['104.21.1.1'],
+          ipv6: [],
+        },
+        http: {
+          success: false,
+          status_code: 522,
+          latency: '118ms',
+          cf_ray: '8dfj2819dj29-NRT',
+          page_title: 'Error 522 Connection timed out'
+        },
+        cdn: {
+          is_provider: true,
+          provider: 'Cloudflare',
+          server: 'cloudflare'
+        },
+        meta: { checkedAt: '2026-06-04T00:00:00.000Z', totalMs: 320 }
+      }),
+    }),
+  )
+
+  await page.goto('/tools/website-check')
+  await page.getByPlaceholder(/Enter domain/i).fill('cloudflare-error.example.com')
+  await page.getByRole('button', { name: /Analyze/i }).click()
+
+  // Verify the CF Error banner is displayed
+  await expect(page.getByText('Cloudflare Error 522 Detected')).toBeVisible()
+  
+  // Verify the link points to the encyclopedia
+  const link = page.getByRole('link', { name: /Read 522 Troubleshooting Guide/i })
+  await expect(link).toBeVisible()
+  await expect(link).toHaveAttribute('href', '/errors/522')
+})
+
+test('cloudflare trace renders and analyzes local connection', async ({ page }) => {
+  await page.route('**/cdn-cgi/trace**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/plain',
+      body: 'fl=234f2\nh=1.1.1.1\nip=203.0.113.5\nts=1717500000\nvisit_scheme=https\nuag=Mozilla/5.0\ncolo=NRT\nsliver=none\nhttp=http/2\nloc=JP\ntls=TLSv1.3\nsni=plaintext\nwarp=off\ngateway=off\nkex=X25519'
+    }),
+  )
+
+  await page.goto('/tools/cloudflare-trace')
+  await expect(page.getByRole('heading', { name: /Cloudflare Trace Center/i })).toBeVisible()
+
+  // Wait for fetch to complete and render
+  await expect(page.getByText('203.0.113.5')).toBeVisible()
+  await expect(page.getByText('NRT', { exact: true })).toBeVisible()
+  await expect(page.getByText('TLSv1.3', { exact: true })).toBeVisible()
+})
+
+test('dns security audit detects weak spf and missing dmarc', async ({ page }) => {
+  // Mock SPF query
+  await page.route('**/api/dns?domain=bad.example.com&type=TXT', async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ answers: [{ data: 'v=spf1 include:_spf.google.com ?all' }] })
+    })
+  })
+
+  // Mock DMARC query
+  await page.route('**/api/dns?domain=_dmarc.bad.example.com&type=TXT', async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ answers: [] })
+    })
+  })
+
+  // Mock CAA query
+  await page.route('**/api/dns?domain=bad.example.com&type=CAA', async (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ answers: [{ data: '0 issue "letsencrypt.org"' }] })
+    })
+  })
+
+  await page.goto('/tools/dns-lookup')
+  
+  // Switch to Security Audit tab
+  await page.getByRole('button', { name: /Security Audit/i }).click()
+  
+  // Fill and submit
+  await page.getByPlaceholder(/Lookup domain/i).fill('bad.example.com')
+  await page.getByRole('button', { name: /Run Audit/i }).click()
+
+  // Verify scoring and text
+  await expect(page.getByText('Weak SPF policy (?all or +all)')).toBeVisible()
+  await expect(page.getByText('No DMARC record found on _dmarc subdomain.')).toBeVisible()
+  await expect(page.getByText('F', { exact: true })).toBeVisible() // Score should be F
+})
+

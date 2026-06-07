@@ -4,6 +4,7 @@ import { Metadata } from 'next'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
+import { RelatedTools } from '@/components/RelatedTools'
 import IPLookupClient from './IPLookupClient'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -46,6 +47,7 @@ export default async function IPPage() {
         }>
           <IPLookupClient dict={dict} lang={lang} />
         </Suspense>
+        <RelatedTools currentTool="ip-lookup" lang={lang} />
       </div>
       <SiteFooter dict={dict} />
     </>

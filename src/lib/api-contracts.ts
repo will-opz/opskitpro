@@ -111,6 +111,8 @@ export interface DiagnosticHttpSummary {
   }>
   redirect_count?: number
   redirect_warning?: string
+  cf_ray?: string
+  page_title?: string
 }
 
 export interface DiagnosticSecurityHeaderCheck {
