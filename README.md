@@ -2,20 +2,31 @@
 
 [English](./README.md) | [简体中文](./README_zh.md)
 
-**OpsKitPro** is a lightweight, practical diagnostic toolbox for SREs, DevOps engineers, and developers who need quick browser-based checks during incidents and day-to-day troubleshooting. It focuses on fast website diagnostics, DNS/IP inspection, JSON/WebSocket utilities, and field notes distilled from real operations work.
+**OpsKitPro** is a comprehensive **Diagnostics Hub** for SREs, DevOps engineers, and webmasters. It has evolved from a simple developer toolbox into a closed-loop diagnostic engine designed to quickly identify, explain, and resolve edge networking and DNS issues.
 
 > [!IMPORTANT]
 > The public repository contains the main site, tools, articles, and Cloudflare deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live in a separate private repository: `opskitpro-ops`.
 
 ---
 
+## 🔍 The Diagnostics Workflow
+
+OpsKitPro is built around a seamless troubleshooting funnel:
+1. **Discover**: Start at `Website Check` to automatically uncover hidden CDN/DNS faults.
+2. **Explain**: Issues like a 522 Timeout intelligently prompt the `Cloudflare Error Encyclopedia` for deep root-cause analysis.
+3. **Verify**: Use `Cloudflare Trace` to inspect edge connectivity, or transition to `DNS Security Audit` to evaluate SPF/DMARC/CAA health.
+4. **Report**: Export rich Markdown diagnostic reports directly from your browser.
+
+---
+
 ## Core Tool Suite
 
-- **Website Check** (`/tools/website-check`): HTTP status, SSL/TLS, DNS, CDN, headers, performance, and security header diagnostics.
-- **DNS Lookup** (`/tools/dns-lookup`): A / AAAA / CNAME / MX / NS / TXT / CAA lookup with multi-resolver comparison.
+- **Website Check** (`/tools/website-check`): HTTP status, SSL/TLS, DNS, CDN headers. Automatically links to diagnostic encyclopedias when anomalies are found.
+- **DNS Lookup & Security Audit** (`/tools/dns-lookup`): Resolves A/CNAME/MX and proactively scores domain security (SPF/DMARC/CAA) with Markdown export.
+- **Cloudflare Trace** (`/tools/cloudflare-trace`): Diagnoses the edge network path (Colo, TLS, SNI) bypassing local cache issues.
+- **Error Encyclopedia** (`/errors/*`): A structured, SEO-optimized directory explaining Cloudflare errors (522, 1020, 525) with resolution paths.
 - **IP Lookup** (`/tools/ip-lookup`): IP geolocation, network metadata, and structured fallback behavior.
-- **JSON Tools** (`/tools/json`): format, repair, diff, schema validation, extraction, and jq-style querying.
-- **WebSocket Tester** (`/tools/websocket`): connection testing, message history, templates, ping monitoring, and multi-session workflows.
+- **JSON & WebSocket** (`/tools/json`, `/tools/websocket`): Developer utilities for formatting, diffing, and real-time connection debugging.
 - **Utility Tools**: QR generation, password generation, time tools, encoding tools, and prompt builder.
 
 ---
