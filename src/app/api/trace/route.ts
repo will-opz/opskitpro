@@ -17,9 +17,35 @@ const BLOCKED_PATTERNS = [
 // We'll enforce this by parsing the hostname and enforcing standard ports for HTTPS.
 const VALID_HOSTNAME_REGEX = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
 
+const parseTraceText = (text: string) => {
+  const raw = Object.fromEntries(
+    text
+      .trim()
+      .split('\n')
+      .map((line) => line.split('='))
+      .filter((parts) => parts.length === 2)
+      .map(([key, value]) => [key.trim(), value.trim()]),
+  ) as Record<string, string>
+
+  return {
+    raw,
+    ip: raw.ip || '',
+    colo: raw.colo || '',
+    loc: raw.loc || '',
+    warp: raw.warp || 'off',
+    gateway: raw.gateway || 'off',
+    http: raw.http || '',
+    tls: raw.tls || '',
+    sni: raw.sni || '',
+    kex: raw.kex || '',
+    postQuantum: /mlkem|kyber/i.test(raw.kex || ''),
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const domain = searchParams.get('domain')
+  const wantsJson = searchParams.get('format') === 'json'
 
   if (!domain) {
     return NextResponse.json({ error: 'Missing domain parameter' }, { status: 400 })
@@ -56,6 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     const text = await response.text()
+    const parsed = parseTraceText(text)
     const isCloudflare = response.headers.get('server')?.toLowerCase().includes('cloudflare') || false
 
     // Heuristics to confirm it's actually CF trace
@@ -67,6 +94,15 @@ export async function GET(request: NextRequest) {
         status: response.status,
         text: text.slice(0, 500) // just a snippet if it's not a trace
       }, { status: 404 })
+    }
+
+    if (wantsJson) {
+      return NextResponse.json(parsed, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'X-Target-Server': response.headers.get('server') || 'unknown',
+        },
+      })
     }
 
     return new NextResponse(text, {

@@ -29,6 +29,7 @@ import type {
   PingResult,
   SpeedResult,
   DnsPerfResult,
+  DnsLatencyItem,
   ReachabilityItem,
   NetworkAnalysis,
 } from '@/lib/api-contracts'
@@ -41,6 +42,10 @@ interface CfTrace {
   http: string
   tls: string
   warp: string
+  gateway?: string
+  loc?: string
+  sni?: string
+  kex?: string
   ip: string
   colo: string
 }
@@ -68,6 +73,8 @@ function analyzeNetwork(
   info: NetworkInfoResponse | null,
   ping: PingResult | null,
   speed: SpeedResult | null,
+  trace: CfTrace | null,
+  dnsLatency: DnsLatencyItem[],
   reachability: ReachabilityItem[],
   lang: string
 ): NetworkAnalysis {
@@ -125,25 +132,59 @@ function analyzeNetwork(
   const colo = info?.colo || '—'
   const avgMs = ping ? `${ping.avg.toFixed(0)} ms` : '—'
   const dlMbps = speed?.downloadMbps ? `${speed.downloadMbps.toFixed(1)} Mbps` : '—'
+  const traceData = trace || info?.trace || null
+  const edgeColo = traceData?.colo || colo
+  const warp = traceData?.warp || 'off'
+  const gateway = traceData?.gateway || 'off'
+  const kex = traceData?.kex || ''
+  const hasPostQuantumKex = /mlkem|kyber/i.test(kex)
+  const slowReachability = reachability.filter((item) => item.status === 'slow' || item.status === 'failed')
+  const fastestDns = dnsLatency
+    .filter((item) => item.status === 'ok' && item.latencyMs !== null)
+    .sort((a, b) => Number(a.latencyMs) - Number(b.latencyMs))[0]
 
   // Summary
   const summaries: Record<string, string[]> = {
     zh: [
-      `你的网络连接到 Cloudflare ${colo} 节点。`,
+      `你的网络连接到 Cloudflare ${edgeColo} 节点。`,
+      warp === 'plus'
+        ? `WARP+ 已开启，Gateway ${gateway === 'on' ? '已启用' : '未启用'}。`
+        : warp === 'on'
+          ? `WARP 已开启，Gateway ${gateway === 'on' ? '已启用' : '未启用'}。`
+          : 'WARP 未开启。',
+      hasPostQuantumKex ? '已启用后量子密钥交换，首次 TLS 握手可能略有额外耗时。' : '',
       ping ? `平均延迟 ${avgMs}，${ping.avg < 80 ? '延迟优秀，非常适合实时应用。' : ping.avg < 150 ? '延迟正常，适合日常使用。' : '延迟偏高，可能影响实时通信。'}` : '',
       speed?.downloadMbps ? `下载速度 ${dlMbps}。` : '',
+      fastestDns ? `当前最快公共 DNS 探测为 ${fastestDns.provider}（${fastestDns.latencyMs} ms）。` : '',
+      ping && ping.avg < 100 && slowReachability.length > 0 ? '基础延迟正常，但部分目标可达性较慢，实时通信或长连接体验可能受路由影响。' : '',
       hasIPv6 ? '你的网络已启用 IPv6 双栈，支持新一代互联网服务。' : '你的网络尚未启用 IPv6。',
     ],
     en: [
-      `Connected to Cloudflare ${colo} edge node.`,
+      `Connected to Cloudflare ${edgeColo} edge node.`,
+      warp === 'plus'
+        ? `WARP+ is enabled and Gateway is ${gateway === 'on' ? 'on' : 'off'}.`
+        : warp === 'on'
+          ? `WARP is enabled and Gateway is ${gateway === 'on' ? 'on' : 'off'}.`
+          : 'WARP is not enabled.',
+      hasPostQuantumKex ? 'Post-quantum key exchange is enabled; first TLS handshakes may carry slight extra cost.' : '',
       ping ? `Average latency ${avgMs} — ${ping.avg < 80 ? 'excellent for real-time applications.' : ping.avg < 150 ? 'good for everyday use.' : 'latency is elevated, may impact real-time communication.'}` : '',
       speed?.downloadMbps ? `Download speed: ${dlMbps}.` : '',
+      fastestDns ? `Fastest public DNS probe: ${fastestDns.provider} (${fastestDns.latencyMs} ms).` : '',
+      ping && ping.avg < 100 && slowReachability.length > 0 ? 'Baseline latency is healthy, but some targets are slow; real-time apps or long-lived connections may be affected by routing.' : '',
       hasIPv6 ? 'Your network supports IPv6 dual-stack.' : 'IPv6 is not yet enabled on your network.',
     ],
     ja: [
-      `Cloudflare ${colo} エッジノードに接続中。`,
+      `Cloudflare ${edgeColo} エッジノードに接続中。`,
+      warp === 'plus'
+        ? `WARP+ が有効で、Gateway は ${gateway === 'on' ? '有効' : '無効'} です。`
+        : warp === 'on'
+          ? `WARP が有効で、Gateway は ${gateway === 'on' ? '有効' : '無効'} です。`
+          : 'WARP は有効ではありません。',
+      hasPostQuantumKex ? 'ポスト量子鍵交換が有効です。初回 TLS ハンドシェイクの時間がわずかに増える可能性があります。' : '',
       ping ? `平均遅延 ${avgMs} — ${ping.avg < 80 ? 'リアルタイムアプリケーションに最適です。' : ping.avg < 150 ? '日常利用に適しています。' : '遅延がやや高く、リアルタイム通信に影響する可能性があります。'}` : '',
       speed?.downloadMbps ? `ダウンロード速度: ${dlMbps}。` : '',
+      fastestDns ? `最速の Public DNS は ${fastestDns.provider}（${fastestDns.latencyMs} ms）です。` : '',
+      ping && ping.avg < 100 && slowReachability.length > 0 ? '基本遅延は良好ですが、一部ターゲットが遅く、リアルタイム通信や長時間接続に影響する可能性があります。' : '',
       hasIPv6 ? 'IPv6 デュアルスタックに対応しています。' : 'IPv6 はまだ有効ではありません。',
     ],
   }
@@ -226,6 +267,24 @@ function analyzeNetwork(
   if (!hasIPv6) potentialIssues.push(im.noIPv6)
   const unreachableCount = reachability.filter((r) => !r.reachable).length
   if (unreachableCount > 2) potentialIssues.push(im.lowReach)
+  if (hasPostQuantumKex) {
+    potentialIssues.push(
+      isCN
+        ? '后量子密钥交换已启用，首次连接握手可能略慢'
+        : isJA
+          ? 'ポスト量子鍵交換が有効で、初回接続がわずかに遅くなる可能性'
+          : 'Post-quantum key exchange may add slight first-connection latency'
+    )
+  }
+  if ((warp === 'on' || warp === 'plus') && ping && ping.avg < 100 && slowReachability.length > 0) {
+    potentialIssues.push(
+      isCN
+        ? 'WARP 路由下部分目标较慢，可能影响即时通讯/长连接'
+        : isJA
+          ? 'WARP ルーティングで一部ターゲットが遅く、長時間接続に影響する可能性'
+          : 'Some targets are slow under WARP routing; realtime or long-lived connections may suffer'
+    )
+  }
 
   // Recommendations
   const recMap = {
@@ -260,6 +319,15 @@ function analyzeNetwork(
   if (ping && ping.jitter > 15) recommendations.push(rm.wiredConn)
   if (unreachableCount > 0) recommendations.push(rm.vpn)
   if (speed?.downloadMbps != null && speed.downloadMbps < 10) recommendations.push(rm.contactISP)
+  if ((warp === 'on' || warp === 'plus') && gateway === 'off' && slowReachability.length > 0) {
+    recommendations.push(
+      isCN
+        ? '日常使用可考虑 DNS Only，需要 Zero Trust 应用时再开启 WARP'
+        : isJA
+          ? '普段は DNS Only を使い、Zero Trust が必要なときだけ WARP を有効化'
+          : 'Use DNS Only for daily browsing; enable WARP when Zero Trust access is needed'
+    )
+  }
   if (recommendations.length < 2) recommendations.push(rm.reboot)
 
   return { score, grade, ipVersion, summary, suitableFor, potentialIssues, recommendations }
@@ -446,6 +514,8 @@ export default function NetworkCheckClient({
 
   const [dnsPerfResult, setDnsPerfResult] = useState<DnsPerfResult | null>(null)
   const [dnsPerfPhase, setDnsPerfPhase] = useState<CardPhase>('idle')
+  const [dnsLatency, setDnsLatency] = useState<DnsLatencyItem[]>([])
+  const [dnsLatencyPhase, setDnsLatencyPhase] = useState<CardPhase>('idle')
 
   const [reachability, setReachability] = useState<ReachabilityItem[]>([])
   const [reachPhase, setReachPhase] = useState<CardPhase>('idle')
@@ -547,6 +617,8 @@ export default function NetworkCheckClient({
     setDlProgress(0)
     setDnsPerfResult(null)
     setDnsPerfPhase('idle')
+    setDnsLatency([])
+    setDnsLatencyPhase('idle')
     setReachability([])
     setReachPhase('idle')
     setCfTrace(null)
@@ -557,6 +629,8 @@ export default function NetworkCheckClient({
     let finalPing: PingResult | null = null
     let finalSpeed: SpeedResult | null = null
     let finalReach: ReachabilityItem[] = []
+    let finalTrace: CfTrace | null = null
+    let finalDnsLatency: DnsLatencyItem[] = []
 
     // Step 1 — Network info
     setCurrentStep(nc.info_title)
@@ -575,6 +649,18 @@ export default function NetworkCheckClient({
     const dnsPerf = getDnsPerf()
     setDnsPerfResult(dnsPerf)
     setDnsPerfPhase(dnsPerf.dnsMs !== null ? 'done' : 'error')
+
+    // Step 2b — Public resolver latency from edge/server perspective
+    setDnsLatencyPhase('loading')
+    try {
+      const res = await fetch('/api/network/dns-latency', { cache: 'no-store' })
+      const data = await res.json()
+      finalDnsLatency = data.results ?? []
+      setDnsLatency(finalDnsLatency)
+      setDnsLatencyPhase(finalDnsLatency.length > 0 ? 'done' : 'error')
+    } catch {
+      setDnsLatencyPhase('error')
+    }
 
     // Step 3 — Ping
     setCurrentStep(nc.ping_title)
@@ -638,6 +724,7 @@ export default function NetworkCheckClient({
           .filter((p) => p.length === 2)
           .map(([k, v]) => [k.trim(), v.trim()])
       ) as unknown as CfTrace
+      finalTrace = parsed
       setCfTrace(parsed)
       setTracePhase('done')
     } catch {
@@ -646,7 +733,7 @@ export default function NetworkCheckClient({
 
     // Step 7 — Analysis
     setCurrentStep(nc.ai_title)
-    const result = analyzeNetwork(finalNetInfo, finalPing, finalSpeed, finalReach, lang)
+    const result = analyzeNetwork(finalNetInfo, finalPing, finalSpeed, finalTrace, finalDnsLatency, finalReach, lang)
     setAnalysis(result)
 
     setCurrentStep('')
@@ -1034,15 +1121,33 @@ export default function NetworkCheckClient({
           {/* 7. Cloudflare Trace */}
           <SectionCard title={nc.trace_title} icon={<Server className="w-4 h-4" />} phase={tracePhase}>
             {cfTrace ? (
-              <div className="grid sm:grid-cols-2 gap-x-8">
-                <MetaRow label={nc.info_ip} value={cfTrace.ip} mono />
-                <MetaRow label={nc.trace_colo} value={cfTrace.colo} mono />
-                <MetaRow label={nc.trace_http} value={cfTrace.http} mono />
-                <MetaRow label={nc.trace_tls} value={cfTrace.tls} mono />
-                <MetaRow
-                  label={nc.trace_warp}
-                  value={cfTrace.warp === 'on' ? nc.trace_warp_on : nc.trace_warp_off}
-                />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <StatBox
+                    label={nc.trace_warp}
+                    value={cfTrace.warp === 'plus' ? 'WARP+' : cfTrace.warp === 'on' ? nc.trace_warp_on : nc.trace_warp_off}
+                    quality={cfTrace.warp === 'plus' || cfTrace.warp === 'on' ? 'good' : 'ok'}
+                  />
+                  <StatBox
+                    label={nc.trace_gateway || 'Gateway'}
+                    value={cfTrace.gateway === 'on' ? 'On' : 'Off'}
+                    quality={cfTrace.gateway === 'on' ? 'good' : 'ok'}
+                  />
+                  <StatBox label={nc.trace_colo} value={cfTrace.colo || '—'} quality="good" />
+                  <StatBox
+                    label={nc.trace_kex || 'TLS/KEX'}
+                    value={cfTrace.kex && /mlkem|kyber/i.test(cfTrace.kex) ? 'Post-Quantum' : (cfTrace.kex || cfTrace.tls || '—')}
+                    quality={cfTrace.kex && /mlkem|kyber/i.test(cfTrace.kex) ? 'ok' : 'good'}
+                  />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-x-8">
+                  <MetaRow label={nc.info_ip} value={cfTrace.ip} mono />
+                  <MetaRow label={nc.trace_http} value={cfTrace.http} mono />
+                  <MetaRow label={nc.trace_tls} value={cfTrace.tls} mono />
+                  <MetaRow label={nc.trace_sni || 'SNI'} value={cfTrace.sni || '—'} mono />
+                  <MetaRow label={nc.info_country} value={cfTrace.loc || '—'} mono />
+                  <MetaRow label={nc.trace_kex || 'KEX'} value={cfTrace.kex || '—'} mono />
+                </div>
               </div>
             ) : (
               tracePhase === 'loading' && (
@@ -1053,7 +1158,35 @@ export default function NetworkCheckClient({
             )}
           </SectionCard>
 
-          {/* 8. AI Analysis */}
+          {/* 8. DNS Resolver Latency */}
+          <SectionCard title={nc.dns_latency_title || 'DNS Resolver Latency'} icon={<Radio className="w-4 h-4" />} phase={dnsLatencyPhase}>
+            {dnsLatency.length > 0 ? (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {dnsLatency.map((item) => (
+                  <div key={item.resolver} className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] bg-white/60 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{item.provider}</p>
+                      <p className="font-mono text-[10px] text-[var(--text-muted)]">{item.resolver}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-black ${item.status === 'ok' ? 'text-emerald-500' : 'text-red-400'}`}>
+                        {item.latencyMs !== null ? `${item.latencyMs} ms` : 'ERR'}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-faint)]">{item.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              dnsLatencyPhase === 'loading' && (
+                <div className="h-16 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
+                </div>
+              )
+            )}
+          </SectionCard>
+
+          {/* 9. AI Analysis */}
           <div className="op-card rounded-2xl overflow-hidden border-[var(--accent-color)]/20 shadow-[0_0_40px_-10px_rgba(16,185,129,0.15)]">
             <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--accent-soft)]">
               <Zap className="w-4 h-4 text-[var(--accent-color)]" />

@@ -362,6 +362,88 @@ test('cloudflare trace renders and analyzes local connection', async ({ page }) 
   await expect(page.getByText('TLSv1.3', { exact: true })).toBeVisible()
 })
 
+test('network check renders network doctor trace and dns resolver diagnostics', async ({ page }) => {
+  await page.route('**/api/network/info', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ip: '203.0.113.5',
+        ipv6: null,
+        asn: 13335,
+        org: 'Cloudflare',
+        country: 'JP',
+        city: 'Tokyo',
+        colo: 'NRT',
+        timezone: 'Asia/Tokyo',
+        ua: 'Playwright',
+        trace: {
+          http: 'http/3',
+          tls: 'TLSv1.3',
+          warp: 'plus',
+          gateway: 'off',
+          loc: 'JP',
+          sni: 'plaintext',
+          kex: 'X25519MLKEM768',
+          ip: '203.0.113.5',
+          colo: 'NRT',
+        },
+        _source: 'cloudflare-context',
+      }),
+    }),
+  )
+  await page.route('**/api/network/ping', (route) => route.fulfill({ status: 204, body: '' }))
+  await page.route('**/api/network/download?size=*', (route) =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-length': '1024' },
+      body: 'x'.repeat(1024),
+    }),
+  )
+  await page.route('**/api/network/reachability', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results: [
+          { url: 'https://github.com', label: 'GitHub', reachable: true, latencyMs: 120, status: 'ok' },
+          { url: 'https://web.telegram.org', label: 'Telegram', reachable: true, latencyMs: 1800, status: 'slow' },
+        ],
+      }),
+    }),
+  )
+  await page.route('**/api/network/dns-latency', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results: [
+          { resolver: '1.1.1.1', provider: 'Cloudflare', latencyMs: 11, status: 'ok' },
+          { resolver: '8.8.8.8', provider: 'Google', latencyMs: 18, status: 'ok' },
+          { resolver: '9.9.9.9', provider: 'Quad9', latencyMs: 25, status: 'ok' },
+          { resolver: '208.67.222.222', provider: 'OpenDNS', latencyMs: 31, status: 'ok' },
+        ],
+      }),
+    }),
+  )
+  await page.route('**/cdn-cgi/trace', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/plain',
+      body: 'ip=203.0.113.5\ncolo=NRT\nloc=JP\nhttp=http/3\ntls=TLSv1.3\nsni=plaintext\nwarp=plus\ngateway=off\nkex=X25519MLKEM768',
+    }),
+  )
+
+  await page.goto('/tools/network-check')
+  await page.getByRole('button', { name: /Start Check/i }).click()
+
+  await expect(page.getByText('WARP+', { exact: true })).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText('Post-Quantum', { exact: true })).toBeVisible()
+  await expect(page.getByText('DNS Resolver Latency')).toBeVisible()
+  await expect(page.getByText('Cloudflare').first()).toBeVisible()
+  await expect(page.getByText(/WARP\+ is enabled/)).toBeVisible()
+})
+
 test('dns security audit detects weak spf and missing dmarc', async ({ page }) => {
   // Mock SPF query
   await page.route('**/api/dns?domain=bad.example.com&type=TXT', async (route) => {
@@ -404,4 +486,3 @@ test('dns security audit detects weak spf and missing dmarc', async ({ page }) =
   await expect(page.getByText('No DMARC record found on _dmarc subdomain.')).toBeVisible()
   await expect(page.getByText('F', { exact: true })).toBeVisible() // Score should be F
 })
-

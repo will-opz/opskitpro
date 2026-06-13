@@ -65,6 +65,10 @@ export async function GET(request: NextRequest) {
             http: trace.http || 'Unknown',
             tls: trace.tls || 'Unknown',
             warp: trace.warp || 'off',
+            gateway: trace.gateway || 'off',
+            loc: trace.loc || cfData?.country || 'Unknown',
+            sni: trace.sni || 'Unknown',
+            kex: trace.kex || 'Unknown',
             ip: trace.ip || ip,
             colo: trace.colo || 'Unknown',
           }

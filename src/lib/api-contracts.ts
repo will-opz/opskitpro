@@ -277,6 +277,10 @@ export interface NetworkInfoResponse {
     http: string
     tls: string
     warp: string
+    gateway?: string
+    loc?: string
+    sni?: string
+    kex?: string
     ip: string
     colo: string
   } | null
@@ -302,6 +306,17 @@ export interface DnsPerfResult {
   tcpMs: number | null
   tlsMs: number | null
   ttfbMs: number | null
+}
+
+export interface DnsLatencyItem {
+  resolver: string
+  provider: string
+  latencyMs: number | null
+  status: 'ok' | 'failed'
+}
+
+export interface DnsLatencyResponse {
+  results: DnsLatencyItem[]
 }
 
 export interface ReachabilityItem {
