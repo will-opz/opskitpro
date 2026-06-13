@@ -21,7 +21,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const pathname = usePathname()
-  const { authenticated, loading, openLogin, logout } = useAdminSession()
+  const { authenticated, email, provider, loading, openLogin, logout } = useAdminSession()
   const loginLabel = {
     zh: '登录',
     tw: '登入',
@@ -29,11 +29,16 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
     ja: 'ログイン',
   }[lang]
   const accountCopy = {
-    zh: { admin: '管理员', dashboard: '管理后台', editTools: '编辑导航', logout: '退出登录' },
-    tw: { admin: '管理員', dashboard: '管理後台', editTools: '編輯導航', logout: '登出' },
-    en: { admin: 'Admin', dashboard: 'Dashboard', editTools: 'Edit navigation', logout: 'Sign out' },
-    ja: { admin: '管理者', dashboard: '管理画面', editTools: 'ナビを編集', logout: 'ログアウト' },
+    zh: { admin: '管理员', dashboard: '管理后台', editTools: '编辑导航', logout: '退出登录', viaAccess: 'Zero Trust 登录', viaPassword: '密码登录' },
+    tw: { admin: '管理員', dashboard: '管理後台', editTools: '編輯導航', logout: '登出', viaAccess: 'Zero Trust 登入', viaPassword: '密碼登入' },
+    en: { admin: 'Admin', dashboard: 'Dashboard', editTools: 'Edit navigation', logout: 'Sign out', viaAccess: 'Zero Trust', viaPassword: 'Password' },
+    ja: { admin: '管理者', dashboard: '管理画面', editTools: 'ナビを編集', logout: 'ログアウト', viaAccess: 'Zero Trust', viaPassword: 'パスワード' },
   }[lang]
+  const providerLabel = provider === 'cloudflare_access'
+    ? accountCopy.viaAccess
+    : provider === 'password'
+      ? accountCopy.viaPassword
+      : ''
 
   const isActive = (path: string) => {
     const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, '') || '/'
@@ -90,7 +95,11 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
             {authenticated ? accountCopy.admin : loginLabel}
           </button>
           {authenticated && isAccountOpen && (
-            <div className="ui-surface-elevated absolute right-0 top-[calc(100%+10px)] z-50 w-44 rounded-xl p-1.5 shadow-xl">
+            <div className="ui-surface-elevated absolute right-0 top-[calc(100%+10px)] z-50 w-56 rounded-xl p-1.5 shadow-xl">
+              <div className="border-b border-[var(--border-subtle)] px-3 py-2">
+                <div className="truncate text-xs font-semibold text-[var(--text-primary)]">{email || accountCopy.admin}</div>
+                {providerLabel && <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">{providerLabel}</div>}
+              </div>
               <Link href="/admin" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 {accountCopy.dashboard}
               </Link>
@@ -155,6 +164,10 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
               </Link>
               {authenticated && (
                 <>
+                  <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3">
+                    <div className="truncate text-sm font-semibold text-[var(--text-primary)]">{email || accountCopy.admin}</div>
+                    {providerLabel && <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">{providerLabel}</div>}
+                  </div>
                   <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]">
                     <CircleUserRound className="h-4 w-4" /> {accountCopy.dashboard}
                   </Link>

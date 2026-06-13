@@ -10,6 +10,14 @@ type HeaderReader = {
   get(name: string): string | null
 }
 
+export type AdminProvider = 'cloudflare_access' | 'password'
+
+export type AdminIdentity = {
+  authenticated: boolean
+  email: string
+  provider: AdminProvider | null
+}
+
 async function sha256(value: string) {
   const input = new TextEncoder().encode(value)
   const hash = await crypto.subtle.digest('SHA-256', input)
@@ -27,11 +35,15 @@ export function isAdminPassword(password: string) {
   return Boolean(expected && password === expected)
 }
 
-export async function getAdminToken() {
+export async function getAdminToken(email?: string) {
   const password = process.env.OPSKITPRO_ADMIN_PASSWORD || ''
   const secret = getAdminSecret()
+  const normalizedEmail = email?.trim().toLowerCase() || ''
 
   if (!password || !secret) return ''
+  if (normalizedEmail && isAllowedAdminEmail(normalizedEmail)) {
+    return sha256(`password:${normalizedEmail}:${secret}`)
+  }
   return sha256(`${password}:${secret}`)
 }
 
@@ -48,13 +60,7 @@ export async function getCloudflareAccessAdminToken(email: string) {
 }
 
 export async function isAdminToken(token?: string) {
-  const expected = await getAdminToken()
-  if (token && expected && token === expected) return true
-
-  const accessTokens = await Promise.all(
-    getAllowedAdminEmails().map((email) => getCloudflareAccessAdminToken(email)),
-  )
-  return Boolean(token && accessTokens.some((accessToken) => accessToken && token === accessToken))
+  return (await getAdminIdentity(token)).authenticated
 }
 
 export function getAllowedAdminEmails() {
@@ -74,7 +80,7 @@ export function isAllowedAdminEmail(email?: string) {
 }
 
 export async function isAdminIdentity(token?: string, accessEmail?: string) {
-  return await isAdminToken(token) || isAllowedAdminEmail(accessEmail)
+  return (await getAdminIdentity(token, accessEmail)).authenticated
 }
 
 export async function isAdminRequest(request: NextRequest) {
@@ -82,4 +88,38 @@ export async function isAdminRequest(request: NextRequest) {
     request.cookies.get(ADMIN_COOKIE_NAME)?.value,
     getCloudflareAccessEmail(request.headers),
   )
+}
+
+export async function getAdminIdentity(token?: string, accessEmail?: string): Promise<AdminIdentity> {
+  const normalizedAccessEmail = accessEmail?.trim().toLowerCase() || ''
+  if (isAllowedAdminEmail(normalizedAccessEmail)) {
+    return {
+      authenticated: true,
+      email: normalizedAccessEmail,
+      provider: 'cloudflare_access',
+    }
+  }
+
+  const allowedEmails = getAllowedAdminEmails()
+  if (token) {
+    for (const email of allowedEmails) {
+      if (token === await getCloudflareAccessAdminToken(email)) {
+        return { authenticated: true, email, provider: 'cloudflare_access' }
+      }
+      if (token === await getAdminToken(email)) {
+        return { authenticated: true, email, provider: 'password' }
+      }
+    }
+  }
+
+  const legacyPasswordToken = await getAdminToken()
+  if (token && legacyPasswordToken && token === legacyPasswordToken) {
+    return {
+      authenticated: true,
+      email: allowedEmails[0] || '',
+      provider: 'password',
+    }
+  }
+
+  return { authenticated: false, email: '', provider: null }
 }

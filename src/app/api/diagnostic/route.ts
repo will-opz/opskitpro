@@ -40,7 +40,12 @@ async function isAdminDiagnosticRequest(request: NextRequest) {
   const accessTokens = await Promise.all(
     allowedEmails.map((email) => sha256(`cloudflare-access:${email}:${secret}`)),
   )
-  return accessTokens.some((accessToken) => accessToken === token)
+  if (accessTokens.some((accessToken) => accessToken === token)) return true
+
+  const passwordEmailTokens = await Promise.all(
+    allowedEmails.map((email) => sha256(`password:${email}:${secret}`)),
+  )
+  return passwordEmailTokens.some((passwordEmailToken) => passwordEmailToken === token)
 }
 
 const normalizeTargetInput = (value: string) => {

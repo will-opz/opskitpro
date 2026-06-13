@@ -6,6 +6,8 @@ import { KeyRound, ShieldCheck, X } from 'lucide-react'
 
 type AdminSessionContextValue = {
   authenticated: boolean
+  email: string
+  provider: 'cloudflare_access' | 'password' | null
   configured: boolean
   passwordConfigured: boolean
   accessConfigured: boolean
@@ -88,6 +90,8 @@ export function AdminSessionProvider({
 }) {
   const router = useRouter()
   const [authenticated, setAuthenticated] = useState(false)
+  const [email, setEmail] = useState('')
+  const [provider, setProvider] = useState<'cloudflare_access' | 'password' | null>(null)
   const [configured, setConfigured] = useState(true)
   const [passwordConfigured, setPasswordConfigured] = useState(false)
   const [accessConfigured, setAccessConfigured] = useState(false)
@@ -100,6 +104,8 @@ export function AdminSessionProvider({
       .then((response) => response.json())
       .then((data) => {
         setAuthenticated(Boolean(data.authenticated))
+        setEmail(typeof data.email === 'string' ? data.email : '')
+        setProvider(data.provider === 'cloudflare_access' || data.provider === 'password' ? data.provider : null)
         setConfigured(Boolean(data.configured))
         setPasswordConfigured(Boolean(data.passwordConfigured))
         setAccessConfigured(Boolean(data.accessConfigured))
@@ -116,12 +122,14 @@ export function AdminSessionProvider({
   const logout = async () => {
     await fetch('/api/admin/session', { method: 'DELETE' })
     setAuthenticated(false)
+    setEmail('')
+    setProvider(null)
     router.push('/tools')
     router.refresh()
   }
 
   return (
-    <AdminSessionContext.Provider value={{ authenticated, configured, passwordConfigured, accessConfigured, loading, openLogin, logout }}>
+    <AdminSessionContext.Provider value={{ authenticated, email, provider, configured, passwordConfigured, accessConfigured, loading, openLogin, logout }}>
       {children}
       {loginOpen && (
         <AdminLoginDialog
@@ -134,8 +142,10 @@ export function AdminSessionProvider({
             router.push(nextPath || '/admin')
           }}
           onClose={() => setLoginOpen(false)}
-          onLogin={() => {
+          onLogin={(identity) => {
             setAuthenticated(true)
+            setEmail(identity.email)
+            setProvider(identity.provider)
             setLoginOpen(false)
             if (nextPath) router.push(nextPath)
             router.refresh()
@@ -167,7 +177,7 @@ function AdminLoginDialog({
   accessConfigured: boolean
   onAccessLogin: () => void
   onClose: () => void
-  onLogin: () => void
+  onLogin: (identity: { email: string; provider: 'cloudflare_access' | 'password' | null }) => void
 }) {
   const t = labels[lang]
   const [email, setEmail] = useState('')
@@ -187,7 +197,13 @@ function AdminLoginDialog({
     })
 
     setSubmitting(false)
-    if (response.ok) return onLogin()
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}))
+      return onLogin({
+        email: typeof data.email === 'string' ? data.email : '',
+        provider: data.provider === 'cloudflare_access' || data.provider === 'password' ? data.provider : 'password',
+      })
+    }
     setError(response.status === 503 ? t.notConfigured : t.failed)
   }
 

@@ -21,15 +21,12 @@ function getAllowedAdminEmails() {
 }
 
 async function attachCloudflareAccessAdminCookie(request: NextRequest, response: NextResponse) {
-  const secret = process.env.OPSKITPRO_ADMIN_SECRET || process.env.OPSKITPRO_ADMIN_PASSWORD || ''
-  const accessEmail = request.headers.get(CLOUDFLARE_ACCESS_EMAIL_HEADER)?.trim().toLowerCase() || ''
-  const allowed = accessEmail && getAllowedAdminEmails().includes(accessEmail)
-
-  if (!secret || !allowed) return response
+  const token = await getCloudflareAccessAdminToken(request)
+  if (!token) return response
 
   response.cookies.set(
     ADMIN_COOKIE_NAME,
-    await sha256(`cloudflare-access:${accessEmail}:${secret}`),
+    token,
     {
       httpOnly: true,
       sameSite: 'lax',
@@ -40,6 +37,26 @@ async function attachCloudflareAccessAdminCookie(request: NextRequest, response:
   )
 
   return response
+}
+
+async function getCloudflareAccessAdminToken(request: NextRequest) {
+  const secret = process.env.OPSKITPRO_ADMIN_SECRET || process.env.OPSKITPRO_ADMIN_PASSWORD || ''
+  const accessEmail = request.headers.get(CLOUDFLARE_ACCESS_EMAIL_HEADER)?.trim().toLowerCase() || ''
+  const allowed = accessEmail && getAllowedAdminEmails().includes(accessEmail)
+
+  if (!secret || !allowed) return ''
+  return sha256(`cloudflare-access:${accessEmail}:${secret}`)
+}
+
+function injectCookie(headers: Headers, name: string, value: string) {
+  const existingCookie = headers.get('cookie') || ''
+  const withoutExisting = existingCookie
+    .split(';')
+    .map((part) => part.trim())
+    .filter((part) => part && !part.startsWith(`${name}=`))
+    .join('; ')
+
+  headers.set('cookie', `${withoutExisting ? withoutExisting + '; ' : ''}${name}=${value}`)
 }
 
 export async function middleware(request: NextRequest) {
@@ -95,6 +112,10 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-url', request.url)
   requestHeaders.set('x-pathname', pathname)
   requestHeaders.set('x-next-locale', locale)
+  const accessAdminToken = await getCloudflareAccessAdminToken(request)
+  if (accessAdminToken) {
+    injectCookie(requestHeaders, ADMIN_COOKIE_NAME, accessAdminToken)
+  }
 
   let response: NextResponse
 

@@ -121,9 +121,9 @@ These variables enable private admin access for the `/admin` dashboard and `/too
 
 Recommended Cloudflare Access policy:
 
-- protect `/admin*`
+- create a self-hosted Access application for `opskitpro.com/admin*`
 - allow only the same emails configured in `OPSKITPRO_ADMIN_EMAILS`
-- keep public tools and `/api/admin/session` outside Access so anonymous users can browse without a login challenge
+- keep public tools, `/api/admin/session`, and `/api/diagnostic` outside Access so anonymous users can browse and run public diagnostics without a login challenge
 
 Keep real values in Cloudflare Worker environment variables or secrets, not in Git.
 
