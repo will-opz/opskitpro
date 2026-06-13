@@ -28,10 +28,24 @@ test('tools navigator searches default links', async ({ page }) => {
 })
 
 test('global sign-in opens the shared admin dialog', async ({ page }) => {
+  await page.route('**/api/admin/session', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        authenticated: false,
+        configured: true,
+        passwordConfigured: true,
+        accessConfigured: false,
+      }),
+    })
+  })
+
   await page.goto('/blog')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('heading', { name: 'Admin sign in' })).toBeVisible()
+  await expect(page.getByLabel('Admin email')).toBeVisible()
   await expect(page.getByLabel('Admin password')).toBeVisible()
 })
 
@@ -56,7 +70,12 @@ test('single-user editor can add a custom local link', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ authenticated: false, configured: true }),
+      body: JSON.stringify({
+        authenticated: false,
+        configured: true,
+        passwordConfigured: true,
+        accessConfigured: false,
+      }),
     })
   })
 
@@ -64,6 +83,7 @@ test('single-user editor can add a custom local link', async ({ page }) => {
   await page.waitForLoadState('networkidle')
 
   await page.getByRole('button', { name: 'Sign in to edit' }).click()
+  await page.getByLabel('Admin email').fill('deopsai@gmail.com')
   await page.getByLabel('Admin password').fill('test-password')
   await page.locator('form').getByRole('button', { name: 'Sign in' }).click()
 

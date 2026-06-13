@@ -1,6 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useAdminSession } from '@/components/AdminSessionProvider'
 import { normalizeTargetInput, createSafeDiagnosticResult } from './helpers'
-import { useDiagnosticHistory } from './useDiagnosticHistory'
+import {
+  readCachedDiagnosticResult,
+  useDiagnosticHistory,
+  writeCachedDiagnosticResult,
+} from './useDiagnosticHistory'
+
+const LOCAL_RESULT_CACHE_TTL_MS = 10 * 60 * 1000
 
 export function useWebsiteCheck() {
   const [domain, setDomain] = useState('')
@@ -10,6 +17,7 @@ export function useWebsiteCheck() {
   const [error, setError] = useState<string | null>(null)
   const [localResolvers, setLocalResolvers] = useState<Record<string, any>>({})
   
+  const { authenticated } = useAdminSession()
   const { upsertHistory } = useDiagnosticHistory()
   const domainRef = useRef(domain)
 
@@ -24,6 +32,19 @@ export function useWebsiteCheck() {
     setError(null)
     setCurrentStep(1)
     setLocalResolvers({})
+
+    if (!authenticated && !skipCache) {
+      const cachedResult = await readCachedDiagnosticResult(d, LOCAL_RESULT_CACHE_TTL_MS).catch(() => null)
+      if (cachedResult) {
+        setResult(cachedResult)
+        setCurrentStep(3)
+        setLoading(false)
+        if (cachedResult.domain) {
+          await upsertHistory(cachedResult.domain, false).catch(() => null)
+        }
+        return
+      }
+    }
     
     const expectedStepCount = 3
 
@@ -66,7 +87,9 @@ export function useWebsiteCheck() {
     }, 800)
 
     try {
-      const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(d || '')}${skipCache ? '&_nocache=' + Date.now() : ''}`)
+      const cacheMode = authenticated && !skipCache ? 'kv' : '0'
+      const noCacheParam = skipCache ? `&_nocache=${Date.now()}` : ''
+      const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(d || '')}&cache=${cacheMode}${noCacheParam}`)
       const contentType = res.headers.get('content-type') || ''
       if (!contentType.includes('application/json')) {
         throw new Error(`Platform error (${res.status}): Received non-JSON response from server.`)
@@ -87,6 +110,9 @@ export function useWebsiteCheck() {
       
       const safeResult = createSafeDiagnosticResult(data, d)
       setResult(safeResult)
+      if (!authenticated) {
+        await writeCachedDiagnosticResult(safeResult.domain || d, safeResult).catch(() => null)
+      }
       if (safeResult.domain) {
         await upsertHistory(safeResult.domain, false).catch(() => null)
       }
@@ -97,7 +123,7 @@ export function useWebsiteCheck() {
       clearInterval(stepInterval)
       setLoading(false)
     }
-  }, [upsertHistory])
+  }, [authenticated, upsertHistory])
 
   return {
     domain,

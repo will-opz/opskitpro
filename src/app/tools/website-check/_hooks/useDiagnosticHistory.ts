@@ -6,16 +6,27 @@ export type StoredDiagnosticTarget = {
   pinned?: boolean
 }
 
+type StoredDiagnosticResult = {
+  target: string
+  savedAt: number
+  result: any
+}
+
 const historyStoreName = 'diagnostic-targets'
+const resultStoreName = 'diagnostic-results'
 const historyDbName = 'opskitpro-diagnostics'
+const historyDbVersion = 2
 
 function openHistoryDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(historyDbName, 1)
+    const request = indexedDB.open(historyDbName, historyDbVersion)
     request.onupgradeneeded = () => {
       const db = request.result
       if (!db.objectStoreNames.contains(historyStoreName)) {
         db.createObjectStore(historyStoreName, { keyPath: 'target' })
+      }
+      if (!db.objectStoreNames.contains(resultStoreName)) {
+        db.createObjectStore(resultStoreName, { keyPath: 'target' })
       }
     }
     request.onsuccess = () => resolve(request.result)
@@ -57,6 +68,56 @@ async function deleteHistoryTargetRecord(target: string) {
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(historyStoreName, 'readwrite')
     tx.objectStore(historyStoreName).delete(target)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+export async function readCachedDiagnosticResult(target: string, ttlMs: number) {
+  if (typeof indexedDB === 'undefined' || !target) return null
+  const normalizedTarget = target.toLowerCase()
+  const db = await openHistoryDb()
+  const stored = await new Promise<StoredDiagnosticResult | undefined>((resolve, reject) => {
+    const tx = db.transaction(resultStoreName, 'readonly')
+    const request = tx.objectStore(resultStoreName).get(normalizedTarget)
+    request.onsuccess = () => resolve(request.result as StoredDiagnosticResult | undefined)
+    request.onerror = () => reject(request.error)
+  })
+
+  if (!stored?.savedAt || !stored.result) return null
+
+  const ageMs = Date.now() - Number(stored.savedAt)
+  if (!Number.isFinite(ageMs) || ageMs > ttlMs) {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(resultStoreName, 'readwrite')
+      tx.objectStore(resultStoreName).delete(normalizedTarget)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+    return null
+  }
+
+  return {
+    ...stored.result,
+    meta: {
+      ...stored.result.meta,
+      servedAt: new Date().toISOString(),
+      cacheStatus: 'BROWSER',
+      cacheAgeSeconds: Math.max(0, Math.floor(ageMs / 1000)),
+    },
+  }
+}
+
+export async function writeCachedDiagnosticResult(target: string, result: any) {
+  if (typeof indexedDB === 'undefined' || !target || !result) return
+  const db = await openHistoryDb()
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(resultStoreName, 'readwrite')
+    tx.objectStore(resultStoreName).put({
+      target: target.toLowerCase(),
+      savedAt: Date.now(),
+      result,
+    } satisfies StoredDiagnosticResult)
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
   })

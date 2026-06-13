@@ -10,6 +10,39 @@ import type {
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = 'force-dynamic'
 
+const ADMIN_COOKIE_NAME = 'opskitpro_admin'
+const CLOUDFLARE_ACCESS_EMAIL_HEADER = 'cf-access-authenticated-user-email'
+
+async function sha256(value: string) {
+  const input = new TextEncoder().encode(value)
+  const hash = await crypto.subtle.digest('SHA-256', input)
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+async function isAdminDiagnosticRequest(request: NextRequest) {
+  const password = process.env.OPSKITPRO_ADMIN_PASSWORD || ''
+  const secret = process.env.OPSKITPRO_ADMIN_SECRET || password
+  const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value
+  const allowedEmails = (process.env.OPSKITPRO_ADMIN_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+  const accessEmail = request.headers.get(CLOUDFLARE_ACCESS_EMAIL_HEADER)?.trim().toLowerCase() || ''
+
+  if (accessEmail && allowedEmails.includes(accessEmail)) return true
+  if (!secret || !token) return false
+
+  const passwordToken = password ? await sha256(`${password}:${secret}`) : ''
+  if (passwordToken && token === passwordToken) return true
+
+  const accessTokens = await Promise.all(
+    allowedEmails.map((email) => sha256(`cloudflare-access:${email}:${secret}`)),
+  )
+  return accessTokens.some((accessToken) => accessToken === token)
+}
+
 const normalizeTargetInput = (value: string) => {
   const trimmed = value.trim()
   if (!trimmed) return ''
@@ -208,7 +241,7 @@ export async function GET(request: NextRequest | Request) {
   const cfRay = request.headers.get('cf-ray') || ''
   const edgeColo = cfRay.includes('-') ? cfRay.split('-').pop()?.toUpperCase() || 'Unknown' : 'Unknown'
   const buildMeta = (
-    cacheStatus: 'HIT' | 'MISS' = 'MISS',
+    cacheStatus: 'HIT' | 'MISS' | 'BYPASS' = 'BYPASS',
     timings: { coreMs?: number; enrichmentMs?: number } = {},
   ) => ({
     checkedAt: new Date().toISOString(),
@@ -226,12 +259,16 @@ export async function GET(request: NextRequest | Request) {
     domain = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
   }
 
+  const wantsKvCache = searchParams.get('cache') === 'kv' && !searchParams.has('_nocache')
+  const useKvCache = wantsKvCache && 'cookies' in request && await isAdminDiagnosticRequest(request as NextRequest)
   const cacheKey = `diag:v2:${domain}`
-  const skipKvCache = searchParams.has('_nocache') || searchParams.get('cache') === '0'
   
   // --- Robust KV Discovery ---
-  let KV: any = (process.env as any).KV;
-  if (!KV) {
+  let KV: any = null;
+  if (useKvCache) {
+    KV = (process.env as any).KV;
+  }
+  if (useKvCache && !KV) {
     try {
       const { env } = await getCloudflareContext();
       KV = (env as any)?.KV || (globalThis as any).KV;
@@ -241,7 +278,7 @@ export async function GET(request: NextRequest | Request) {
   }
 
   // 1. Global KV Cache Lookup
-  if (KV && !skipKvCache) {
+  if (KV && useKvCache) {
     try {
       const cached = await KV.get(cacheKey)
       if (cached) {
@@ -424,7 +461,7 @@ export async function GET(request: NextRequest | Request) {
         isPrivate: isPrivateIp,
         error: httpRes.message,
         dns: { resolved_ip: domain, latency: `${dnsLatency}ms`, success: true },
-        meta: buildMeta('MISS'),
+        meta: buildMeta(useKvCache ? 'MISS' : 'BYPASS'),
       }
       return NextResponse.json(partialError)
     }
@@ -545,17 +582,19 @@ export async function GET(request: NextRequest | Request) {
       cdn: { is_provider: isCdn, provider, server: serverHeader },
       geo,
       whois: whoisInfo,
-      meta: buildMeta('MISS', {
+      meta: buildMeta(useKvCache ? 'MISS' : 'BYPASS', {
         coreMs,
         enrichmentMs: Math.max(0, Date.now() - requestStartedAt - coreMs),
       }),
     }
 
-    if (KV && !skipKvCache) {
+    if (KV && useKvCache) {
       await KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 3600 }).catch(() => null)
     }
     return NextResponse.json(responseData, {
-      headers: skipKvCache ? { 'X-Cache': 'BYPASS', 'Cache-Control': 'no-store' } : undefined,
+      headers: useKvCache
+        ? { 'X-Cache': 'MISS', 'Cache-Control': 'no-store' }
+        : { 'X-Cache': 'BYPASS', 'Cache-Control': 'no-store' },
     })
 
   } catch (error: any) {

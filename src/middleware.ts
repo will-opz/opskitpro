@@ -1,7 +1,48 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+const ADMIN_COOKIE_NAME = 'opskitpro_admin'
+const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
+const CLOUDFLARE_ACCESS_EMAIL_HEADER = 'cf-access-authenticated-user-email'
+
+async function sha256(value: string) {
+  const input = new TextEncoder().encode(value)
+  const hash = await crypto.subtle.digest('SHA-256', input)
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function getAllowedAdminEmails() {
+  return (process.env.OPSKITPRO_ADMIN_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+async function attachCloudflareAccessAdminCookie(request: NextRequest, response: NextResponse) {
+  const secret = process.env.OPSKITPRO_ADMIN_SECRET || process.env.OPSKITPRO_ADMIN_PASSWORD || ''
+  const accessEmail = request.headers.get(CLOUDFLARE_ACCESS_EMAIL_HEADER)?.trim().toLowerCase() || ''
+  const allowed = accessEmail && getAllowedAdminEmails().includes(accessEmail)
+
+  if (!secret || !allowed) return response
+
+  response.cookies.set(
+    ADMIN_COOKIE_NAME,
+    await sha256(`cloudflare-access:${accessEmail}:${secret}`),
+    {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: ADMIN_COOKIE_MAX_AGE,
+      path: '/',
+    },
+  )
+
+  return response
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const url = request.nextUrl.clone()
 
@@ -9,7 +50,7 @@ export function middleware(request: NextRequest) {
   const proto = request.headers.get('x-forwarded-proto')
   if (process.env.NODE_ENV === 'production' && proto === 'http') {
     url.protocol = 'https:'
-    return NextResponse.redirect(url, 301)
+    return attachCloudflareAccessAdminCookie(request, NextResponse.redirect(url, 301))
   }
   
   // 1. Handle language prefixing via REWRITE (internal routing)
@@ -36,7 +77,7 @@ export function middleware(request: NextRequest) {
       })
     }
     
-    return response
+    return attachCloudflareAccessAdminCookie(request, response)
   }
 
   // 2. Auto-detect logic for default locale based on Cloudflare IP Country
@@ -83,7 +124,7 @@ export function middleware(request: NextRequest) {
     })
   }
 
-  return response
+  return attachCloudflareAccessAdminCookie(request, response)
 }
 
 export const config = {
@@ -92,4 +133,3 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 }
-

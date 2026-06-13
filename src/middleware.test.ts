@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
 import { middleware } from './middleware'
 import { NextRequest } from 'next/server'
 
@@ -10,17 +10,22 @@ function makeRequest(pathname: string, cookieLocale?: string): NextRequest {
   return req
 }
 
+afterEach(() => {
+  delete process.env.OPSKITPRO_ADMIN_EMAILS
+  delete process.env.OPSKITPRO_ADMIN_SECRET
+})
+
 describe('middleware — locale rewriting', () => {
   it('rewrites /zh to /', async () => {
     const req = makeRequest('/zh')
-    const res = middleware(req)
+    const res = await middleware(req)
     // Rewrite response should have the rewritten URL pointing to /
     expect(res.status).toBe(200)
   })
 
   it('rewrites /zh/tools/ip-lookup to /tools/ip-lookup', async () => {
     const req = makeRequest('/zh/tools/ip-lookup')
-    const res = middleware(req)
+    const res = await middleware(req)
     expect(res.status).toBe(200)
     // The internal rewrite target is /tools/ip-lookup
     const rewriteHeader = res.headers.get('x-middleware-rewrite')
@@ -29,7 +34,7 @@ describe('middleware — locale rewriting', () => {
 
   it('rewrites /en/services to /services', async () => {
     const req = makeRequest('/en/services')
-    const res = middleware(req)
+    const res = await middleware(req)
     expect(res.status).toBe(200)
     const rewriteHeader = res.headers.get('x-middleware-rewrite')
     expect(rewriteHeader).toContain('/services')
@@ -37,14 +42,14 @@ describe('middleware — locale rewriting', () => {
 
   it('rewrites /en/blog to /blog', async () => {
     const req = makeRequest('/en/blog')
-    const res = middleware(req)
+    const res = await middleware(req)
     const rewriteHeader = res.headers.get('x-middleware-rewrite')
     expect(rewriteHeader).toContain('/blog')
   })
 
   it('passes through non-locale paths (no rewrite)', async () => {
     const req = makeRequest('/tools/dns-lookup')
-    const res = middleware(req)
+    const res = await middleware(req)
     // Should be a next() pass-through, not a rewrite
     const rewriteHeader = res.headers.get('x-middleware-rewrite')
     expect(rewriteHeader).toBeNull()
@@ -52,7 +57,7 @@ describe('middleware — locale rewriting', () => {
 
   it('passes through root path /', async () => {
     const req = makeRequest('/')
-    const res = middleware(req)
+    const res = await middleware(req)
     const rewriteHeader = res.headers.get('x-middleware-rewrite')
     expect(rewriteHeader).toBeNull()
   })
@@ -61,14 +66,14 @@ describe('middleware — locale rewriting', () => {
 describe('middleware — locale cookie', () => {
   it('sets NEXT_LOCALE cookie to zh when path starts with /zh', async () => {
     const req = makeRequest('/zh/about')
-    const res = middleware(req)
+    const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie')
     expect(setCookie).toContain('NEXT_LOCALE=zh')
   })
 
   it('sets NEXT_LOCALE cookie to en when path starts with /en', async () => {
     const req = makeRequest('/en/about')
-    const res = middleware(req)
+    const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie')
     expect(setCookie).toContain('NEXT_LOCALE=en')
   })
@@ -76,7 +81,7 @@ describe('middleware — locale cookie', () => {
   it('does NOT set cookie again when NEXT_LOCALE is already correct', async () => {
     // Cookie already matches, so no set-cookie should be issued
     const req = makeRequest('/zh/services', 'zh')
-    const res = middleware(req)
+    const res = await middleware(req)
     // set-cookie should be absent or not change the value to zh again
     const setCookie = res.headers.get('set-cookie')
     // Per middleware logic: only sets if currentCookie !== locale
@@ -85,22 +90,56 @@ describe('middleware — locale cookie', () => {
 
   it('updates cookie when locale changes from en to zh', async () => {
     const req = makeRequest('/zh/services', 'en') // cookie says en, path says zh
-    const res = middleware(req)
+    const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie')
     expect(setCookie).toContain('NEXT_LOCALE=zh')
   })
 
   it('sets cookie with SameSite=Lax', async () => {
     const req = makeRequest('/en/tools/dns-lookup')
-    const res = middleware(req)
+    const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie') ?? ''
     expect(setCookie.toLowerCase()).toContain('samesite=lax')
   })
 
   it('sets cookie with long max-age (1 year)', async () => {
     const req = makeRequest('/zh/tools/ip-lookup')
-    const res = middleware(req)
+    const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie') ?? ''
     expect(setCookie).toContain('31536000')
+  })
+})
+
+describe('middleware — Cloudflare Access admin cookie', () => {
+  it('sets the admin cookie for a whitelisted Cloudflare Access email', async () => {
+    process.env.OPSKITPRO_ADMIN_EMAILS = 'will@example.com'
+    process.env.OPSKITPRO_ADMIN_SECRET = 'test-secret'
+
+    const req = new NextRequest('http://localhost/admin', {
+      headers: {
+        'cf-access-authenticated-user-email': 'will@example.com',
+      },
+    })
+    const res = await middleware(req)
+    const setCookie = res.headers.get('set-cookie') ?? ''
+
+    expect(setCookie).toContain('opskitpro_admin=')
+    expect(setCookie.toLowerCase()).toContain('httponly')
+    expect(setCookie.toLowerCase()).toContain('samesite=lax')
+  })
+
+  it('does not set the admin cookie for a non-whitelisted Cloudflare Access email', async () => {
+    process.env.OPSKITPRO_ADMIN_EMAILS = 'will@example.com'
+    process.env.OPSKITPRO_ADMIN_SECRET = 'test-secret'
+
+    const req = new NextRequest('http://localhost/admin', {
+      headers: {
+        'cf-access-authenticated-user-email': 'other@example.com',
+      },
+    })
+    const res = await middleware(req)
+    const setCookie = res.headers.get('set-cookie') ?? ''
+
+    expect(setCookie).not.toContain('opskitpro_admin=')
   })
 })

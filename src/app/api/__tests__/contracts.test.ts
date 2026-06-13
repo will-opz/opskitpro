@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { NextRequest } from 'next/server'
 import { GET as diagnosticGET, POST as diagnosticPOST } from '../diagnostic/route'
 import { GET as ipGET } from '../ip/route'
 import { GET as dnsGET, POST as dnsPOST } from '../dns/route'
@@ -106,6 +107,24 @@ function makeFetchStub() {
   })
 }
 
+async function createAdminCookie() {
+  const input = new TextEncoder().encode('test-password:test-secret')
+  const hash = await crypto.subtle.digest('SHA-256', input)
+  const token = Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+  return `opskitpro_admin=${token}`
+}
+
+async function createCloudflareAccessAdminCookie(email: string) {
+  const input = new TextEncoder().encode(`cloudflare-access:${email}:test-secret`)
+  const hash = await crypto.subtle.digest('SHA-256', input)
+  const token = Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+  return `opskitpro_admin=${token}`
+}
+
 beforeEach(() => {
   vi.restoreAllMocks()
 })
@@ -163,7 +182,7 @@ describe('API contract integration', () => {
       },
     })
     expect(body.meta).toMatchObject({
-      cacheStatus: 'MISS',
+      cacheStatus: 'BYPASS',
     })
     expect(body.meta.coreMs).toBeTypeOf('number')
     expect(body.meta.enrichmentMs).toBeTypeOf('number')
@@ -281,5 +300,95 @@ describe('API contract integration', () => {
     expect(kv.put).not.toHaveBeenCalled()
 
     delete (globalThis as any).KV
+  })
+
+  it('bypasses KV reads and writes by default for diagnostic requests', async () => {
+    vi.stubGlobal('fetch', makeFetchStub())
+    const kv = {
+      get: vi.fn(),
+      put: vi.fn(),
+    }
+    ;(globalThis as any).KV = kv
+
+    const res = await diagnosticGET(new Request('http://localhost/api/diagnostic?domain=example.com') as any)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('X-Cache')).toBe('BYPASS')
+    expect(kv.get).not.toHaveBeenCalled()
+    expect(kv.put).not.toHaveBeenCalled()
+
+    const body = await res.json()
+    expect(body.meta.cacheStatus).toBe('BYPASS')
+
+    delete (globalThis as any).KV
+  })
+
+  it('ignores explicit KV cache requests from unauthenticated diagnostic requests', async () => {
+    vi.stubGlobal('fetch', makeFetchStub())
+    const kv = {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue(undefined),
+    }
+    ;(globalThis as any).KV = kv
+
+    const res = await diagnosticGET(new NextRequest('http://localhost/api/diagnostic?domain=example.com&cache=kv'))
+    expect(res.status).toBe(200)
+    expect(res.headers.get('X-Cache')).toBe('BYPASS')
+    expect(kv.get).not.toHaveBeenCalled()
+    expect(kv.put).not.toHaveBeenCalled()
+
+    const body = await res.json()
+    expect(body.meta.cacheStatus).toBe('BYPASS')
+
+    delete (globalThis as any).KV
+  })
+
+  it('uses KV only for authenticated explicit diagnostic cache requests', async () => {
+    vi.stubGlobal('fetch', makeFetchStub())
+    const kv = {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue(undefined),
+    }
+    ;(globalThis as any).KV = kv
+    process.env.OPSKITPRO_ADMIN_PASSWORD = 'test-password'
+    process.env.OPSKITPRO_ADMIN_SECRET = 'test-secret'
+
+    const res = await diagnosticGET(new NextRequest('http://localhost/api/diagnostic?domain=example.com&cache=kv', {
+      headers: {
+        cookie: await createAdminCookie(),
+      },
+    }))
+    expect(res.status).toBe(200)
+    expect(res.headers.get('X-Cache')).toBe('MISS')
+    expect(kv.get).toHaveBeenCalled()
+    expect(kv.put).toHaveBeenCalled()
+
+    delete (globalThis as any).KV
+    delete process.env.OPSKITPRO_ADMIN_PASSWORD
+    delete process.env.OPSKITPRO_ADMIN_SECRET
+  })
+
+  it('uses KV for Cloudflare Access whitelisted diagnostic cache requests', async () => {
+    vi.stubGlobal('fetch', makeFetchStub())
+    const kv = {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue(undefined),
+    }
+    ;(globalThis as any).KV = kv
+    process.env.OPSKITPRO_ADMIN_EMAILS = 'will@example.com'
+    process.env.OPSKITPRO_ADMIN_SECRET = 'test-secret'
+
+    const res = await diagnosticGET(new NextRequest('http://localhost/api/diagnostic?domain=example.com&cache=kv', {
+      headers: {
+        cookie: await createCloudflareAccessAdminCookie('will@example.com'),
+      },
+    }))
+    expect(res.status).toBe(200)
+    expect(res.headers.get('X-Cache')).toBe('MISS')
+    expect(kv.get).toHaveBeenCalled()
+    expect(kv.put).toHaveBeenCalled()
+
+    delete (globalThis as any).KV
+    delete process.env.OPSKITPRO_ADMIN_EMAILS
+    delete process.env.OPSKITPRO_ADMIN_SECRET
   })
 })

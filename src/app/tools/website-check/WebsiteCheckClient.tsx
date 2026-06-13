@@ -36,6 +36,7 @@ import {
   History
 } from 'lucide-react'
 import { TrackedLink } from '@/components/TrackedLink'
+import { useAdminSession } from '@/components/AdminSessionProvider'
 
 import { useDiagnosticHistory } from './_hooks/useDiagnosticHistory'
 import { useWebsiteCheck } from './_hooks/useWebsiteCheck'
@@ -44,6 +45,7 @@ import { calculateScore, normalizeTargetInput, BatchDiagnosticResult, createSafe
 export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const isAsianLanguage = lang !== 'en'
   const searchParams = useSearchParams()
+  const { authenticated } = useAdminSession()
   const { history, upsertHistory, deleteHistory, togglePin } = useDiagnosticHistory()
   const { domain, setDomain, loading, currentStep, result, setResult, error, localResolvers, runDiagnostic } = useWebsiteCheck()
   const [showJson, setShowJson] = useState(false)
@@ -1360,7 +1362,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     try {
       const settled = await Promise.all(targets.map(async (target) => {
         try {
-          const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(target)}&_nocache=${Date.now()}`)
+          const cacheMode = authenticated ? 'kv' : '0'
+          const noCacheParam = authenticated ? '' : `&_nocache=${Date.now()}`
+          const res = await fetch(`/api/diagnostic?domain=${encodeURIComponent(target)}&cache=${cacheMode}${noCacheParam}`)
           const data = await res.json()
           if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`)
           const safeResult = createSafeDiagnosticResult(data, target, data.error)

@@ -3,20 +3,28 @@ import {
   ADMIN_COOKIE_MAX_AGE,
   ADMIN_COOKIE_NAME,
   getAdminToken,
+  getAdminSecret,
+  getAllowedAdminEmails,
   isAdminConfigured,
+  isAllowedAdminEmail,
   isAdminPassword,
   isAdminRequest,
 } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
+  const passwordConfigured = Boolean(process.env.OPSKITPRO_ADMIN_PASSWORD)
+  const accessConfigured = Boolean(getAdminSecret() && getAllowedAdminEmails().length > 0)
+
   return NextResponse.json({
     authenticated: await isAdminRequest(request),
     configured: isAdminConfigured(),
+    passwordConfigured,
+    accessConfigured,
   })
 }
 
 export async function POST(request: NextRequest) {
-  let body: { password?: string }
+  let body: { email?: string; password?: string }
 
   try {
     body = await request.json()
@@ -28,7 +36,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ authenticated: false, error: 'not_configured' }, { status: 503 })
   }
 
-  if (!isAdminPassword(body.password || '')) {
+  const email = (body.email || '').trim().toLowerCase()
+  const allowedEmails = getAllowedAdminEmails()
+
+  if (!email || (allowedEmails.length > 0 && !isAllowedAdminEmail(email)) || !isAdminPassword(body.password || '')) {
     return NextResponse.json({ authenticated: false, error: 'invalid_password' }, { status: 401 })
   }
 

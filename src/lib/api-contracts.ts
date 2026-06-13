@@ -178,7 +178,7 @@ export interface DiagnosticMetaSummary {
   cacheLookupMs?: number
   cacheAgeSeconds?: number
   edgeColo: string
-  cacheStatus?: 'HIT' | 'MISS'
+  cacheStatus?: 'HIT' | 'MISS' | 'BYPASS' | 'BROWSER'
 }
 
 export interface DiagnosticSuccessResponse {

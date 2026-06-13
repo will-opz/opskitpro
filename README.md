@@ -114,9 +114,18 @@ Runtime environment variables:
 ```bash
 OPSKITPRO_ADMIN_PASSWORD=
 OPSKITPRO_ADMIN_SECRET=
+OPSKITPRO_ADMIN_EMAILS=
 ```
 
-These variables enable the single-user admin login for the `/tools` navigation editor. Keep real values in Cloudflare Worker environment variables or secrets, not in Git.
+These variables enable private admin access for the `/admin` dashboard and `/tools` navigation editor. `OPSKITPRO_ADMIN_PASSWORD` keeps the local/password fallback login available. `OPSKITPRO_ADMIN_EMAILS` is a comma-separated Cloudflare Zero Trust Access whitelist, for example `you@example.com,team@example.com`. Set `OPSKITPRO_ADMIN_SECRET` when using the email whitelist so OpsKitPro can mint its own secure admin session cookie after Cloudflare Access authenticates the user.
+
+Recommended Cloudflare Access policy:
+
+- protect `/admin*`
+- allow only the same emails configured in `OPSKITPRO_ADMIN_EMAILS`
+- keep public tools and `/api/admin/session` outside Access so anonymous users can browse without a login challenge
+
+Keep real values in Cloudflare Worker environment variables or secrets, not in Git.
 
 ---
 
