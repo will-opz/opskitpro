@@ -227,6 +227,7 @@ export async function GET(request: NextRequest | Request) {
   }
 
   const cacheKey = `diag:v2:${domain}`
+  const skipKvCache = searchParams.has('_nocache') || searchParams.get('cache') === '0'
   
   // --- Robust KV Discovery ---
   let KV: any = (process.env as any).KV;
@@ -240,7 +241,7 @@ export async function GET(request: NextRequest | Request) {
   }
 
   // 1. Global KV Cache Lookup
-  if (KV && !searchParams.has('_nocache')) {
+  if (KV && !skipKvCache) {
     try {
       const cached = await KV.get(cacheKey)
       if (cached) {
@@ -550,8 +551,12 @@ export async function GET(request: NextRequest | Request) {
       }),
     }
 
-    if (KV) await KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 3600 }).catch(() => null)
-    return NextResponse.json(responseData)
+    if (KV && !skipKvCache) {
+      await KV.put(cacheKey, JSON.stringify(responseData), { expirationTtl: 3600 }).catch(() => null)
+    }
+    return NextResponse.json(responseData, {
+      headers: skipKvCache ? { 'X-Cache': 'BYPASS', 'Cache-Control': 'no-store' } : undefined,
+    })
 
   } catch (error: any) {
     return NextResponse.json({ status: 'error', message: error.message }, { status: 500 })

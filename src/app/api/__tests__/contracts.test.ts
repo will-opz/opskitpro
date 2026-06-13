@@ -265,4 +265,21 @@ describe('API contract integration', () => {
       },
     })
   })
+
+  it('bypasses KV reads and writes for nocache diagnostic requests', async () => {
+    vi.stubGlobal('fetch', makeFetchStub())
+    const kv = {
+      get: vi.fn(),
+      put: vi.fn(),
+    }
+    ;(globalThis as any).KV = kv
+
+    const res = await diagnosticGET(new Request('http://localhost/api/diagnostic?domain=example.com&_nocache=1') as any)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('X-Cache')).toBe('BYPASS')
+    expect(kv.get).not.toHaveBeenCalled()
+    expect(kv.put).not.toHaveBeenCalled()
+
+    delete (globalThis as any).KV
+  })
 })
