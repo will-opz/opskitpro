@@ -50,6 +50,44 @@ interface CfTrace {
   colo: string
 }
 
+function parseCfTrace(text: string): CfTrace {
+  return Object.fromEntries(
+    text
+      .trim()
+      .split('\n')
+      .map((l) => l.split('='))
+      .filter((p) => p.length === 2)
+      .map(([k, v]) => [k.trim(), v.trim()])
+  ) as unknown as CfTrace
+}
+
+function buildNetworkInfoFromTrace(trace: CfTrace, ua: string): NetworkInfoResponse {
+  const ip = trace.ip || 'Unknown'
+  return {
+    ip,
+    ipv6: ip.includes(':') ? ip : null,
+    asn: null,
+    org: 'Unknown',
+    country: trace.loc || 'Unknown',
+    city: 'Unknown',
+    colo: trace.colo || 'Unknown',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    ua,
+    trace: {
+      http: trace.http || 'Unknown',
+      tls: trace.tls || 'Unknown',
+      warp: trace.warp || 'off',
+      gateway: trace.gateway || 'off',
+      loc: trace.loc || 'Unknown',
+      sni: trace.sni || 'Unknown',
+      kex: trace.kex || 'Unknown',
+      ip,
+      colo: trace.colo || 'Unknown',
+    },
+    _source: 'fallback',
+  }
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PING_SAMPLES = 10
@@ -339,16 +377,20 @@ function SectionCard({
   title,
   icon,
   phase,
+  pendingText,
   children,
 }: {
   title: string
   icon: React.ReactNode
   phase: CardPhase
+  pendingText?: string
   children?: React.ReactNode
 }) {
+  const isPending = phase === 'idle' || (phase !== 'done' && !children)
+
   return (
     <div className="op-card rounded-2xl overflow-hidden">
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)]">
+      <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5 sm:py-4 border-b border-[var(--border-subtle)]">
         <span className="text-[var(--accent-color)]">{icon}</span>
         <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">{title}</h2>
         {phase === 'loading' && (
@@ -357,7 +399,38 @@ function SectionCard({
         {phase === 'done' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
         {phase === 'error' && <AlertCircle className="w-4 h-4 text-amber-500" />}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">
+        {phase === 'error' && !children ? (
+          <div className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
+            <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
+            <p className="text-xs font-medium text-[var(--text-muted)]">
+              {pendingText || 'Check failed. Try again later.'}
+            </p>
+          </div>
+        ) : isPending ? (
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-soft)]/50 px-3 py-3">
+            {phase === 'loading' ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--accent-color)]" />
+            ) : (
+              <div className="h-2 w-2 shrink-0 rounded-full bg-[var(--text-faint)]" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-[var(--text-muted)]">
+                {pendingText || (phase === 'loading' ? 'Checking...' : 'Waiting for check')}
+              </p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-subtle)]">
+                <div
+                  className={`h-full rounded-full bg-[var(--accent-color)] ${
+                    phase === 'loading' ? 'w-2/3 animate-pulse' : 'w-1/4 opacity-30'
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
     </div>
   )
 }
@@ -390,17 +463,17 @@ function StatBox({
     bad: 'text-red-500',
   }
   return (
-    <div className="op-card-soft rounded-xl p-4 text-center">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-2">
+    <div className="op-card-soft rounded-xl p-3 text-center sm:p-4">
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:mb-2 sm:tracking-[0.18em]">
         {label}
       </p>
       {value !== null ? (
-        <p className={`text-2xl font-bold ${quality ? colors[quality] : 'text-[var(--text-primary)]'}`}>
+        <p className={`text-xl font-bold leading-tight sm:text-2xl ${quality ? colors[quality] : 'text-[var(--text-primary)]'}`}>
           {value}
           {unit && <span className="text-xs ml-1 text-[var(--text-muted)]">{unit}</span>}
         </p>
       ) : (
-        <div className="h-8 flex items-center justify-center">
+        <div className="h-7 sm:h-8 flex items-center justify-center">
           <div className="w-5 h-5 rounded-full border-2 border-[var(--border-subtle)] border-t-[var(--accent-color)] animate-spin" />
         </div>
       )}
@@ -496,6 +569,14 @@ export default function NetworkCheckClient({
   lang: 'zh' | 'en' | 'ja' | 'tw'
 }) {
   const nc = dict.tools.network_check
+  const waitingText =
+    lang === 'ja'
+      ? '前のチェックを待っています'
+      : lang === 'zh'
+        ? '等待前序检测'
+        : lang === 'tw'
+          ? '等待前序檢測'
+          : 'Waiting for previous check'
 
   // State
   const [phase, setPhase] = useState<'idle' | 'running' | 'done'>('idle')
@@ -637,11 +718,22 @@ export default function NetworkCheckClient({
     setNetInfoPhase('loading')
     try {
       const res = await fetch('/api/network/info', { cache: 'no-store' })
+      if (!res.ok) throw new Error(`network info failed: ${res.status}`)
       finalNetInfo = await res.json()
       setNetInfo(finalNetInfo)
       setNetInfoPhase('done')
     } catch {
-      setNetInfoPhase('error')
+      try {
+        const traceRes = await fetch('/cdn-cgi/trace', { cache: 'no-store' })
+        const traceText = await traceRes.text()
+        finalTrace = parseCfTrace(traceText)
+        finalNetInfo = buildNetworkInfoFromTrace(finalTrace, navigator.userAgent || 'Unknown')
+        setCfTrace(finalTrace)
+        setNetInfo(finalNetInfo)
+        setNetInfoPhase('done')
+      } catch {
+        setNetInfoPhase('error')
+      }
     }
 
     // Step 2 — DNS perf (from page load timing)
@@ -716,14 +808,7 @@ export default function NetworkCheckClient({
     try {
       const res = await fetch('/cdn-cgi/trace')
       const text = await res.text()
-      const parsed = Object.fromEntries(
-        text
-          .trim()
-          .split('\n')
-          .map((l) => l.split('='))
-          .filter((p) => p.length === 2)
-          .map(([k, v]) => [k.trim(), v.trim()])
-      ) as unknown as CfTrace
+      const parsed = parseCfTrace(text)
       finalTrace = parsed
       setCfTrace(parsed)
       setTracePhase('done')
@@ -828,17 +913,17 @@ export default function NetworkCheckClient({
 
       <div className="glow" aria-hidden />
 
-      <section className="mx-auto w-full max-w-3xl px-4 pt-12 pb-6 sm:px-6 text-center">
+      <section className="mx-auto w-full max-w-3xl px-4 pt-8 pb-5 sm:px-6 sm:pt-12 sm:pb-6 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 ui-chip mb-5">
+        <div className="inline-flex items-center gap-2 ui-chip mb-4 sm:mb-5">
           <Radio className="w-3.5 h-3.5" />
           <span>{nc.badge}</span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mb-3">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mb-2 sm:mb-3">
           {nc.title}
         </h1>
-        <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl mx-auto mb-8">
+        <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl mx-auto mb-6 sm:mb-8 leading-7">
           {nc.subtitle}
         </p>
 
@@ -904,9 +989,9 @@ export default function NetworkCheckClient({
 
       {/* Cards grid */}
       {(phase === 'running' || phase === 'done') && (
-        <section className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-16 grid gap-4">
+        <section className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-16 grid gap-3 sm:gap-4">
           {/* 1. Network Info */}
-          <SectionCard title={nc.info_title} icon={<Globe className="w-4 h-4" />} phase={netInfoPhase}>
+          <SectionCard title={nc.info_title} icon={<Globe className="w-4 h-4" />} phase={netInfoPhase} pendingText={currentStep === nc.info_title ? nc.checking : waitingText}>
             {netInfo ? (
               <div className="grid sm:grid-cols-2 gap-x-8">
                 <div>
@@ -923,17 +1008,11 @@ export default function NetworkCheckClient({
                   <MetaRow label={nc.info_ua} value={netInfo.ua.split('/')[0] ?? netInfo.ua} />
                 </div>
               </div>
-            ) : (
-              netInfoPhase === 'loading' && (
-                <div className="h-24 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 2. IPv6 Status */}
-          <SectionCard title={nc.ipv6_title} icon={<Layers className="w-4 h-4" />} phase={netInfoPhase}>
+          <SectionCard title={nc.ipv6_title} icon={<Layers className="w-4 h-4" />} phase={netInfoPhase} pendingText={currentStep === nc.info_title ? nc.checking : waitingText}>
             {netInfo ? (
               <div className="flex items-start gap-4">
                 <div
@@ -952,17 +1031,11 @@ export default function NetworkCheckClient({
                   </p>
                 </div>
               </div>
-            ) : (
-              netInfoPhase === 'loading' && (
-                <div className="h-16 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 3. Latency */}
-          <SectionCard title={nc.ping_title} icon={<Activity className="w-4 h-4" />} phase={pingPhase}>
+          <SectionCard title={nc.ping_title} icon={<Activity className="w-4 h-4" />} phase={pingPhase} pendingText={currentStep === nc.ping_title ? nc.checking : waitingText}>
             {pingResult ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -998,17 +1071,11 @@ export default function NetworkCheckClient({
                   <PingChart samples={pingResult.samples} />
                 </div>
               </>
-            ) : (
-              pingPhase === 'loading' && (
-                <div className="h-24 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 4. Speed */}
-          <SectionCard title={nc.speed_title} icon={<Gauge className="w-4 h-4" />} phase={speedPhase}>
+          <SectionCard title={nc.speed_title} icon={<Gauge className="w-4 h-4" />} phase={speedPhase} pendingText={currentStep === nc.speed_title ? nc.checking : waitingText}>
             <div className="space-y-5">
               {/* Download */}
               <div>
@@ -1037,7 +1104,7 @@ export default function NetworkCheckClient({
           </SectionCard>
 
           {/* 5. DNS / TLS Perf */}
-          <SectionCard title={nc.dns_perf_title} icon={<Clock className="w-4 h-4" />} phase={dnsPerfPhase}>
+          <SectionCard title={nc.dns_perf_title} icon={<Clock className="w-4 h-4" />} phase={dnsPerfPhase} pendingText={nc.checking}>
             {dnsPerfResult ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1068,17 +1135,11 @@ export default function NetworkCheckClient({
                 </div>
                 <p className="mt-3 text-[10px] text-[var(--text-faint)]">{nc.dns_perf_note}</p>
               </>
-            ) : (
-              dnsPerfPhase === 'loading' && (
-                <div className="h-16 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 6. Reachability */}
-          <SectionCard title={nc.reach_title} icon={<Globe className="w-4 h-4" />} phase={reachPhase}>
+          <SectionCard title={nc.reach_title} icon={<Globe className="w-4 h-4" />} phase={reachPhase} pendingText={currentStep === nc.reach_title ? nc.checking : waitingText}>
             {reachability.length > 0 ? (
               <div className="grid sm:grid-cols-2 gap-x-6">
                 {reachability.map((item) => (
@@ -1109,17 +1170,11 @@ export default function NetworkCheckClient({
                   </div>
                 ))}
               </div>
-            ) : (
-              reachPhase === 'loading' && (
-                <div className="h-16 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 7. Cloudflare Trace */}
-          <SectionCard title={nc.trace_title} icon={<Server className="w-4 h-4" />} phase={tracePhase}>
+          <SectionCard title={nc.trace_title} icon={<Server className="w-4 h-4" />} phase={tracePhase} pendingText={currentStep === nc.trace_title ? nc.checking : waitingText}>
             {cfTrace ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1149,17 +1204,11 @@ export default function NetworkCheckClient({
                   <MetaRow label={nc.trace_kex || 'KEX'} value={cfTrace.kex || '—'} mono />
                 </div>
               </div>
-            ) : (
-              tracePhase === 'loading' && (
-                <div className="h-16 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 8. DNS Resolver Latency */}
-          <SectionCard title={nc.dns_latency_title || 'DNS Resolver Latency'} icon={<Radio className="w-4 h-4" />} phase={dnsLatencyPhase}>
+          <SectionCard title={nc.dns_latency_title || 'DNS Resolver Latency'} icon={<Radio className="w-4 h-4" />} phase={dnsLatencyPhase} pendingText={nc.checking}>
             {dnsLatency.length > 0 ? (
               <div className="grid sm:grid-cols-2 gap-3">
                 {dnsLatency.map((item) => (
@@ -1177,13 +1226,7 @@ export default function NetworkCheckClient({
                   </div>
                 ))}
               </div>
-            ) : (
-              dnsLatencyPhase === 'loading' && (
-                <div className="h-16 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
-                </div>
-              )
-            )}
+            ) : null}
           </SectionCard>
 
           {/* 9. AI Analysis */}

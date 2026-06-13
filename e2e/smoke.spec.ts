@@ -358,7 +358,7 @@ test('cloudflare trace renders and analyzes local connection', async ({ page }) 
 
   // Wait for fetch to complete and render
   await expect(page.getByText('203.0.113.5')).toBeVisible()
-  await expect(page.getByText('NRT', { exact: true })).toBeVisible()
+  await expect(page.getByText('NRT', { exact: true }).first()).toBeVisible()
   await expect(page.getByText('TLSv1.3', { exact: true })).toBeVisible()
 })
 
@@ -442,6 +442,52 @@ test('network check renders network doctor trace and dns resolver diagnostics', 
   await expect(page.getByText('DNS Resolver Latency')).toBeVisible()
   await expect(page.getByText('Cloudflare').first()).toBeVisible()
   await expect(page.getByText(/WARP\+ is enabled/)).toBeVisible()
+})
+
+test('network check falls back to cloudflare trace when network info fails', async ({ page }) => {
+  await page.route('**/api/network/info', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'network info unavailable' }),
+    }),
+  )
+  await page.route('**/api/network/ping', (route) => route.fulfill({ status: 204, body: '' }))
+  await page.route('**/api/network/download?size=*', (route) =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-length': '1024' },
+      body: 'x'.repeat(1024),
+    }),
+  )
+  await page.route('**/api/network/reachability', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ results: [] }),
+    }),
+  )
+  await page.route('**/api/network/dns-latency', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ results: [] }),
+    }),
+  )
+  await page.route('**/cdn-cgi/trace', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/plain',
+      body: 'ip=2001:db8::5\ncolo=NRT\nloc=JP\nhttp=http/3\ntls=TLSv1.3\nsni=plaintext\nwarp=off\ngateway=off\nkex=X25519',
+    }),
+  )
+
+  await page.goto('/tools/network-check')
+  await page.getByRole('button', { name: /Start Check/i }).click()
+
+  await expect(page.getByText('2001:db8::5', { exact: true }).first()).toBeVisible({ timeout: 15000 })
+  await expect(page.getByText(/IPv6 dual-stack|IPv6 デュアルスタック|双栈|雙棧/i)).toBeVisible()
+  await expect(page.getByText('NRT', { exact: true }).first()).toBeVisible()
 })
 
 test('dns security audit detects weak spf and missing dmarc', async ({ page }) => {
