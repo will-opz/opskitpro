@@ -83,7 +83,7 @@ export default async function BlogPage() {
             : lang === 'tw'
               ? '把 website-check、IP、DNS 這幾塊按單一題目拆開講。'
               : 'Breaks down website-check, IP, and DNS as separate implementation topics.',
-      slugs: ['website-check-module', 'ip-dns-module', 'cloudflare-dual-stack'],
+      slugs: ['website-check-module', 'network-doctor-upgrade', 'ip-dns-module', 'cloudflare-dual-stack'],
     },
     {
       id: 'tool-implementation',

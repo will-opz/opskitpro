@@ -286,6 +286,77 @@ const posts: BlogPost[] = [
     related: ['website-check-module', 'ip-dns-module', 'services-deployment'],
   },
   {
+    slug: 'network-doctor-upgrade',
+    date: '2026-06-14',
+    readTime: '7 min',
+    tag: '工具',
+    accent: 'from-emerald-500/10 via-cyan-500/10 to-transparent',
+    ctaUrl: 'https://opskitpro.com/tools/network-check',
+    actionKind: 'tool',
+    coverImage: '/blog-covers/network-doctor.svg',
+    titles: {
+      zh: '把 Network Check 升级成 Network Doctor：让测速结果变成诊断结论',
+      en: 'Upgrading Network Check into Network Doctor: turning speed tests into diagnosis',
+      ja: 'Network Check を Network Doctor へ: 速度測定を診断結果に変える',
+      tw: '把 Network Check 升級成 Network Doctor：讓測速結果變成診斷結論',
+    },
+    summaries: {
+      zh: '这次优化新增 Cloudflare Trace 状态卡、DNS 解析器延迟和自动诊断总结，用来解释 WARP、Gateway、边缘节点和实时通信变慢之间的关系。',
+      en: 'This upgrade adds Cloudflare Trace status, DNS resolver latency, and diagnosis summaries to explain WARP, Gateway, edge POPs, and slow realtime apps.',
+      ja: 'Cloudflare Trace、DNS リゾルバー遅延、診断サマリーを追加し、WARP、Gateway、エッジ POP、リアルタイム通信の遅さを説明できるようにしました。',
+      tw: '這次優化新增 Cloudflare Trace 狀態卡、DNS 解析器延遲與自動診斷摘要，用來解釋 WARP、Gateway、邊緣節點與即時通訊變慢之間的關係。',
+    },
+    sections: [
+      {
+        heading: '这次为什么不新开一个大页面',
+        paragraphs: [
+          '今天的优化没有另起一个新的 Network Doctor 页面，而是直接把现有的 /tools/network-check 升级。原因很简单：用户已经把它当成网络质量入口，如果再拆出一个新页面，反而会让“测速”和“诊断”变成两个分散动作。',
+          '更合理的方向，是让原来的 Network Check 继续负责入口和基础检测，再把 Cloudflare Trace、DNS latency、可达性和总结规则接进去。这样用户仍然只需要点一次检测，但结果不再只是“快不快”，而是能回答“为什么某些应用慢”。',
+        ],
+        files: ['src/app/tools/network-check/NetworkCheckClient.tsx', 'src/app/tools/network-check/page.tsx'],
+      },
+      {
+        heading: 'Cloudflare Trace 变成第一层网络上下文',
+        paragraphs: [
+          '这次把 /api/trace 的解析字段补齐了：warp、gateway、colo、http、tls、sni、kex、loc 都会被结构化出来。原来的文本 trace 仍然保留，Cloudflare Trace 专项页不会受影响；但 Network Check 可以直接读取这些字段，生成更具体的状态卡。',
+          '状态卡重点展示 WARP 是否开启、是否 WARP+、Zero Trust Gateway 是否启用、当前命中的 Cloudflare Edge POP，以及 TLS/KEX 是否包含 MLKEM 或 Kyber 这类后量子密钥交换线索。这样用户看到 NRT、WARP+、Gateway off、X25519MLKEM768 时，不需要自己去解释每个字段。',
+        ],
+        files: ['src/app/api/trace/route.ts', 'src/app/api/network/info/route.ts', 'src/app/tools/cloudflare-trace/CloudflareTraceClient.tsx'],
+      },
+      {
+        heading: 'DNS latency 补上“解析器视角”',
+        paragraphs: [
+          '很多网络问题看起来像带宽问题，实际却是解析器、路由或目标站链路问题。所以这次增加了 /api/network/dns-latency，用 DoH 方式测试 Cloudflare、Google、Quad9、OpenDNS 的解析延迟，并在 Network Check 页面展示。',
+          '这里要注意，它不是客户端本机 DNS 的完整替代，而是从服务端或边缘视角给出公共解析器的相对耗时。它的价值在于快速判断：当前问题是否可能和 DNS 解析器选择有关，还是更应该继续看 WARP 路由、目标站可达性或长连接体验。',
+        ],
+        files: ['src/app/api/network/dns-latency/route.ts', 'src/lib/api-contracts.ts', 'src/app/tools/network-check/NetworkCheckClient.tsx'],
+      },
+      {
+        heading: '自动诊断总结要讲人话',
+        paragraphs: [
+          '工具最重要的优化不是多放几个字段，而是把字段变成一句可执行的结论。比如 warp=plus、gateway=off、colo=NRT 时，总结会直接说明 WARP+ 已开启并命中东京节点，Gateway 未启用。',
+          '如果 kex 里包含 MLKEM 或 Kyber，总结会提示后量子密钥交换已启用，首次 TLS 握手可能有轻微额外耗时。如果基础延迟正常，但 Telegram、GitHub 等目标可达性较慢，则会提示吞吐或基础 ping 可能没问题，实时通信和长连接体验仍可能受 WARP 路由影响。',
+        ],
+        bullets: [
+          'WARP+ + Gateway off：适合说明当前是 WARP 加速链路，但没有走 Zero Trust Gateway。',
+          'NRT / LAX / SJC 等 Edge POP：帮助用户确认当前离哪个 Cloudflare 边缘最近。',
+          'MLKEM / Kyber：提示后量子密钥交换，不把它误判成普通 TLS 字段。',
+          'DNS latency + reachability：把“解析快不快”和“目标站慢不慢”分开看。',
+        ],
+        files: ['src/app/tools/network-check/NetworkCheckClient.tsx', 'e2e/smoke.spec.ts'],
+      },
+      {
+        heading: '这和 OpsKitPro 的方向是一致的',
+        paragraphs: [
+          'OpsKitPro 后续不会只堆工具数量，而是继续把排障动作整理成可复用的判断。Network Doctor 这次升级就是一个例子：测速只是事实，诊断才是用户真正需要带走的东西。',
+          '下一步可以继续沿着这个方向补充 1.1.1.1 状态检测、DNS Resolver 识别、即时通讯专项测试和可分享报告。重点不是做成复杂的测速站，而是保持轻量，让 SRE 或开发者在现场能更快知道下一步该查哪里。',
+        ],
+        files: ['src/app/tools/network-check/NetworkCheckClient.tsx', 'src/app/tools/website-check/WebsiteCheckClient.tsx', 'src/content/blog-posts.ts'],
+      },
+    ],
+    related: ['website-check-module', 'cloudflare-dual-stack', 'ip-dns-module'],
+  },
+  {
     slug: 'services-deployment',
     date: '2026-04-22',
     readTime: '6 min',
