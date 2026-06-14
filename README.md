@@ -5,7 +5,7 @@
 **OpsKitPro** is a comprehensive **Diagnostics Hub** for SREs, DevOps engineers, and webmasters. It has evolved from a simple developer toolbox into a closed-loop diagnostic engine designed to quickly identify, explain, and resolve edge networking and DNS issues.
 
 > [!IMPORTANT]
-> The public repository contains the main site, tools, articles, and Cloudflare deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live outside this repository.
+> This public repository contains only the user-facing product: the main site, diagnostic tools, public pages, API routes, tests, and deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live in `opskitpro-ops`.
 
 ---
 
@@ -42,6 +42,18 @@ opskitpro.com (Main Site — Next.js 14)
 ├── /services      Curated external service matrix
 └── /api           Edge diagnostic APIs
 ```
+
+## Repository Model
+
+OpsKitPro is split into three long-lived repositories:
+
+| Repository | Visibility | Responsibility |
+|------------|------------|----------------|
+| `opskitpro` | Public | User-facing product, tools, public pages, CI/CD, and open source code |
+| `opskitpro-ops` | Private | Django operations backend, analytics, Nginx/Cloudflare imports, Qiita/X publishing workflow, and private automation |
+| `opskitpro-public` | Public | Static knowledge base source for `kb.opskitpro.com`: finished articles, tool docs, and public assets |
+
+Anything involving tokens, traffic analysis, private drafts, publishing queues, operational reports, or promotion experiments belongs in `opskitpro-ops`, not in this repository.
 
 ---
 
@@ -82,8 +94,9 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 | **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
-| **CI/CD** | GitHub Actions → Cloudflare Workers / AWS Lightsail |
-| **Knowledge Base** | [kb.opskitpro.com](https://kb.opskitpro.com) (Obsidian-authored knowledge base) |
+| **CI/CD** | GitHub Actions → AWS Lightsail |
+| **Operations Backend** | `opskitpro-ops` Django admin at `ops.opskitpro.com` |
+| **Knowledge Base** | `opskitpro-public` → [kb.opskitpro.com](https://kb.opskitpro.com) |
 
 ---
 
@@ -99,8 +112,8 @@ npm run dev
 
 ### Deploy to Cloudflare
 ```bash
-# Deploys both the main engine and edge assets
-npm run deploy
+# Legacy Worker deploy path. Production currently runs on AWS Lightsail.
+npm run deploy:cloudflare
 ```
 
 ### Package for AWS Lightsail
@@ -125,9 +138,8 @@ PORT=3000
 The repository also includes GitHub Actions CI/CD:
 
 - pull requests to `main`: install, test, and build
-- pushes to `main`: install, test, build, and deploy to Cloudflare
-- manual `Deploy Lightsail` workflow: install, test, build, package standalone, upload to Lightsail, restart systemd
-- required GitHub secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`
+- pushes to `main`: install, test, build, package standalone, upload to Lightsail, restart systemd
+- Cloudflare Worker deploy is retained as a legacy/manual path only
 
 Lightsail workflow secrets:
 
@@ -160,22 +172,22 @@ Keep real values in Cloudflare Worker environment variables or secrets, not in G
 This public repository intentionally contains only the product-facing project:
 
 - main website and tool code
-- public blog/Qiita article drafts
+- public product pages and blog data required by the site
 - tests and CI/CD workflow
 - Cloudflare Worker configuration without secrets
 
-Private operations data is kept out of this repository. The private workspace contains:
+Private operations data is kept out of this repository. `opskitpro-ops` contains:
 
-- Cloudflare/X analytics automation
+- Cloudflare and Nginx analytics imports
 - generated daily reports and history snapshots
-- Qiita/X publishing helpers
-- local read-only ops dashboard
+- Qiita/X publishing queues, publishing logs, and automation
+- Django admin dashboard
 - promotion planning and private backlog signals
 
 ---
 
 ## 📁 Knowledge Base
-All technical field notes and tool guides are authored in Obsidian and published at [kb.opskitpro.com](https://kb.opskitpro.com).
+Finished public articles and tool guides live in `opskitpro-public` and are published at [kb.opskitpro.com](https://kb.opskitpro.com). Drafts, queues, and private planning stay in `opskitpro-ops`.
 
 ---
 
