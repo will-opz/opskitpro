@@ -18,95 +18,78 @@ afterEach(() => {
   process.env.NODE_ENV = originalNodeEnv
 })
 
-describe('middleware — locale rewriting', () => {
-  it('rewrites /zh to /', async () => {
-    const req = makeRequest('/zh')
-    const res = await middleware(req)
-    // Rewrite response should have the rewritten URL pointing to /
-    expect(res.status).toBe(200)
-  })
-
-  it('rewrites /zh/tools/ip-lookup to /tools/ip-lookup', async () => {
+describe('middleware — locale redirection', () => {
+  it('passes through localized paths without redirecting', async () => {
     const req = makeRequest('/zh/tools/ip-lookup')
     const res = await middleware(req)
+    // Next response has status 200 (pass-through)
     expect(res.status).toBe(200)
-    // The internal rewrite target is /tools/ip-lookup
-    const rewriteHeader = res.headers.get('x-middleware-rewrite')
-    expect(rewriteHeader).toContain('/tools/ip-lookup')
+    expect(res.headers.get('location')).toBeNull()
   })
 
-  it('rewrites /en/services to /services', async () => {
-    const req = makeRequest('/en/services')
-    const res = await middleware(req)
-    expect(res.status).toBe(200)
-    const rewriteHeader = res.headers.get('x-middleware-rewrite')
-    expect(rewriteHeader).toContain('/services')
-  })
-
-  it('rewrites /en/blog to /blog', async () => {
-    const req = makeRequest('/en/blog')
-    const res = await middleware(req)
-    const rewriteHeader = res.headers.get('x-middleware-rewrite')
-    expect(rewriteHeader).toContain('/blog')
-  })
-
-  it('passes through non-locale paths (no rewrite)', async () => {
-    const req = makeRequest('/tools/dns-lookup')
-    const res = await middleware(req)
-    // Should be a next() pass-through, not a rewrite
-    const rewriteHeader = res.headers.get('x-middleware-rewrite')
-    expect(rewriteHeader).toBeNull()
-  })
-
-  it('passes through root path /', async () => {
+  it('redirects root path / to default locale /en', async () => {
     const req = makeRequest('/')
     const res = await middleware(req)
-    const rewriteHeader = res.headers.get('x-middleware-rewrite')
-    expect(rewriteHeader).toBeNull()
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('http://localhost/en')
+  })
+
+  it('redirects /services to /en/services', async () => {
+    const req = makeRequest('/services')
+    const res = await middleware(req)
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('http://localhost/en/services')
+  })
+
+  it('redirects /blog to /en/blog', async () => {
+    const req = makeRequest('/blog')
+    const res = await middleware(req)
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('http://localhost/en/blog')
+  })
+
+  it('passes through admin path without redirecting', async () => {
+    const req = makeRequest('/admin')
+    const res = await middleware(req)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('location')).toBeNull()
   })
 })
 
 describe('middleware — locale cookie', () => {
-  it('sets NEXT_LOCALE cookie to zh when path starts with /zh', async () => {
+  it('does NOT set cookie when path already has a locale', async () => {
     const req = makeRequest('/zh/about')
     const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie')
-    expect(setCookie).toContain('NEXT_LOCALE=zh')
+    expect(setCookie).toBeNull()
   })
 
-  it('sets NEXT_LOCALE cookie to en when path starts with /en', async () => {
-    const req = makeRequest('/en/about')
+  it('sets NEXT_LOCALE cookie to en when redirecting to /en', async () => {
+    const req = makeRequest('/about')
     const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie')
     expect(setCookie).toContain('NEXT_LOCALE=en')
   })
 
-  it('does NOT set cookie again when NEXT_LOCALE is already correct', async () => {
-    // Cookie already matches, so no set-cookie should be issued
-    const req = makeRequest('/zh/services', 'zh')
+  it('respects existing NEXT_LOCALE cookie when redirecting', async () => {
+    const req = makeRequest('/services', 'zh')
     const res = await middleware(req)
-    // set-cookie should be absent or not change the value to zh again
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('http://localhost/zh/services')
+    // Does not re-set the cookie because it already matches
     const setCookie = res.headers.get('set-cookie')
-    // Per middleware logic: only sets if currentCookie !== locale
     expect(setCookie).toBeNull()
   })
 
-  it('updates cookie when locale changes from en to zh', async () => {
-    const req = makeRequest('/zh/services', 'en') // cookie says en, path says zh
-    const res = await middleware(req)
-    const setCookie = res.headers.get('set-cookie')
-    expect(setCookie).toContain('NEXT_LOCALE=zh')
-  })
-
-  it('sets cookie with SameSite=Lax', async () => {
-    const req = makeRequest('/en/tools/dns-lookup')
+  it('sets cookie with SameSite=Lax during redirect', async () => {
+    const req = makeRequest('/tools/dns-lookup')
     const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie') ?? ''
     expect(setCookie.toLowerCase()).toContain('samesite=lax')
   })
 
-  it('sets cookie with long max-age (1 year)', async () => {
-    const req = makeRequest('/zh/tools/ip-lookup')
+  it('sets cookie with long max-age (1 year) during redirect', async () => {
+    const req = makeRequest('/tools/ip-lookup')
     const res = await middleware(req)
     const setCookie = res.headers.get('set-cookie') ?? ''
     expect(setCookie).toContain('31536000')
