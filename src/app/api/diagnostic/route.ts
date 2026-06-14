@@ -257,6 +257,7 @@ export async function GET(request: NextRequest | Request) {
     cacheStatus,
   })
   
+  const isVisitor = !query
   let domain = query.replace(/^https?:\/\//, '').split('/')[0]
   
   // If no query, default to visitor's own IP
@@ -462,6 +463,7 @@ export async function GET(request: NextRequest | Request) {
       const partialError: DiagnosticPartialErrorResponse = {
         domain,
         status: 'partial_error',
+        isVisitor,
         isActuallyIp,
         isPrivate: isPrivateIp,
         error: httpRes.message,
@@ -556,6 +558,7 @@ export async function GET(request: NextRequest | Request) {
     const responseData: DiagnosticSuccessResponse = {
       domain,
       status: 'success',
+      isVisitor,
       isActuallyIp,
       isPrivate: isPrivateIp,
       dns: {

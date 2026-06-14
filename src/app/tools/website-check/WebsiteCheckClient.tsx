@@ -40,7 +40,7 @@ import { useAdminSession } from '@/components/AdminSessionProvider'
 
 import { useDiagnosticHistory } from './_hooks/useDiagnosticHistory'
 import { useWebsiteCheck } from './_hooks/useWebsiteCheck'
-import { calculateScore, normalizeTargetInput, BatchDiagnosticResult, createSafeDiagnosticResult } from './_hooks/helpers'
+import { calculateScore, isBlockedHttpStatus, normalizeTargetInput, BatchDiagnosticResult, createSafeDiagnosticResult } from './_hooks/helpers'
 
 export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const isAsianLanguage = lang !== 'en'
@@ -894,17 +894,62 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     return loadingStages[index] ?? loadingStages[0]
   }, [currentStep, loadingStages])
 
+  const statusCopy = useMemo(() => ({
+    zh: {
+      blocked: '连接可达，但 HTTP 被拒绝',
+      blockedAdvice: '目标拒绝了当前探测请求。若这是你的公网 IP，通常表示没有开放 Web 服务；若这是网站域名，请检查 Cloudflare WAF、Access、Bot Fight Mode、IP 访问规则或源站 Host/SNI 策略。',
+      visitorSslNa: '公网 IP 检测不适用 SSL 证书评分。',
+      visitorHeadersNa: 'HTTP 被拒绝时无法完整评估安全响应头。',
+    },
+    tw: {
+      blocked: '連線可達，但 HTTP 被拒絕',
+      blockedAdvice: '目標拒絕了目前探測請求。若這是你的公網 IP，通常表示沒有開放 Web 服務；若這是網站域名，請檢查 Cloudflare WAF、Access、Bot Fight Mode、IP 存取規則或源站 Host/SNI 策略。',
+      visitorSslNa: '公網 IP 檢測不適用 SSL 憑證評分。',
+      visitorHeadersNa: 'HTTP 被拒絕時無法完整評估安全回應標頭。',
+    },
+    en: {
+      blocked: 'Reachable, but HTTP is blocked',
+      blockedAdvice: 'The target rejected this probe. For a public IP, this usually means no web service is exposed. For a domain, check Cloudflare WAF, Access, Bot Fight Mode, IP rules, or origin Host/SNI policy.',
+      visitorSslNa: 'SSL certificate grading is not applicable to a public IP check.',
+      visitorHeadersNa: 'Security headers cannot be fully graded while HTTP is blocked.',
+    },
+    ja: {
+      blocked: '到達可能ですが HTTP が拒否されました',
+      blockedAdvice: '対象がこの探測リクエストを拒否しました。公開 IP の場合は Web サービス未公開の可能性が高く、ドメインの場合は Cloudflare WAF、Access、Bot Fight Mode、IP ルール、Origin の Host/SNI 設定を確認してください。',
+      visitorSslNa: '公開 IP の確認では SSL 証明書スコアは対象外です。',
+      visitorHeadersNa: 'HTTP が拒否されているため、セキュリティヘッダーは完全には評価できません。',
+    },
+  }[lang]), [lang])
+
+  const getResultState = useCallback((data: any) => {
+    const blocked = !data?.http?.success && isBlockedHttpStatus(data?.http?.status_code)
+    const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp)
+    const headersScore = data?.securityHeaders?.score ?? 100
+    const whoisHold = data?.whois?.status?.toLowerCase().includes('hold')
+    const healthy = data?.http?.success && headersScore >= 55 && !whoisHold
+    const warning = blocked || (isIpOrVisitor && Number(data?.http?.status_code || 0) >= 400)
+
+    return {
+      blocked,
+      isIpOrVisitor,
+      healthy,
+      warning,
+      verdict: healthy
+        ? dict.tools.website_check.summary_good
+        : warning
+          ? statusCopy.blocked
+          : dict.tools.website_check.summary_bad,
+      tone: healthy ? 'emerald' : warning ? 'orange' : 'red',
+    }
+  }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, statusCopy])
+
 
 
   const summaryFacts = useMemo(() => {
     if (!result) return []
 
     const score = calculateScore(result)
-    const verdict = result.http.success
-      && (result.securityHeaders?.score ?? 100) >= 55
-      && !result.whois?.status?.toLowerCase().includes('hold')
-      ? dict.tools.website_check.summary_good
-      : dict.tools.website_check.summary_bad
+    const state = getResultState(result)
 
     return [
       {
@@ -914,8 +959,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       },
       {
         label: localeText.summaryVerdict,
-        value: verdict,
-        tone: result.http.success ? 'emerald' : 'red',
+        value: state.verdict,
+        tone: state.tone,
       },
       {
         label: localeText.dns.title,
@@ -925,17 +970,17 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       {
         label: localeText.http.title,
         value: `${result.http.status_code}`,
-        tone: result.http.success ? 'emerald' : 'red',
+        tone: result.http.success ? 'emerald' : state.blocked ? 'orange' : 'red',
       },
       {
         label: localeText.ssl.title,
-        value: result.ssl.grade || 'A',
-        tone: result.ssl.valid ? 'emerald' : 'red',
+        value: state.isIpOrVisitor && !result.ssl.valid ? 'N/A' : (result.ssl.grade || 'A'),
+        tone: result.ssl.valid ? 'emerald' : state.isIpOrVisitor ? 'zinc' : 'red',
       },
       {
         label: localeText.security.title,
-        value: result.securityHeaders?.grade || '—',
-        tone: (result.securityHeaders?.score ?? 0) >= 75 ? 'emerald' : (result.securityHeaders?.score ?? 0) >= 55 ? 'orange' : 'red',
+        value: state.blocked ? 'N/A' : (result.securityHeaders?.grade || '—'),
+        tone: state.blocked ? 'zinc' : (result.securityHeaders?.score ?? 0) >= 75 ? 'emerald' : (result.securityHeaders?.score ?? 0) >= 55 ? 'orange' : 'red',
       },
       {
         label: localeText.cdn.title,
@@ -943,7 +988,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
         tone: result.cdn.is_provider ? 'emerald' : 'orange',
       },
     ]
-  }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, localeText, result])
+  }, [getResultState, localeText, result])
 
 
 
@@ -1031,6 +1076,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   const buildDiagnosticFindings = (data: any) => {
     const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
+    const state = getResultState(data)
     const findings = [
       {
         key: 'dns',
@@ -1041,27 +1087,37 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       {
         key: 'http',
         title: localeText.http.title,
-        status: data.http.success ? 'ok' : 'error',
-        description: data.http.success ? `${localeText.report.httpOk} HTTP ${data.http.status_code || 'ERR'} · ${data.http.latency}` : localeText.report.httpBad,
+        status: data.http.success ? 'ok' : state.blocked ? 'warning' : 'error',
+        description: data.http.success
+          ? `${localeText.report.httpOk} HTTP ${data.http.status_code || 'ERR'} · ${data.http.latency}`
+          : state.blocked
+            ? `${statusCopy.blocked} · HTTP ${data.http.status_code || 'ERR'} · ${data.http.latency}`
+            : localeText.report.httpBad,
       },
       {
         key: 'ssl',
         title: localeText.ssl.title,
-        status: data.ssl.valid ? 'ok' : 'error',
-        description: data.ssl.valid ? `${localeText.report.sslOk} ${data.ssl.grade || 'OK'} · ${data.ssl.expiry}` : localeText.report.sslBad,
+        status: data.ssl.valid ? 'ok' : state.isIpOrVisitor ? 'warning' : 'error',
+        description: data.ssl.valid
+          ? `${localeText.report.sslOk} ${data.ssl.grade || 'OK'} · ${data.ssl.expiry}`
+          : state.isIpOrVisitor
+            ? statusCopy.visitorSslNa
+            : localeText.report.sslBad,
       },
       {
         key: 'headers',
         title: localeText.security.title,
-        status: (data.securityHeaders?.score ?? 0) >= 75 ? 'ok' : (data.securityHeaders?.score ?? 0) >= 55 ? 'warning' : 'error',
-        description: missingHeaders.length
+        status: state.blocked ? 'warning' : (data.securityHeaders?.score ?? 0) >= 75 ? 'ok' : (data.securityHeaders?.score ?? 0) >= 55 ? 'warning' : 'error',
+        description: state.blocked
+          ? statusCopy.visitorHeadersNa
+          : missingHeaders.length
           ? `${localeText.report.headersBad} ${missingHeaders.map((check: any) => check.label).join(' / ')}`
           : localeText.report.headersOk,
       },
       {
         key: 'cdn',
         title: localeText.cdn.title,
-        status: data.cdn.is_provider ? 'ok' : 'warning',
+        status: data.cdn.is_provider || state.isIpOrVisitor ? 'ok' : 'warning',
         description: data.cdn.is_provider ? `${localeText.report.cdnOk} ${data.cdn.provider}` : localeText.report.cdnBad,
       },
     ]
@@ -1074,6 +1130,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     const warningFindings = findings.filter((item) => item.status === 'warning')
     const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
     const redirectCount = data.http.redirect_count ?? 0
+    const state = getResultState(data)
 
     const impact = criticalFindings.length > 0
       ? 'User-facing availability or trust may be affected.'
@@ -1084,6 +1141,10 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     let suspectedCause = 'No obvious fault. Continue normal monitoring.'
     if (!data.dns.success) {
       suspectedCause = 'DNS resolution failure or missing A/AAAA records.'
+    } else if (state.blocked) {
+      suspectedCause = data.isVisitor || data.isActuallyIp
+        ? 'The public IP is reachable, but HTTP access is blocked or no web service is exposed.'
+        : `HTTP access is blocked${data.http.status_code ? `, status ${data.http.status_code}` : ''}; check WAF, Access, bot rules, or origin policy.`
     } else if (!data.http.success) {
       suspectedCause = `HTTP reachability issue${data.http.status_code ? `, status ${data.http.status_code}` : ''}.`
     } else if (data.http.redirect_warning) {
@@ -1099,7 +1160,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     const evidence = [
       `DNS: ${data.dns.success ? 'OK' : 'FAIL'} · ${data.dns.latency} · ${data.dns.resolved_ip}`,
       `DNS Records: A ${data.dns.records?.A?.length || 0}, AAAA ${data.dns.records?.AAAA?.length || 0}, CNAME ${data.dns.records?.CNAME?.length || 0}, MX ${data.dns.records?.MX?.length || 0}, TXT ${data.dns.records?.TXT?.length || 0}, CAA ${data.dns.records?.CAA?.length || 0}`,
-      `HTTP: ${data.http.success ? 'OK' : 'FAIL'} · ${data.http.status_code || 'ERR'} · ${data.http.latency}`,
+      `HTTP: ${data.http.success ? 'OK' : state.blocked ? 'BLOCKED' : 'FAIL'} · ${data.http.status_code || 'ERR'} · ${data.http.latency}`,
       `Redirects: ${redirectCount} · final ${data.http.final_url || 'Unknown'}`,
       `SSL: ${data.ssl.valid ? 'OK' : 'FAIL'} · ${data.ssl.grade || 'Unknown'} · expires ${data.ssl.expiry}`,
       `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || 'Unknown'}`,
@@ -1156,11 +1217,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const buildPlainSummary = useCallback(() => {
     if (!result) return ''
     const score = calculateScore(result)
-    const verdict = result.http.success
-      && (result.securityHeaders?.score ?? 100) >= 55
-      && !result.whois?.status?.toLowerCase().includes('hold')
-      ? dict.tools.website_check.summary_good
-      : dict.tools.website_check.summary_bad
+    const verdict = getResultState(result).verdict
     const findings = buildDiagnosticFindings(result)
     const advice = getAdvice(result)
     const ticket = buildTicketSummarySections(result, findings, advice)
@@ -1189,7 +1246,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       'Next Action:',
       ...ticket.nextAction.map((item) => `- ${item}`),
     ].filter(Boolean).join('\n')
-  }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, localeText, result])
+  }, [getResultState, localeText, result])
 
   const writeClipboard = async (value: string) => {
     try {
@@ -1398,6 +1455,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     const copy = {
       ja: {
         http530: 'Cloudflare 530: オリジン DNS エラーです。CDN が接続先の IP を見つけられていません。',
+        blocked: statusCopy.blockedAdvice,
         gateway: 'ゲートウェイのタイムアウトです。オリジンサービスが停止しているか、応答に失敗しています。',
         connectivity: '接続障害の可能性があります。ファイアウォールや 80/443 番ポートを確認してください。',
         sslExpired: 'SSL 証明書の有効性に問題があります。現在、ブラウザ側で警告が出る状態です。',
@@ -1411,6 +1469,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       },
       zh: {
         http530: 'Cloudflare 530：源站 DNS 出错，CDN 未能找到上游服务器 IP。',
+        blocked: statusCopy.blockedAdvice,
         gateway: '网关超时：源站服务可能已停止，或响应失败。',
         connectivity: '可能存在连接故障。请检查防火墙与 80/443 端口。',
         sslExpired: 'SSL 证书存在问题，当前会触发浏览器警告。',
@@ -1424,6 +1483,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       },
       tw: {
         http530: 'Cloudflare 530：源站 DNS 發生錯誤，CDN 無法找到上游伺服器 IP。',
+        blocked: statusCopy.blockedAdvice,
         gateway: '閘道逾時：源站服務可能已停止，或回應失敗。',
         connectivity: '可能存在連線故障。請檢查防火牆與 80/443 連接埠。',
         sslExpired: 'SSL 憑證存在問題，目前會觸發瀏覽器警告。',
@@ -1437,6 +1497,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       },
       en: {
         http530: 'Cloudflare 530: Origin DNS error. The CDN cannot find your upstream IP.',
+        blocked: statusCopy.blockedAdvice,
         gateway: 'Gateway timeout: The origin service may be down or failing to respond.',
         connectivity: 'Connectivity fault: Check your firewall and ports 80/443.',
         sslExpired: 'SSL certificate problem: browser warnings are likely right now.',
@@ -1450,8 +1511,12 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
       },
     }[lang]
 
+    const state = getResultState(data)
+
     if (!data.http.success) {
-      if (data.http.status_code === 530) {
+      if (isBlockedHttpStatus(data.http.status_code)) {
+        advice.push(copy.blocked)
+      } else if (data.http.status_code === 530) {
         advice.push(copy.http530)
       } else if (data.http.status_code === 502 || data.http.status_code === 504) {
         advice.push(copy.gateway)
@@ -1461,7 +1526,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     }
 
     const isExpired = data.ssl?.expiry && new Date(data.ssl.expiry) < new Date()
-    if (isExpired || !data.ssl.valid) {
+    if (!state.isIpOrVisitor && (isExpired || !data.ssl.valid)) {
       advice.push(copy.sslExpired)
     } else if (data.ssl.grade === 'C') {
       advice.push(copy.sslSoon)
@@ -1472,13 +1537,15 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
     }
 
     const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
-    if (missingHeaders.some((check: any) => check.key === 'content-security-policy')) {
+    if (state.blocked) {
+      advice.push(statusCopy.visitorHeadersNa)
+    } else if (missingHeaders.some((check: any) => check.key === 'content-security-policy')) {
       advice.push(copy.csp)
     } else if ((data.securityHeaders?.score ?? 100) < 75) {
       advice.push(copy.securityHeaders)
     }
 
-    if (!data.cdn.is_provider) {
+    if (!state.isIpOrVisitor && !data.cdn.is_provider) {
       advice.push(copy.cdn)
     }
 
@@ -1538,6 +1605,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const diagnosticFindings = useMemo(() => (result ? buildDiagnosticFindings(result) : []), [result])
   const faultGuide = useMemo(() => (error ? buildFaultGuide(error, result) : null), [buildFaultGuide, error, result])
   const displayedTarget = result?.domain || domain || 'opskitpro.com'
+  const resultState = result ? getResultState(result) : null
 
   return (
     <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 mt-6 sm:mt-12 mb-24 sm:mb-28 z-20 relative font-sans">
@@ -1917,7 +1985,13 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
            })()}
 
            {/* Overall Status Bar */}
-           <div className={`mb-6 p-4 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5 relative overflow-hidden ${result.http.success ? 'bg-white/90 border-emerald-100/80' : 'bg-red-50 border-red-100'}`}>
+           <div className={`mb-6 p-4 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5 relative overflow-hidden ${
+             resultState?.healthy
+               ? 'bg-white/90 border-emerald-100/80'
+               : resultState?.warning
+                 ? 'bg-orange-50 border-orange-100'
+                 : 'bg-red-50 border-red-100'
+           }`}>
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
               <div className="flex items-center gap-5 z-10 w-full min-w-0">
                  {/* Score Ring */}
@@ -1941,15 +2015,23 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                  })()}
                  <div className="min-w-0">
                    <h2 className="text-[10px] font-semibold text-zinc-400 mb-1 tracking-[0.18em]">{localeText.summaryScore}</h2>
-                  <h1 className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${result.http.success && (result.securityHeaders?.score ?? 100) >= 55 && !result.whois?.status?.toLowerCase().includes('hold') ? 'text-zinc-900' : 'text-red-600'}`}>
-                     {result.http.success && (result.securityHeaders?.score ?? 100) >= 55 && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}
+                  <h1 className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${
+                    resultState?.healthy ? 'text-zinc-900' : resultState?.warning ? 'text-orange-600' : 'text-red-600'
+                  }`}>
+                     {resultState?.verdict}
                    </h1>
                    <div className="mt-3 flex flex-wrap items-center gap-2">
                      <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-zinc-500">
                        <Monitor className="h-3 w-3 shrink-0 text-zinc-400" />
                        <span className="truncate">{displayedTarget}</span>
                      </span>
-                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${result.http.success ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-red-100 bg-red-50 text-red-600'}`}>
+                     <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${
+                       result.http.success
+                         ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                         : resultState?.blocked
+                           ? 'border-orange-100 bg-orange-50 text-orange-600'
+                           : 'border-red-100 bg-red-50 text-red-600'
+                     }`}>
                        <CheckCircle2 className="h-3 w-3" />
                        {result.http.status_code || 'ERR'}
                      </span>

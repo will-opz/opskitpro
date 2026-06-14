@@ -17,12 +17,14 @@ export const normalizeTargetInput = (value: string) => {
 
 export const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fallbackError?: string) => {
   const domain = data?.domain || fallbackDomain || 'opskitpro.com'
+  const isVisitor = Boolean(data?.isVisitor)
   const isActuallyIp = Boolean(data?.isActuallyIp)
   const isPrivate = Boolean(data?.isPrivate)
 
   return {
     domain,
     status: data?.status || 'partial_error',
+    isVisitor,
     isActuallyIp,
     isPrivate,
     error: data?.error || fallbackError,
@@ -55,6 +57,8 @@ export const createSafeDiagnosticResult = (data: any, fallbackDomain: string, fa
       redirect_chain: data?.http?.redirect_chain || [],
       redirect_count: Number(data?.http?.redirect_count || 0),
       redirect_warning: data?.http?.redirect_warning,
+      cf_ray: data?.http?.cf_ray,
+      page_title: data?.http?.page_title,
     },
     securityHeaders: {
       score: Number(data?.securityHeaders?.score ?? 0),
@@ -117,17 +121,29 @@ export function parseLatencyMs(latency: string | number): number {
   return parseInt(String(latency).replace('ms', ''), 10) || 0
 }
 
+export function isBlockedHttpStatus(status: number | string | undefined | null) {
+  const code = Number(status || 0)
+  return code === 401 || code === 403
+}
+
 export function calculateScore(data: any) {
   let score = 100
-  if (!data?.http?.success) score -= 40
-  if ((data?.http?.status_code ?? 0) >= 400) score -= 20
-  if (!data?.ssl?.valid) score -= 20
+  const statusCode = Number(data?.http?.status_code ?? 0)
+  const blocked = isBlockedHttpStatus(statusCode)
+  const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp)
+
+  if (!data?.dns?.success) score -= 25
+  if (!data?.http?.success) score -= blocked ? 15 : 40
+  if (statusCode >= 400) score -= blocked ? 10 : 20
+  if (!data?.ssl?.valid && !isIpOrVisitor) score -= 20
   if (parseLatencyMs(data?.dns?.latency ?? '0ms') > 300) score -= 10
   if (parseLatencyMs(data?.http?.latency ?? '0ms') > 2000) score -= 10
   else if (parseLatencyMs(data?.http?.latency ?? '0ms') > 1000) score -= 5
-  if (!data?.cdn?.is_provider) score -= 5
-  if ((data?.securityHeaders?.score ?? 100) < 35) score -= 20
-  else if ((data?.securityHeaders?.score ?? 100) < 70) score -= 10
+  if (!data?.cdn?.is_provider && !isIpOrVisitor) score -= 5
+  if (!blocked && !isIpOrVisitor) {
+    if ((data?.securityHeaders?.score ?? 100) < 35) score -= 20
+    else if ((data?.securityHeaders?.score ?? 100) < 70) score -= 10
+  }
   
   const status = data?.whois?.status?.toLowerCase() || ''
   if (status.includes('hold')) score -= 50

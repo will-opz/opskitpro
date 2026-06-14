@@ -184,6 +184,7 @@ export interface DiagnosticMetaSummary {
 export interface DiagnosticSuccessResponse {
   domain: string
   status: 'success'
+  isVisitor?: boolean
   isActuallyIp: boolean
   isPrivate: boolean
   dns: DiagnosticDnsSummary
@@ -199,6 +200,7 @@ export interface DiagnosticSuccessResponse {
 export interface DiagnosticPartialErrorResponse {
   domain: string
   status: 'partial_error'
+  isVisitor?: boolean
   isActuallyIp: boolean
   isPrivate: boolean
   error: string
