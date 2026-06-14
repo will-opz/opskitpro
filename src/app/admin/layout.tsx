@@ -9,10 +9,12 @@ import {
   isAdminIdentity,
 } from '@/lib/admin-auth'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies()
   const headerStore = headers()
-  const lang = (cookieStore.get('NEXT_LOCALE')?.value || 'zh') as 'zh' | 'en' | 'ja' | 'tw'
+  const lang = (cookieStore.get('NEXT_LOCALE')?.value || 'en') as 'zh' | 'en' | 'ja' | 'tw'
   const authenticated = await isAdminIdentity(
     cookieStore.get(ADMIN_COOKIE_NAME)?.value,
     getCloudflareAccessEmail(headerStore),

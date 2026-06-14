@@ -186,6 +186,21 @@ Private operations data is kept out of this repository. `opskitpro-ops` contains
 
 ---
 
+## 🧠 AI Memory System
+
+This repository implements an **Externalized AI Memory** system (located in `AGENTS.md` and the `.ai/` directory) to maintain high-context continuity for AI coding assistants (like Antigravity).
+
+- **`AGENTS.md`**: The entry-point rules that instruct AI tools on how to behave in this specific codebase.
+- **`.ai/current_state.md`**: The current development phase, focus, and strict architectural boundaries.
+- **`.ai/decisions.md`**: Architecture Decision Records (ADRs) to prevent AI from Hallucinating conflicting designs.
+- **`.ai/task_board.md`**: A lightweight, machine-readable Kanban board for the current sprint.
+- **`.ai/session_log.md`**: The history of previous AI sessions and completed tasks.
+
+> [!WARNING]
+> Because this is a **public repository**, absolute data sanitization is required. AI agents and contributors must **never** write API keys, server IP addresses, or internal private system URLs into the `.ai/` tracking files.
+
+---
+
 ## 📁 Knowledge Base
 Finished public articles and tool guides live in `opskitpro-public` and are published at [kb.opskitpro.com](https://kb.opskitpro.com). Drafts, queues, and private planning stay in `opskitpro-ops`.
 

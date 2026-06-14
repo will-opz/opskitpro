@@ -1,0 +1,28 @@
+import { getDictionary } from '@/dictionaries'
+import { SiteHeader } from '@/components/SiteHeader'
+import { SiteFooter } from '@/components/SiteFooter'
+import WebsocketClient from './WebsocketClient'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
+  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
+  const dict = await getDictionary(lang);
+  
+  return {
+    title: `${dict.tools.websocket_title} - OpsKitPro`,
+    description: dict.tools.websocket_desc,
+  }
+}
+
+export default async function WebsocketPage({ params }: { params: { lang: string } }) {
+  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
+  const dict = await getDictionary(lang)
+
+  return (
+    <>
+      <SiteHeader dict={dict} lang={lang} />
+      <WebsocketClient dict={dict} lang={lang} />
+      <SiteFooter dict={dict} />
+    </>
+  )
+}

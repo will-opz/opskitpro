@@ -1,5 +1,5 @@
-import { cookies, headers } from 'next/headers'
 import { CircleUserRound, KeyRound, ShieldCheck } from 'lucide-react'
+import { cookies, headers } from 'next/headers'
 import { ProfileActions } from './ProfileActions'
 import {
   ADMIN_COOKIE_NAME,
@@ -69,7 +69,7 @@ const copy = {
 export default async function AdminProfilePage() {
   const cookieStore = cookies()
   const headerStore = headers()
-  const lang = (cookieStore.get('NEXT_LOCALE')?.value || 'zh') as keyof typeof copy
+  const lang = (cookieStore.get('NEXT_LOCALE')?.value || 'en') as keyof typeof copy
   const t = copy[lang] || copy.zh
   const identity = await getAdminIdentity(
     cookieStore.get(ADMIN_COOKIE_NAME)?.value,

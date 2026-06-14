@@ -24,6 +24,10 @@ async function attachCloudflareAccessAdminCookie(request: NextRequest, response:
   const token = await getCloudflareAccessAdminToken(request)
   if (!token) return response
 
+  if (request.cookies.get(ADMIN_COOKIE_NAME)?.value === token) {
+    return response
+  }
+
   response.cookies.set(
     ADMIN_COOKIE_NAME,
     token,
@@ -63,6 +67,8 @@ function getForwardedHost(request: NextRequest) {
   return request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
 }
 
+const LOCALES = ['zh', 'en', 'ja', 'tw']
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const url = request.nextUrl.clone()
@@ -81,78 +87,36 @@ export async function middleware(request: NextRequest) {
     return attachCloudflareAccessAdminCookie(request, NextResponse.redirect(url, 301))
   }
   
-  // 1. Handle language prefixing via REWRITE (internal routing)
-  // This allows /zh/tools/ip-lookup to show /tools/ip-lookup content
-  const localeMatch = pathname.match(/^\/(zh|en|ja|tw)(\/.*|$)/)
-  const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
+  // 1. Check if the pathname already has a locale prefix
+  const hasLocale = LOCALES.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  )
   
-  if (localeMatch) {
-    const locale = localeMatch[1]
-    const subpath = localeMatch[2] || '/'
-    
-    // Create the rewrite URL
-    const url = request.nextUrl.clone()
-    url.pathname = subpath
-    
-    const response = NextResponse.rewrite(url)
-    
-    // Set cookie so that Layout/Pages know the preferred language
-    if (currentCookie !== locale) {
-      response.cookies.set('NEXT_LOCALE', locale, { 
-        path: '/',
-        maxAge: 31536000, // 1 year
-        sameSite: 'lax'
-      })
-    }
-    
-    return attachCloudflareAccessAdminCookie(request, response)
+  if (hasLocale || pathname.startsWith('/admin')) {
+    // Already localized or is admin path. Let the Next.js page handle it natively.
+    return attachCloudflareAccessAdminCookie(request, NextResponse.next())
   }
 
-  // 2. Auto-detect logic for default locale based on Cloudflare IP Country
-  // If no locale prefix and no cookie exists, detect and set cookie.
+  // 2. If no locale, we REDIRECT to a localized path.
+  const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
+  
   const country = request.headers.get('cf-ipcountry') || ''
   let defaultLocale = 'en'
   if (country === 'JP') defaultLocale = 'ja'
   else if (country === 'CN') defaultLocale = 'zh'
   else if (['TW', 'HK', 'MO'].includes(country)) defaultLocale = 'tw'
 
-  const locale = currentCookie || defaultLocale
+  const locale = currentCookie && LOCALES.includes(currentCookie) ? currentCookie : defaultLocale
   
-  // Inject headers for downstream Server Components (Layouts/Pages)
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-url', request.url)
-  requestHeaders.set('x-pathname', pathname)
-  requestHeaders.set('x-next-locale', locale)
-  const accessAdminToken = await getCloudflareAccessAdminToken(request)
-  if (accessAdminToken) {
-    injectCookie(requestHeaders, ADMIN_COOKIE_NAME, accessAdminToken)
-  }
-
-  let response: NextResponse
-
-  if (!currentCookie && !pathname.match(/^\/(api|_next|favicon\.ico)/)) {
-    // Inject cookie into the request for downstream Server Components
-    const existingCookie = requestHeaders.get('cookie') || ''
-    requestHeaders.set('cookie', `${existingCookie ? existingCookie + '; ' : ''}NEXT_LOCALE=${locale}`)
-    
-    response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
-    
-    // Set the cookie on the client response to persist
+  url.pathname = `/${locale}${pathname}`
+  const response = NextResponse.redirect(url, 307)
+  
+  // Set cookie ONLY on the redirect response to avoid busting cache on static HTML (200 OK)
+  if (currentCookie !== locale) {
     response.cookies.set('NEXT_LOCALE', locale, { 
       path: '/',
       maxAge: 31536000,
       sameSite: 'lax'
-    })
-  } else {
-    // Standard response with injected headers
-    response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
     })
   }
 

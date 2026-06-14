@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
   Github,
   Twitter,
@@ -21,10 +21,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const { authenticated, email, provider, loading, openLogin, logout } = useAdminSession()
-  const search = searchParams.toString()
-  const currentPath = `${pathname}${search ? `?${search}` : ''}`
   const loginLabel = {
     zh: '登录',
     tw: '登入',
@@ -90,7 +87,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           <button
             type="button"
             disabled={loading}
-            onClick={() => authenticated ? setIsAccountOpen((open) => !open) : openLogin(currentPath)}
+            onClick={() => authenticated ? setIsAccountOpen((open) => !open) : openLogin(`${pathname}${window.location.search}`)}
             className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] hover:-translate-y-0.5 hover:border-emerald-500/25 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)] disabled:opacity-50"
             aria-expanded={authenticated ? isAccountOpen : undefined}
           >
@@ -131,7 +128,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           type="button"
           aria-label={loginLabel}
           title={loginLabel}
-          onClick={() => authenticated ? setIsMenuOpen(true) : openLogin(currentPath)}
+          onClick={() => authenticated ? setIsMenuOpen(true) : openLogin(`${pathname}${window.location.search}`)}
           className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)]"
         >
           <CircleUserRound className="h-5 w-5" />
