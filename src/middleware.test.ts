@@ -2,6 +2,8 @@ import { afterEach, describe, it, expect } from 'vitest'
 import { middleware } from './middleware'
 import { NextRequest } from 'next/server'
 
+const originalNodeEnv = process.env.NODE_ENV
+
 function makeRequest(pathname: string, cookieLocale?: string): NextRequest {
   const req = new NextRequest(`http://localhost${pathname}`)
   if (cookieLocale) {
@@ -13,6 +15,7 @@ function makeRequest(pathname: string, cookieLocale?: string): NextRequest {
 afterEach(() => {
   delete process.env.OPSKITPRO_ADMIN_EMAILS
   delete process.env.OPSKITPRO_ADMIN_SECRET
+  process.env.NODE_ENV = originalNodeEnv
 })
 
 describe('middleware — locale rewriting', () => {
@@ -141,5 +144,23 @@ describe('middleware — Cloudflare Access admin cookie', () => {
     const setCookie = res.headers.get('set-cookie') ?? ''
 
     expect(setCookie).not.toContain('opskitpro_admin=')
+  })
+})
+
+describe('middleware — proxy redirects', () => {
+  it('uses forwarded host when forcing HTTPS behind a reverse proxy', async () => {
+    process.env.NODE_ENV = 'production'
+
+    const req = new NextRequest('http://localhost:3000/tools/website-check', {
+      headers: {
+        host: 'localhost:3000',
+        'x-forwarded-host': 'opskitpro.com',
+        'x-forwarded-proto': 'http',
+      },
+    })
+    const res = await middleware(req)
+
+    expect(res.status).toBe(301)
+    expect(res.headers.get('location')).toBe('https://opskitpro.com/tools/website-check')
   })
 })

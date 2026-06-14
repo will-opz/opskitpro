@@ -1,0 +1,77 @@
+name: Deploy Lightsail
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: opskitpro-lightsail
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  deploy:
+    name: Deploy to AWS Lightsail
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify
+        run: npm run verify:fast
+
+      - name: Package standalone release
+        run: npm run package:standalone
+
+      - name: Configure SSH
+        env:
+          LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+          LIGHTSAIL_SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        run: |
+          test -n "$LIGHTSAIL_HOST"
+          test -n "$LIGHTSAIL_SSH_KEY"
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/opskitpro_lightsail
+          printf '%s\n' "$LIGHTSAIL_SSH_KEY" > ~/.ssh/opskitpro_lightsail
+          ssh-keyscan -H "$LIGHTSAIL_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload release
+        env:
+          LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+          LIGHTSAIL_USER: ${{ secrets.LIGHTSAIL_USER }}
+        run: |
+          scp -i ~/.ssh/opskitpro_lightsail \
+            .deploy/opskitpro-standalone.tar.gz \
+            "${LIGHTSAIL_USER:-ec2-user}@${LIGHTSAIL_HOST}:/tmp/opskitpro-${GITHUB_SHA}.tar.gz"
+
+      - name: Activate release
+        env:
+          LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+          LIGHTSAIL_USER: ${{ secrets.LIGHTSAIL_USER }}
+        run: |
+          ssh -i ~/.ssh/opskitpro_lightsail "${LIGHTSAIL_USER:-ec2-user}@${LIGHTSAIL_HOST}" "
+            set -euo pipefail
+            release=/opt/opskitpro/releases/${GITHUB_SHA}
+            sudo mkdir -p \"\$release\"
+            sudo tar -xzf /tmp/opskitpro-${GITHUB_SHA}.tar.gz -C \"\$release\"
+            sudo chown -R opskitpro:opskitpro \"\$release\"
+            sudo ln -sfn \"\$release\" /opt/opskitpro/current
+            sudo systemctl restart opskitpro
+            sudo systemctl is-active opskitpro
+          "

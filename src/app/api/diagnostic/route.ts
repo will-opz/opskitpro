@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCloudflareContext } from '@opennextjs/cloudflare'
 import type {
   DiagnosticHealthResponse,
   DiagnosticPartialErrorResponse,
   DiagnosticPostSuccessResponse,
   DiagnosticSuccessResponse,
 } from '@/lib/api-contracts'
+import {
+  getClientIp,
+  getCloudflareRuntimeContext,
+} from '@/lib/runtime-context'
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = 'force-dynamic'
@@ -262,7 +265,7 @@ export async function GET(request: NextRequest | Request) {
   
   // If no query, default to visitor's own IP
   if (!query) {
-    domain = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+    domain = getClientIp(request as NextRequest)
   }
 
   const wantsKvCache = searchParams.get('cache') === 'kv' && !searchParams.has('_nocache')
@@ -276,7 +279,7 @@ export async function GET(request: NextRequest | Request) {
   }
   if (useKvCache && !KV) {
     try {
-      const { env } = await getCloudflareContext();
+      const { env } = await getCloudflareRuntimeContext();
       KV = (env as any)?.KV || (globalThis as any).KV;
     } catch (e) {
       KV = (globalThis as any).KV;

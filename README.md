@@ -34,7 +34,7 @@ OpsKitPro is built around a seamless troubleshooting funnel:
 ## Architecture
 
 ```
-opskitpro.com (Main Site — Next.js 14 on Cloudflare Workers)
+opskitpro.com (Main Site — Next.js 14)
 ├── /              Home and quick diagnostic entry
 ├── /tools         Toolbox index
 ├── /tools/*       Website, DNS, IP, JSON, WebSocket, and utility modules
@@ -77,12 +77,12 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 | Layer | Technology |
 |-------|-----------|
 | **Framework** | [Next.js 14](https://nextjs.org/) (App Router + standalone build) |
-| **Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
-| **Runtime** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
+| **Runtime** | Cloudflare Workers or Node.js standalone on AWS Lightsail |
+| **Cloudflare Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
 | **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
-| **CI/CD** | GitHub Actions → Cloudflare Workers |
+| **CI/CD** | GitHub Actions → Cloudflare Workers / AWS Lightsail |
 | **Knowledge Base** | [kb.opskitpro.com](https://kb.opskitpro.com) (Obsidian-authored knowledge base) |
 
 ---
@@ -103,11 +103,37 @@ npm run dev
 npm run deploy
 ```
 
+### Package for AWS Lightsail
+```bash
+npm run package:standalone
+```
+
+The standalone archive is written to:
+
+```bash
+.deploy/opskitpro-standalone.tar.gz
+```
+
+Lightsail deployment files live in [`deploy/lightsail`](./deploy/lightsail/README.md). The Node.js server mode expects:
+
+```bash
+OPSKITPRO_RUNTIME=node
+HOSTNAME=127.0.0.1
+PORT=3000
+```
+
 The repository also includes GitHub Actions CI/CD:
 
 - pull requests to `main`: install, test, and build
 - pushes to `main`: install, test, build, and deploy to Cloudflare
+- manual `Deploy Lightsail` workflow: install, test, build, package standalone, upload to Lightsail, restart systemd
 - required GitHub secrets: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`
+
+Lightsail workflow secrets:
+
+- `LIGHTSAIL_HOST`
+- `LIGHTSAIL_USER`
+- `LIGHTSAIL_SSH_KEY`
 
 Runtime environment variables:
 

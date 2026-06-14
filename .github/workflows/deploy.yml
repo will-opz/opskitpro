@@ -167,12 +167,13 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
-  # Job 6: Deploy - Only on main push
+  # Job 6: Cloudflare deploy is disabled after the Lightsail migration.
+  # Keep this workflow as CI; production deploy now runs in deploy-lightsail.yml.
   deploy:
-    name: 🚀 Deploy to Cloudflare
+    name: 🚀 Deploy to Cloudflare (disabled)
     runs-on: ubuntu-latest
     needs: [setup, lint, test, build, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ false }}
     environment: production
 
     env:

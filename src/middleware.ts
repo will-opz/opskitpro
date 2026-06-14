@@ -59,6 +59,10 @@ function injectCookie(headers: Headers, name: string, value: string) {
   headers.set('cookie', `${withoutExisting ? withoutExisting + '; ' : ''}${name}=${value}`)
 }
 
+function getForwardedHost(request: NextRequest) {
+  return request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const url = request.nextUrl.clone()
@@ -66,6 +70,13 @@ export async function middleware(request: NextRequest) {
   // 0. Force HTTPS in production
   const proto = request.headers.get('x-forwarded-proto')
   if (process.env.NODE_ENV === 'production' && proto === 'http') {
+    const forwardedHost = getForwardedHost(request)
+    if (forwardedHost) {
+      url.host = forwardedHost
+      if (!forwardedHost.includes(':')) {
+        url.port = ''
+      }
+    }
     url.protocol = 'https:'
     return attachCloudflareAccessAdminCookie(request, NextResponse.redirect(url, 301))
   }

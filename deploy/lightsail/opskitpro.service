@@ -1,0 +1,18 @@
+[Unit]
+Description=OpsKitPro Next.js standalone server
+After=network.target
+
+[Service]
+Type=simple
+User=opskitpro
+Group=opskitpro
+WorkingDirectory=/opt/opskitpro/current
+EnvironmentFile=/etc/opskitpro/opskitpro.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

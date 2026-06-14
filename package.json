@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -13,7 +14,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:watch": "playwright test --headed --workers=1 --project=chromium",
     "test:e2e:ui": "playwright test --ui",
+    "package:standalone": "bash scripts/package-standalone.sh",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "check:forbidden-imports": "grep -R \"cloudflare:sockets\" src >/dev/null && exit 1 || exit 0",
     "verify:fast": "npm run check:forbidden-imports && npm run build && npm run test",
     "verify": "npm run verify:fast && npm run test:e2e:clean"

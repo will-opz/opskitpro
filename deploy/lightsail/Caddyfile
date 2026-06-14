@@ -1,0 +1,8 @@
+opskitpro.com {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:3000
+}
+
+www.opskitpro.com {
+  redir https://opskitpro.com{uri} permanent
+}

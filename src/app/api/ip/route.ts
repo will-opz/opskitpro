@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCloudflareContext } from '@opennextjs/cloudflare'
 import type { IpLookupResponse } from '@/lib/api-contracts'
+import {
+  getClientIp,
+  getCloudflareRuntimeContext,
+  getRequestCloudflareMetadata,
+} from '@/lib/runtime-context'
 
 // export const runtime = 'edge' // Removed to avoid 500 errors on OpenNext Node.js runtime
 export const dynamic = 'force-dynamic'
@@ -95,11 +99,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 2. Feature: Current User Info using Cloudflare (getCloudflareContext)
-  const cfip = request.headers.get('cf-connecting-ip');
-  const xff = request.headers.get('x-forwarded-for')?.split(',')[0];
-  const rip = request.headers.get('x-real-ip');
-  const nextIp = (request as any).ip;
-  const ip = cfip || xff || rip || nextIp || '127.0.0.1';
+  const ip = getClientIp(request)
 
   const buildCloudflareResponse = (cf: any) =>
     NextResponse.json({
@@ -124,22 +124,18 @@ export async function GET(request: NextRequest) {
       _source: 'cloudflare-context'
     } satisfies IpLookupResponse)
 
-  const requestCf = (request as any).cf
-  if (requestCf && Object.keys(requestCf).length > 0) {
+  const requestCf = getRequestCloudflareMetadata(request)
+  if (requestCf) {
     return buildCloudflareResponse(requestCf)
   }
 
   // Prefer request-scoped CF metadata in tests/local dev, then fall back to OpenNext context.
-  try {
-    const { cf: cfContext } = await getCloudflareContext()
-    if (cfContext && Object.keys(cfContext).length > 0) {
-      return buildCloudflareResponse(cfContext)
-    }
-  } catch {
-    // getCloudflareContext not available (e.g., local dev without wrangler)
+  const { cf: cfContext } = await getCloudflareRuntimeContext()
+  if (cfContext && Object.keys(cfContext).length > 0) {
+    return buildCloudflareResponse(cfContext)
   }
 
-  // Fallback for Local Development (where CF context is mostly absent)
+  // Fallback for local development and standard Node.js server deployments.
   const fallbackData = await fetchFallbackData(ip)
   if (fallbackData) {
     return NextResponse.json({ 
@@ -165,6 +161,6 @@ export async function GET(request: NextRequest) {
   }
   
   return NextResponse.json(
-    buildFallbackResponse(ip, 'Cloudflare Edge', 'cloudflare-edge-default')
+    buildFallbackResponse(ip, 'Node Proxy Fallback', 'cloudflare-edge-default')
   )
 }

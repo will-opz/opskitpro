@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCloudflareContext } from '@opennextjs/cloudflare'
 import type { NetworkInfoResponse } from '@/lib/api-contracts'
+import {
+  getClientIp,
+  getCloudflareRuntimeContext,
+  getRequestCloudflareMetadata,
+} from '@/lib/runtime-context'
 
 // Removed runtime='edge' to avoid 500 errors on OpenNext Node.js runtime
 export const dynamic = 'force-dynamic'
@@ -26,23 +30,16 @@ async function fetchCfTrace(origin: string): Promise<Record<string, string>> {
 }
 
 export async function GET(request: NextRequest) {
-  const ip =
-    request.headers.get('cf-connecting-ip') ||
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    '127.0.0.1'
+  const ip = getClientIp(request)
 
   const ua = request.headers.get('user-agent') || 'Unknown'
 
   // --- CF metadata with 3-level fallback ---
-  let cfData: any = (request as any).cf
+  let cfData: any = getRequestCloudflareMetadata(request)
 
   if (!cfData || Object.keys(cfData).length === 0) {
-    try {
-      const { cf } = await getCloudflareContext()
-      if (cf && Object.keys(cf).length > 0) cfData = cf
-    } catch {
-      cfData = (globalThis as any).__cf || null
-    }
+    const { cf } = await getCloudflareRuntimeContext()
+    cfData = cf && Object.keys(cf).length > 0 ? cf : (globalThis as any).__cf || null
   }
 
   // Cloudflare Trace

@@ -96,8 +96,15 @@ describe('GET /api/ip — Cloudflare geo data', () => {
     expect(body.isp).toBe('Unknown')
   })
 
-  it('always reports provider as Cloudflare Edge', async () => {
+  it('reports Node fallback provider when Cloudflare metadata is unavailable', async () => {
     const req = makeRequest()
+    const res = await GET(req)
+    const body = await res.json()
+    expect(body.provider).toBe('Node Proxy Fallback')
+  })
+
+  it('reports Cloudflare Edge provider when cf metadata is available', async () => {
+    const req = makeRequest({ 'cf-connecting-ip': '1.2.3.4' }, { country: 'JP' })
     const res = await GET(req)
     const body = await res.json()
     expect(body.provider).toBe('Cloudflare Edge')
