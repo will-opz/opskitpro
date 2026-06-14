@@ -54,3 +54,6 @@ next-env.d.ts
 # generated marketing outputs
 /marketing/generated/
 /marketing/history/*.json
+
+# private cross-repository AI memory lives in opskitpro-ops/.ai
+.ai/
