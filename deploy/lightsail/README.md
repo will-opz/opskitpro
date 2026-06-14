@@ -54,6 +54,9 @@ ssh ec2-user@YOUR_LIGHTSAIL_IP '
 With Nginx on Amazon Linux:
 
 ```bash
+sudo mkdir -p /etc/nginx/ssl/opskitpro.com
+sudo install -m 644 ca.pem /etc/nginx/ssl/opskitpro.com/origin.pem
+sudo install -m 600 ca.key /etc/nginx/ssl/opskitpro.com/origin.key
 sudo install -m 644 deploy/lightsail/nginx.conf /etc/nginx/conf.d/opskitpro.conf
 sudo nginx -t
 sudo systemctl enable --now nginx
@@ -67,7 +70,7 @@ sudo install -m 644 deploy/lightsail/Caddyfile /etc/caddy/Caddyfile
 sudo systemctl reload caddy
 ```
 
-Keep Cloudflare proxy enabled after the origin is healthy. Use Cloudflare SSL mode `Full (strict)` when the origin has a valid certificate.
+Keep Cloudflare proxy enabled after the origin is healthy. Use Cloudflare SSL mode `Full (strict)` after port 443 is open in Lightsail Networking and the Cloudflare Origin Certificate is installed.
 
 ## GitHub Secrets For CI Deploy
 
