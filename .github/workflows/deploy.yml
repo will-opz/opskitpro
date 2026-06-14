@@ -16,6 +16,7 @@ concurrency:
 env:
   NODE_VERSION: '24'
   CACHE_VERSION: v1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # Job 1: Setup - Detect configurations
