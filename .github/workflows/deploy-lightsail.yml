@@ -72,8 +72,6 @@ jobs:
             sudo tar -xzf /tmp/opskitpro-${GITHUB_SHA}.tar.gz -C \"\$release\"
             sudo chown -R opskitpro:opskitpro \"\$release\"
             sudo ln -sfn \"\$release\" /opt/opskitpro/current
-            sudo -u opskitpro env $(sudo grep -v '^#' /etc/opskitpro/env | xargs) /opt/opskitpro/current/node_modules/.bin/pm2 reload opskitpro || sudo -u opskitpro env $(sudo grep -v '^#' /etc/opskitpro/env | xargs) /opt/opskitpro/current/node_modules/.bin/pm2 start /opt/opskitpro/current/ecosystem.config.js
-            sleep 3
             sudo systemctl restart opskitpro
             sudo systemctl is-active opskitpro
           "
