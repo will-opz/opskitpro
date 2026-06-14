@@ -39,6 +39,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
     : provider === 'password'
       ? accountCopy.viaPassword
       : ''
+  const localizedHref = (path: string) => `/${lang}${path === '/' ? '' : path}`
 
   const isActive = (path: string) => {
     const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, '') || '/'
@@ -48,7 +49,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-primary)] backdrop-blur-2xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-      <Link href={`/`} className="group flex items-center gap-3 no-underline outline-none relative z-50">
+      <Link href={localizedHref('/')} className="group flex items-center gap-3 no-underline outline-none relative z-50">
         <div className="relative group-hover:-rotate-6 transition-transform duration-500">
           <img 
             src="/logo.svg" 
@@ -69,13 +70,13 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
 
       {/* Desktop Nav */}
       <nav className="ui-surface hidden items-center gap-1 rounded-full px-1.5 py-1.5 text-sm md:flex">
-        <Link href={`/tools`} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive('/tools') ? 'bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]'}`}>
+        <Link href={localizedHref('/tools')} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive('/tools') ? 'bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]'}`}>
           <TerminalSquare className={`w-4 h-4 ${isActive('/tools') ? 'text-emerald-500' : ''}`} /> {dict.nav.services}
         </Link>
-        <Link href={`/blog`} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive('/blog') ? 'bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]'}`}>
+        <Link href={localizedHref('/blog')} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive('/blog') ? 'bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]'}`}>
           <FileText className={`w-4 h-4 ${isActive('/blog') ? 'text-emerald-500' : ''}`} /> {dict.nav.blog}
         </Link>
-        <Link href={`/about`} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive('/about') ? 'bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]'}`}>
+        <Link href={localizedHref('/about')} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive('/about') ? 'bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold' : 'text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]'}`}>
           <Fingerprint className={`w-4 h-4 ${isActive('/about') ? 'text-emerald-500' : ''}`} /> {dict.nav.about}
         </Link>
         <div className="ml-2 flex items-center gap-2 border-l border-[var(--border-subtle)] pl-3">
@@ -106,7 +107,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
               <Link href="/admin" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 {accountCopy.dashboard}
               </Link>
-              <Link href="/tools?admin=1" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+              <Link href={`${localizedHref('/tools')}?admin=1`} onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 {accountCopy.editTools}
               </Link>
               <button type="button" onClick={() => void logout()} className="mt-1 w-full border-t border-[var(--border-subtle)] px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-500/5">
@@ -156,13 +157,13 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           />
           <div className="fixed inset-x-3 top-[76px] z-40 md:hidden">
             <nav className="ui-surface-elevated flex flex-col rounded-2xl p-3 text-[var(--text-muted)] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-              <Link href={`/tools`} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+              <Link href={localizedHref('/tools')} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 <TerminalSquare className="h-4 w-4" /> {dict.nav.services}
               </Link>
-              <Link href={`/blog`} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+              <Link href={localizedHref('/blog')} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 <FileText className="h-4 w-4" /> {dict.nav.blog}
               </Link>
-              <Link href={`/about`} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+              <Link href={localizedHref('/about')} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 <Fingerprint className="h-4 w-4" /> {dict.nav.about}
               </Link>
               {authenticated && (
@@ -177,7 +178,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
                   <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]">
                     <CircleUserRound className="h-4 w-4" /> {accountCopy.dashboard}
                   </Link>
-                  <Link href="/tools?admin=1" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+                  <Link href={`${localizedHref('/tools')}?admin=1`} onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                     <TerminalSquare className="h-4 w-4" /> {accountCopy.editTools}
                   </Link>
                   <button type="button" onClick={() => void logout()} className="flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-red-500 hover:bg-red-500/5">

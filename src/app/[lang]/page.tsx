@@ -16,7 +16,6 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import HomeSearch from '@/components/HomeSearch'
 import { getBlogPosts } from '@/content/blog-posts'
-import type { DiagnosticResponse, DiagnosticSuccessResponse } from '@/lib/api-contracts'
 
 type HomeDiagnosticPreview = {
   domain: string
@@ -29,7 +28,7 @@ type HomeDiagnosticPreview = {
 }
 
 async function getHomeDiagnosticPreview(): Promise<HomeDiagnosticPreview> {
-  const fallback: HomeDiagnosticPreview = {
+  return {
     domain: 'opskitpro.com',
     status: 'unavailable',
     rows: [
@@ -38,50 +37,6 @@ async function getHomeDiagnosticPreview(): Promise<HomeDiagnosticPreview> {
       { label: 'CDN provider', value: 'Awaiting check', tone: 'bg-zinc-400' },
       { label: 'HTTP latency', value: 'Awaiting check', tone: 'bg-zinc-400' },
     ],
-  }
-
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://opskitpro.com'
-    const response = await fetch(`${baseUrl}/api/diagnostic?domain=opskitpro.com`, {
-      next: { revalidate: 600 },
-    })
-
-    if (!response.ok) return fallback
-
-    const data = (await response.json()) as DiagnosticResponse
-    if (data.status !== 'success') return fallback
-
-    const result = data as DiagnosticSuccessResponse
-    const status = result.http.success && result.ssl.valid && result.dns.success ? 'healthy' : 'degraded'
-
-    return {
-      domain: result.domain || 'opskitpro.com',
-      status,
-      rows: [
-        {
-          label: 'DNS resolved',
-          value: result.dns.resolved_ip || 'Unknown',
-          tone: result.dns.success ? 'bg-emerald-500' : 'bg-red-500',
-        },
-        {
-          label: 'SSL certificate',
-          value: result.ssl.valid ? `Valid${result.ssl.expiry && result.ssl.expiry !== 'Unknown' ? ` · ${result.ssl.expiry}` : ''}` : 'Validation fault',
-          tone: result.ssl.valid ? 'bg-emerald-500' : 'bg-red-500',
-        },
-        {
-          label: 'CDN provider',
-          value: result.cdn.provider || 'Unknown',
-          tone: result.cdn.is_provider ? 'bg-orange-500' : 'bg-zinc-400',
-        },
-        {
-          label: 'HTTP latency',
-          value: result.http.latency || 'Unknown',
-          tone: result.http.success ? 'bg-sky-500' : 'bg-red-500',
-        },
-      ],
-    }
-  } catch {
-    return fallback
   }
 }
 
