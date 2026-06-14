@@ -80,6 +80,101 @@ const isIpAddress = (value: string) => {
   return value.includes(':') && value.split(':').length >= 3 && /^[0-9a-fA-F:.]+$/.test(value)
 }
 
+const isBlockedIpv4 = (value: string) => {
+  if (!ipv4Regex.test(value)) return false
+  const parts = value.split('.').map(Number)
+  const [a, b] = parts
+
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    a >= 224 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 192 && b === 0 && parts[2] === 2) ||
+    (a === 198 && b === 51 && parts[2] === 100) ||
+    (a === 203 && b === 0 && parts[2] === 113) ||
+    value === '255.255.255.255'
+  )
+}
+
+const isBlockedIpv6 = (value: string) => {
+  if (!value.includes(':')) return false
+  const normalized = value.toLowerCase()
+
+  return (
+    normalized === '::' ||
+    normalized === '::1' ||
+    normalized.startsWith('fe80:') ||
+    normalized.startsWith('fc') ||
+    normalized.startsWith('fd') ||
+    normalized.startsWith('ff') ||
+    normalized.startsWith('2001:db8:') ||
+    normalized.startsWith('::ffff:127.') ||
+    normalized.startsWith('::ffff:10.') ||
+    normalized.startsWith('::ffff:192.168.') ||
+    /^::ffff:172\.(1[6-9]|2\d|3[01])\./.test(normalized) ||
+    normalized.startsWith('::ffff:169.254.')
+  )
+}
+
+const isBlockedNetworkAddress = (value: string) => isBlockedIpv4(value) || isBlockedIpv6(value)
+
+const assertSafeHttpUrl = (url: string) => {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error('Invalid diagnostic URL.')
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('Only HTTP and HTTPS targets are allowed.')
+  }
+
+  const hostname = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  if (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    isBlockedNetworkAddress(hostname)
+  ) {
+    throw new Error('Private, loopback, link-local, and reserved targets are not allowed.')
+  }
+}
+
+const assertSafeResolvedAddresses = (addresses: string[]) => {
+  const blocked = addresses.find(isBlockedNetworkAddress)
+  if (blocked) {
+    throw new Error(`Target resolves to a private or reserved address (${blocked}).`)
+  }
+}
+
+const assertSafeResolvedHostForUrl = async (url: string) => {
+  assertSafeHttpUrl(url)
+  const hostname = new URL(url).hostname.replace(/^\[|\]$/g, '').toLowerCase()
+  if (isIpAddress(hostname)) {
+    assertSafeResolvedAddresses([hostname])
+    return
+  }
+
+  const [aData, aaaaData] = await Promise.all([
+    fetchDnsJson(hostname, 'A', 2500),
+    fetchDnsJson(hostname, 'AAAA', 2500),
+  ])
+  const addresses = [
+    ...extractDnsRecords(aData, 1),
+    ...extractDnsRecords(aaaaData, 28),
+  ]
+  if (addresses.length === 0) {
+    throw new Error('Target did not resolve to a public A or AAAA address.')
+  }
+  assertSafeResolvedAddresses(addresses)
+}
+
 const truncateHeaderValue = (value: string | null) => {
   if (!value) return undefined
   return value.length > 180 ? `${value.slice(0, 177)}...` : value
@@ -125,6 +220,8 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
   let warning: string | undefined
 
   for (let hop = 0; hop <= maxHops; hop += 1) {
+    await assertSafeResolvedHostForUrl(currentUrl)
+
     if (seen.has(currentUrl)) {
       warning = 'Redirect loop detected.'
       break
@@ -146,7 +243,9 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
       break
     }
 
-    currentUrl = new URL(location, currentUrl).toString()
+    const nextUrl = new URL(location, currentUrl).toString()
+    assertSafeHttpUrl(nextUrl)
+    currentUrl = nextUrl
   }
 
   return {
@@ -381,17 +480,37 @@ export async function GET(request: NextRequest | Request) {
           }),
         ).then((entries) => Object.fromEntries(entries) as Record<typeof dnsRecordTypes[number], string[]>)
 
+    const [[dnsResults, dnsLatency], dnsRecordsData] = await Promise.all([
+      dnsPromise,
+      recordsPromise
+    ])
+    const dnsMatch = dnsResults.find((r: any) => r.data?.Answer)
+    const ipv4: string[] = isActuallyIp && !domain.includes(':')
+      ? [domain]
+      : Array.from(new Set<string>(dnsResults.flatMap((result: any) => result.records?.A || [])))
+    const ipv6: string[] = isActuallyIp && domain.includes(':')
+      ? [domain]
+      : Array.from(new Set<string>(dnsResults.flatMap((result: any) => result.records?.AAAA || [])))
+    const allIps: string[] = isActuallyIp
+      ? [domain]
+      : [...ipv4, ...ipv6]
+    if (!isActuallyIp && allIps.length === 0) {
+      throw new Error('Target did not resolve to a public A or AAAA address.')
+    }
+    assertSafeResolvedAddresses(allIps)
+
     // HTTP, SSL, and WHOIS Promises
     const ipHost = isActuallyIp && domain.includes(':') ? `[${domain}]` : domain
     const targetUrl = query.startsWith('http') ? query : (isActuallyIp ? `http://${ipHost}` : `https://${domain}`)
+    assertSafeHttpUrl(targetUrl)
     const isHttps = targetUrl.startsWith('https')
 
     const httpPromise: Promise<[Response | { error: true; message: string }, number, RedirectTrace | undefined, string?]> = (() => {
       const t0 = Date.now()
-      return Promise.all([
-        fetch(targetUrl, {
+      return traceRedirects(targetUrl)
+        .then((redirectTrace) => fetch(redirectTrace.finalUrl, {
           method: 'GET',
-          redirect: 'follow',
+          redirect: 'manual',
           headers: { 'User-Agent': 'OpsKitPro-Diagnostic/1.0' },
           signal: AbortSignal.timeout(8000)
         }).then(async (res) => {
@@ -409,14 +528,8 @@ export async function GET(request: NextRequest | Request) {
           } catch (e) {}
           // @ts-ignore attach title to response object temporarily
           res._page_title = title
-          return res
-        }),
-        traceRedirects(targetUrl).catch(() => ({
-          chain: [],
-          finalUrl: targetUrl,
-          warning: 'Redirect trace unavailable.',
-        })),
-      ])
+          return [res, redirectTrace] as const
+        }))
         .then(([res, redirectTrace]) => [res, Date.now() - t0, redirectTrace, (res as any)._page_title] as [Response, number, RedirectTrace, string?])
         .catch((e: Error) => [{ error: true as const, message: e.message }, Date.now() - t0, undefined, undefined] as [{ error: true; message: string }, number, undefined, undefined])
     })()
@@ -433,11 +546,7 @@ export async function GET(request: NextRequest | Request) {
       }).then(r => r.ok ? r.json() : null).catch(() => null)
     })()
 
-    const [[dnsResults, dnsLatency], [httpResRaw, httpLatency, redirectTrace, pageTitle], dnsRecordsData] = await Promise.all([
-      dnsPromise,
-      httpPromise,
-      recordsPromise
-    ])
+    const [httpResRaw, httpLatency, redirectTrace, pageTitle] = await httpPromise
     const coreMs = Date.now() - requestStartedAt
     const [crtData, rdapData] = await Promise.all([sslPromise, whoisPromise])
 
@@ -476,16 +585,6 @@ export async function GET(request: NextRequest | Request) {
       return NextResponse.json(partialError)
     }
 
-    const dnsMatch = dnsResults.find((r: any) => r.data?.Answer)
-    const ipv4: string[] = isActuallyIp && !domain.includes(':')
-      ? [domain]
-      : Array.from(new Set<string>(dnsResults.flatMap((result: any) => result.records?.A || [])))
-    const ipv6: string[] = isActuallyIp && domain.includes(':')
-      ? [domain]
-      : Array.from(new Set<string>(dnsResults.flatMap((result: any) => result.records?.AAAA || [])))
-    const allIps: string[] = isActuallyIp
-      ? [domain]
-      : [...ipv4, ...ipv6]
     const nsRecords: string[] = dnsRecordsData?.NS || []
     const dnsRecords = {
       A: dnsRecordsData?.A?.length ? dnsRecordsData.A : ipv4,
@@ -609,7 +708,9 @@ export async function GET(request: NextRequest | Request) {
     })
 
   } catch (error: any) {
-    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 })
+    const message = error?.message || 'Diagnostic request failed'
+    const blockedTarget = /private|loopback|link-local|reserved|not allowed|Invalid diagnostic URL|Only HTTP|public A or AAAA/.test(message)
+    return NextResponse.json({ status: 'error', message }, { status: blockedTarget ? 400 : 500 })
   }
 }
 

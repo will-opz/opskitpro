@@ -322,6 +322,44 @@ describe('API contract integration', () => {
     delete (globalThis as any).KV
   })
 
+  it('rejects metadata and private diagnostic targets before probing HTTP', async () => {
+    const fetchStub = vi.fn()
+    vi.stubGlobal('fetch', fetchStub)
+
+    const res = await diagnosticGET(new Request('http://localhost/api/diagnostic?domain=169.254.169.254') as any)
+    expect(res.status).toBe(400)
+
+    const body = await res.json()
+    expect(body.message).toContain('private or reserved')
+    expect(fetchStub).not.toHaveBeenCalled()
+  })
+
+  it('rejects domains that resolve to private addresses', async () => {
+    const fetchStub = vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : (input as Request).url
+
+      if (url.includes('type=A')) {
+        return jsonResponse({ Status: 0, Answer: [{ name: 'internal.example', type: 1, TTL: 300, data: '10.0.0.5' }] })
+      }
+      if (url.includes('type=AAAA')) {
+        return jsonResponse({ Status: 0, Answer: [] })
+      }
+      return jsonResponse({ Status: 0, Answer: [] })
+    })
+    vi.stubGlobal('fetch', fetchStub)
+
+    const res = await diagnosticGET(new Request('http://localhost/api/diagnostic?domain=internal.example') as any)
+    expect(res.status).toBe(400)
+
+    const body = await res.json()
+    expect(body.message).toContain('private or reserved')
+    expect(fetchStub).not.toHaveBeenCalledWith(expect.stringContaining('https://internal.example'), expect.anything())
+  })
+
   it('ignores explicit KV cache requests from unauthenticated diagnostic requests', async () => {
     vi.stubGlobal('fetch', makeFetchStub())
     const kv = {

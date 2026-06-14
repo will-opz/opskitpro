@@ -184,7 +184,7 @@ function analyzeNetwork(
   // Summary
   const summaries: Record<string, string[]> = {
     zh: [
-      `你的网络连接到 Cloudflare ${edgeColo} 节点。`,
+      `当前 Cloudflare Trace 显示连接命中 ${edgeColo} 节点。`,
       warp === 'plus'
         ? `WARP+ 已开启，Gateway ${gateway === 'on' ? '已启用' : '未启用'}。`
         : warp === 'on'
@@ -193,12 +193,12 @@ function analyzeNetwork(
       hasPostQuantumKex ? '已启用后量子密钥交换，首次 TLS 握手可能略有额外耗时。' : '',
       ping ? `平均延迟 ${avgMs}，${ping.avg < 80 ? '延迟优秀，非常适合实时应用。' : ping.avg < 150 ? '延迟正常，适合日常使用。' : '延迟偏高，可能影响实时通信。'}` : '',
       speed?.downloadMbps ? `下载速度 ${dlMbps}。` : '',
-      fastestDns ? `当前最快公共 DNS 探测为 ${fastestDns.provider}（${fastestDns.latencyMs} ms）。` : '',
+      fastestDns ? `服务器侧公共 DNS 探测中，最快的是 ${fastestDns.provider}（${fastestDns.latencyMs} ms）。` : '',
       ping && ping.avg < 100 && slowReachability.length > 0 ? '基础延迟正常，但部分目标可达性较慢，实时通信或长连接体验可能受路由影响。' : '',
       hasIPv6 ? '你的网络已启用 IPv6 双栈，支持新一代互联网服务。' : '你的网络尚未启用 IPv6。',
     ],
     en: [
-      `Connected to Cloudflare ${edgeColo} edge node.`,
+      `Cloudflare Trace reports the ${edgeColo} edge node for this connection.`,
       warp === 'plus'
         ? `WARP+ is enabled and Gateway is ${gateway === 'on' ? 'on' : 'off'}.`
         : warp === 'on'
@@ -207,12 +207,12 @@ function analyzeNetwork(
       hasPostQuantumKex ? 'Post-quantum key exchange is enabled; first TLS handshakes may carry slight extra cost.' : '',
       ping ? `Average latency ${avgMs} — ${ping.avg < 80 ? 'excellent for real-time applications.' : ping.avg < 150 ? 'good for everyday use.' : 'latency is elevated, may impact real-time communication.'}` : '',
       speed?.downloadMbps ? `Download speed: ${dlMbps}.` : '',
-      fastestDns ? `Fastest public DNS probe: ${fastestDns.provider} (${fastestDns.latencyMs} ms).` : '',
+      fastestDns ? `Fastest server-side public DNS probe: ${fastestDns.provider} (${fastestDns.latencyMs} ms).` : '',
       ping && ping.avg < 100 && slowReachability.length > 0 ? 'Baseline latency is healthy, but some targets are slow; real-time apps or long-lived connections may be affected by routing.' : '',
       hasIPv6 ? 'Your network supports IPv6 dual-stack.' : 'IPv6 is not yet enabled on your network.',
     ],
     ja: [
-      `Cloudflare ${edgeColo} エッジノードに接続中。`,
+      `Cloudflare Trace では ${edgeColo} エッジノードが表示されています。`,
       warp === 'plus'
         ? `WARP+ が有効で、Gateway は ${gateway === 'on' ? '有効' : '無効'} です。`
         : warp === 'on'
@@ -221,7 +221,7 @@ function analyzeNetwork(
       hasPostQuantumKex ? 'ポスト量子鍵交換が有効です。初回 TLS ハンドシェイクの時間がわずかに増える可能性があります。' : '',
       ping ? `平均遅延 ${avgMs} — ${ping.avg < 80 ? 'リアルタイムアプリケーションに最適です。' : ping.avg < 150 ? '日常利用に適しています。' : '遅延がやや高く、リアルタイム通信に影響する可能性があります。'}` : '',
       speed?.downloadMbps ? `ダウンロード速度: ${dlMbps}。` : '',
-      fastestDns ? `最速の Public DNS は ${fastestDns.provider}（${fastestDns.latencyMs} ms）です。` : '',
+      fastestDns ? `サーバー側の Public DNS 探測では ${fastestDns.provider}（${fastestDns.latencyMs} ms）が最速です。` : '',
       ping && ping.avg < 100 && slowReachability.length > 0 ? '基本遅延は良好ですが、一部ターゲットが遅く、リアルタイム通信や長時間接続に影響する可能性があります。' : '',
       hasIPv6 ? 'IPv6 デュアルスタックに対応しています。' : 'IPv6 はまだ有効ではありません。',
     ],
@@ -1203,6 +1203,13 @@ export default function NetworkCheckClient({
                   <MetaRow label={nc.info_country} value={cfTrace.loc || '—'} mono />
                   <MetaRow label={nc.trace_kex || 'KEX'} value={cfTrace.kex || '—'} mono />
                 </div>
+                <p className="text-[10px] leading-5 text-[var(--text-faint)]">
+                  {lang === 'zh' || lang === 'tw'
+                    ? 'Cloudflare Trace 反映当前请求经过 Cloudflare 时看到的连接信息；在非 Cloudflare 环境下会使用页面侧回退数据。'
+                    : lang === 'ja'
+                      ? 'Cloudflare Trace は、このリクエストが Cloudflare を通過した時点の接続情報です。Cloudflare 以外ではページ側のフォールバックデータを使います。'
+                      : 'Cloudflare Trace reflects connection details observed as this request passes through Cloudflare; non-Cloudflare paths use page-side fallback data.'}
+                </p>
               </div>
             ) : null}
           </SectionCard>
@@ -1225,6 +1232,13 @@ export default function NetworkCheckClient({
                     </div>
                   </div>
                 ))}
+                <p className="sm:col-span-2 text-[10px] leading-5 text-[var(--text-faint)]">
+                  {lang === 'zh' || lang === 'tw'
+                    ? '这里展示的是 OpsKitPro 服务器侧到公共 DoH 解析器的延迟，不等同于你本机或手机当前 DNS 的真实延迟。'
+                    : lang === 'ja'
+                      ? 'ここに表示されるのは OpsKitPro サーバー側から Public DoH リゾルバーへの遅延で、端末ローカル DNS の実測値ではありません。'
+                      : 'These values are measured from the OpsKitPro server to public DoH resolvers, not from your local device DNS path.'}
+                </p>
               </div>
             ) : null}
           </SectionCard>
