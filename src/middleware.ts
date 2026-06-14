@@ -108,6 +108,14 @@ export async function middleware(request: NextRequest) {
 
   const locale = currentCookie && LOCALES.includes(currentCookie) ? currentCookie : defaultLocale
   
+  const forwardedHost = getForwardedHost(request)
+  if (forwardedHost) {
+    url.host = forwardedHost
+    if (!forwardedHost.includes(':')) {
+      url.port = ''
+    }
+  }
+
   url.pathname = `/${locale}${pathname}`
   const response = NextResponse.redirect(url, 307)
   
