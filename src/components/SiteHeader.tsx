@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   Github,
   Twitter,
@@ -21,7 +21,10 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { authenticated, email, provider, loading, openLogin, logout } = useAdminSession()
+  const search = searchParams.toString()
+  const currentPath = `${pathname}${search ? `?${search}` : ''}`
   const loginLabel = {
     zh: '登录',
     tw: '登入',
@@ -29,10 +32,10 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
     ja: 'ログイン',
   }[lang]
   const accountCopy = {
-    zh: { admin: '管理员', dashboard: '管理后台', editTools: '编辑导航', logout: '退出登录', viaAccess: 'Zero Trust 登录', viaPassword: '密码登录' },
-    tw: { admin: '管理員', dashboard: '管理後台', editTools: '編輯導航', logout: '登出', viaAccess: 'Zero Trust 登入', viaPassword: '密碼登入' },
-    en: { admin: 'Admin', dashboard: 'Dashboard', editTools: 'Edit navigation', logout: 'Sign out', viaAccess: 'Zero Trust', viaPassword: 'Password' },
-    ja: { admin: '管理者', dashboard: '管理画面', editTools: 'ナビを編集', logout: 'ログアウト', viaAccess: 'Zero Trust', viaPassword: 'パスワード' },
+    zh: { admin: '管理员', profile: '个人资料', dashboard: '管理后台', editTools: '编辑导航', logout: '退出登录', viaAccess: 'Zero Trust 登录', viaPassword: '密码登录' },
+    tw: { admin: '管理員', profile: '個人資料', dashboard: '管理後台', editTools: '編輯導航', logout: '登出', viaAccess: 'Zero Trust 登入', viaPassword: '密碼登入' },
+    en: { admin: 'Admin', profile: 'Profile', dashboard: 'Dashboard', editTools: 'Edit navigation', logout: 'Sign out', viaAccess: 'Zero Trust', viaPassword: 'Password' },
+    ja: { admin: '管理者', profile: 'プロフィール', dashboard: '管理画面', editTools: 'ナビを編集', logout: 'ログアウト', viaAccess: 'Zero Trust', viaPassword: 'パスワード' },
   }[lang]
   const providerLabel = provider === 'cloudflare_access'
     ? accountCopy.viaAccess
@@ -87,7 +90,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           <button
             type="button"
             disabled={loading}
-            onClick={() => authenticated ? setIsAccountOpen((open) => !open) : openLogin('/admin')}
+            onClick={() => authenticated ? setIsAccountOpen((open) => !open) : openLogin(currentPath)}
             className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] hover:-translate-y-0.5 hover:border-emerald-500/25 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)] disabled:opacity-50"
             aria-expanded={authenticated ? isAccountOpen : undefined}
           >
@@ -100,6 +103,9 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
                 <div className="truncate text-xs font-semibold text-[var(--text-primary)]">{email || accountCopy.admin}</div>
                 {providerLabel && <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">{providerLabel}</div>}
               </div>
+              <Link href="/admin/profile" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
+                {accountCopy.profile}
+              </Link>
               <Link href="/admin" onClick={() => setIsAccountOpen(false)} className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                 {accountCopy.dashboard}
               </Link>
@@ -125,7 +131,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           type="button"
           aria-label={loginLabel}
           title={loginLabel}
-          onClick={() => authenticated ? setIsMenuOpen(true) : openLogin('/admin')}
+          onClick={() => authenticated ? setIsMenuOpen(true) : openLogin(currentPath)}
           className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)]"
         >
           <CircleUserRound className="h-5 w-5" />
@@ -168,6 +174,9 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
                     <div className="truncate text-sm font-semibold text-[var(--text-primary)]">{email || accountCopy.admin}</div>
                     {providerLabel && <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">{providerLabel}</div>}
                   </div>
+                  <Link href="/admin/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]">
+                    <CircleUserRound className="h-4 w-4" /> {accountCopy.profile}
+                  </Link>
                   <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]">
                     <CircleUserRound className="h-4 w-4" /> {accountCopy.dashboard}
                   </Link>

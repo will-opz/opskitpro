@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BarChart3, BookOpen, ExternalLink, LayoutGrid, ShieldCheck } from 'lucide-react'
+import { BarChart3, BookOpen, CircleUserRound, ExternalLink, LayoutGrid, ShieldCheck } from 'lucide-react'
 
 const sections = [
   {
@@ -20,6 +20,12 @@ const sections = [
     href: '/tools?admin=1',
     icon: LayoutGrid,
   },
+  {
+    title: 'Profile',
+    description: 'Review the current admin identity and sign out.',
+    href: '/admin/profile',
+    icon: CircleUserRound,
+  },
 ]
 
 export default function AdminPage() {
@@ -36,7 +42,7 @@ export default function AdminPage() {
         </p>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-3">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {sections.map((section) => {
           const Icon = section.icon
           return (

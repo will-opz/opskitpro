@@ -82,7 +82,7 @@ test('single-user editor can add a custom local link', async ({ page }) => {
   await page.goto('/tools?admin=1')
   await page.waitForLoadState('networkidle')
 
-  await page.getByRole('button', { name: 'Sign in to edit' }).click()
+  await page.getByRole('button', { name: 'Sign in' }).click()
   await page.getByLabel('Admin email').fill('deopsai@gmail.com')
   await page.getByLabel('Admin password').fill('test-password')
   await page.locator('form').getByRole('button', { name: 'Sign in' }).click()

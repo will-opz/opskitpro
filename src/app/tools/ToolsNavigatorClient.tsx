@@ -96,6 +96,7 @@ const copy = {
     subtitle: '把 OpsKitPro 工具、排障入口和日常服务放到一个轻量页面。',
     search: '搜索名称、URL、标签',
     login: '登录编辑',
+    loginHint: '使用右上角登录后可编辑导航。',
     logout: '退出',
     add: '添加入口',
     edit: '编辑',
@@ -128,6 +129,7 @@ const copy = {
     subtitle: '把 OpsKitPro 工具、排障入口和日常服務放到一個輕量頁面。',
     search: '搜尋名稱、URL、標籤',
     login: '登入編輯',
+    loginHint: '使用右上角登入後可編輯導航。',
     logout: '登出',
     add: '新增入口',
     edit: '編輯',
@@ -160,6 +162,7 @@ const copy = {
     subtitle: 'OpsKitPro tools, diagnostic links, and daily services in one focused page.',
     search: 'Search name, URL, or tags',
     login: 'Sign in to edit',
+    loginHint: 'Sign in from the top bar to edit navigation.',
     logout: 'Sign out',
     add: 'Add link',
     edit: 'Edit',
@@ -192,6 +195,7 @@ const copy = {
     subtitle: 'OpsKitPro ツール、診断入口、日常サービスを軽量な 1 ページに集約。',
     search: '名前、URL、タグを検索',
     login: '編集ログイン',
+    loginHint: '右上からログインするとナビを編集できます。',
     logout: 'ログアウト',
     add: '入口を追加',
     edit: '編集',
@@ -389,10 +393,10 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
                   </button>
                 </>
               ) : adminMode ? (
-                <button type="button" onClick={() => openLogin('/tools?admin=1')} className="ui-button-primary rounded-xl px-4 py-2.5">
+                <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-2.5 text-sm font-semibold text-[var(--text-muted)]">
                   <Lock className="h-4 w-4" />
-                  {t.login}
-                </button>
+                  {t.loginHint}
+                </div>
               ) : null}
             </div>
           </div>

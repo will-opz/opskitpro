@@ -138,8 +138,9 @@ export function AdminSessionProvider({
           passwordConfigured={passwordConfigured}
           accessConfigured={accessConfigured}
           onAccessLogin={() => {
+            const target = nextPath?.startsWith('/') && !nextPath.startsWith('//') ? nextPath : '/admin'
             setLoginOpen(false)
-            router.push(nextPath || '/admin')
+            router.push(`/admin/auth?next=${encodeURIComponent(target)}`)
           }}
           onClose={() => setLoginOpen(false)}
           onLogin={(identity) => {
