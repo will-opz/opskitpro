@@ -998,11 +998,16 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   useEffect(() => {
     const q = searchParams.get('q') || searchParams.get('domain') || searchParams.get('target') || undefined
     const normalizedQuery = q ? normalizeTargetInput(q) : undefined
+
+    if (!normalizedQuery) {
+      lastProcessedQuery.current = undefined
+      return
+    }
     
     // Check if we already processed this exact query
     if (normalizedQuery !== lastProcessedQuery.current) {
         lastProcessedQuery.current = normalizedQuery
-        if (normalizedQuery) setDomain(normalizedQuery)
+        setDomain(normalizedQuery)
         runDiagnostic(normalizedQuery)
     }
   }, [searchParams, runDiagnostic])
@@ -1563,6 +1568,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const normalized = normalizeTargetInput(domain)
+    if (!normalized) return
     setDomain(normalized)
     runDiagnostic(normalized)
   }
@@ -1648,7 +1654,10 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                  onKeyDown={(e) => {
                    if (e.key === 'Enter') {
                      e.preventDefault()
-                     runDiagnostic()
+                     const normalized = normalizeTargetInput(domain)
+                     if (!normalized) return
+                     setDomain(normalized)
+                     runDiagnostic(normalized)
                    }
                  }}
                  placeholder={dict.home.diagnostics_placeholder}
@@ -1656,8 +1665,13 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                />
                <button 
                  type="button"
-                 onClick={() => runDiagnostic(undefined, true)}
-                 disabled={loading}
+                 onClick={() => {
+                   const normalized = normalizeTargetInput(domain)
+                   if (!normalized) return
+                   setDomain(normalized)
+                   runDiagnostic(normalized, true)
+                 }}
+                 disabled={loading || !normalizeTargetInput(domain)}
                  className="shrink-0 w-full sm:w-auto justify-center bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-5 sm:px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/25 disabled:opacity-50"
                  >
                  {loading ? <Activity className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}

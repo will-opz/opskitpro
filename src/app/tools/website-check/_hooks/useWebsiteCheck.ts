@@ -27,6 +27,13 @@ export function useWebsiteCheck() {
 
   const runDiagnostic = useCallback(async (target?: string, skipCache: boolean = false) => {
     const d = normalizeTargetInput(target !== undefined ? target : domainRef.current)
+
+    if (!d) {
+      setError(null)
+      setLoading(false)
+      setCurrentStep(0)
+      return
+    }
     
     setLoading(true)
     setError(null)
