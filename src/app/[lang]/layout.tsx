@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { getDictionary } from '@/dictionaries'
 import { AdminSessionProvider } from '@/components/AdminSessionProvider'
 import '../globals.css'
@@ -108,11 +109,12 @@ export default async function RootLayout({
     <html lang={lang} className="overflow-x-hidden" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <script 
-          async 
+        <Script
+          id="adsense-loader"
+          strategy="lazyOnload"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3793455361566383"
           crossOrigin="anonymous"
-        ></script>
+        />
       </head>
       <body className="ui-shell selection:bg-emerald-500/20 selection:text-[var(--text-primary)]">
         {/* Dual Core tech background glow */}

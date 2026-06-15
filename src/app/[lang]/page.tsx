@@ -246,9 +246,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
     diagnosticPreview.rows[3] && { ...diagnosticPreview.rows[3], label: dashboardCopy.rows.http, value: diagnosticPreview.rows[3].value === 'Awaiting check' ? dashboardCopy.pending : diagnosticPreview.rows[3].value },
   ].filter(Boolean) as HomeDiagnosticPreview['rows']
   const featuredTools = [
-    { href: '/tools/website-check', title: dict.home.card1_title, desc: dict.home.card1_desc, icon: Activity, tag: dashboardCopy.toolTags.web, tone: 'text-emerald-500 bg-emerald-500/10' },
-    { href: '/tools/dns-lookup', title: dict.home.card3_title, desc: dict.home.card3_desc, icon: Server, tag: dashboardCopy.toolTags.dns, tone: 'text-sky-500 bg-sky-500/10' },
-    { href: '/tools/ip-lookup', title: dict.home.card2_title, desc: dict.home.card2_desc, icon: Globe, tag: dashboardCopy.toolTags.network, tone: 'text-purple-500 bg-purple-500/10' },
+    { href: `/${lang}/tools/website-check`, title: dict.home.card1_title, desc: dict.home.card1_desc, icon: Activity, tag: dashboardCopy.toolTags.web, tone: 'text-emerald-500 bg-emerald-500/10' },
+    { href: `/${lang}/tools/dns-lookup`, title: dict.home.card3_title, desc: dict.home.card3_desc, icon: Server, tag: dashboardCopy.toolTags.dns, tone: 'text-sky-500 bg-sky-500/10' },
+    { href: `/${lang}/tools/ip-lookup`, title: dict.home.card2_title, desc: dict.home.card2_desc, icon: Globe, tag: dashboardCopy.toolTags.network, tone: 'text-purple-500 bg-purple-500/10' },
   ]
 
 
@@ -286,7 +286,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
               {heroSubtitle}
             </p>
             <div className="mt-6 max-w-3xl">
-              <HomeSearch dict={dict} compact />
+              <HomeSearch dict={dict} lang={lang} compact />
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               {[
@@ -330,10 +330,10 @@ export default async function Home({ params }: { params: { lang: string } }) {
               ))}
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <Link href="/tools/website-check" className="ui-button-primary px-3 py-2 text-xs">
+              <Link href={`/${lang}/tools/website-check`} className="ui-button-primary px-3 py-2 text-xs">
                 {dashboardCopy.runFullCheck}
               </Link>
-              <Link href="/tools/dns-lookup" className="ui-button-ghost border border-[var(--border-subtle)] px-3 py-2 text-xs">
+              <Link href={`/${lang}/tools/dns-lookup`} className="ui-button-ghost border border-[var(--border-subtle)] px-3 py-2 text-xs">
                 {dashboardCopy.openDnsLookup}
               </Link>
             </div>
@@ -347,7 +347,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
               <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--text-primary)]">{dict.home.scenes.title}</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{dashboardCopy.featuredToolsDesc}</p>
             </div>
-            <Link href="/tools" className="group inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)] hover:text-[var(--accent-hover)]">
+            <Link href={`/${lang}/tools`} className="group inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)] hover:text-[var(--accent-hover)]">
               {dashboardCopy.openAllTools}
               <ArrowRight className="h-3 w-3 group-hover:translate-x-1" />
             </Link>
@@ -418,7 +418,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
                    {dict.home.blog_section?.subtitle || "Technical Notes"}
                  </p>
               </div>
-              <Link href="/blog" className="group flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)] hover:text-[var(--accent-hover)]">
+              <Link href={`/${lang}/blog`} className="group flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)] hover:text-[var(--accent-hover)]">
                  {dict.home.blog_section?.view_all || "VIEW_ALL_POSTS"}
                  <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -428,7 +428,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
               {latestNotes.map((post) => (
                 <Link
                   key={post.slug}
-                  href={`/blog/${post.slug}`}
+                  href={`/${lang}/blog/${post.slug}`}
                   className="ui-surface group overflow-hidden rounded-2xl hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-xl"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden">

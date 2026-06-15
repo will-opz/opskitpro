@@ -4,7 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Globe, ArrowRight, Zap, ShieldCheck } from 'lucide-react'
 
-export default function HomeSearch({ dict, compact = false }: { dict: any; compact?: boolean }) {
+export default function HomeSearch({
+  dict,
+  lang,
+  compact = false,
+}: {
+  dict: any
+  lang: 'zh' | 'en' | 'ja' | 'tw'
+  compact?: boolean
+}) {
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -13,7 +21,7 @@ export default function HomeSearch({ dict, compact = false }: { dict: any; compa
     if (!query.trim()) return
     // For now, redirect to search or a default tool (IP) with the query
     // In the future, this should lead to a dedicated /diagnostics page
-    router.push(`/tools/website-check?q=${encodeURIComponent(query.trim())}`)
+    router.push(`/${lang}/tools/website-check?q=${encodeURIComponent(query.trim())}`)
   }
 
   const quickChecks = [

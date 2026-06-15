@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, FormEvent, useContext, useEffect, useState } from 'react'
+import { createContext, FormEvent, useContext, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { KeyRound, ShieldCheck, X } from 'lucide-react'
 
@@ -95,27 +95,42 @@ export function AdminSessionProvider({
   const [configured, setConfigured] = useState(true)
   const [passwordConfigured, setPasswordConfigured] = useState(false)
   const [accessConfigured, setAccessConfigured] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [sessionChecked, setSessionChecked] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const [nextPath, setNextPath] = useState<string | undefined>()
 
-  useEffect(() => {
-    fetch('/api/admin/session')
+  const loadSession = async () => {
+    if (sessionChecked) {
+      return authenticated
+    }
+
+    setLoading(true)
+    return fetch('/api/admin/session')
       .then((response) => response.json())
       .then((data) => {
-        setAuthenticated(Boolean(data.authenticated))
+        const isAuthenticated = Boolean(data.authenticated)
+        setAuthenticated(isAuthenticated)
         setEmail(typeof data.email === 'string' ? data.email : '')
         setProvider(data.provider === 'cloudflare_access' || data.provider === 'password' ? data.provider : null)
         setConfigured(Boolean(data.configured))
         setPasswordConfigured(Boolean(data.passwordConfigured))
         setAccessConfigured(Boolean(data.accessConfigured))
+        setSessionChecked(true)
+        return isAuthenticated
       })
-      .catch(() => setConfigured(false))
+      .catch(() => {
+        setConfigured(false)
+        setSessionChecked(true)
+        return false
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }
 
-  const openLogin = (path?: string) => {
+  const openLogin = async (path?: string) => {
     setNextPath(path)
+    const isAuthenticated = await loadSession()
+    if (isAuthenticated) return
     setLoginOpen(true)
   }
 
@@ -124,6 +139,7 @@ export function AdminSessionProvider({
     setAuthenticated(false)
     setEmail('')
     setProvider(null)
+    setSessionChecked(true)
     router.push('/tools')
     router.refresh()
   }
