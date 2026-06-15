@@ -18,3 +18,14 @@ For any non-trivial task, first write an Implementation Plan to `../opskitpro-op
 After implementation, write a Walkthrough to `../opskitpro-ops/.ai/walkthroughs/YYYY-MM-DD-phase-name.md`, then update `../opskitpro-ops/.ai/current_state.md` and `../opskitpro-ops/.ai/session_log.md`.
 
 Do not rely on Antigravity chat memory as the only project memory. Project memory must live in Git-tracked files under `../opskitpro-ops/.ai/`.
+
+
+## Dry-Run Rule
+
+Any command or script that writes data, sends notifications, deletes files, moves files, changes symlinks, modifies infrastructure, restarts services, deploys releases, or calls external side-effect APIs should support `--dry-run`.
+
+Dry-run mode should validate inputs, compute the planned actions, and print what would happen without making changes.
+
+For AWS CLI commands, preserve the upstream flag spelling when needed. For example, `aws s3 sync` uses `--dryrun`, not `--dry-run`.
+
+For every non-trivial command added or modified, the Implementation Plan must state whether dry-run support is required.
