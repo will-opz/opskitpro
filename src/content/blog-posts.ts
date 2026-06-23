@@ -24,6 +24,74 @@ export type BlogPost = {
 
 const posts: BlogPost[] = [
   {
+    slug: 'api-v0-release',
+    date: '2026-06-23',
+    readTime: '4 min',
+    tag: 'Release',
+    accent: 'from-emerald-500/10 via-teal-500/10 to-transparent',
+    ctaUrl: 'https://opskitpro.com/en/tools/api',
+    actionKind: 'tool',
+    coverImage: '/blog-covers/why-opskitpro.svg',
+    titles: {
+      zh: 'OpsKitPro Public JSON API v0 正式发布：DNS、IP 与 HTTP 检测 API 上线',
+      en: 'OpsKitPro Public JSON API v0 Is Live: DNS, IP and HTTP Check APIs',
+      ja: 'OpsKitPro Public JSON API v0 リリース：DNS、IP、HTTPチェック API が公開されました',
+      tw: 'OpsKitPro Public JSON API v0 正式發佈：DNS、IP 與 HTTP 檢測 API 上線',
+    },
+    summaries: {
+      zh: '探索专为开发者打造的 Public JSON API。无需鉴权，支持 curl，全面涵盖 DNS、IP 以及带 SSRF 防护的 HTTP 诊断能力。',
+      en: 'Use OpsKitPro Public JSON API for DNS lookup, IP lookup, and HTTP checks with curl, scripts, and automation workflows.',
+      ja: '開発者向けの Public JSON API をお試しください。認証不要で、curl に最適化された DNS、IP検索、および SSRF 防御を備えた HTTP 診断機能をサポート。',
+      tw: '探索專為開發者打造的 Public JSON API。無需驗證，支援 curl，全面涵蓋 DNS、IP 以及具備 SSRF 防護的 HTTP 診斷能力。',
+    },
+    sections: [
+      {
+        heading: 'Introduction / 简介',
+        paragraphs: [
+          'OpsKitPro is thrilled to announce the launch of our Public JSON API v0. While our web UI is great for quick manual checks, we know that DevOps, SREs, and developers need programmable access to build automations, CI/CD integrations, and AI agent workflows.',
+          'That is why we have extracted our core diagnostic engines into a set of clean, fast, and free public API endpoints.'
+        ]
+      },
+      {
+        heading: 'What is Included in v0? / v0 包含哪些能力？',
+        paragraphs: [
+          'The v0 release introduces three foundational diagnostic APIs, all returning a standardized JSON envelope:'
+        ],
+        bullets: [
+          '**DNS Lookup API**: Fetch global A, AAAA, MX, TXT, and CNAME records instantly.',
+          '**IP Lookup API**: Get accurate GeoIP, ISP, ASN, and Proxy/VPN detection signals.',
+          '**HTTP Check API**: Perform deep HTTP diagnostics with full redirect chain tracing and header analysis.'
+        ]
+      },
+      {
+        heading: 'Built for Curl and Scripts / 为自动化而生',
+        paragraphs: [
+          'The API requires absolutely no authentication or API keys to start using. It is rate-limited fairly at 60 requests per minute per IP.',
+          'Try it out right now in your terminal:'
+        ],
+        bullets: [
+          '`curl -s "https://opskitpro.com/api/tools/dns-lookup?domain=example.com" | jq`',
+          '`curl -s "https://opskitpro.com/api/tools/ip-lookup?ip=8.8.8.8" | jq`',
+          '`curl -s "https://opskitpro.com/api/tools/http-check?url=https://example.com" | jq`'
+        ]
+      },
+      {
+        heading: 'Enterprise-Grade Security (SSRF Protection)',
+        paragraphs: [
+          'Opening up an HTTP Check API to the public comes with immense security responsibilities. OpsKitPro v0 implements rigorous SSRF (Server-Side Request Forgery) mitigations.',
+          'Our HTTP engine strictly enforces `http`/`https` protocols, blocks non-standard ports, and manually intercepts every single redirect hop to validate that the target hostname does not resolve to a private or internal network (DNS Rebinding protection).'
+        ]
+      },
+      {
+        heading: 'Read the Documentation / 查看文档',
+        paragraphs: [
+          'For full details on endpoint parameters, response schemas, and rate limits, please visit our Developer API portal.'
+        ]
+      }
+    ],
+    related: ['diagnostic-tools-overview']
+  },
+  {
     slug: 'diagnostic-tools-overview',
     date: '2026-06-23',
     readTime: '8 min',

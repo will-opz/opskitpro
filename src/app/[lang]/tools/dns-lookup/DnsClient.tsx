@@ -158,9 +158,15 @@ export default function DnsClient({ dict, lang }: { dict: any; lang: 'zh' | 'en'
        {/* Header */}
        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
           <div className="text-center md:text-left">
-             <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-zinc-900 tracking-tighter mb-4 leading-none break-words">
-                {dict.tools.dns_lookup_title}
-             </h1>
+             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 justify-center md:justify-start">
+               <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-zinc-900 tracking-tighter leading-none break-words">
+                  {dict.tools.dns_lookup_title}
+               </h1>
+               <Link href={`/${lang}/tools/api`} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0">
+                  <Terminal className="w-3.5 h-3.5" />
+                  JSON API Available
+               </Link>
+             </div>
              <p className="text-sm text-zinc-500 leading-relaxed max-w-2xl">{dict.tools.dns_lookup_desc}</p>
           </div>
        </div>

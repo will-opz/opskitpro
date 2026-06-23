@@ -30,6 +30,7 @@ import {
   LayoutGrid,
   Download,
   Star,
+  Terminal,
   Trash2,
   Link2,
   FileText,
@@ -1624,13 +1625,19 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           {localeText.heroBadge}
         </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-zinc-900 tracking-tighter mb-5 break-words">
-           {result?.isVisitor
-             ? localeText.heroTitles.visitor
-             : result?.isActuallyIp
-             ? localeText.heroTitles.ip
-             : localeText.heroTitles.site}
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5 justify-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-zinc-900 tracking-tighter break-words">
+             {result?.isVisitor
+               ? localeText.heroTitles.visitor
+               : result?.isActuallyIp
+               ? localeText.heroTitles.ip
+               : localeText.heroTitles.site}
+          </h1>
+          <Link href={`/${lang}/tools/api`} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0">
+            <Terminal className="w-3.5 h-3.5" />
+            JSON API Available
+          </Link>
+        </div>
         <p className="max-w-2xl mx-auto mb-4 leading-relaxed text-zinc-600 text-sm sm:text-base font-medium tracking-normal">
            {localeText.heroSubtitle}
         </p>

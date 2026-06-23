@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Activity,
@@ -15,6 +16,7 @@ import {
   Server,
   ShieldCheck,
   SignalHigh,
+  Terminal,
 } from 'lucide-react'
 import type { IpLookupResponse, IpLookupSource } from '@/lib/api-contracts'
 
@@ -352,9 +354,15 @@ export default function IPLookupClient({ dict, lang }: { dict: any; lang: Lang }
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           {copy.badge}
         </div>
-        <h1 className="mt-5 text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tighter text-zinc-900 leading-none">
-          {copy.title}
-        </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-5 justify-center lg:justify-start">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tighter text-zinc-900 leading-none">
+            {copy.title}
+          </h1>
+          <Link href={`/${lang}/tools/api`} className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0">
+            <Terminal className="w-3.5 h-3.5" />
+            JSON API Available
+          </Link>
+        </div>
         <p className="mt-4 max-w-3xl text-sm sm:text-base leading-7 text-zinc-500 mx-auto lg:mx-0">
           {copy.subtitle}
         </p>
