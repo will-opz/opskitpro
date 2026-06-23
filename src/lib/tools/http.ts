@@ -25,7 +25,7 @@ export async function performHttpCheck(urlStr: string) {
         redirect: 'manual',
         signal: AbortSignal.timeout(5000), // 5 seconds per hop
         headers: {
-          'User-Agent': 'OpsKitPro-HttpCheck/1.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 (OpsKitPro-HttpCheck/1.0)',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         }
       })
