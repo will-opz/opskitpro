@@ -106,9 +106,9 @@ test('home page exposes core navigation and tool entry points', async ({ page })
   await expect(page.getByRole('heading', { name: /DNS, IP & Site|DNS·IP·网站|DNS・IP・サイトを|DNS·IP·網站/i })).toBeVisible()
   await expect(page.getByRole('link', { name: /Tools|工具|ツール/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Knowledge Base|知识库|知識庫|ナレッジベース/i }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: /Website Diagnostic|网站综合诊断|網站綜合診斷|Webサイト診断/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /IP Lookup|IP 归属查询|IP 歸屬查詢|IP アドレス検索/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Open DNS lookup' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Website Diagnostic|网站综合诊断|網站綜合診斷|Webサイト診断/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /IP Lookup|IP 归属查询|IP 歸屬查詢|IP アドレス検索/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open DNS lookup' }).first()).toBeVisible()
 })
 
 test('services dashboard can search first-party tools', async ({ page }) => {
