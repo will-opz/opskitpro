@@ -1,47 +1,90 @@
 import { validateSSRF } from '../validators'
 
+const REDIRECT_STATUS = new Set([301, 302, 303, 307, 308])
+const MAX_REDIRECTS = 5
+
 export async function performHttpCheck(urlStr: string) {
-  const ssrfCheck = await validateSSRF(urlStr)
-  if (!ssrfCheck.safe) {
-    throw new Error(`Security Exception: ${ssrfCheck.error}`)
+  let currentUrl = urlStr
+  let redirectCount = 0
+  const redirectChain: string[] = []
+  
+  const t0 = Date.now()
+  let finalResponse: Response | null = null
+
+  while (redirectCount <= MAX_REDIRECTS) {
+    // 1. Double Validation (Pre-fetch SSRF check)
+    const ssrfCheck = await validateSSRF(currentUrl)
+    if (!ssrfCheck.safe) {
+      throw new Error(`Security Exception: ${ssrfCheck.error}`)
+    }
+
+    try {
+      // 2. Fetch with manual redirects
+      const response = await fetch(currentUrl, {
+        method: 'GET',
+        redirect: 'manual',
+        signal: AbortSignal.timeout(5000), // 5 seconds per hop
+        headers: {
+          'User-Agent': 'OpsKitPro-HttpCheck/1.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      })
+      
+      finalResponse = response
+
+      // 3. Prevent downloading large bodies: immediately cancel the body stream since we only need headers/status
+      if (response.body) {
+        await response.body.cancel()
+      }
+
+      // 4. Handle redirects
+      if (REDIRECT_STATUS.has(response.status)) {
+        const location = response.headers.get('location')
+        if (!location) {
+          // Redirect status but no location, stop here
+          break
+        }
+        
+        // Resolve relative paths correctly
+        const nextUrl = new URL(location, currentUrl).toString()
+        redirectChain.push(nextUrl)
+        
+        currentUrl = nextUrl
+        redirectCount++
+        continue
+      }
+      
+      // Not a redirect, stop here
+      break
+    } catch (err: any) {
+      throw new Error(`HTTP Fetch Failed on ${currentUrl}: ${err.message}`)
+    }
   }
 
-  // To prevent the host header from revealing we're querying an IP directly if we substituted it,
-  // we just fetch the original URL because Node's fetch will respect the system DNS, and if SSRF
-  // validated the hostname's DNS records, we assume it's safe at the time of check.
-  // Note: For strict enterprise SSRF prevention against DNS rebinding, 
-  // you would construct the request using the resolved IP and pass the Host header.
-  // For this MVP, since we validated it, we proceed with fetch.
+  if (redirectCount > MAX_REDIRECTS) {
+    throw new Error('Security Exception: TOO_MANY_REDIRECTS')
+  }
 
-  try {
-    const t0 = Date.now()
-    const response = await fetch(urlStr, {
-      method: 'GET',
-      redirect: 'follow', // Follow redirects to get the final URL
-      signal: AbortSignal.timeout(5000), // 5 seconds timeout
-      headers: {
-        'User-Agent': 'OpsKitPro-HttpCheck/1.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-      }
-    })
-    const durationMs = Date.now() - t0
+  if (!finalResponse) {
+    throw new Error('HTTP Fetch Failed: No response received')
+  }
 
-    const headers: Record<string, string> = {}
-    response.headers.forEach((val, key) => {
-      headers[key.toLowerCase()] = val
-    })
+  const durationMs = Date.now() - t0
 
-    return {
-      status: response.status,
-      statusText: response.statusText,
-      finalUrl: response.url,
-      redirected: response.redirected,
-      durationMs,
-      server: headers['server'] || 'Unknown',
-      contentType: headers['content-type'] || 'Unknown',
-      headers
-    }
-  } catch (err: any) {
-    throw new Error(`HTTP Check Failed: ${err.message}`)
+  const headers: Record<string, string> = {}
+  finalResponse.headers.forEach((val, key) => {
+    headers[key.toLowerCase()] = val
+  })
+
+  return {
+    status: finalResponse.status,
+    statusText: finalResponse.statusText,
+    finalUrl: currentUrl,
+    redirectChain,
+    redirected: redirectCount > 0,
+    durationMs,
+    server: headers['server'] || 'Unknown',
+    contentType: headers['content-type'] || 'Unknown',
+    headers
   }
 }

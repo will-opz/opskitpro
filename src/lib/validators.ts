@@ -32,7 +32,15 @@ export function checkRateLimit(ip: string): boolean {
 export function isValidUrl(urlStr: string): boolean {
   try {
     const url = new URL(urlStr)
-    return url.protocol === 'http:' || url.protocol === 'https:'
+    // Only allow http and https
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return false
+    }
+    // Restrict unusual ports for MVP to reduce SSRF scanning risk.
+    if (url.port && !['80', '443', '8080', '8443'].includes(url.port)) {
+      return false
+    }
+    return true
   } catch {
     return false
   }
@@ -67,6 +75,7 @@ export async function validateSSRF(urlStr: string): Promise<{ safe: boolean, ip?
     const hostname = url.hostname
 
     // First check if the hostname itself is a private IP.
+    // Node's URL constructor normalizes obfuscated IPs like '0177.0.0.1' or '2130706433' or '127.1' into standard notation.
     if (ipaddr.isValid(hostname)) {
       if (isPrivateIp(hostname)) {
         return { safe: false, error: 'Private IP addresses are not allowed.' }

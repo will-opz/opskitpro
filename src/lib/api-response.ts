@@ -21,6 +21,8 @@ export function successResponse<T>({
   }, {
     headers: {
       'Cache-Control': 'public, max-age=60, s-maxage=300',
+      // Public read-only API only.
+      // Do not use wildcard CORS for authenticated or user-specific APIs.
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
     }
@@ -60,6 +62,8 @@ export function errorResponse({
       status,
       headers: {
         'Cache-Control': 'no-store',
+        // Public read-only API only.
+        // Do not use wildcard CORS for authenticated or user-specific APIs.
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
       }

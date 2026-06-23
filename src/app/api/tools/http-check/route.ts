@@ -55,14 +55,22 @@ export async function GET(request: NextRequest) {
       startTime
     })
   } catch (error: any) {
-    // Determine if it was an SSRF security block or a normal fetch failure
-    const isSecurityError = error.message.includes('Security Exception')
+    let code = 'FETCH_FAILED'
+    let statusCode = 500
+    if (error.message.includes('TOO_MANY_REDIRECTS')) {
+      code = 'TOO_MANY_REDIRECTS'
+      statusCode = 400
+    } else if (error.message.includes('Security Exception')) {
+      code = 'SSRF_BLOCKED'
+      statusCode = 403
+    }
+    
     return errorResponse({
       tool: 'http-check',
       input: { url },
-      code: isSecurityError ? 'SECURITY_BLOCKED' : 'FETCH_FAILED',
+      code,
       message: error.message || 'HTTP request failed.',
-      status: isSecurityError ? 403 : 500,
+      status: statusCode,
       startTime
     })
   }
