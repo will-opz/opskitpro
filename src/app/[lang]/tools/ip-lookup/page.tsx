@@ -4,20 +4,21 @@ import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import { RelatedTools } from '@/components/RelatedTools'
+import { ApiUsageSnippet } from '@/components/ApiUsageSnippet'
 import IPLookupClient from './IPLookupClient'
+
+import { buildPageMetadata, buildToolJsonLd } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   
-  return {
-    title: dict.tools.ip_title,
-    description: dict.tools.ip_desc,
-    openGraph: {
-      title: dict.tools.ip_title,
-      description: dict.tools.ip_desc,
-    },
-  }
+  return buildPageMetadata(
+    `${dict.tools.ip_title} with JSON API | OpsKitPro`,
+    dict.tools.ip_desc,
+    lang,
+    '/tools/ip-lookup'
+  )
 }
 
 
@@ -25,8 +26,18 @@ export default async function IPPage({ params }: { params: { lang: string } }) {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
   
+  const jsonLdWebApp = buildToolJsonLd({
+    name: dict.tools.ip_title,
+    description: dict.tools.ip_desc,
+    url: 'https://opskitpro.com/tools/ip-lookup',
+  })
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
+      />
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense fallback={
@@ -44,6 +55,39 @@ export default async function IPPage({ params }: { params: { lang: string } }) {
         }>
           <IPLookupClient dict={dict} lang={lang} />
         </Suspense>
+
+        <div className="max-w-4xl mx-auto px-6 w-full">
+          <ApiUsageSnippet 
+            endpoint="GET https://opskitpro.com/api/tools/ip-lookup"
+            exampleCurl={'curl "https://opskitpro.com/api/tools/ip-lookup?ip=8.8.8.8"'}
+            exampleResponse={`{
+  "ok": true,
+  "tool": "ip-lookup",
+  "input": {
+    "ip": "8.8.8.8"
+  },
+  "result": {
+    "ip": "8.8.8.8",
+    "country": "United States",
+    "countryCode": "US",
+    "region": "Ohio",
+    "city": "Glenmont",
+    "latitude": 40.5369,
+    "longitude": -82.1228,
+    "isp": "Google LLC",
+    "asn": "15169",
+    "timezone": "America/New_York",
+    "isDataCenter": true,
+    "isProxy": false
+  },
+  "meta": {
+    "durationMs": 47,
+    "timestamp": "2026-06-23T00:00:00.000Z"
+  }
+}`}
+          />
+        </div>
+
         <RelatedTools currentTool="ip-lookup" lang={lang} />
       </div>
       <SiteFooter dict={dict} />

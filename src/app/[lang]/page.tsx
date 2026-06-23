@@ -16,6 +16,20 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import HomeSearch from '@/components/HomeSearch'
 import { getBlogPosts } from '@/content/blog-posts'
+import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/seo'
+
+export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
+  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw"
+  const dict = await getDictionary(lang)
+  
+  return buildPageMetadata(
+    dict.home.meta_title || 'OpsKitPro | Edge Diagnostic Portal',
+    dict.home.meta_desc || 'Real-time global network forensics and edge diagnostic tools.',
+    lang,
+    ''
+  )
+}
 
 type HomeDiagnosticPreview = {
   domain: string

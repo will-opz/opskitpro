@@ -8,6 +8,8 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import { getBlogPost, getBlogPostSlugs, getBlogPosts } from '@/content/blog-posts'
 
+import { buildPageMetadata, buildTechArticleJsonLd } from '@/lib/seo'
+
 export function generateStaticParams() {
   return getBlogPostSlugs().map((slug) => ({ slug }))
 }
@@ -23,16 +25,18 @@ export async function generateMetadata({ params }: { params: { lang: string, slu
     }
   }
 
-  return {
-    title: post.title,
-    description: post.summary,
-    openGraph: {
-      title: post.title,
-      description: post.summary,
-      type: 'article',
-      images: [{ url: post.coverImage }],
-    },
-  }
+  return buildPageMetadata(
+    post.title,
+    post.summary,
+    lang,
+    `/blog/${slug}`,
+    {
+      openGraph: {
+        type: 'article',
+        images: [{ url: post.coverImage }],
+      }
+    }
+  )
 }
 
 export default async function BlogPost({ params }: { params: { lang: string, slug: string } }) {
@@ -50,8 +54,20 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
     .filter((entry) => post.related.includes(entry.slug))
     .slice(0, 3)
 
+  const jsonLd = buildTechArticleJsonLd({
+    headline: post.title,
+    description: post.summary,
+    datePublished: post.date,
+    imageUrl: post.coverImage,
+    url: `https://opskitpro.com/${lang}/blog/${slug}`,
+  })
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <SiteHeader dict={dict} lang={lang} />
 
       <main className="relative mx-auto mb-28 w-full max-w-6xl flex-grow px-6 pt-6 pb-6 md:pt-8">

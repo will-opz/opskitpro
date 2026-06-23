@@ -5,50 +5,45 @@ import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import NetworkCheckClient from './NetworkCheckClient'
 
+import { buildPageMetadata, buildToolJsonLd } from '@/lib/seo'
+
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
 
   const title = dict.tools.network_check_title
   const description = dict.tools.network_check_desc
-  const url = 'https://opskitpro.com/tools/network-check'
 
-  return {
-    title,
+  return buildPageMetadata(
+    `${title} | OpsKitPro`,
     description,
-    keywords:
-      lang === 'zh' || lang === 'tw'
-        ? '网络测速,网络诊断,IPv6检测,DNS检测,网络质量测试,延迟测试,Ping测试,网速检测'
-        : 'network test,internet speed test,network quality check,ipv6 test,dns test,latency test,ping test,internet diagnostics',
-    openGraph: {
-      title: `${title} | OpsKitPro`,
-      description,
-      url,
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${title} | OpsKitPro`,
-      description,
-    },
-    alternates: {
-      canonical: url,
-      languages: {
-        'zh-CN': `${url}`,
-        'en': `https://opskitpro.com/en/tools/network-check`,
-        'ja': `https://opskitpro.com/ja/tools/network-check`,
-        'zh-TW': `https://opskitpro.com/tw/tools/network-check`,
-      },
-    },
-  }
+    lang,
+    '/tools/network-check',
+    {
+      keywords:
+        lang === 'zh' || lang === 'tw'
+          ? '网络测速,网络诊断,IPv6检测,DNS检测,网络质量测试,延迟测试,Ping测试,网速检测'
+          : 'network test,internet speed test,network quality check,ipv6 test,dns test,latency test,ping test,internet diagnostics',
+    }
+  )
 }
 
 export default async function NetworkCheckPage({ params }: { params: { lang: string } }) {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
 
+  const jsonLdWebApp = buildToolJsonLd({
+    name: dict.tools.network_check_title,
+    description: dict.tools.network_check_desc,
+    url: 'https://opskitpro.com/tools/network-check',
+  })
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
+      />
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense

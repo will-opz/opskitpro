@@ -4,30 +4,19 @@ import DnsClient from './DnsClient'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import { RelatedTools } from '@/components/RelatedTools'
+import { ApiUsageSnippet } from '@/components/ApiUsageSnippet'
 import type { Metadata } from 'next'
+
+import { buildPageMetadata, buildToolJsonLd } from '@/lib/seo'
 
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang);
   
-  const title = `${dict.home.card3_title} | OpsKitPro`;
+  const title = `${dict.home.card3_title} with JSON API | OpsKitPro`;
   const description = dict.home.card3_desc;
 
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      url: 'https://opskitpro.com/tools/dns-lookup',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-    }
-  }
+  return buildPageMetadata(title, description, lang, '/tools/dns-lookup')
 }
 
 export default async function DnsPage({ params }: { params: { lang: string } }) {
@@ -44,20 +33,11 @@ export default async function DnsPage({ params }: { params: { lang: string } }) 
     ],
   }
 
-  const jsonLdWebApp = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
+  const jsonLdWebApp = buildToolJsonLd({
     name: dict.home.card3_title,
     description: dict.home.card3_desc,
-    applicationCategory: 'DeveloperApplication',
-    operatingSystem: 'Any',
     url: 'https://opskitpro.com/tools/dns-lookup',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-  }
+  })
 
   const jsonLdFAQ = {
     '@context': 'https://schema.org',
@@ -99,6 +79,34 @@ export default async function DnsPage({ params }: { params: { lang: string } }) 
         }>
           <DnsClient dict={dict} lang={lang} />
         </Suspense>
+
+        <div className="max-w-4xl mx-auto px-6 w-full">
+          <ApiUsageSnippet 
+            endpoint="GET https://opskitpro.com/api/tools/dns-lookup"
+            exampleCurl={'curl "https://opskitpro.com/api/tools/dns-lookup?domain=example.com&type=all"'}
+            exampleResponse={`{
+  "ok": true,
+  "tool": "dns-lookup",
+  "input": {
+    "domain": "example.com",
+    "type": "all"
+  },
+  "result": {
+    "a": ["93.184.215.14"],
+    "aaaa": ["2606:2800:21f:cb07:6820:80da:af6b:8b2c"],
+    "cname": [],
+    "mx": [],
+    "txt": ["v=spf1 -all"],
+    "ns": ["a.iana-servers.net.", "b.iana-servers.net."]
+  },
+  "meta": {
+    "durationMs": 42,
+    "timestamp": "2026-06-23T00:00:00.000Z"
+  }
+}`}
+          />
+        </div>
+
         <RelatedTools currentTool="dns-lookup" lang={lang} />
       </div>
       <SiteFooter dict={dict} />

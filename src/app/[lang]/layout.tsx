@@ -73,15 +73,6 @@ export async function generateMetadata({ params }: { params: { lang: string } })
       shortcut: '/favicon.ico',
       apple: '/apple-touch-icon.png',
     },
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        'en-US': '/en',
-        'zh-CN': '/zh',
-        'ja-JP': '/ja',
-        'zh-TW': '/tw',
-      },
-    }
   }
 }
 

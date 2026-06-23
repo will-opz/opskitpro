@@ -6,6 +6,8 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { RelatedTools } from '@/components/RelatedTools'
 import CloudflareTraceClient from './CloudflareTraceClient'
 
+import { buildPageMetadata, buildToolJsonLd } from '@/lib/seo'
+
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
@@ -13,24 +15,16 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   // Using a fallback directly since it might not be in the dictionary yet
   const title = lang === 'zh' ? 'Cloudflare Trace 解析' : lang === 'tw' ? 'Cloudflare Trace 解析' : lang === 'ja' ? 'Cloudflare Trace 解析' : 'Cloudflare Trace Analyzer'
   const description = lang === 'zh' ? '查看当前浏览器访问 Cloudflare 边缘节点的详细追踪信息，包括 Colo, TLS, HTTP, WARP 等状态。' : 'Analyze your connection to Cloudflare edge nodes, including Colo, TLS, HTTP, and WARP status.'
-  const url = 'https://opskitpro.com/tools/cloudflare-trace'
 
-  return {
+  return buildPageMetadata(
     title,
     description,
-    keywords: 'cloudflare trace, cloudflare colo, cloudflare warp, pop, /cdn-cgi/trace',
-    openGraph: {
-      title: `${title} | OpsKitPro`,
-      description,
-      url,
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${title} | OpsKitPro`,
-      description,
+    lang,
+    '/tools/cloudflare-trace',
+    {
+      keywords: 'cloudflare trace, cloudflare colo, cloudflare warp, pop, /cdn-cgi/trace',
     }
-  }
+  )
 }
 
 export default async function CloudflareTracePage({ params }: { params: { lang: string } }) {
@@ -50,20 +44,11 @@ export default async function CloudflareTracePage({ params }: { params: { lang: 
     ],
   }
 
-  const jsonLdWebApp = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
+  const jsonLdWebApp = buildToolJsonLd({
     name: title,
     description: description,
-    applicationCategory: 'DeveloperApplication',
-    operatingSystem: 'Any',
     url: 'https://opskitpro.com/tools/cloudflare-trace',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-  }
+  })
 
   const jsonLdFAQ = {
     '@context': 'https://schema.org',

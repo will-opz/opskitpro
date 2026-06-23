@@ -9,6 +9,20 @@ import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import { getBlogPosts } from '@/content/blog-posts'
+import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/seo'
+
+export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
+  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw"
+  const dict = await getDictionary(lang)
+  
+  return buildPageMetadata(
+    dict.nav.blog || 'Blog | OpsKitPro',
+    'A public hub for OpsKitPro tool notes, operations guides, and implementation records.',
+    lang,
+    '/blog'
+  )
+}
 
 export default async function BlogPage({ params }: { params: { lang: string } }) {
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
