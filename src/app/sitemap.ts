@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/time',
     '/tools/encode',
     '/tools/prompt-builder',
+    '/tools/api',
   ]
 
   const errorRoutes = getCloudflareErrors().map(e => `/errors/${e.code}`)
