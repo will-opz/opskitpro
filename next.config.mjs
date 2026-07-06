@@ -53,6 +53,25 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      {
+        source: '/tools/ip',
+        destination: '/tools/ip-lookup', // Middleware will handle the language prefix automatically
+        permanent: true, // 301 redirect for SEO
+      },
+      {
+        source: '/zh/tools/ip',
+        destination: '/zh/tools/ip-lookup',
+        permanent: true,
+      },
+      {
+        source: '/en/tools/ip',
+        destination: '/en/tools/ip-lookup',
+        permanent: true,
+      }
+    ]
+  },
   // Middleware handles the /zh and /en path mapping and locale cookies
 };
 

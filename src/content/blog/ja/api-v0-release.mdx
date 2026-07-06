@@ -1,0 +1,47 @@
+---
+title: "OpsKitPro Public JSON API v0 リリース：DNS、IP、HTTPチェック API が公開されました"
+summary: "開発者向けの Public JSON API をお試しください。認証不要で、curl に最適化された DNS、IP検索、および SSRF 防御を備えた HTTP 診断機能をサポート。"
+publishedAt: "2026-06-23"
+readTime: "4 min"
+category: "Release"
+tags: ["api", "dns", "http", "devops"]
+coverImage: "/blog-covers/why-opskitpro.svg"
+accent: "from-emerald-500/10 via-teal-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/api"
+related: ["diagnostic-tools-overview"]
+---
+
+## Introduction / 简介
+
+OpsKitPro is thrilled to announce the launch of our Public JSON API v0. While our web UI is great for quick manual checks, we know that DevOps, SREs, and developers need programmable access to build automations, CI/CD integrations, and AI agent workflows.
+
+That is why we have extracted our core diagnostic engines into a set of clean, fast, and free public API endpoints.
+
+## What is Included in v0? / v0 包含哪些能力？
+
+The v0 release introduces three foundational diagnostic APIs, all returning a standardized JSON envelope:
+
+- **DNS Lookup API**: Fetch global A, AAAA, MX, TXT, and CNAME records instantly.
+- **IP Lookup API**: Get accurate GeoIP, ISP, ASN, and Proxy/VPN detection signals.
+- **HTTP Check API**: Perform deep HTTP diagnostics with full redirect chain tracing and header analysis.
+
+## Built for Curl and Scripts / 为自动化而生
+
+The API requires absolutely no authentication or API keys to start using. It is rate-limited fairly at 60 requests per minute per IP.
+
+Try it out right now in your terminal:
+
+- `curl -s "https://opskitpro.com/api/tools/dns-lookup?domain=example.com" | jq`
+- `curl -s "https://opskitpro.com/api/tools/ip-lookup?ip=8.8.8.8" | jq`
+- `curl -s "https://opskitpro.com/api/tools/http-check?url=https://example.com" | jq`
+
+## Enterprise-Grade Security (SSRF Protection)
+
+Opening up an HTTP Check API to the public comes with immense security responsibilities. OpsKitPro v0 implements rigorous SSRF (Server-Side Request Forgery) mitigations.
+
+Our HTTP engine strictly enforces `http`/`https` protocols, blocks non-standard ports, and manually intercepts every single redirect hop to validate that the target hostname does not resolve to a private or internal network (DNS Rebinding protection).
+
+## Read the Documentation / 查看文档
+
+For full details on endpoint parameters, response schemas, and rate limits, please visit our Developer API portal.

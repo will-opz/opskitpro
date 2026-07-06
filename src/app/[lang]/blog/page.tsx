@@ -8,7 +8,7 @@ import {
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
-import { getBlogPosts } from '@/content/blog-posts'
+import { getAllBlogPosts } from '@/lib/blog'
 import { Metadata } from 'next'
 import { buildPageMetadata } from '@/lib/seo'
 
@@ -29,7 +29,7 @@ export default async function BlogPage({ params }: { params: { lang: string } })
   const dict = await getDictionary(lang)
   const isZh = lang === 'zh'
   const isJapanese = lang === 'ja'
-  const posts = getBlogPosts(lang)
+  const posts = getAllBlogPosts(lang)
   const postsBySlug = new Map(posts.map((post) => [post.slug, post]))
   const totalPosts = posts.length
   const kbLabel = isJapanese ? '公開ナレッジ' : isZh ? '公开知识库' : lang === 'tw' ? '公開知識庫' : 'Public Knowledge Base'
@@ -280,7 +280,7 @@ export default async function BlogPage({ params }: { params: { lang: string } })
                   >
                     <div className="relative aspect-[16/10] overflow-hidden">
                       <Image
-                        src={post.coverImage}
+                        src={post.coverImage || ''}
                         alt={post.title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
@@ -289,7 +289,7 @@ export default async function BlogPage({ params }: { params: { lang: string } })
                       <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
                       <div className="absolute left-4 top-4 flex items-center gap-2">
                         <span className="rounded-full bg-white/90 px-3 py-1 text-[9px] font-bold tracking-[0.22em] text-zinc-700 backdrop-blur-md">
-                          {post.tag}
+                          {post.category || 'Blog'}
                         </span>
                         <span className="rounded-full border border-white/20 bg-zinc-950/75 px-3 py-1 text-[9px] font-semibold tracking-[0.18em] text-white backdrop-blur-md">
                           {post.actionKind === 'tool'
@@ -313,7 +313,7 @@ export default async function BlogPage({ params }: { params: { lang: string } })
 
                     <div className="flex h-full flex-col p-6">
                       <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-                        <span>{post.date}</span>
+                        <span>{post.publishedAt}</span>
                         <span className="inline-flex items-center gap-1 text-emerald-600">
                           <Clock className="h-3 w-3" />
                           {post.readTime}

@@ -6,18 +6,21 @@ import { ArrowLeft, ArrowRight, BookOpen, Calendar, Clock } from 'lucide-react'
 import { getDictionary } from '@/dictionaries'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
-import { getBlogPost, getBlogPostSlugs, getBlogPosts } from '@/content/blog-posts'
-
+import { MDXRemote } from 'next-mdx-remote/rsc'
+import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/blog'
+import { LegacyBlogRenderer } from '@/components/blog/legacy-blog-renderer'
+import { mdxComponents } from '@/components/blog/mdx-components'
 import { buildPageMetadata, buildTechArticleJsonLd } from '@/lib/seo'
 
 export function generateStaticParams() {
-  return getBlogPostSlugs().map((slug) => ({ slug }))
+  const posts = getAllBlogPosts('en')
+  return posts.map((post) => ({ slug: post.slug }))
 }
 
 export async function generateMetadata({ params }: { params: { lang: string, slug: string } }): Promise<Metadata> {
   const { slug } = params
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const post = getBlogPost(slug, lang)
+  const post = getBlogPostBySlug(lang, slug)
 
   if (!post) {
     return {
@@ -33,7 +36,7 @@ export async function generateMetadata({ params }: { params: { lang: string, slu
     {
       openGraph: {
         type: 'article',
-        images: [{ url: post.coverImage }],
+        images: [{ url: post.coverImage || '' }],
       }
     }
   )
@@ -43,22 +46,22 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
   const { slug } = params
   const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
   const dict = await getDictionary(lang)
-  const post = getBlogPost(slug, lang)
+  const post = getBlogPostBySlug(lang, slug)
 
   if (!post) {
     notFound()
   }
 
   const isToolArticle = post.actionKind === 'tool'
-  const relatedPosts = getBlogPosts(lang)
+  const relatedPosts = getAllBlogPosts(lang)
     .filter((entry) => post.related.includes(entry.slug))
     .slice(0, 3)
 
   const jsonLd = buildTechArticleJsonLd({
     headline: post.title,
     description: post.summary,
-    datePublished: post.date,
-    imageUrl: post.coverImage,
+    datePublished: post.publishedAt,
+    imageUrl: post.coverImage || '',
     url: `https://opskitpro.com/${lang}/blog/${slug}`,
   })
 
@@ -87,11 +90,11 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
           <div className="border-b border-zinc-100 px-6 py-6 sm:px-10 sm:py-8">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-emerald-500/20 bg-emerald-500/8 px-4 py-1.5 text-[10px] font-semibold tracking-[0.24em] text-emerald-600">
-                {post.tag}
+                {post.category || 'Blog'}
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-zinc-400">
                 <Calendar className="h-3.5 w-3.5" />
-                {post.date}
+                {post.publishedAt}
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-zinc-400">
                 <Clock className="h-3.5 w-3.5" />
@@ -126,9 +129,9 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
                 </div>
 
                 <a
-                  href={post.ctaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={post.ctaPath ? `/${lang}${post.ctaPath}` : '#'}
+                  target={post.ctaPath?.startsWith('http') ? '_blank' : undefined}
+                  rel={post.ctaPath?.startsWith('http') ? 'noopener noreferrer' : undefined}
                   className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
                 >
                   {isToolArticle
@@ -150,19 +153,21 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
                 </a>
               </div>
 
-              <figure className="overflow-hidden rounded-[2rem] border border-zinc-100 bg-zinc-950 shadow-sm">
-                <div className="relative aspect-[16/10]">
-                  <Image
-                    src={post.coverImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 420px"
-                    priority
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
-                </div>
-              </figure>
+              {post.coverImage ? (
+                <figure className="overflow-hidden rounded-[2rem] border border-zinc-100 bg-zinc-950 shadow-sm">
+                  <div className="relative aspect-[16/10]">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 420px"
+                      priority
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`} />
+                  </div>
+                </figure>
+              ) : null}
             </div>
           </div>
 
@@ -196,53 +201,13 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
                   {lang === 'ja' ? '本文' : lang === 'zh' ? '正文' : lang === 'tw' ? '正文' : 'Article body'}
                 </div>
-                <div className="mt-6 space-y-10">
-                  {post.sections.map((section, index) => (
-                    <section key={`${section.heading}-body`} className="border-b border-zinc-100 pb-8 last:border-b-0 last:pb-0">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-2xl font-black tracking-tight text-zinc-900">{section.heading}</h2>
-                        <span className="rounded-full border border-emerald-500/15 bg-emerald-500/8 px-2.5 py-1 text-[10px] font-semibold tracking-[0.22em] text-emerald-600">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                      </div>
-
-                      <div className="mt-5 space-y-5">
-                        {section.paragraphs.map((paragraph, paragraphIndex) => (
-                          <p key={`${section.heading}-${paragraphIndex}`} className="text-[15px] leading-8 text-zinc-700">
-                            {paragraph}
-                          </p>
-                        ))}
-                      </div>
-
-                      {section.bullets?.length ? (
-                        <ul className="mt-6 space-y-3 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-5 text-[15px] leading-7 text-zinc-700">
-                          {section.bullets.map((bullet, bulletIndex) => (
-                            <li key={`${section.heading}-bullet-${bulletIndex}`} className="flex gap-3">
-                              <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                              <span>{bullet}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-
-                      {section.files?.length ? (
-                        <div className="mt-6 flex flex-wrap gap-2">
-                          <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-zinc-500">
-                            {lang === 'ja' ? '参考ファイル' : lang === 'zh' ? '参考文件' : lang === 'tw' ? '參考檔案' : 'Reference files'}
-                          </span>
-                          {section.files.map((file) => (
-                            <span
-                              key={file}
-                              className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] text-zinc-600"
-                            >
-                              {file}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </section>
-                  ))}
-                </div>
+                {post.source === 'mdx' && post.content ? (
+                  <article className="mt-6 prose prose-zinc prose-emerald max-w-none">
+                    <MDXRemote source={post.content} components={mdxComponents} />
+                  </article>
+                ) : post.sections ? (
+                  <LegacyBlogRenderer sections={post.sections} lang={lang} />
+                ) : null}
               </div>
             </div>
 
@@ -330,9 +295,9 @@ export default async function BlogPost({ params }: { params: { lang: string, slu
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
-                    href={post.ctaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={post.ctaPath ? `/${lang}${post.ctaPath}` : '#'}
+                    target={post.ctaPath?.startsWith('http') ? '_blank' : undefined}
+                    rel={post.ctaPath?.startsWith('http') ? 'noopener noreferrer' : undefined}
                     className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
                   >
                     {isToolArticle
