@@ -145,7 +145,7 @@ export default function CloudflareTraceClient({
       panel2: 'Encryption & Protocol',
       targetPlaceholder: 'example.com',
       targetBtn: 'Trace Target',
-      targetHint: 'This checks the target from OpsKitPro’s Cloudflare Worker, not from your browser.',
+      targetHint: 'This checks the target from OpsKitPro’s server-side probe, not from your browser.',
       notCfTitle: 'Cloudflare Trace Not Available',
       notCfDesc: 'The target may not be using Cloudflare, or it blocks the /cdn-cgi/trace path.',
     },

@@ -238,7 +238,7 @@ const defaultItems: NavItem[] = [
   { id: 'encode', title: 'Encode Tool', description: 'Base64, URL encoding and JWT payload decode', url: '/tools/encode', category: 'dev', tags: ['base64', 'jwt'], kind: 'builtin' },
   { id: 'prompt-builder', title: 'Prompt Builder', description: 'Engineering prompts for AI coding agents', url: '/tools/prompt-builder', category: 'ai', tags: ['prompt', 'agent'], kind: 'builtin', pinned: true },
   { id: 'blog', title: 'OpsKitPro Blog', description: 'Public notes, tool design and SRE reflections', url: '/blog', category: 'docs', tags: ['kb', 'notes'], kind: 'builtin' },
-  { id: 'cloudflare', title: 'Cloudflare Dashboard', description: 'Edge, DNS, WAF and Workers console', url: 'https://dash.cloudflare.com', category: 'ops', tags: ['cloudflare', 'edge'], kind: 'external', pinned: true },
+  { id: 'cloudflare', title: 'Cloudflare Dashboard', description: 'Edge, DNS and WAF console', url: 'https://dash.cloudflare.com', category: 'ops', tags: ['cloudflare', 'edge'], kind: 'external', pinned: true },
   { id: 'github', title: 'GitHub OpsKitPro', description: 'Public repository and CI/CD history', url: 'https://github.com/will-opz/opskitpro', category: 'dev', tags: ['github', 'ci'], kind: 'external', pinned: true },
   { id: 'cloudflare-status', title: 'Cloudflare Status', description: 'Cloudflare incidents and component health', url: 'https://www.cloudflarestatus.com/', category: 'ops', tags: ['status'], kind: 'external' },
   { id: 'github-status', title: 'GitHub Status', description: 'GitHub incidents and component health', url: 'https://www.githubstatus.com/', category: 'dev', tags: ['status'], kind: 'external' },

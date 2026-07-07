@@ -15,15 +15,13 @@
     "test:e2e:watch": "playwright test --headed --workers=1 --project=chromium",
     "test:e2e:ui": "playwright test --ui",
     "package:standalone": "bash scripts/package-standalone.sh",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "deploy:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "npm run package:standalone",
     "check:forbidden-imports": "grep -R \"cloudflare:sockets\" src >/dev/null && exit 1 || exit 0",
     "verify:fast": "npm run check:forbidden-imports && npm run build && npm run test",
     "verify": "npm run verify:fast && npm run test:e2e:clean"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.5.10",
-    "@opennextjs/cloudflare": "^1.15.1",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
     "clsx": "^2.1.1",
@@ -63,7 +61,6 @@
     "postcss": "^8.4.49",
     "tailwindcss": "3.4.17",
     "typescript": "5.6.3",
-    "vitest": "^4.1.2",
-    "wrangler": "^4.77.0"
+    "vitest": "^4.1.2"
   }
 }

@@ -503,16 +503,16 @@ const posts: BlogPost[] = [
     actionKind: 'kb',
     coverImage: '/blog-covers/services-standardization.svg',
     titles: {
-      zh: '服务矩阵、国际化与 Cloudflare 部署：OpsKitPro 的工程收口',
-      en: "Service matrix, i18n, and Cloudflare deployment: OpsKitPro's engineering wrap-up",
-      ja: 'サービスマトリクス、i18n、Cloudflare デプロイ: OpsKitPro の工程整理',
-      tw: '服務矩陣、國際化與 Cloudflare 部署：OpsKitPro 的工程收斂',
+      zh: '服务矩阵、国际化与 Lightsail 部署：OpsKitPro 的工程收口',
+      en: "Service matrix, i18n, and Lightsail deployment: OpsKitPro's engineering wrap-up",
+      ja: 'サービスマトリクス、i18n、Lightsail デプロイ: OpsKitPro の工程整理',
+      tw: '服務矩陣、國際化與 Lightsail 部署：OpsKitPro 的工程收斂',
     },
     summaries: {
-      zh: '把普通工具统一成标准卡片，Tools 保留独立风格，再把整站部署到 Cloudflare Workers。',
-      en: 'Standardize the regular tools into one card system, keep Tools distinct, and deploy everything to Cloudflare Workers.',
-      ja: '通常ツールを標準カードへ揃え、Tools は独立した表現を保ったまま Workers にデプロイしています。',
-      tw: '把普通工具統一成標準卡片，Tools 保留獨立風格，再把整站部署到 Cloudflare Workers。',
+      zh: '把普通工具统一成标准卡片，Tools 保留独立风格，再把整站收束到 Lightsail standalone Node 部署。',
+      en: 'Standardize the regular tools into one card system, keep Tools distinct, and deploy the product as a Lightsail standalone Node service.',
+      ja: '通常ツールを標準カードへ揃え、Tools は独立した表現を保ったまま Lightsail standalone Node へデプロイしています。',
+      tw: '把普通工具統一成標準卡片，Tools 保留獨立風格，再把整站收斂到 Lightsail standalone Node 部署。',
     },
     sections: [
       {
@@ -532,12 +532,12 @@ const posts: BlogPost[] = [
         files: ['src/middleware.ts', 'src/components/LanguageToggle.tsx', 'src/dictionaries.ts'],
       },
       {
-        heading: 'Cloudflare Workers 是这个项目的落点',
+        heading: 'Lightsail standalone Node 是当前产品运行时',
         paragraphs: [
-          '整个站点最终跑在 Cloudflare Workers 上，通过 OpenNext 做 Next.js 的适配和边缘部署。这样做的好处很明显：边缘就近、诊断场景一致、部署流程单一，也更符合这个项目“运维工具要快”的定位。',
+          '主站现在以 Next.js standalone Node 服务运行在 AWS Lightsail 上，由 Nginx 承接入口流量。这让诊断工具可以使用更完整的 Node.js 运行时，也让产品主站和私有运维后台保持更一致的部署模型。',
           '博客、README、Backlog 和实际页面一起更新，也是在强调一个点：这个项目不是先写文档再做产品，而是产品、文章和工程记录同步推进。',
         ],
-        files: ['src/app/layout.tsx', 'wrangler.jsonc', 'open-next.config.ts', 'README.md', 'OpsKitPro_Backlog.md'],
+        files: ['src/app/layout.tsx', 'scripts/package-standalone.sh', 'README.md', 'OpsKitPro_Backlog.md'],
       },
     ],
     related: ['why-opskitpro', 'design-principles', 'ip-dns-module', 'passgen-tool', 'qrgen-tool', 'json-tool', 'websocket-tool'],

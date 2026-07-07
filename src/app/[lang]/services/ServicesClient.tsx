@@ -260,7 +260,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: Lang }
       category: isJapanese ? 'SRE ステータス' : (lang === 'zh' ? 'SRE 状态面板' : lang === 'tw' ? 'SRE 狀態面板' : 'SRE Status'),
       scene: 'ops',
       tools: [
-        { name: 'Cloudflare Status', desc: 'Edge, DNS, WAF, Workers status', icon: Shield, status: 'operational', url: 'https://www.cloudflarestatus.com/', scene: 'ops', tags: ['edge', 'status'], favorite: true, pinned: true, external: true, accent: 'orange' },
+        { name: 'Cloudflare Status', desc: 'Edge, DNS, WAF status', icon: Shield, status: 'operational', url: 'https://www.cloudflarestatus.com/', scene: 'ops', tags: ['edge', 'status'], favorite: true, pinned: true, external: true, accent: 'orange' },
         { name: 'AWS Health', desc: 'AWS service health and events', icon: Cloud, status: 'operational', url: 'https://health.aws.amazon.com/health/status', scene: 'ops', tags: ['cloud', 'status'], favorite: true, pinned: true, external: true, accent: 'amber' },
         { name: 'GitHub Status', desc: 'GitHub incidents and component health', icon: GitMerge, status: 'operational', url: 'https://www.githubstatus.com/', scene: 'dev', tags: ['git', 'status'], favorite: true, pinned: true, external: true, accent: 'zinc' },
         { name: 'OpenAI Status', desc: 'API, ChatGPT, model platform health', icon: Brain, status: 'operational', url: 'https://status.openai.com/', scene: 'ai', tags: ['ai', 'status'], favorite: true, pinned: true, external: true, accent: 'emerald' },
@@ -300,7 +300,7 @@ export default function ServicesClient({ dict, lang }: { dict: any, lang: Lang }
       scene: 'ops',
       tools: [
         { name: 'AWS Console', desc: 'Primary Cloud Provider', icon: Cloud, status: 'operational', url: 'https://aws.amazon.com/console/', scene: 'ops', tags: ['cloud', 'console'], favorite: true, pinned: true, external: true, accent: 'amber' },
-        { name: 'Cloudflare', desc: 'Edge Network & WAF', icon: Shield, status: 'operational', url: 'https://dash.cloudflare.com', scene: 'ops', tags: ['edge', 'waf'], favorite: true, pinned: true, external: true, accent: 'orange' },
+        { name: 'Cloudflare', desc: 'Edge, DNS & WAF', icon: Shield, status: 'operational', url: 'https://dash.cloudflare.com', scene: 'ops', tags: ['edge', 'waf'], favorite: true, pinned: true, external: true, accent: 'orange' },
         { name: 'Kubernetes', desc: 'Container Orchestration', icon: Server, status: 'operational', url: 'https://kubernetes.io', scene: 'ops', tags: ['container', 'cluster'], external: true, accent: 'blue' },
       ],
     },

@@ -21,12 +21,5 @@ export function getRequestCloudflareMetadata(request: NextRequest) {
 }
 
 export async function getCloudflareRuntimeContext(): Promise<CloudflareRuntimeContext> {
-  if (process.env.OPSKITPRO_RUNTIME === 'node') return {}
-
-  try {
-    const cloudflare = await import('@opennextjs/cloudflare')
-    return await cloudflare.getCloudflareContext()
-  } catch {
-    return {}
-  }
+  return {}
 }

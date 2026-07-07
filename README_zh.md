@@ -66,9 +66,8 @@ opskitpro.com (主站 — Next.js 14 standalone on AWS Lightsail)
 3. [website-check 的实现拆解：为什么要做并行探测](https://opskitpro.com/blog/website-check-module)
 4. [IP Lookup：为什么要返回结构化兜底结果](https://opskitpro.com/blog/ip-lookup)
 5. [DNS Lookup：为什么要做多 resolver 交叉验证](https://opskitpro.com/blog/dns-lookup)
-6. [服务矩阵标准化与 Cloudflare 部署路径](https://opskitpro.com/blog/services-deployment)
-7. [OpsKitPro 为什么最终跑在 Cloudflare Workers 上](https://opskitpro.com/blog/cloudflare-workers-deployment)
-8. [翻到 8 年前自己在 V2EX 的回复，发现当年我真低估了 Git](https://opskitpro.com/blog/underestimating-git)
+6. [服务矩阵标准化与生产部署路径](https://opskitpro.com/blog/services-deployment)
+7. [翻到 8 年前自己在 V2EX 的回复，发现当年我真低估了 Git](https://opskitpro.com/blog/underestimating-git)
 
 > 文章正文直接在主站中阅读，主站保留多语言标题、摘要和入口。
 
@@ -80,7 +79,6 @@ opskitpro.com (主站 — Next.js 14 standalone on AWS Lightsail)
 |-------|-----------|
 | **框架** | [Next.js 14](https://nextjs.org/) (App Router + standalone 构建) |
 | **运行时** | Node.js standalone on AWS Lightsail |
-| **Cloudflare 适配器** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)，仅保留 legacy/manual Worker 构建路径 |
 | **样式** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **图标** | [Lucide React](https://lucide.dev/) |
 | **测试** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
@@ -98,12 +96,6 @@ git clone https://github.com/will-opz/opskitpro.git
 cd opskitpro
 npm install
 npm run dev
-```
-
-### 部署至 Cloudflare
-```bash
-# Legacy Worker deploy path. Production currently runs on AWS Lightsail.
-npm run deploy:cloudflare
 ```
 
 ### 打包 AWS Lightsail
@@ -136,7 +128,6 @@ OPSKITPRO_ADMIN_EMAILS=
 - 主站和工具代码
 - 公开博客和工具文档
 - 测试与 CI/CD workflow
-- 不含密钥的 legacy Cloudflare Worker 配置
 
 私有运营数据不放在这里。private 仓库包含：
 

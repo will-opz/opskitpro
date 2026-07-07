@@ -78,9 +78,8 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 3. [How the website-check module works: a breakdown of the implementation](https://opskitpro.com/blog/website-check-module)
 4. [IP lookup: returning structured fallback data instead of hard failure](https://opskitpro.com/blog/ip-lookup)
 5. [DNS lookup: why multi-resolver cross-checking matters](https://opskitpro.com/blog/dns-lookup)
-6. [Service matrix standardization and the Cloudflare deployment path](https://opskitpro.com/blog/services-deployment)
-7. [Why OpsKitPro runs on Cloudflare Workers](https://opskitpro.com/blog/cloudflare-workers-deployment)
-8. [Looking back at SVN, Git, and the shift toward modern engineering workflows](https://opskitpro.com/blog/underestimating-git)
+6. [Service matrix standardization and the production deployment path](https://opskitpro.com/blog/services-deployment)
+7. [Looking back at SVN, Git, and the shift toward modern engineering workflows](https://opskitpro.com/blog/underestimating-git)
 
 > The articles are read directly on the main site. The homepage keeps localized titles, summaries, and entry points only.
 
@@ -92,7 +91,6 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 |-------|-----------|
 | **Framework** | [Next.js 14](https://nextjs.org/) (App Router + standalone build) |
 | **Runtime** | Node.js standalone on AWS Lightsail |
-| **Cloudflare Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) retained for legacy/manual Worker builds |
 | **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
@@ -110,12 +108,6 @@ git clone https://github.com/will-opz/opskitpro.git
 cd opskitpro
 npm install
 npm run dev
-```
-
-### Deploy to Cloudflare
-```bash
-# Legacy Worker deploy path. Production currently runs on AWS Lightsail.
-npm run deploy:cloudflare
 ```
 
 ### Package for AWS Lightsail
@@ -141,7 +133,6 @@ The repository also includes GitHub Actions CI/CD:
 
 - pull requests to `main`: install, test, and build
 - pushes to `main`: install, test, build, package standalone, upload to Lightsail, restart systemd
-- Cloudflare Worker deploy is retained as a legacy/manual path only
 
 Lightsail workflow secrets:
 
@@ -165,7 +156,7 @@ Recommended Cloudflare Access policy:
 - allow only the same emails configured in `OPSKITPRO_ADMIN_EMAILS`
 - keep public tools, `/api/admin/session`, and `/api/diagnostic` outside Access so anonymous users can browse and run public diagnostics without a login challenge
 
-Keep real values in Cloudflare Worker environment variables or secrets, not in Git.
+Keep real values in server environment variables or GitHub Secrets, not in Git.
 
 ---
 
@@ -176,7 +167,6 @@ This public repository intentionally contains only the product-facing project:
 - main website and tool code
 - public product pages and blog data required by the site
 - tests and CI/CD workflow
-- Cloudflare Worker configuration without secrets
 
 Private operations data is kept out of this repository. `opskitpro-ops` contains:
 
