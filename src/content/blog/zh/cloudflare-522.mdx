@@ -1,0 +1,91 @@
+---
+title: "Cloudflare 522 报错：别急着骂它，先搞清楚谁的锅"
+summary: "Cloudflare 522 意味着 Cloudflare 想连你的源站，但 TCP 连接超时了。本文拆解四种最常见的原因，帮你按顺序快速定位。"
+publishedAt: "2026-07-07"
+readTime: "5 min"
+category: "Guide"
+tags: ["cloudflare", "522", "cdn", "sre", "故障排查", "运维"]
+coverImage: "/blog-covers/website-check.svg"
+accent: "from-orange-500/10 via-red-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/website-check"
+related: ["website-diagnostic-report", "diagnostic-tools-overview"]
+---
+
+## 522 到底是什么意思
+
+522 是 Cloudflare 生成的 **Connection Timed Out** 响应，不是你的源站返回的。
+
+关键区别：用户浏览器成功连上了 Cloudflare，但 Cloudflare 在超时时间内没能和你的源站完成 TCP 握手。
+
+翻成人话：
+
+- 用户 → Cloudflare：**正常**
+- Cloudflare → 源站：**超时**
+
+这不是 Cloudflare 自身故障。几乎都是 Cloudflare 和你源站之间的问题。
+
+## 四种最常见的原因
+
+### 1. 源站防火墙拦了 Cloudflare 的 IP
+
+这是最常见的原因。
+
+Cloudflare 代理流量时，连接源站使用的是自己的 IP 段，不是访客的 IP。如果你的源站防火墙、安全组或 WAF 没有放行 Cloudflare 公布的 IP 段，来自 Cloudflare 的连接会被静默丢弃。
+
+而你本地或监控探测源站，走的是不同的 IP 路径，所以看起来一切正常。
+
+**怎么验证**：检查源站 80、443 端口的防火墙规则，确认 Cloudflare IP 段已明确放行。
+
+### 2. 源站负载打满
+
+CPU 飙升、连接 backlog 满了、应用 worker 线程耗尽，源站就无法接受新的 TCP 连接，即使进程本身还在跑。
+
+高峰期出现间歇性 522，往往就是这个原因。
+
+**怎么验证**：查 522 发生时刻的源站 CPU、内存、连接数，以及 Nginx 和应用的 error log。
+
+### 3. 源站网络或路由异常
+
+云厂商网络事件、刚刚改过安全组、或者源站路由不稳，都可能让 Cloudflare 边缘节点连不进来，即使源站对别的地方仍然可达。
+
+这类问题在本地最难复现，因为你自己的网络路径和 Cloudflare 的不同。
+
+**怎么验证**：用 Cloudflare Trace 确认当前是哪个边缘节点在处理请求，然后从同区域的服务器测源站连通性。
+
+### 4. DNS 指向了错误的源站
+
+如果 Cloudflare DNS 里的 A 记录指向了旧机器、已下线的 IP 或 Cloudflare 无法访问的内网地址，不管源站健不健康，连接都会超时。
+
+**怎么验证**：在 Cloudflare 控制台检查 DNS A 记录，确认 IP 是当前正在运行的源站。
+
+## 建议的排查顺序
+
+看到 522，在动手改任何配置之前，先按这个顺序走一遍：
+
+1. **检查源站 80/443 端口**：服务真的在监听吗？（`ss -tlnp` 或 `netstat`）
+2. **检查防火墙规则**：Cloudflare IP 段有没有放行 80 和 443 入站？
+3. **检查源站负载**：故障时刻的 CPU、内存、连接数、Nginx worker 状态。
+4. **检查 DNS 记录**：Cloudflare 里的 A 记录是不是指向正确的源站？
+5. **看 Nginx 和应用日志**：故障时间段有没有对应的请求记录？没有记录说明连接在到达应用之前就被拦了；有记录但有报错说明是应用层问题。
+
+按顺序走，大多数 522 的答案在第 1 到第 4 步就能找到。
+
+## 522 和附近错误码的区别
+
+| 错误码 | 含义 |
+|-------|------|
+| 521 | 源站拒绝了 TCP 连接（RST）|
+| **522** | **TCP 连接在完成握手前超时** |
+| 523 | 源站不可达（DNS 失败或无路由）|
+| 524 | 连接建立成功，但源站响应太慢 |
+| 525 | Cloudflare 与源站之间 SSL 握手失败 |
+| 526 | Cloudflare 无法验证源站 SSL 证书 |
+
+522 介于 521（直接拒绝）和 524（响应太慢）之间。每个错误码指向不同的栈层级，区分清楚才能不走冤枉路。
+
+## 用 Website Check 快速拿到第一手数据
+
+手动逐项检查比较费时，你可以直接用 [Website Check](/tools/website-check)，一次拿到 DNS 解析、HTTP 状态、SSL 有效性、CDN 检测和结构化 findings。
+
+遇到 522 场景，报告会把源站连通性列为 finding，标出可能原因，并给出具体验证步骤，帮你直接定位应该先查哪一层。
