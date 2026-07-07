@@ -16,8 +16,9 @@ import {
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAdminSession } from '@/components/AdminSessionProvider'
+import { type ActiveLocale, type Locale } from '@/lib/i18n'
 
-export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
+export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAccountOpen, setIsAccountOpen] = useState(false)
   const pathname = usePathname()
@@ -80,7 +81,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
           <Fingerprint className={`w-4 h-4 ${isActive('/about') ? 'text-emerald-500' : ''}`} /> {dict.nav.about}
         </Link>
         <div className="ml-2 flex items-center gap-2 border-l border-[var(--border-subtle)] pl-3">
-          <LanguageToggle currentLang={lang} />
+          <LanguageToggle currentLang={lang as ActiveLocale} />
           <ThemeToggle />
         </div>
 
@@ -188,7 +189,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja'
               )}
 
               <div className="mt-2 flex items-center justify-between border-t border-[var(--border-subtle)] px-1 pt-3">
-                <LanguageToggle currentLang={lang} />
+                <LanguageToggle currentLang={lang as ActiveLocale} />
                 <div className="flex items-center gap-2">
                   <Link href="https://github.com/will-opz/opskitpro" target="_blank" onClick={() => setIsMenuOpen(false)} className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]">
                     <Github className="h-5 w-5" />

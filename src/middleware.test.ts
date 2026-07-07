@@ -54,6 +54,34 @@ describe('middleware — locale redirection', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('location')).toBeNull()
   })
+
+  it('redirects localized admin paths back to root admin', async () => {
+    const req = makeRequest('/en/admin')
+    const res = await middleware(req)
+    expect(res.status).toBe(301)
+    expect(res.headers.get('location')).toBe('http://localhost/admin')
+  })
+
+  it('redirects retired localized admin paths back to root admin', async () => {
+    const req = makeRequest('/ja/admin/profile')
+    const res = await middleware(req)
+    expect(res.status).toBe(301)
+    expect(res.headers.get('location')).toBe('http://localhost/admin/profile')
+  })
+
+  it('permanently redirects retired Japanese paths to English', async () => {
+    const req = makeRequest('/ja/tools/website-check')
+    const res = await middleware(req)
+    expect(res.status).toBe(301)
+    expect(res.headers.get('location')).toBe('http://localhost/en/tools/website-check')
+  })
+
+  it('permanently redirects retired Traditional Chinese paths to Simplified Chinese', async () => {
+    const req = makeRequest('/tw/blog/api-v0-release')
+    const res = await middleware(req)
+    expect(res.status).toBe(301)
+    expect(res.headers.get('location')).toBe('http://localhost/zh/blog/api-v0-release')
+  })
 })
 
 describe('middleware — locale cookie', () => {
@@ -79,6 +107,14 @@ describe('middleware — locale cookie', () => {
     // Does not re-set the cookie because it already matches
     const setCookie = res.headers.get('set-cookie')
     expect(setCookie).toBeNull()
+  })
+
+  it('ignores retired NEXT_LOCALE cookies when redirecting locale-less paths', async () => {
+    const req = makeRequest('/services', 'ja')
+    const res = await middleware(req)
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('http://localhost/en/services')
+    expect(res.headers.get('set-cookie')).toContain('NEXT_LOCALE=en')
   })
 
   it('sets cookie with SameSite=Lax during redirect', async () => {

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { getDictionary } from '@/dictionaries'
 import { AdminSessionProvider } from '@/components/AdminSessionProvider'
+import { ACTIVE_LOCALES, LOCALE_MAP, type Locale } from '@/lib/i18n'
 import '../globals.css'
 
 const themeInitScript = `
@@ -16,7 +17,7 @@ const themeInitScript = `
 `
 
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
+  const lang = (params.lang || "en") as Locale;
   const dict = await getDictionary(lang);
   
   const baseUrl = 'https://opskitpro.com';
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: { params: { lang: string } })
           height: 630,
         },
       ],
-      locale: lang === 'zh' ? 'zh_CN' : lang === 'ja' ? 'ja_JP' : lang === 'tw' ? 'zh_TW' : 'en_US',
+      locale: (LOCALE_MAP as Record<string, string>)[lang]?.replace('-', '_') || 'en_US',
       type: 'website',
     },
     twitter: {
@@ -78,12 +79,7 @@ export async function generateMetadata({ params }: { params: { lang: string } })
 
 
 export function generateStaticParams() {
-  return [
-    { lang: 'en' },
-    { lang: 'zh' },
-    { lang: 'ja' },
-    { lang: 'tw' }
-  ];
+  return ACTIVE_LOCALES.map((lang) => ({ lang }));
 }
 
 export default async function RootLayout({
@@ -93,7 +89,7 @@ export default async function RootLayout({
   children: React.ReactNode,
   params: { lang: string }
 }) {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
+  const lang = (params.lang || "en") as Locale;
   const dict = await getDictionary(lang)
   
   return (

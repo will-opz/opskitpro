@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 
 import { getCloudflareErrors } from '@/content/cloudflare-errors'
 import { getBlogPostSlugs } from '@/content/blog-posts'
+import { ACTIVE_LOCALES } from '@/lib/i18n'
 import { buildLanguageAlternates, SITE_URL } from '@/lib/seo'
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -43,7 +44,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/tools/prompt-builder',
   ]
 
-  const locales = ['en', 'zh', 'ja', 'tw']
   const allEntries: MetadataRoute.Sitemap = []
 
   routes.forEach((route) => {
@@ -57,7 +57,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     
     const alternates = buildLanguageAlternates(route)
 
-    locales.forEach((locale) => {
+    ACTIVE_LOCALES.forEach((locale) => {
       // Construct the localized URL
       const url = `${SITE_URL}/${locale}${route}`
 

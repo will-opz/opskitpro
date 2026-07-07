@@ -1,15 +1,9 @@
 import { Metadata } from 'next'
+import { ACTIVE_LOCALES, LOCALE_MAP, type Locale } from '@/lib/i18n'
 
-export type Lang = 'zh' | 'en' | 'ja' | 'tw'
+export type Lang = Locale
 
 export const SITE_URL = 'https://opskitpro.com'
-
-export const LOCALE_MAP: Record<Lang, string> = {
-  en: 'en-US',
-  zh: 'zh-CN',
-  ja: 'ja-JP',
-  tw: 'zh-TW',
-}
 
 /**
  * Builds language alternates for a given path.
@@ -20,13 +14,12 @@ export function buildLanguageAlternates(path: string) {
   // Ensure path starts with a slash if it's not empty
   const safePath = path && !path.startsWith('/') ? `/${path}` : path
   
-  return {
-    'en-US': `${SITE_URL}/en${safePath}`,
-    'zh-CN': `${SITE_URL}/zh${safePath}`,
-    'ja-JP': `${SITE_URL}/ja${safePath}`,
-    'zh-TW': `${SITE_URL}/tw${safePath}`,
+  return ACTIVE_LOCALES.reduce<Record<string, string>>((alternates, locale) => {
+    alternates[LOCALE_MAP[locale]] = `${SITE_URL}/${locale}${safePath}`
+    return alternates
+  }, {
     'x-default': `${SITE_URL}/en${safePath}`,
-  }
+  })
 }
 
 /**
@@ -58,7 +51,7 @@ export function buildPageMetadata(
       description,
       url: buildCanonicalUrl(path, lang),
       siteName: 'OpsKitPro',
-      locale: LOCALE_MAP[lang],
+      locale: (LOCALE_MAP as Record<string, string>)[lang] || 'en-US',
       type: 'website',
       ...(extraMetadata?.openGraph || {}),
     },

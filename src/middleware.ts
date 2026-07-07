@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import {
+  ACTIVE_LOCALES,
+  RETIRED_LOCALE_REDIRECTS,
+  getGeoDefaultLocale,
+  getLocaleFromPathname,
+  isActiveLocale,
+  isRetiredLocale,
+} from '@/lib/i18n'
 
 const ADMIN_COOKIE_NAME = 'opskitpro_admin'
 const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 30
@@ -67,8 +75,6 @@ function getForwardedHost(request: NextRequest) {
   return request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
 }
 
-const LOCALES = ['zh', 'en', 'ja', 'tw']
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const url = request.nextUrl.clone()
@@ -87,8 +93,38 @@ export async function middleware(request: NextRequest) {
     return attachCloudflareAccessAdminCookie(request, NextResponse.redirect(url, 301))
   }
   
-  // 1. Check if the pathname already has a locale prefix
-  const hasLocale = LOCALES.some(
+  const pathLocale = getLocaleFromPathname(pathname)
+
+  if (
+    (isActiveLocale(pathLocale) || isRetiredLocale(pathLocale))
+    && (pathname === `/${pathLocale}/admin` || pathname.startsWith(`/${pathLocale}/admin/`))
+  ) {
+    const forwardedHost = getForwardedHost(request)
+    if (forwardedHost) {
+      url.host = forwardedHost
+      if (!forwardedHost.includes(':')) {
+        url.port = ''
+      }
+    }
+    url.pathname = pathname.replace(`/${pathLocale}/admin`, '/admin')
+    return attachCloudflareAccessAdminCookie(request, NextResponse.redirect(url, 301))
+  }
+
+  if (isRetiredLocale(pathLocale)) {
+    const targetLocale = RETIRED_LOCALE_REDIRECTS[pathLocale]
+    const forwardedHost = getForwardedHost(request)
+    if (forwardedHost) {
+      url.host = forwardedHost
+      if (!forwardedHost.includes(':')) {
+        url.port = ''
+      }
+    }
+    url.pathname = pathname.replace(`/${pathLocale}`, `/${targetLocale}`)
+    return attachCloudflareAccessAdminCookie(request, NextResponse.redirect(url, 301))
+  }
+
+  // 1. Check if the pathname already has an active locale prefix
+  const hasLocale = ACTIVE_LOCALES.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
   
@@ -101,12 +137,9 @@ export async function middleware(request: NextRequest) {
   const currentCookie = request.cookies.get('NEXT_LOCALE')?.value
   
   const country = request.headers.get('cf-ipcountry') || ''
-  let defaultLocale = 'en'
-  if (country === 'JP') defaultLocale = 'ja'
-  else if (country === 'CN') defaultLocale = 'zh'
-  else if (['TW', 'HK', 'MO'].includes(country)) defaultLocale = 'tw'
+  const defaultLocale = getGeoDefaultLocale(country)
 
-  const locale = currentCookie && LOCALES.includes(currentCookie) ? currentCookie : defaultLocale
+  const locale = isActiveLocale(currentCookie) ? currentCookie : defaultLocale
   
   const forwardedHost = getForwardedHost(request)
   if (forwardedHost) {

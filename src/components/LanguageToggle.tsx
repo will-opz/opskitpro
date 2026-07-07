@@ -1,11 +1,13 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Globe, ChevronDown } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { ACTIVE_LOCALES, type ActiveLocale } from '@/lib/i18n'
 
-export function LanguageToggle({ currentLang }: { currentLang: 'zh' | 'tw' | 'en' | 'ja' }) {
+export function LanguageToggle({ currentLang }: { currentLang: ActiveLocale }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -17,18 +19,24 @@ export function LanguageToggle({ currentLang }: { currentLang: 'zh' | 'tw' | 'en
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const switchLang = (newLang: 'zh' | 'tw' | 'en' | 'ja') => {
+  const switchLang = (newLang: ActiveLocale) => {
     document.cookie = `NEXT_LOCALE=${newLang}; path=/; max-age=31536000`
     setIsOpen(false)
-    router.refresh()
+
+    const segments = pathname.split('/')
+    if (ACTIVE_LOCALES.includes(segments[1] as ActiveLocale)) {
+      segments[1] = newLang
+    } else {
+      segments.splice(1, 0, newLang)
+    }
+
+    router.push(`${segments.join('/') || `/${newLang}`}${window.location.search}`)
   }
 
   const langNames = {
-    'zh': '简体中文',
-    'tw': '繁體中文',
     'en': 'English',
-    'ja': '日本語'
-  }
+    'zh': '简体中文',
+  } satisfies Record<ActiveLocale, string>
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -43,7 +51,7 @@ export function LanguageToggle({ currentLang }: { currentLang: 'zh' | 'tw' | 'en
 
       {isOpen && (
         <div className="ui-surface-elevated absolute right-0 z-50 mt-2 w-32 rounded-xl py-2 animate-in fade-in zoom-in-95 duration-200">
-          {(Object.keys(langNames) as Array<keyof typeof langNames>).map((l) => (
+          {ACTIVE_LOCALES.map((l) => (
             <button
               key={l}
               onClick={() => switchLang(l)}

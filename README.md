@@ -4,6 +4,8 @@
 
 **OpsKitPro** is a comprehensive **Diagnostics Hub** for SREs, DevOps engineers, and webmasters. It has evolved from a simple developer toolbox into a closed-loop diagnostic engine designed to quickly identify, explain, and resolve edge networking and DNS issues.
 
+Public site localization is intentionally focused on English and Simplified Chinese. Retired Japanese and Traditional Chinese URLs redirect to the closest maintained locale.
+
 > [!IMPORTANT]
 > This public repository contains only the user-facing product: the main site, diagnostic tools, public pages, API routes, tests, and deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live in `opskitpro-ops`.
 
@@ -89,8 +91,8 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 | Layer | Technology |
 |-------|-----------|
 | **Framework** | [Next.js 14](https://nextjs.org/) (App Router + standalone build) |
-| **Runtime** | Cloudflare Workers or Node.js standalone on AWS Lightsail |
-| **Cloudflare Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
+| **Runtime** | Node.js standalone on AWS Lightsail |
+| **Cloudflare Adapter** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) retained for legacy/manual Worker builds |
 | **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |

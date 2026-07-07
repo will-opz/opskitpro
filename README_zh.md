@@ -4,8 +4,10 @@
 
 **OpsKitPro** 是一个面向 SRE、DevOps 工程师和站长的 **综合诊断中枢 (Diagnostics Hub)**。它已经从一个简单的工具箱，进化为了一套闭环的诊断引擎，能够快速发现、解释并解决边缘网络及 DNS 故障。
 
+公开站点的语言维护范围已收敛为英文和简体中文。已下线的日文和繁体中文 URL 会重定向到最接近的维护语言版本。
+
 > [!IMPORTANT]
-> 此公开仓库包含主站、诊断工具、百科文章以及 Cloudflare 部署配置。私有运营自动化脚本、数据分析报告以及内部控制台代码存放于独立环境。
+> 此公开仓库只包含面向用户的产品代码：主站、诊断工具、公开页面、API 路由、测试和部署流程。私有运营自动化、数据分析报告、发布辅助和内部控制台存放在 `opskitpro-ops`。
 
 ---
 
@@ -34,7 +36,7 @@ OpsKitPro 围绕着无缝排障漏斗进行设计：
 ## 🏗️ 系统架构
 
 ```
-opskitpro.com (主站 — Next.js 14 on Cloudflare Workers)
+opskitpro.com (主站 — Next.js 14 standalone on AWS Lightsail)
 ├── /              首页和快速诊断入口
 ├── /tools         工具箱索引
 ├── /tools/*       网站、DNS、IP、JSON、WebSocket 和实用工具
@@ -77,13 +79,14 @@ opskitpro.com (主站 — Next.js 14 on Cloudflare Workers)
 | 层级 | 技术选型 |
 |-------|-----------|
 | **框架** | [Next.js 14](https://nextjs.org/) (App Router + standalone 构建) |
-| **适配器** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) |
-| **运行时** | [Cloudflare Workers](https://workers.cloudflare.com/) (Edge Runtime) |
+| **运行时** | Node.js standalone on AWS Lightsail |
+| **Cloudflare 适配器** | [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare)，仅保留 legacy/manual Worker 构建路径 |
 | **样式** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **图标** | [Lucide React](https://lucide.dev/) |
 | **测试** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
-| **CI/CD** | GitHub Actions → Cloudflare Workers |
-| **知识库** | [kb.opskitpro.com](https://kb.opskitpro.com)（Obsidian 编写，静态发布） |
+| **CI/CD** | GitHub Actions → AWS Lightsail |
+| **运营后台** | `opskitpro-ops` Django admin at `ops.opskitpro.com` |
+| **知识库** | `opskitpro-public` → [kb.opskitpro.com](https://kb.opskitpro.com) |
 
 ---
 
@@ -99,24 +102,30 @@ npm run dev
 
 ### 部署至 Cloudflare
 ```bash
-# 一键构建探测引擎并同步边缘资产
-npm run deploy
+# Legacy Worker deploy path. Production currently runs on AWS Lightsail.
+npm run deploy:cloudflare
+```
+
+### 打包 AWS Lightsail
+```bash
+npm run package:standalone
 ```
 
 仓库已经接入 GitHub Actions CI/CD：
 
 - PR 到 `main`：安装依赖、测试、构建
-- push 到 `main`：安装依赖、测试、构建并部署到 Cloudflare
-- 需要配置的 GitHub Secrets：`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`
+- push 到 `main`：安装依赖、测试、构建、打包 standalone，并部署到 Lightsail
+- 需要配置的 GitHub Secrets：`LIGHTSAIL_HOST`、`LIGHTSAIL_USER`、`LIGHTSAIL_SSH_KEY`
 
 运行时环境变量：
 
 ```bash
 OPSKITPRO_ADMIN_PASSWORD=
 OPSKITPRO_ADMIN_SECRET=
+OPSKITPRO_ADMIN_EMAILS=
 ```
 
-这些变量用于 `/tools` 导航页的单用户管理员登录。真实值请配置在 Cloudflare Worker 环境变量或 secret 中，不要提交到 Git。
+这些变量用于 `/admin` 后台和 `/tools` 导航页的单用户管理员登录。真实值请配置在服务器环境或 GitHub Secrets 中，不要提交到 Git。
 
 ---
 
@@ -125,16 +134,16 @@ OPSKITPRO_ADMIN_SECRET=
 这个 public 仓库只保留面向产品和社区的内容：
 
 - 主站和工具代码
-- 公开博客 / Qiita 文章草稿
+- 公开博客和工具文档
 - 测试与 CI/CD workflow
-- 不含密钥的 Cloudflare Worker 配置
+- 不含密钥的 legacy Cloudflare Worker 配置
 
 私有运营数据不放在这里。private 仓库包含：
 
-- Cloudflare / X 数据分析自动化
+- Cloudflare 和 Nginx 数据分析自动化
 - 每日运营报告和历史快照
-- Qiita / X 发布辅助脚本
-- 本地只读 Ops Dashboard
+- Qiita / X 发布队列与辅助脚本
+- Django Ops Dashboard
 - 推广计划和私有 backlog 信号
 
 ---
