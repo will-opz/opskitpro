@@ -42,6 +42,7 @@ import { useAdminSession } from '@/components/AdminSessionProvider'
 import { useDiagnosticHistory } from './_hooks/useDiagnosticHistory'
 import { useWebsiteCheck } from './_hooks/useWebsiteCheck'
 import { calculateScore, isBlockedHttpStatus, normalizeTargetInput, BatchDiagnosticResult, createSafeDiagnosticResult } from './_hooks/helpers'
+import { buildWebsiteCheckMarkdown, buildWebsiteCheckPlainSummary, buildWebsiteCheckReport } from './_lib/report'
 
 export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'zh' | 'en' | 'ja' | 'tw' }) {
   const isAsianLanguage = lang !== 'en'
@@ -1018,168 +1019,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   const buildMarkdownReport = useCallback(() => {
     if (!result) return
-    const score = calculateScore(result)
-    const advice = getAdvice(result)
-    const findings = buildDiagnosticFindings(result)
-    return [
-      `# OpsKitPro Diagnostic Report: ${result.domain}`,
-      '',
-      `- Verdict: ${result.http.success && (result.securityHeaders?.score ?? 100) >= 55 && !result.whois?.status?.toLowerCase().includes('hold') ? dict.tools.website_check.summary_good : dict.tools.website_check.summary_bad}`,
-      `- Score: ${score}/100`,
-      `- Checked at: ${result.meta?.checkedAt || new Date().toISOString()}`,
-      `- Core probe: ${result.meta?.coreMs ? `${result.meta.coreMs}ms` : 'Unknown'}`,
-      `- Full check: ${result.meta?.totalMs ? `${result.meta.totalMs}ms` : 'Unknown'}`,
-      `- Cache: ${result.meta?.cacheStatus || 'MISS'}${result.meta?.cacheAgeSeconds ? ` (${result.meta.cacheAgeSeconds}s old)` : ''}`,
-      `- Cloudflare Edge: ${result.meta?.edgeColo || 'Unknown'}`,
-      '',
-      '## Key Findings',
-      ...findings.map((item) => `- ${item.status.toUpperCase()} ${item.title}: ${item.description}`),
-      '',
-      '## DNS',
-      `- Resolved IP: ${result.dns.resolved_ip}`,
-      `- All IPs: ${result.dns.all_ips?.length ? result.dns.all_ips.join(', ') : result.dns.resolved_ip}`,
-      `- IPv4: ${result.dns.ipv4?.length ? result.dns.ipv4.join(', ') : 'None'}`,
-      `- IPv6: ${result.dns.ipv6?.length ? result.dns.ipv6.join(', ') : 'None'}`,
-      `- Dual stack: ${result.dns.dual_stack ? 'Yes' : 'No'}`,
-      `- Nameservers: ${result.dns.ns?.length ? result.dns.ns.join(', ') : 'Unknown'}`,
-      `- Lookup latency: ${result.dns.latency}`,
-      `- CNAME: ${result.dns.records?.CNAME?.length ? result.dns.records.CNAME.join(', ') : 'None'}`,
-      `- MX: ${result.dns.records?.MX?.length ? result.dns.records.MX.join(', ') : 'None'}`,
-      `- TXT: ${result.dns.records?.TXT?.length ? `${result.dns.records.TXT.length} record(s)` : 'None'}`,
-      `- CAA: ${result.dns.records?.CAA?.length ? result.dns.records.CAA.join(', ') : 'None'}`,
-      `- SOA: ${result.dns.records?.SOA?.length ? result.dns.records.SOA.join(', ') : 'None'}`,
-      ...(result.dns.resolvers || []).map((resolver: any) => `- ${resolver.resolver}: ${resolver.status || 'Unknown'} · ${resolver.latencyMs ?? '—'}ms`),
-      '',
-      '## HTTP',
-      `- Reachable: ${result.http.success ? 'Yes' : 'No'}`,
-      `- Status: ${result.http.status_code || 'Error'}`,
-      `- Protocol: ${result.http.is_https ? 'HTTPS' : 'HTTP/TCP'}`,
-      `- Response time: ${result.http.latency}`,
-      `- Final URL: ${result.http.final_url || 'Unknown'}`,
-      `- Redirects: ${result.http.redirect_count ?? 0}${result.http.redirect_warning ? ` (${result.http.redirect_warning})` : ''}`,
-      ...(result.http.redirect_chain || []).map((hop: any, index: number) => `- Hop ${index + 1}: ${hop.status} ${hop.url}${hop.location ? ` -> ${hop.location}` : ''}`),
-      '',
-      '## Security Headers',
-      `- Grade: ${result.securityHeaders?.grade || 'Unknown'}`,
-      `- Score: ${result.securityHeaders?.score ?? 0}/100`,
-      `- Enabled: ${result.securityHeaders?.passed ?? 0}/${result.securityHeaders?.total ?? 0}`,
-      ...(result.securityHeaders?.checks || []).map((check: any) => `- ${check.present ? 'OK' : 'Missing'} ${check.label}${check.value ? `: ${check.value}` : ''}`),
-      '',
-      '## SSL',
-      `- Valid: ${result.ssl.valid ? 'Yes' : 'No'}`,
-      `- Grade: ${result.ssl.grade || 'Unknown'}`,
-      `- Expiry: ${result.ssl.expiry}`,
-      `- Issuer: ${result.ssl.issuer}`,
-      '',
-      '## CDN',
-      `- Provider: ${result.cdn.provider}`,
-      `- Server: ${result.cdn.server}`,
-      '',
-      '## Recommendations',
-      ...advice.map((item) => `- ${item}`),
-    ].join('\n')
-  }, [dict.tools.website_check.summary_bad, dict.tools.website_check.summary_good, result])
-
-  const buildDiagnosticFindings = (data: any) => {
-    const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
-    const state = getResultState(data)
-    const findings = [
-      {
-        key: 'dns',
-        title: localeText.dns.title,
-        status: data.dns.success ? 'ok' : 'error',
-        description: data.dns.success ? localeText.report.dnsOk : localeText.report.dnsBad,
-      },
-      {
-        key: 'http',
-        title: localeText.http.title,
-        status: data.http.success ? 'ok' : state.blocked ? 'warning' : 'error',
-        description: data.http.success
-          ? `${localeText.report.httpOk} HTTP ${data.http.status_code || 'ERR'} · ${data.http.latency}`
-          : state.blocked
-            ? `${statusCopy.blocked} · HTTP ${data.http.status_code || 'ERR'} · ${data.http.latency}`
-            : localeText.report.httpBad,
-      },
-      {
-        key: 'ssl',
-        title: localeText.ssl.title,
-        status: data.ssl.valid ? 'ok' : state.isIpOrVisitor ? 'warning' : 'error',
-        description: data.ssl.valid
-          ? `${localeText.report.sslOk} ${data.ssl.grade || 'OK'} · ${data.ssl.expiry}`
-          : state.isIpOrVisitor
-            ? statusCopy.visitorSslNa
-            : localeText.report.sslBad,
-      },
-      {
-        key: 'headers',
-        title: localeText.security.title,
-        status: state.blocked ? 'warning' : (data.securityHeaders?.score ?? 0) >= 75 ? 'ok' : (data.securityHeaders?.score ?? 0) >= 55 ? 'warning' : 'error',
-        description: state.blocked
-          ? statusCopy.visitorHeadersNa
-          : missingHeaders.length
-          ? `${localeText.report.headersBad} ${missingHeaders.map((check: any) => check.label).join(' / ')}`
-          : localeText.report.headersOk,
-      },
-      {
-        key: 'cdn',
-        title: localeText.cdn.title,
-        status: data.cdn.is_provider || state.isIpOrVisitor ? 'ok' : 'warning',
-        description: data.cdn.is_provider ? `${localeText.report.cdnOk} ${data.cdn.provider}` : localeText.report.cdnBad,
-      },
-    ]
-
-    return findings
-  }
-
-  const buildTicketSummarySections = (data: any, findings: ReturnType<typeof buildDiagnosticFindings>, advice: string[]) => {
-    const criticalFindings = findings.filter((item) => item.status === 'error')
-    const warningFindings = findings.filter((item) => item.status === 'warning')
-    const missingHeaders = data.securityHeaders?.checks?.filter((check: any) => !check.present) || []
-    const redirectCount = data.http.redirect_count ?? 0
-    const state = getResultState(data)
-
-    const impact = criticalFindings.length > 0
-      ? 'User-facing availability or trust may be affected.'
-      : warningFindings.length > 0
-      ? 'Service is reachable, but configuration risk or performance drift exists.'
-      : 'No immediate user impact detected.'
-
-    let suspectedCause = 'No obvious fault. Continue normal monitoring.'
-    if (!data.dns.success) {
-      suspectedCause = 'DNS resolution failure or missing A/AAAA records.'
-    } else if (state.blocked) {
-      suspectedCause = data.isVisitor || data.isActuallyIp
-        ? 'The public IP is reachable, but HTTP access is blocked or no web service is exposed.'
-        : `HTTP access is blocked${data.http.status_code ? `, status ${data.http.status_code}` : ''}; check WAF, Access, bot rules, or origin policy.`
-    } else if (!data.http.success) {
-      suspectedCause = `HTTP reachability issue${data.http.status_code ? `, status ${data.http.status_code}` : ''}.`
-    } else if (data.http.redirect_warning) {
-      suspectedCause = data.http.redirect_warning
-    } else if (!data.ssl.valid) {
-      suspectedCause = 'Invalid, expired, or incomplete SSL certificate chain.'
-    } else if (missingHeaders.length > 0) {
-      suspectedCause = `Security header hardening gap: ${missingHeaders.map((check: any) => check.label).join(', ')}.`
-    } else if (!data.cdn.is_provider) {
-      suspectedCause = 'Direct origin delivery; CDN/Edge layer not detected.'
-    }
-
-    const evidence = [
-      `DNS: ${data.dns.success ? 'OK' : 'FAIL'} · ${data.dns.latency} · ${data.dns.resolved_ip}`,
-      `DNS Records: A ${data.dns.records?.A?.length || 0}, AAAA ${data.dns.records?.AAAA?.length || 0}, CNAME ${data.dns.records?.CNAME?.length || 0}, MX ${data.dns.records?.MX?.length || 0}, TXT ${data.dns.records?.TXT?.length || 0}, CAA ${data.dns.records?.CAA?.length || 0}`,
-      `HTTP: ${data.http.success ? 'OK' : state.blocked ? 'BLOCKED' : 'FAIL'} · ${data.http.status_code || 'ERR'} · ${data.http.latency}`,
-      `Redirects: ${redirectCount} · final ${data.http.final_url || 'Unknown'}`,
-      `SSL: ${data.ssl.valid ? 'OK' : 'FAIL'} · ${data.ssl.grade || 'Unknown'} · expires ${data.ssl.expiry}`,
-      `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || 'Unknown'}`,
-      `CDN: ${data.cdn.is_provider ? data.cdn.provider : 'Not detected'} · server ${data.cdn.server || 'Unknown'}`,
-    ]
-
-    return {
-      impact,
-      suspectedCause,
-      evidence,
-      nextAction: advice.length ? advice : [localeText.report.noIssues],
-    }
-  }
+    return buildWebsiteCheckMarkdown(buildWebsiteCheckReport(result, { lang }), result)
+  }, [lang, result])
 
   const buildFaultGuide = useCallback((message: string, data?: any) => {
     const normalized = `${message || ''} ${data?.http?.status_code || ''}`.toLowerCase()
@@ -1222,37 +1063,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   const buildPlainSummary = useCallback(() => {
     if (!result) return ''
-    const score = calculateScore(result)
-    const verdict = getResultState(result).verdict
-    const findings = buildDiagnosticFindings(result)
-    const advice = getAdvice(result)
-    const ticket = buildTicketSummarySections(result, findings, advice)
-    const notableFindings = findings
-      .filter((item) => item.status !== 'ok')
-      .map((item) => `- ${item.title}: ${item.description}`)
-
-    return [
-      `OpsKitPro Website Check: ${result.domain}`,
-      `Verdict: ${verdict}`,
-      `Score: ${score}/100`,
-      `Checked at: ${result.meta?.checkedAt || new Date().toISOString()}`,
-      '',
-      'Impact:',
-      ticket.impact,
-      '',
-      'Suspected Cause:',
-      ticket.suspectedCause,
-      '',
-      'Evidence:',
-      ...ticket.evidence.map((item) => `- ${item}`),
-      '',
-      'Key Findings:',
-      ...(notableFindings.length ? notableFindings : [`- ${localeText.report.noIssues}`]),
-      '',
-      'Next Action:',
-      ...ticket.nextAction.map((item) => `- ${item}`),
-    ].filter(Boolean).join('\n')
-  }, [getResultState, localeText, result])
+    return buildWebsiteCheckPlainSummary(buildWebsiteCheckReport(result, { lang }))
+  }, [lang, result])
 
   const writeClipboard = async (value: string) => {
     try {
@@ -1284,7 +1096,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   const copyResult = () => {
     if (!result) return
-    copyText(JSON.stringify(result, null, 2), 'json')
+    const report = buildWebsiteCheckReport(result, { lang })
+    copyText(JSON.stringify({ result, report }, null, 2), 'json')
   }
 
   const copyMarkdown = () => {
@@ -1326,7 +1139,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   const exportJson = () => {
     if (!result) return
-    downloadText(`opskitpro-${result.domain}.json`, JSON.stringify(result, null, 2), 'application/json')
+    const report = buildWebsiteCheckReport(result, { lang })
+    downloadText(`opskitpro-${result.domain}.json`, JSON.stringify({ result, report }, null, 2), 'application/json')
   }
 
   const exportMarkdown = () => {
@@ -1609,7 +1423,8 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
 
   // Memoize advice to avoid computing it twice in render
   const adviceList = useMemo(() => (result ? getAdvice(result) : []), [result])
-  const diagnosticFindings = useMemo(() => (result ? buildDiagnosticFindings(result) : []), [result])
+  const diagnosticReport = useMemo(() => (result ? buildWebsiteCheckReport(result, { lang }) : null), [lang, result])
+  const diagnosticFindings = diagnosticReport?.findings || []
   const faultGuide = useMemo(() => (error ? buildFaultGuide(error, result) : null), [buildFaultGuide, error, result])
   const displayedTarget = result?.domain || domain || 'opskitpro.com'
   const resultState = result ? getResultState(result) : null
@@ -2144,6 +1959,9 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                  <div>
                    <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">{localeText.report.keyFindings}</p>
                    <h3 className="mt-1 text-lg font-semibold text-zinc-900">{displayedTarget}</h3>
+                   {diagnosticReport && (
+                     <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-600">{diagnosticReport.summary}</p>
+                   )}
                  </div>
                  <div className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${
                    diagnosticFindings.some((item: any) => item.status === 'error')
@@ -2158,6 +1976,11 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                      ? localeText.report.warning
                      : localeText.report.ok}
                  </div>
+               </div>
+               <div className="mb-4 rounded-2xl border border-zinc-100 bg-zinc-50/80 px-4 py-3">
+                 <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">EXECUTIVE SUMMARY</p>
+                 <p className="mt-2 text-sm font-semibold text-zinc-900">{diagnosticReport?.impact}</p>
+                 <p className="mt-1 text-xs leading-5 text-zinc-600">{diagnosticReport?.suspectedCause}</p>
                </div>
                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                  {diagnosticFindings.map((item: any) => (
@@ -2179,6 +2002,24 @@ export default function WebsiteCheckClient({ dict, lang }: { dict: any; lang: 'z
                            {item.title}
                          </p>
                          <p className="mt-1 text-xs leading-5 text-zinc-600">{item.description}</p>
+                         <div className="mt-3 space-y-2 border-t border-white/80 pt-3">
+                           <div>
+                             <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">CAUSE</p>
+                             <p className="mt-1 text-xs leading-5 text-zinc-600">{item.likelyCause}</p>
+                           </div>
+                           <div>
+                             <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">FIX</p>
+                             <p className="mt-1 text-xs leading-5 text-zinc-600">{item.recommendedFix}</p>
+                           </div>
+                           <div>
+                             <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">VERIFY</p>
+                             <ul className="mt-1 space-y-1">
+                               {item.verificationSteps.slice(0, 2).map((step: string) => (
+                                 <li key={step} className="text-xs leading-5 text-zinc-600">- {step}</li>
+                               ))}
+                             </ul>
+                           </div>
+                         </div>
                        </div>
                      </div>
                    </div>
