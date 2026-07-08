@@ -17,7 +17,8 @@
     "package:standalone": "bash scripts/package-standalone.sh",
     "deploy": "npm run package:standalone",
     "check:forbidden-imports": "grep -R \"cloudflare:sockets\" src >/dev/null && exit 1 || exit 0",
-    "verify:fast": "npm run check:forbidden-imports && npm run build && npm run test",
+    "verify:content": "node scripts/verify-content.js",
+    "verify:fast": "npm run check:forbidden-imports && npm run verify:content && npm run build && npm run test",
     "verify": "npm run verify:fast && npm run test:e2e:clean"
   },
   "dependencies": {
