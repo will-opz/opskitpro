@@ -17,6 +17,14 @@ const config: Config = {
         appSurface: '#ffffff',
         appCanvas: '#f7f8f8',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            "code::before": { content: '""' },
+            "code::after": { content: '""' },
+          },
+        },
+      },
     },
   },
   plugins: [require("@tailwindcss/typography")],

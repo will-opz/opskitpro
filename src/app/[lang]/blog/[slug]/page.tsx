@@ -7,6 +7,7 @@ import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import rehypePrettyCode from "rehype-pretty-code";
 import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/blog";
 import { mdxComponents } from "@/components/blog/mdx-components";
 import { buildPageMetadata, buildTechArticleJsonLd } from "@/lib/seo";
@@ -237,6 +238,18 @@ export default async function BlogPost({
                     <MDXRemote
                       source={post.content}
                       components={mdxComponents}
+                      options={{
+                        mdxOptions: {
+                          rehypePlugins: [
+                            [
+                              rehypePrettyCode,
+                              {
+                                theme: "github-dark",
+                              },
+                            ],
+                          ],
+                        },
+                      }}
                     />
                   </article>
                 ) : null}
