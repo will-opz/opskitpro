@@ -14,7 +14,7 @@ import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import HomeSearch from "@/components/HomeSearch";
-import { getBlogPosts } from "@/content/blog-posts";
+import { getAllBlogPosts } from "@/lib/blog";
 import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -157,9 +157,9 @@ const homeDashboardCopy = {
 export default async function Home({ params }: { params: { lang: string } }) {
   const lang = (params.lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
-  const latestNotes = getBlogPosts(lang)
+  const latestNotes = getAllBlogPosts(lang)
     .slice()
-    .sort((a, b) => b.date.localeCompare(a.date))
+    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
     .slice(0, 4);
   const heroBadge = dict.home.title_part1;
   const heroSubtitle = dict.home.subtitle;
@@ -480,19 +480,21 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 className="ui-surface group overflow-hidden rounded-2xl hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-xl"
               >
                 <div className="relative aspect-[16/10] overflow-hidden">
-                  <Image
-                    src={post.coverImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                  />
+                  {post.coverImage && (
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                    />
+                  )}
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`}
                   />
                   <div className="absolute left-3 top-3 flex items-center gap-2">
                     <span className="rounded-full border border-white/30 bg-white/85 px-2.5 py-1 text-[9px] font-bold tracking-[0.2em] text-zinc-700 backdrop-blur-md">
-                      {post.tag}
+                      {post.category || post.tags?.[0] || "Blog"}
                     </span>
                     <span className="rounded-full border border-white/20 bg-zinc-950/70 px-2.5 py-1 text-[9px] font-semibold tracking-[0.16em] text-white backdrop-blur-md">
                       {post.actionKind === "tool"
@@ -508,7 +510,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
                 <div className="p-5 sm:p-6">
                   <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                    <span>{post.date}</span>
+                    <span>{post.publishedAt}</span>
                     <span className="text-[var(--accent-color)]">
                       {post.readTime}
                     </span>

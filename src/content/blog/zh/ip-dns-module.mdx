@@ -1,0 +1,47 @@
+---
+title: "IP 与 DNS 模块：把查询结果变成可读的诊断结论"
+summary: "IP 页负责确认位置与接入环境，DNS 页负责交叉解析与多 resolver 比对。"
+publishedAt: "2026-04-21"
+readTime: "7 min"
+category: "Article"
+tags: ["模块"]
+coverImage: "/blog-covers/ip-dns.svg"
+accent: "from-indigo-500/10 via-sky-500/10 to-transparent"
+actionKind: "kb"
+ctaPath: "/blog"
+related: ["website-check-module","design-principles","services-deployment"]
+---
+
+## IP 页要先给“可用结论”
+
+IP 页的重点不是输出一大堆字段，而是先回答三个问题：我是谁、我从哪里来、我现在是不是在代理后面。为了做到这一点，页面优先展示地理位置、ASN、ISP、代理线索和当前连接来源。
+
+当外部查询不可用时，页面也不会直接崩掉，而是返回结构化的部分结果。用户依然能继续往下看，也能知道哪些信息来自 Cloudflare Context，哪些信息来自外部回退。
+
+- [src/app/api/ip/route.ts](file:///path/to/src/app/api/ip/route.ts)
+- [src/app/tools/ip-lookup/IPLookupClient.tsx](file:///path/to/src/app/tools/ip-lookup/IPLookupClient.tsx)
+- [src/app/api/ip/__tests__/route.test.ts](file:///path/to/src/app/api/ip/__tests__/route.test.ts)
+
+
+
+## DNS 页要做交叉验证，而不是单点查询
+
+DNS 工具最重要的不是“查得到”，而是“查得一致”。所以我给它接了多个 resolver，并且把本地联查和远端接口结果一起展示出来。这样用户就能一眼看出问题是出在解析本身，还是出在某个节点。
+
+同时，A、AAAA、CNAME、MX、NS、TXT、CAA 都被纳入标准记录类型里，避免“DNS 查询”只剩一个粗糙的 A 记录结果。
+
+- [src/app/api/dns/route.ts](file:///path/to/src/app/api/dns/route.ts)
+- [src/app/tools/dns-lookup/DnsClient.tsx](file:///path/to/src/app/tools/dns-lookup/DnsClient.tsx)
+- [src/app/tools/dns-lookup/components/DnsBatchResult.tsx](file:///path/to/src/app/tools/dns-lookup/components/DnsBatchResult.tsx)
+
+
+
+## 统一输出格式，才能让 UI 真正变轻
+
+之前这两个模块最容易出问题的地方，是字段名和展示层口径不完全一致。后来我把 API 契约抽成了共享 schema，前端和后端都基于同一份类型来理解“结果应该长什么样”。
+
+这样一来，页面上复制按钮、JSON 区、状态标签、提示语就能统一收口，不需要每个页面自己猜字段，也不会再出现同一项在不同页上叫法不同的情况。
+
+- [src/lib/api-contracts.ts](file:///path/to/src/lib/api-contracts.ts)
+- [src/app/tools/dns-lookup/components/DnsResultTable.tsx](file:///path/to/src/app/tools/dns-lookup/components/DnsResultTable.tsx)
+- [src/app/tools/dns-lookup/components/DnsHistory.tsx](file:///path/to/src/app/tools/dns-lookup/components/DnsHistory.tsx)

@@ -1,0 +1,66 @@
+---
+title: "Cloudflare dual-stack access layers: how to judge the IPv6 switch"
+summary: "Separating edge, origin, client, DNS, and troubleshooting layers makes IPv6 decisions much clearer."
+publishedAt: "2026-05-24"
+readTime: "6 min"
+category: "Article"
+tags: ["工程"]
+coverImage: "/blog-covers/cloudflare-dual-stack.svg"
+accent: "from-cyan-500/10 via-sky-500/10 to-transparent"
+actionKind: "kb"
+ctaPath: "/blog"
+related: ["website-check-module","ip-dns-module","services-deployment"]
+---
+
+## 先把链路分层，才知道该关哪一层
+
+Cloudflare 的双栈不是一个开关控制所有事情，而是至少有三层：客户端到 Cloudflare 边缘、Cloudflare 到源站的回源、源站本身的双栈能力。很多排障把这三层混在一起，就会把“回源不支持 IPv6”误判成“边缘 IPv6 不能开”。
+
+所以分析图最好先把 DNS、Edge、Origin、Client 分开，再看每层是否需要 IPv6。边缘是用户入口，回源是到源站，源站才决定你自己的基础设施能不能接住双栈。
+
+- [src/app/api/diagnostic/route.ts](file:///path/to/src/app/api/diagnostic/route.ts)
+- [src/app/api/ip/route.ts](file:///path/to/src/app/api/ip/route.ts)
+- [src/app/tools/website-check/WebsiteCheckClient.tsx](file:///path/to/src/app/tools/website-check/WebsiteCheckClient.tsx)
+
+
+
+## Cloudflare IPv6 开关的决策表
+
+最核心的一句话：默认保留 Cloudflare 边缘 IPv6，只按需控制源站是否 IPv6 回源。
+
+如果你只记住一条规则，就记住“边缘和回源不是一个开关”。边缘决定外部用户能不能更容易连上你，回源决定你的源站基础设施是否准备好了双栈。
+
+- 公网站点 / SaaS / API：保留 IPv6。
+- 移动端流量较多：保留 IPv6。
+- 源站暂时不支持 IPv6：只关回源，不关边缘。
+- 需要做临时排障：可临时关闭排查。
+- 纯内网系统：按需决定。
+- 合规要求单栈：按制度执行。
+
+- [src/app/tools/ip-lookup/IPLookupClient.tsx](file:///path/to/src/app/tools/ip-lookup/IPLookupClient.tsx)
+- [src/app/tools/dns-lookup/DnsClient.tsx](file:///path/to/src/app/tools/dns-lookup/DnsClient.tsx)
+
+
+
+## 文章末尾可直接用的实操顺序
+
+第一步：先别动边缘 IPv6。对于公网站点，Cloudflare 边缘 IPv6 默认保持开启。原因很简单：这能兼容更多移动端和双栈客户端，不会白白损失可达性。
+
+第二步：如果源站不支持 IPv6，先只关闭回源链路的 IPv6，确认源站、WAF、负载均衡和回源地址都稳定后，再判断是否要恢复。
+
+第三步：如果问题仍然存在，再看 DNS 记录、边缘状态和真实访问来源。很多“IPv6 问题”其实是解析、缓存、回源或防火墙问题，而不是边缘本身。
+
+- [src/app/tools/website-check/WebsiteCheckClient.tsx](file:///path/to/src/app/tools/website-check/WebsiteCheckClient.tsx)
+- [src/app/api/diagnostic/route.ts](file:///path/to/src/app/api/diagnostic/route.ts)
+
+
+
+## 什么时候才适合关掉边缘 IPv6
+
+只有在你明确要做临时排障，或者制度要求单栈时，才考虑临时关掉边缘 IPv6。排障完成后，还是应该回到“边缘保留、回源按需控制”的默认策略。
+
+如果站点面向公网，默认策略应该更保守：尽量不牺牲入口可达性，只控制最可能出问题的那一层。
+
+- [src/app/tools/website-check/WebsiteCheckClient.tsx](file:///path/to/src/app/tools/website-check/WebsiteCheckClient.tsx)
+- [src/app/api/diagnostic/route.ts](file:///path/to/src/app/api/diagnostic/route.ts)
+- [src/app/api/ip/route.ts](file:///path/to/src/app/api/ip/route.ts)

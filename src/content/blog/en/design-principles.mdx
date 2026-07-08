@@ -1,0 +1,47 @@
+---
+title: "OpsKitPro design principles: why the UI became more restrained"
+summary: "The UI was tightened from a HUD vibe into a light product surface with unified cards, states, and copy."
+publishedAt: "2026-04-19"
+readTime: "5 min"
+category: "Article"
+tags: ["设计"]
+coverImage: "/blog-covers/design-principles.svg"
+accent: "from-sky-500/10 via-cyan-500/10 to-transparent"
+actionKind: "kb"
+ctaPath: "/blog"
+related: ["why-opskitpro","website-check-module","services-deployment"]
+---
+
+## 为什么后来我把视觉收得更轻
+
+项目早期的视觉更偏“运维控制台”与“HUD 仪表盘”风格，强调科技感和冲击力。但在实际使用中，这种风格会让信息显得太重，尤其是在日本用户习惯里，页面越清楚、越克制，越容易被认为是“认真做事”的产品。
+
+所以我逐步把主视觉收成了浅色卡片、明确标题、较低噪音的层级结构，让页面不只是“酷”，而是“稳”。
+
+- [src/app/page.tsx](file:///path/to/src/app/page.tsx)
+- [src/app/about/page.tsx](file:///path/to/src/app/about/page.tsx)
+- [src/app/blog/page.tsx](file:///path/to/src/app/blog/page.tsx)
+
+
+
+## 标准化比“风格化”更重要
+
+真正把产品拉齐的，不是某个单独页面的炫技，而是卡片、badge、按钮、状态文案这些基础组件是否统一。我的目标是让用户不管进首页、服务矩阵还是工具页，都能立刻读懂这是同一个系统。
+
+这也是为什么后来我会反复收紧排版，减少中英混排里的“拼装感”，让页面语言和结构尽量一体化。
+
+- [src/components/SiteHeader.tsx](file:///path/to/src/components/SiteHeader.tsx)
+- [src/components/HomeSearch.tsx](file:///path/to/src/components/HomeSearch.tsx)
+- [src/components/SiteFooter.tsx](file:///path/to/src/components/SiteFooter.tsx)
+- [src/app/services/ServicesClient.tsx](file:///path/to/src/app/services/ServicesClient.tsx)
+
+
+
+## 日本用户视角下的收口
+
+站点主要面向日本推广后，我更明确地把设计目标改成了“清楚、安定、轻量”。这意味着 hero 不要太吵、按钮不要太多、说明不要太虚，用户进入页面后应该先看到结论，再决定要不要继续看细节。
+
+所以你会看到首页、about、website-check、ip-lookup 这些页面的共同变化：更短的标题、更自然的文案、更低噪音的间距，以及更少的装饰性元素。
+
+- [src/app/tools/website-check/WebsiteCheckClient.tsx](file:///path/to/src/app/tools/website-check/WebsiteCheckClient.tsx)
+- [src/app/tools/ip-lookup/IPLookupClient.tsx](file:///path/to/src/app/tools/ip-lookup/IPLookupClient.tsx)

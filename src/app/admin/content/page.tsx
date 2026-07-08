@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ArrowLeft, BookOpen, ExternalLink, FileText } from "lucide-react";
-import { getBlogPosts } from "@/content/blog-posts";
+import { getAllBlogPosts } from "@/lib/blog";
 
 export default function AdminContentPage() {
-  const posts = getBlogPosts("en");
+  const posts = getAllBlogPosts("en");
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-20 pt-8 sm:px-6">

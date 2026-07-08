@@ -8,7 +8,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/blog";
-import { LegacyBlogRenderer } from "@/components/blog/legacy-blog-renderer";
 import { mdxComponents } from "@/components/blog/mdx-components";
 import { buildPageMetadata, buildTechArticleJsonLd } from "@/lib/seo";
 
@@ -240,8 +239,6 @@ export default async function BlogPost({
                       components={mdxComponents}
                     />
                   </article>
-                ) : post.sections ? (
-                  <LegacyBlogRenderer sections={post.sections} lang={lang} />
                 ) : null}
               </div>
             </div>

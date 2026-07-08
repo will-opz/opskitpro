@@ -1,0 +1,47 @@
+---
+title: "JSON 整理器怎么做：json 的设计、实现、用途和用法"
+summary: "从校验、修复、格式化，到 jq、schema、对比与字段提取，一页完成。"
+publishedAt: "2026-04-22"
+readTime: "7 min"
+category: "Article"
+tags: ["工具"]
+coverImage: "/blog-covers/json-tool.svg"
+accent: "from-violet-500/10 via-fuchsia-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/json"
+related: ["passgen-tool","websocket-tool","services-deployment"]
+---
+
+## 为什么把 JSON 工具做成工作台
+
+JSON 工具最常见的使用场景，是把 API 返回、配置文件、日志片段或者抓到的对象先整理清楚。很多时候你不是想“写 JSON”，而是想“看懂 JSON”。
+
+所以我把它做成一个多模式工作台：输入、修复、格式化、对比、转换和提取都放在同一页里。
+
+- [src/app/tools/json/json-client.tsx](file:///path/to/src/app/tools/json/json-client.tsx)
+- [src/app/tools/json/page.tsx](file:///path/to/src/app/tools/json/page.tsx)
+
+
+
+## 为什么要拆成几个功能块
+
+JSON 的处理其实是多个不同任务的组合：有时你要修坏 JSON，有时要格式化，有时要跑 jq，有时要生成 schema。把这些任务硬塞到一个按钮里，用户只会更乱。
+
+所以我把它拆成编辑器、修复、转换、比较、校验、提取几个区块，用户可以按自己的节奏逐步推进。
+
+- [src/app/tools/json/components/FormatConverter.tsx](file:///path/to/src/app/tools/json/components/FormatConverter.tsx)
+- [src/app/tools/json/components/JsonDiffPanel.tsx](file:///path/to/src/app/tools/json/components/JsonDiffPanel.tsx)
+- [src/app/tools/json/components/SchemaValidator.tsx](file:///path/to/src/app/tools/json/components/SchemaValidator.tsx)
+
+
+
+## 实现和用法
+
+实现上我把 JSON 修复、格式转换、jq 查询、schema 校验和字段提取都拆成了独立 hook / component。这样每个功能可以单独测试，也方便以后继续加新模式。
+
+用法上最简单的流程是：粘贴 JSON，先看校验状态，再决定是格式化、修复、转 YAML/TOML，还是直接跑 jq。需要对比时再切到 diff，需要抽字段时再进提取器。
+
+- [src/app/tools/json/hooks/useFormatConvert.ts](file:///path/to/src/app/tools/json/hooks/useFormatConvert.ts)
+- [src/app/tools/json/hooks/useJqQuery.ts](file:///path/to/src/app/tools/json/hooks/useJqQuery.ts)
+- [src/app/tools/json/hooks/useJsonRepair.ts](file:///path/to/src/app/tools/json/hooks/useJsonRepair.ts)
+- [src/app/tools/json/hooks/useJsonStorage.ts](file:///path/to/src/app/tools/json/hooks/useJsonStorage.ts)

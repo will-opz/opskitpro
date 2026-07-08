@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 import { getCloudflareErrors } from "@/content/cloudflare-errors";
-import { getBlogPostSlugs } from "@/content/blog-posts";
+import { getAllBlogPosts } from "@/lib/blog";
 import { ACTIVE_LOCALES } from "@/lib/i18n";
 import { buildLanguageAlternates, SITE_URL } from "@/lib/seo";
 
@@ -30,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const errorRoutes = getCloudflareErrors().map((e) => `/errors/${e.code}`);
 
   // Fetch all blog posts
-  const blogRoutes = getBlogPostSlugs().map((slug) => `/blog/${slug}`);
+  const blogRoutes = getAllBlogPosts("en").map((post) => `/blog/${post.slug}`);
 
   const routes = [...baseRoutes, ...errorRoutes, ...blogRoutes];
 

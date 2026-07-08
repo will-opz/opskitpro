@@ -1,0 +1,48 @@
+---
+title: "How the WebSocket debugger works: design, implementation, use, and usage"
+summary: "Multi-connection tabs, message templates, binary sending, session saving, and log retrieval for real debugging."
+publishedAt: "2026-04-22"
+readTime: "7 min"
+category: "Article"
+tags: ["工具"]
+coverImage: "/blog-covers/websocket-tool.svg"
+accent: "from-sky-500/10 via-cyan-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/websocket"
+related: ["json-tool","qrgen-tool","services-deployment"]
+---
+
+## WebSocket 调试最麻烦的是什么
+
+WebSocket 调试的难点，不只是“能不能连上”，而是连上之后要怎么发消息、怎么看日志、怎么留存会话。很多时候你还要同时调多个连接，或者在文本、JSON、二进制之间切换。
+
+所以我把它做成了一个多标签工作台，目标是让调试像开几个终端一样自然。
+
+- [src/app/tools/websocket/WebsocketClient.tsx](file:///path/to/src/app/tools/websocket/WebsocketClient.tsx)
+- [src/app/tools/websocket/page.tsx](file:///path/to/src/app/tools/websocket/page.tsx)
+
+
+
+## 为什么要拆成几个面板
+
+一个 WebSocket 工具如果只有一块大输入框，通常不够用。真正调试时，你会同时关心连接状态、消息模板、发送内容、日志列表、统计信息和二进制编码。
+
+所以我把它拆成连接面板、消息编辑器、日志视图、统计面板、二进制构造器和会话管理几个部分。每块都小一点，组合起来反而更好用。
+
+- [src/app/tools/websocket/components/ConnectionPanel.tsx](file:///path/to/src/app/tools/websocket/components/ConnectionPanel.tsx)
+- [src/app/tools/websocket/components/MessageComposer.tsx](file:///path/to/src/app/tools/websocket/components/MessageComposer.tsx)
+- [src/app/tools/websocket/components/LogViewer.tsx](file:///path/to/src/app/tools/websocket/components/LogViewer.tsx)
+- [src/app/tools/websocket/components/SessionManager.tsx](file:///path/to/src/app/tools/websocket/components/SessionManager.tsx)
+
+
+
+## 实现和用法
+
+实现上我用 `useWebSocket` 和 `useMultiConnection` 去管理连接状态、日志和发送逻辑。这样可以把连接生命周期、消息统计和会话切换拆开，避免一个巨大组件把所有事情都塞在一起。
+
+用法很直接：先输入 WebSocket 地址，再选文本或二进制模式，连接后发消息、看日志，需要时保存会话。对调试 echo 服务、内部推送或者实时通知都很方便。
+
+- [src/app/tools/websocket/hooks/useWebSocket.ts](file:///path/to/src/app/tools/websocket/hooks/useWebSocket.ts)
+- [src/app/tools/websocket/hooks/useMultiConnection.ts](file:///path/to/src/app/tools/websocket/hooks/useMultiConnection.ts)
+- [src/app/tools/websocket/hooks/useMessageTemplates.ts](file:///path/to/src/app/tools/websocket/hooks/useMessageTemplates.ts)
+- [src/app/tools/websocket/hooks/useMessageHistory.ts](file:///path/to/src/app/tools/websocket/hooks/useMessageHistory.ts)
