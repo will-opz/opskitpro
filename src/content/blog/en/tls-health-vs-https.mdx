@@ -1,0 +1,71 @@
+---
+title: "Your HTTPS is Working, But Is Your TLS Configuration Actually Healthy?"
+summary: "Why a successful connection in the browser doesn't guarantee a secure TLS configuration, and how to verify exact hostname matching, legacy protocol exposure, and CDN edge termination."
+publishedAt: "2026-07-08"
+readTime: "5 min"
+category: "Engineering"
+tags: ["tls", "https", "ssl", "sre", "cdn"]
+coverImage: "/blog-covers/website-check.svg"
+accent: "from-blue-500/10 via-indigo-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/website-check"
+related: ["cloudflare-522", "website-diagnostic-report", "diagnostic-tools-overview"]
+---
+
+Seeing the HTTPS secure connection indicator in your browser simply means your session is encrypted. It tells you a handshake succeeded. What it *doesn't* tell you is how robust that encryption is, whether the backend infrastructure is properly secured, or if legacy protocols expose your users to weaker cryptographic primitives. 
+
+## A Successful HTTPS Connection ≠ Complete TLS Health
+
+For SREs and platform engineers, "HTTPS works" is only the beginning of a health check. A successful TLS handshake is not the same thing as a complete TLS security assessment. Here is why.
+
+## 1. The CDN Edge Alters the Observed Certificate
+
+Most modern web infrastructure relies on a CDN or reverse proxy (like Cloudflare, AWS CloudFront, or Akamai) sitting in front of the origin servers.
+
+When a standard client connects, they terminate TLS at the CDN edge. The observed certificate is the certificate presented at the public CDN edge, not necessarily your backend. If your origin server's internal certificate expires, users might still see a perfectly valid HTTPS connection for a time—but this may eventually cause origin-fetch failures, such as certificate validation errors in strict TLS modes.
+
+Always check the `Server` response header and CDN-specific trace headers (like `cf-ray`). A robust diagnostic tool should explicitly contextualize whether you are observing an edge node or the origin server directly.
+
+## 2. Valid Certificates Don't Guarantee Hostname Matches
+
+A common misconfiguration is deploying a certificate that is technically valid (unexpired, trusted issuer) but does not cover the requested hostname. This happens frequently when wildcard certificates don't cover deep subdomains, or when directly querying an IP address.
+
+A simple `rejectUnauthorized: false` check in Node.js or `curl -k` will suppress these errors, masking the problem. A strict TLS probe must evaluate `Subject Alternative Names` (SANs) directly against the requested domain. A network connection reset (`ECONNRESET`) shouldn't be conflated with a hostname mismatch—a mismatch is a specific cryptographic failure where the server *did* present a certificate, but it was for the wrong domain.
+
+## 3. TLS 1.0 / 1.1 Expands the Legacy Protocol Surface
+
+TLS 1.0 and 1.1 are deprecated and should generally not remain enabled unless a specific compatibility requirement justifies them.
+
+If your server negotiates TLS 1.3 with modern browsers, it's easy to assume you are secure. However, accepting TLS 1.0 or 1.1 expands the legacy protocol surface and may expose older clients or configurations to weaker security properties. Your diagnostic probe should explicitly attempt a handshake capped at `TLSv1.1`. If the server accepts it and negotiates the legacy protocol, your configuration is overly permissive. A healthy server will explicitly reject the handshake with a protocol version error.
+
+## 4. OCSP Stapling: Detecting Presence, Not Validating Revocation
+
+Checking the expiration date isn't enough. If a private key is compromised, the certificate must be revoked immediately. Modern TLS relies on OCSP (Online Certificate Status Protocol) stapling, where the server periodically fetches a signed time-stamped response from the Certificate Authority and "staples" it to the initial handshake.
+
+Ensure your TLS diagnostic checks for the presence of an OCSP stapled response during the handshake phase. Note that checking for the presence of stapled bytes does not mean you have fully audited the revocation payload. While the absence of stapling isn't necessarily a critical failure, its presence is a strong signal of a well-configured modern server.
+
+## 5. Why We Don't Do A-F Grading
+
+Many legacy SSL checking tools aggregate these signals into a singular "A-F" grade. We explicitly designed our tool to avoid this approach.
+
+* TLS diagnostics cannot be accurately represented by a single arbitrary score.
+* A CDN edge configuration and an origin configuration may differ wildly.
+* A missing OCSP staple should not automatically deduct critical risk points.
+* A timeout or network reset does not equal a "secure" block of legacy protocols.
+* An `Unknown` state is a valid, factual part of a diagnostic result, not a failure.
+
+A diagnostic tool's job is to present evidence, not arbitrary judgment.
+
+## 6. How OpsKitPro Website Check Does Live TLS Probing
+
+We rebuilt the OpsKitPro [Website Check](/en/tools/website-check) TLS module to address these exact gaps. Instead of querying historical Certificate Transparency logs, we rely on a custom Node.js backend probe to extract live handshake data.
+
+It provides precise, evidence-based findings: explicitly flagging CDN termination, strictly verifying SAN matching, capturing the presence of stapled OCSP responses, and actively testing for legacy TLS support.
+
+## Final Checklist
+
+Before claiming your TLS configuration is healthy, ensure:
+1. You know whether you are testing the CDN edge or the origin server.
+2. `date_valid`, `hostname_valid`, and `chain_authorized` are verified independently.
+3. Legacy TLS handshakes are explicitly rejected with protocol errors, not just timing out.
+4. Your monitoring alerts on true cryptographic failures, rather than generic network resets.

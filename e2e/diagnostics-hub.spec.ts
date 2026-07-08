@@ -89,7 +89,7 @@ test.describe('Diagnostics Hub Closed-Loop', () => {
     // 2. DNS Security Audit banner
     await expect(page.getByText(/DNS Security Audit/i)).toBeVisible()
     // 3. Cloudflare Edge CDN banner
-    await expect(page.getByText(/Cloudflare Edge/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Cloudflare Edge/i })).toBeVisible()
   })
 
   test('4. Sitemap includes dynamic routes', async ({ page }) => {

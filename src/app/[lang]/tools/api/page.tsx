@@ -70,10 +70,32 @@ export default async function ApiDocsPage({
 
           <h2>3. Rate Limits</h2>
           <p>
-            To prevent abuse, all endpoints are rate-limited to{" "}
-            <strong>60 requests per minute per IP address</strong>. Exceeding
-            this limit will result in a <code>429 Too Many Requests</code>{" "}
-            response.
+            To prevent abuse while keeping lightweight automation usable,
+            public endpoints use tiered per-IP limits based on probe cost:
+          </p>
+          <ul>
+            <li>
+              <strong>Low-cost lookups:</strong>{" "}
+              <code>/api/tools/dns-lookup</code> and{" "}
+              <code>/api/tools/ip-lookup</code> allow{" "}
+              <strong>60 requests per minute</strong>.
+            </li>
+            <li>
+              <strong>Medium-cost checks:</strong>{" "}
+              <code>/api/tools/http-check</code> and <code>/api/trace</code>{" "}
+              allow <strong>15 requests per minute</strong>.
+            </li>
+            <li>
+              <strong>Full diagnostics:</strong> <code>/api/diagnostic</code>{" "}
+              allows <strong>3 requests per minute</strong>.
+            </li>
+          </ul>
+          <p>
+            Rate-limited responses return <code>429 Too Many Requests</code>{" "}
+            with <code>X-RateLimit-Limit</code>,{" "}
+            <code>X-RateLimit-Remaining</code>,{" "}
+            <code>X-RateLimit-Reset</code>, and <code>Retry-After</code>{" "}
+            headers.
           </p>
 
           <h2>4. Common Response Format</h2>

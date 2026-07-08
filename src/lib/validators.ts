@@ -1,33 +1,6 @@
 import ipaddr from "ipaddr.js";
 import dns from "dns/promises";
 
-// A simple in-memory rate limiter using Map.
-// For production scale, replace with Redis or Cloudflare edge rate limiting.
-const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 60; // 60 requests per minute
-
-export function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = rateLimitCache.get(ip);
-
-  if (!record) {
-    rateLimitCache.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (now > record.resetTime) {
-    rateLimitCache.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
-  }
-
-  record.count += 1;
-  return true;
-}
 
 export function isValidUrl(urlStr: string): boolean {
   try {

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { checkRateLimit } from "@/lib/validators";
+import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
 import { performIpLookup } from "@/lib/tools/ip";
 import {
   getClientIp,
@@ -13,16 +13,18 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const requestIp = getClientIp(request);
 
-  if (!checkRateLimit(requestIp)) {
-    return errorResponse({
-      tool: "ip-lookup",
-      input: {},
-      code: "RATE_LIMIT_EXCEEDED",
-      message: "Too many requests, please try again later.",
-      status: 429,
-      startTime,
-    });
+  const rateLimit = checkRateLimit({
+    ip: requestIp,
+    route: "/api/tools/ip-lookup",
+    costClass: "LOW",
+    limit: 60,
+  });
+
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit);
   }
+
+  const rateLimitHeaders = createRateLimitHeaders(rateLimit);
 
   const { searchParams } = new URL(request.url);
   const queryIp = searchParams.get("ip");
@@ -60,6 +62,7 @@ export async function GET(request: NextRequest) {
       input: queryIp ? { ip: queryIp } : {},
       result,
       startTime,
+      extraHeaders: rateLimitHeaders,
     });
   } catch (error: any) {
     return errorResponse({
@@ -69,6 +72,7 @@ export async function GET(request: NextRequest) {
       message: error.message || "IP lookup failed.",
       status: 500,
       startTime,
+      extraHeaders: rateLimitHeaders,
     });
   }
 }

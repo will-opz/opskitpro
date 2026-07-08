@@ -3,11 +3,13 @@ export function successResponse<T>({
   input,
   result,
   startTime,
+  extraHeaders,
 }: {
   tool: string;
   input: Record<string, unknown>;
   result: T;
   startTime: number;
+  extraHeaders?: HeadersInit;
 }) {
   return Response.json(
     {
@@ -27,6 +29,7 @@ export function successResponse<T>({
         // Do not use wildcard CORS for authenticated or user-specific APIs.
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
+        ...((extraHeaders as any) || {}),
       },
     },
   );
@@ -39,6 +42,7 @@ export function errorResponse({
   message,
   status = 400,
   startTime,
+  extraHeaders,
 }: {
   tool: string;
   input: Record<string, unknown>;
@@ -46,6 +50,7 @@ export function errorResponse({
   message: string;
   status?: number;
   startTime: number;
+  extraHeaders?: HeadersInit;
 }) {
   return Response.json(
     {
@@ -69,6 +74,7 @@ export function errorResponse({
         // Do not use wildcard CORS for authenticated or user-specific APIs.
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
+        ...((extraHeaders as any) || {}),
       },
     },
   );

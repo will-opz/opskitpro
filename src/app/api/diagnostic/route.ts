@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import tls from "tls";
 import type {
   DiagnosticHealthResponse,
   DiagnosticPartialErrorResponse,
@@ -9,6 +10,7 @@ import {
   getClientIp,
   getCloudflareRuntimeContext,
 } from "@/lib/runtime-context";
+import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = "force-dynamic";
@@ -282,6 +284,105 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
 
 type RedirectTrace = Awaited<ReturnType<typeof traceRedirects>>;
 
+const probeTls = async (hostname: string, port = 443, ip?: string) => {
+  return new Promise<any>((resolve) => {
+    const targetIp = ip || hostname;
+    const socket = tls.connect({
+      host: targetIp,
+      port,
+      servername: hostname,
+      rejectUnauthorized: false,
+      requestOCSP: true,
+      ALPNProtocols: ['h2', 'http/1.1'],
+      timeout: 5000,
+    });
+    
+    let ocspStapled: boolean | "unknown" = "unknown";
+    
+    socket.on('OCSPResponse', (response: Buffer) => {
+      ocspStapled = response && response.length > 0;
+    });
+
+    socket.on('secureConnect', () => {
+      const cert = socket.getPeerCertificate(true);
+      const authorized = socket.authorized;
+      const authorizationError = socket.authorizationError;
+      const protocol = socket.getProtocol();
+      const cipher = socket.getCipher().name;
+      const alpn = socket.alpnProtocol;
+      
+      resolve({
+        success: true,
+        authorized,
+        authorizationError,
+        protocol,
+        cipher,
+        alpn,
+        cert,
+        ocspStapled,
+      });
+      socket.end();
+    });
+
+    socket.on('error', (err: Error) => {
+      resolve({ success: false, error: err.message });
+    });
+    
+    socket.on('timeout', () => {
+      resolve({ success: false, error: 'timeout' });
+      socket.destroy();
+    });
+  });
+};
+
+const probeLegacyTls = async (hostname: string, port = 443, ip?: string) => {
+  return new Promise<string | false>((resolve) => {
+    const targetIp = ip || hostname;
+    const socket = tls.connect({
+      host: targetIp,
+      port,
+      servername: hostname,
+      rejectUnauthorized: false,
+      maxVersion: 'TLSv1.1',
+      timeout: 1800,
+    });
+
+    socket.on('secureConnect', () => {
+      const protocol = socket.getProtocol();
+      resolve(protocol || "Unknown Protocol"); // Handshake succeeded with legacy TLS
+      socket.end();
+    });
+
+    socket.on('error', (err: any) => {
+      // Explicitly classify network errors as unknown
+      if (err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
+        resolve("unknown");
+        return;
+      }
+      
+      const msg = err.message || "";
+      // If error is protocol version related, the server explicitly rejected the legacy TLS handshake (Secure)
+      if (
+        msg.includes('protocol version') || 
+        msg.includes('wrong version number') || 
+        msg.includes('handshake failure') ||
+        msg.includes('no protocols available') ||
+        err.code === 'ERR_SSL_NO_PROTOCOLS_AVAILABLE' ||
+        err.code === 'ERR_SSL_VERSION_TOO_LOW'
+      ) {
+        resolve(false);
+      } else {
+        resolve("unknown"); // Generic socket errors are unknown
+      }
+    });
+
+    socket.on('timeout', () => {
+      resolve("unknown");
+      socket.destroy();
+    });
+  });
+};
+
 const buildSecurityHeadersSummary = (headers: Headers) => {
   const hsts = headers.get("strict-transport-security");
   const csp = headers.get("content-security-policy");
@@ -383,6 +484,22 @@ export async function GET(request: NextRequest | Request) {
     };
     return NextResponse.json(health);
   }
+
+  const ip = getClientIp(request as NextRequest);
+  const rateLimit = checkRateLimit({
+    ip,
+    route: "/api/diagnostic",
+    costClass: "HIGH",
+    limit: 3,
+  });
+
+  if (!rateLimit.success) {
+    // Log abuse patterns (IP hash, route, status) specifically for denied requests
+    console.warn(`[RATE_LIMIT] denied ${rateLimit.ipHash} on /api/diagnostic (HIGH). Retry in ${rateLimit.retryAfterSeconds}s.`);
+    return rateLimitResponse(rateLimit);
+  }
+
+  const rateLimitHeaders = createRateLimitHeaders(rateLimit);
 
   const { searchParams } = new URL(requestUrl);
   const query = normalizeTargetInput(
@@ -682,14 +799,16 @@ export async function GET(request: NextRequest | Request) {
         );
     })();
 
+    const targetPort = 443; // Assume 443 for now
     const sslPromise =
       isActuallyIp || !isHttps
         ? Promise.resolve(null)
-        : fetch(`https://crt.sh/?q=${domain}&output=json`, {
-            signal: AbortSignal.timeout(3000),
-          })
-            .then((r) => r.json())
-            .catch(() => null);
+        : probeTls(domain, targetPort, ipHost);
+
+    const legacyTlsPromise = 
+      isActuallyIp || !isHttps
+        ? Promise.resolve("unknown" as const)
+        : probeLegacyTls(domain, targetPort, ipHost);
 
     const whoisPromise = (() => {
       const rdapUrl = isActuallyIp
@@ -709,7 +828,7 @@ export async function GET(request: NextRequest | Request) {
     const [httpResRaw, httpLatency, redirectTrace, pageTitle] =
       await httpPromise;
     const coreMs = Date.now() - requestStartedAt;
-    const [crtData, rdapData] = await Promise.all([sslPromise, whoisPromise]);
+    const [tlsData, legacyTlsData, rdapData] = await Promise.all([sslPromise, legacyTlsPromise, whoisPromise]);
 
     const httpRes = httpResRaw as Response | { error: true; message: string };
     let whoisInfo: any = {
@@ -750,20 +869,7 @@ export async function GET(request: NextRequest | Request) {
         : rdapData.status?.join(", ") || "OK";
     }
 
-    if ("error" in httpRes) {
-      const partialError: DiagnosticPartialErrorResponse = {
-        domain,
-        status: "partial_error",
-        isVisitor,
-        isActuallyIp,
-        isPrivate: isPrivateIp,
-        error: httpRes.message,
-        dns: { resolved_ip: domain, latency: `${dnsLatency}ms`, success: true },
-        meta: buildMeta(useKvCache ? "MISS" : "BYPASS"),
-      };
-      return NextResponse.json(partialError);
-    }
-
+    // We no longer bail out on HTTP error, so we can display TLS and DNS findings even if HTTP fails (e.g. due to bad SSL or timeout).
     const nsRecords: string[] = dnsRecordsData?.NS || [];
     const dnsRecords = {
       A: dnsRecordsData?.A?.length ? dnsRecordsData.A : ipv4,
@@ -777,18 +883,20 @@ export async function GET(request: NextRequest | Request) {
     const ip = isActuallyIp
       ? domain
       : allIps[0] || dnsMatch?.data?.Answer?.[0]?.data || domain;
-    const serverHeader = httpRes.headers.get("server") || "Unknown";
-    const hstsEnabled = Boolean(
+      
+    const hasHttpError = "error" in httpRes;
+    const serverHeader = hasHttpError ? "Unknown" : httpRes.headers.get("server") || "Unknown";
+    const hstsEnabled = hasHttpError ? false : Boolean(
       httpRes.headers.get("strict-transport-security"),
     );
-    const securityHeaders = buildSecurityHeadersSummary(httpRes.headers);
+    const securityHeaders = hasHttpError ? buildSecurityHeadersSummary(new Headers()) : buildSecurityHeadersSummary(httpRes.headers);
 
     // Enhanced CDN Logic
     let provider = "Origin";
     let isCdn = false;
     if (!isPrivateIp) {
       const serverValue = serverHeader.toLowerCase();
-      if (httpRes.headers.get("cf-ray") || serverValue.includes("cloudflare")) {
+      if (!hasHttpError && (httpRes.headers.get("cf-ray") || serverValue.includes("cloudflare"))) {
         provider = "Cloudflare";
         isCdn = true;
       } else if (serverValue.includes("akamai")) {
@@ -827,27 +935,93 @@ export async function GET(request: NextRequest | Request) {
       } catch {}
     }
 
-    const certEntries = Array.isArray(crtData) ? crtData : [];
-    const latestCert = certEntries
-      .filter((entry: any) => entry?.not_after)
-      .sort((a: any, b: any) =>
-        String(b.not_after).localeCompare(String(a.not_after)),
-      )[0];
-    const sslExpiry = latestCert?.not_after
-      ? String(latestCert.not_after).split("T")[0].split(" ")[0]
-      : "Unknown";
-    const sslIssuer = latestCert?.issuer_name || "Unknown";
+    let certValid = false;
+    let dateValid = false;
+    let hostnameValid = false;
+    let chainAuthorized = false;
+    let ocspStapled: boolean | "unknown" = "unknown";
+    
+    let sslExpiry = "Unknown";
+    let sslIssuer = "Unknown";
+    let subjectAltName = undefined;
+    let protocol = undefined;
+    let cipher = undefined;
+    let alpn = undefined;
+    let errorReason = undefined;
+    let authorized = false;
+
+    if (tlsData && tlsData.success) {
+      const { cert } = tlsData;
+      sslExpiry = cert?.valid_to ? new Date(cert.valid_to).toISOString().split('T')[0] : "Unknown";
+      sslIssuer = cert?.issuer?.O || cert?.issuer?.CN || "Unknown";
+      subjectAltName = cert?.subjectaltname;
+      protocol = tlsData.protocol;
+      cipher = tlsData.cipher;
+      alpn = tlsData.alpn;
+      authorized = tlsData.authorized;
+
+      ocspStapled = tlsData.ocspStapled;
+
+      // Check dates
+      const now = Date.now();
+      const validFrom = cert?.valid_from ? new Date(cert.valid_from).getTime() : 0;
+      const validTo = cert?.valid_to ? new Date(cert.valid_to).getTime() : 0;
+      if (validFrom && validTo && now >= validFrom && now <= validTo) {
+        dateValid = true;
+      }
+
+      // Check hostname
+      if (cert) {
+        try {
+          const identityError = tls.checkServerIdentity(domain, cert);
+          hostnameValid = !identityError;
+        } catch {
+          hostnameValid = false;
+        }
+      }
+
+      // Check chain authorization
+      chainAuthorized = authorized;
+
+      // Calculate aggregated valid flag
+      if (authorized && hostnameValid && dateValid) {
+        certValid = true;
+      } else {
+        errorReason = tlsData.authorizationError;
+        
+        if (!dateValid) {
+           if (validTo && now > validTo) {
+              errorReason = "CERT_EXPIRED";
+           } else if (validFrom && now < validFrom) {
+              errorReason = "CERT_NOT_YET_VALID";
+           }
+        } else if (!hostnameValid) {
+           errorReason = "HOSTNAME_MISMATCH";
+        } else if (!chainAuthorized) {
+           errorReason = errorReason || "UNTRUSTED_ISSUER";
+        }
+      }
+    } else if (tlsData && !tlsData.success) {
+      errorReason = tlsData.error;
+    }
+
     const expiryDate = sslExpiry !== "Unknown" ? new Date(sslExpiry) : null;
     const daysToExpiry = expiryDate
       ? Math.ceil((expiryDate.getTime() - Date.now()) / 86_400_000)
       : null;
-    const certValid = isHttps && (daysToExpiry === null || daysToExpiry >= 0);
+    
+    // Fallback valid flag if not fully rejected
+    if (isHttps && certValid === false && !errorReason && daysToExpiry !== null && daysToExpiry >= 0) {
+       certValid = true; 
+    }
+
     const sslFactors = [
       isHttps ? "HTTPS_ENABLED" : null,
       certValid ? "CERT_VALID" : null,
       hstsEnabled ? "HSTS_ENABLED" : null,
       isCdn ? "CDN_PRESENT" : null,
     ].filter(Boolean) as string[];
+    
     const sslGrade =
       !isHttps || !certValid
         ? "F"
@@ -856,6 +1030,7 @@ export async function GET(request: NextRequest | Request) {
           : hstsEnabled
             ? "A+"
             : "B";
+
     const certChain = [
       { level: "Leaf", name: domain, status: certValid ? "Active" : "Invalid" },
       ...(sslIssuer !== "Unknown"
@@ -882,22 +1057,33 @@ export async function GET(request: NextRequest | Request) {
         resolvers: dnsResults,
       },
       http: {
-        success: httpRes.ok,
-        status_code: httpRes.status,
+        success: !hasHttpError && httpRes.ok,
+        status_code: hasHttpError ? 0 : httpRes.status,
         latency: `${httpLatency}ms`,
         is_https: isHttps,
-        final_url: redirectTrace?.finalUrl || httpRes.url || targetUrl,
+        final_url: redirectTrace?.finalUrl || (hasHttpError ? targetUrl : httpRes.url) || targetUrl,
         redirect_chain: redirectTrace?.chain || [],
         redirect_count: Math.max(0, (redirectTrace?.chain?.length || 1) - 1),
-        redirect_warning: redirectTrace?.warning,
-        cf_ray: httpRes.headers.get("cf-ray") || undefined,
+        redirect_warning: redirectTrace?.warning || (hasHttpError ? httpRes.message : undefined),
+        cf_ray: hasHttpError ? undefined : httpRes.headers.get("cf-ray") || undefined,
         page_title: pageTitle,
       },
       securityHeaders,
       ssl: {
         valid: certValid,
+        date_valid: dateValid,
+        hostname_valid: hostnameValid,
+        chain_authorized: chainAuthorized,
+        ocsp_stapled: ocspStapled,
         issuer: sslIssuer,
         expiry: sslExpiry,
+        subject_alt_name: subjectAltName,
+        protocol,
+        cipher,
+        alpn,
+        legacy_tls_accepted: legacyTlsData,
+        authorized,
+        error_reason: errorReason,
         grade: sslGrade,
         factors: sslFactors,
         tls_version: isHttps ? "TLS" : "HTTP",
@@ -918,9 +1104,12 @@ export async function GET(request: NextRequest | Request) {
       }).catch(() => null);
     }
     return NextResponse.json(responseData, {
-      headers: useKvCache
-        ? { "X-Cache": "MISS", "Cache-Control": "no-store" }
-        : { "X-Cache": "BYPASS", "Cache-Control": "no-store" },
+      headers: {
+        ...(useKvCache
+          ? { "X-Cache": "MISS", "Cache-Control": "no-store" }
+          : { "X-Cache": "BYPASS", "Cache-Control": "no-store" }),
+        ...rateLimitHeaders,
+      },
     });
   } catch (error: any) {
     const message = error?.message || "Diagnostic request failed";
@@ -930,12 +1119,27 @@ export async function GET(request: NextRequest | Request) {
       );
     return NextResponse.json(
       { status: "error", message },
-      { status: blockedTarget ? 400 : 500 },
+      { status: blockedTarget ? 400 : 500, headers: rateLimitHeaders },
     );
   }
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request as NextRequest);
+  const rateLimit = checkRateLimit({
+    ip,
+    route: "/api/diagnostic",
+    costClass: "HIGH",
+    limit: 3,
+  });
+
+  if (!rateLimit.success) {
+    console.warn(`[RATE_LIMIT] denied ${rateLimit.ipHash} on /api/diagnostic POST (HIGH). Retry in ${rateLimit.retryAfterSeconds}s.`);
+    return rateLimitResponse(rateLimit);
+  }
+
+  const rateLimitHeaders = createRateLimitHeaders(rateLimit);
+
   try {
     const body = await request.json();
     const target =
@@ -944,7 +1148,7 @@ export async function POST(request: Request) {
     if (!target) {
       return NextResponse.json(
         { error: "target is required" },
-        { status: 400 },
+        { status: 400, headers: rateLimitHeaders },
       );
     }
 
@@ -956,11 +1160,11 @@ export async function POST(request: Request) {
         timestamp: new Date().toISOString(),
       },
     };
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: rateLimitHeaders });
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.message || "Invalid request body" },
-      { status: 500 },
+      { status: 500, headers: rateLimitHeaders },
     );
   }
 }

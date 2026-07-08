@@ -8,9 +8,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
+import rehypeSlug from "rehype-slug";
 import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/blog";
 import { mdxComponents } from "@/components/blog/mdx-components";
 import { buildPageMetadata, buildTechArticleJsonLd } from "@/lib/seo";
+import { extractTocFromMarkdown } from "@/lib/toc";
 
 export function generateStaticParams() {
   const posts = getAllBlogPosts("en");
@@ -66,6 +68,8 @@ export default async function BlogPost({
     imageUrl: post.coverImage || "",
     url: `https://opskitpro.com/${lang}/blog/${slug}`,
   });
+
+  const toc = post.source === "mdx" && post.content ? extractTocFromMarkdown(post.content) : [];
 
   return (
     <>
@@ -241,6 +245,7 @@ export default async function BlogPost({
                       options={{
                         mdxOptions: {
                           rehypePlugins: [
+                            rehypeSlug,
                             [
                               rehypePrettyCode,
                               {
@@ -257,6 +262,27 @@ export default async function BlogPost({
             </div>
 
             <aside className="space-y-6">
+              {toc.length > 0 && (
+                <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm hidden lg:block sticky top-8">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+                    {lang === "en" ? "On this page" : "目录"}
+                  </div>
+                  <nav className="mt-4 space-y-2">
+                    {toc.map((heading) => (
+                      <a
+                        key={heading.id}
+                        href={`#${heading.id}`}
+                        className={`block text-sm transition-colors hover:text-emerald-600 ${
+                          heading.level === 3 ? "pl-4 text-zinc-500" : "font-medium text-zinc-700"
+                        }`}
+                      >
+                        {heading.text}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+              )}
+
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
                   {false

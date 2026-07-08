@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getClientIp } from "@/lib/runtime-context";
+import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +46,21 @@ const parseTraceText = (text: string) => {
 };
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+
+  const rateLimit = checkRateLimit({
+    ip,
+    route: "/api/trace",
+    costClass: "MEDIUM",
+    limit: 15,
+  });
+
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit);
+  }
+
+  const rateLimitHeaders = createRateLimitHeaders(rateLimit);
+
   const { searchParams } = new URL(request.url);
   const domain = searchParams.get("domain");
   const wantsJson = searchParams.get("format") === "json";
@@ -51,15 +68,15 @@ export async function GET(request: NextRequest) {
   if (!domain) {
     return NextResponse.json(
       { error: "Missing domain parameter" },
-      { status: 400 },
+      { status: 400, headers: rateLimitHeaders },
     );
   }
 
   // Basic validation: Must be a pure domain/hostname
   if (!VALID_HOSTNAME_REGEX.test(domain)) {
     return NextResponse.json(
-      { error: "Invalid domain format" },
-      { status: 400 },
+      { error: "Invalid domain: blocked pattern" },
+      { status: 400, headers: rateLimitHeaders },
     );
   }
 
@@ -70,7 +87,7 @@ export async function GET(request: NextRequest) {
   if (BLOCKED_PATTERNS.some((p) => p.test(targetUrl))) {
     return NextResponse.json(
       { error: "Target URL not allowed" },
-      { status: 403 },
+      { status: 403, headers: rateLimitHeaders },
     );
   }
 
@@ -90,7 +107,7 @@ export async function GET(request: NextRequest) {
           error:
             "Target redirected; Cloudflare Trace not available on this path",
         },
-        { status: 400 },
+        { status: 400, headers: rateLimitHeaders },
       );
     }
 
@@ -111,13 +128,14 @@ export async function GET(request: NextRequest) {
           status: response.status,
           text: text.slice(0, 500), // just a snippet if it's not a trace
         },
-        { status: 404 },
+        { status: 404, headers: rateLimitHeaders },
       );
     }
 
     if (wantsJson) {
       return NextResponse.json(parsed, {
         headers: {
+          ...rateLimitHeaders,
           "Cache-Control": "no-store",
           "X-Target-Server": response.headers.get("server") || "unknown",
         },
@@ -127,6 +145,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(text, {
       status: 200,
       headers: {
+        ...rateLimitHeaders,
         "Content-Type": "text/plain",
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
@@ -135,6 +154,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Trace request failed";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: msg }, { status: 500, headers: rateLimitHeaders });
   }
 }

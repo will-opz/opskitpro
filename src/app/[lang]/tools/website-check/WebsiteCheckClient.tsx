@@ -2776,81 +2776,22 @@ export default function WebsiteCheckClient({
                     </div>
                   </div>
 
-                  {/* Col 2: Security Grade */}
-                  <div className="flex flex-col items-center justify-center bg-zinc-50 rounded-2xl p-4 border border-black/5 relative">
-                    <button
-                      onClick={() => setShowGradeInfo(!showGradeInfo)}
-                      className="flex items-center gap-1 group"
-                    >
-                      <p className="text-[9px] font-semibold text-zinc-400 mb-2 group-hover:text-zinc-600 transition-colors tracking-[0.18em]">
-                        {localeText.ssl.grade}
-                      </p>
-                      <HelpCircle className="w-2.5 h-2.5 text-zinc-300 mb-2 group-hover:text-emerald-500 transition-colors" />
-                    </button>
-
-                    {showGradeInfo && (
-                      <div className="absolute z-50 bottom-full mb-2 w-64 bg-zinc-900 text-white p-4 rounded-xl shadow-2xl text-[10px] space-y-2 border border-white/10">
-                        <p className="font-semibold text-emerald-400 tracking-[0.18em]">
-                          {localeText.ssl.grading}
-                        </p>
-                        <div className="space-y-1 text-zinc-300">
-                          <p>
-                            <span className="text-white font-bold">A+ :</span>{" "}
-                            {lang === "en"
-                              ? "Fully Secure (HTTPS + HSTS Active)"
-                              : "極為安全（HTTPS + HSTS 已啟用）"}
-                          </p>
-                          <p>
-                            <span className="text-white font-bold">A :</span>{" "}
-                            {lang === "en"
-                              ? "Secure (HTTPS Enabled)"
-                              : "安全（HTTPS 已啟用）"}
-                          </p>
-                          <p>
-                            <span className="text-white font-bold">B :</span>{" "}
-                            {lang === "en"
-                              ? "Warning (HTTPS but Missing HSTS)"
-                              : "提醒（HTTPS 可用，但缺少 HSTS）"}
-                          </p>
-                          <p>
-                            <span className="text-white font-bold">C :</span>{" "}
-                            {lang === "en"
-                              ? "Urgent (Expiring within 15 days)"
-                              : "即將到期（15 天內）"}
-                          </p>
-                          <p>
-                            <span className="text-white font-bold">F :</span>{" "}
-                            {lang === "en"
-                              ? "Critical (HTTP only or Invalid Cert)"
-                              : "需要處理（僅 HTTP 或憑證無效）"}
-                          </p>
-                        </div>
-                        <div className="pt-2 border-t border-white/5 text-[8px] text-zinc-500">
-                          {lang === "en"
-                            ? "Based on Qualys SSL Labs & Mozilla Security standards."
-                            : "參考 Qualys SSL Labs 與 Mozilla 的標準。"}
-                        </div>
-                      </div>
-                    )}
-                    <div
-                      className={`text-4xl font-semibold ${
-                        result.ssl.grade?.startsWith("A")
-                          ? "text-emerald-500"
-                          : result.ssl.grade === "B"
-                            ? "text-orange-500"
-                            : "text-red-500"
-                      }`}
-                    >
-                      {result.ssl.grade || "A"}
+                  {/* Col 2: Precise Validation */}
+                  <div className="flex flex-col justify-center space-y-2 bg-zinc-50 rounded-2xl p-4 border border-black/5 relative">
+                    <p className="text-[9px] font-semibold text-zinc-400 tracking-[0.18em] mb-1">
+                      {lang === "en" ? "VALIDATION CHECKS" : "驗證檢查"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                       <div className={`w-1.5 h-1.5 rounded-full ${result.ssl.date_valid === true ? 'bg-emerald-500' : result.ssl.date_valid === false ? 'bg-red-500' : 'bg-zinc-300'}`}></div>
+                       <p className="text-[10px] text-zinc-700">{lang === "en" ? "Date Valid" : "日期有效"}</p>
                     </div>
-                    <div className="mt-2 flex gap-1">
-                      {result.ssl.factors?.map((f: string) => (
-                        <div
-                          key={f}
-                          className="w-1.5 h-1.5 rounded-full bg-zinc-200"
-                          title={f}
-                        ></div>
-                      ))}
+                    <div className="flex items-center gap-2">
+                       <div className={`w-1.5 h-1.5 rounded-full ${result.ssl.hostname_valid === true ? 'bg-emerald-500' : result.ssl.hostname_valid === false ? 'bg-red-500' : 'bg-zinc-300'}`}></div>
+                       <p className="text-[10px] text-zinc-700">{lang === "en" ? "Hostname Match" : "主機名稱相符"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <div className={`w-1.5 h-1.5 rounded-full ${result.ssl.chain_authorized === true ? 'bg-emerald-500' : result.ssl.chain_authorized === false ? 'bg-red-500' : 'bg-zinc-300'}`}></div>
+                       <p className="text-[10px] text-zinc-700">{lang === "en" ? "Trusted Chain" : "受信任憑證鏈"}</p>
                     </div>
                   </div>
 

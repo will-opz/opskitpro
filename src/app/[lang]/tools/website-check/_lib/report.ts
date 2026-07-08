@@ -309,9 +309,12 @@ export function buildWebsiteCheckReport(
 
   const sslExpired = isExpired(data.ssl.expiry);
   const sslSoon = isExpiringSoon(data.ssl.expiry) || data.ssl.grade === "C";
+  const sslValid = data.ssl.valid;
+  const isCdn = data.cdn.is_provider;
+
   findings.push(
     makeFinding({
-      id: data.ssl.valid
+      id: sslValid
         ? sslSoon
           ? "ssl.expiring"
           : "ssl.valid"
@@ -319,7 +322,7 @@ export function buildWebsiteCheckReport(
           ? "ssl.not-applicable"
           : "ssl.invalid",
       key: "ssl",
-      severity: data.ssl.valid
+      severity: sslValid
         ? sslSoon
           ? "warning"
           : "success"
@@ -327,32 +330,52 @@ export function buildWebsiteCheckReport(
           ? "info"
           : "critical",
       title: copy.labels.ssl,
-      summary: data.ssl.valid
-        ? `Certificate is valid (${data.ssl.grade || "OK"}), expires ${data.ssl.expiry}.`
+      summary: sslValid
+        ? `Certificate is valid and matches hostname, expires ${data.ssl.expiry}.`
         : isIpOrVisitor
-          ? "SSL certificate grading is not applicable to this public IP probe."
-          : "SSL/TLS validation failed or the certificate chain is incomplete.",
+          ? "TLS certificate validation is not applicable to this public IP probe."
+          : `TLS validation failed: ${
+              data.ssl.date_valid === false ? "Certificate has expired." :
+              data.ssl.hostname_valid === false ? "Hostname mismatch." :
+              data.ssl.chain_authorized === false ? "Untrusted issuer." :
+              data.ssl.error_reason || "Unknown error."
+            }`,
       evidence: [
-        `Valid: ${data.ssl.valid ? "yes" : "no"}`,
-        `Grade: ${data.ssl.grade || "Unknown"}`,
+        `Valid: ${sslValid ? "yes" : "no"}`,
+        `Protocol: ${data.ssl.protocol || "Unknown"}`,
         `Issuer: ${data.ssl.issuer || "Unknown"}`,
         `Expiry: ${data.ssl.expiry || "Unknown"}`,
-      ],
-      likelyCause: data.ssl.valid
+        `OCSP Stapled: ${data.ssl.ocsp_stapled === true ? "yes" : data.ssl.ocsp_stapled === false ? "no" : "unknown"}`,
+        data.ssl.subject_alt_name ? `SANs: ${data.ssl.subject_alt_name}` : "",
+        !sslValid && data.ssl.error_reason ? `Error: ${data.ssl.error_reason}` : "",
+      ].filter(Boolean),
+      likelyCause: sslValid
         ? sslSoon
           ? "The certificate is valid but close to renewal time."
           : copy.noIssueCause
         : isIpOrVisitor
           ? "A raw IP probe usually cannot match the hostname on a certificate."
-          : "Expired certificate, hostname mismatch, missing intermediate, or CDN/origin TLS mode mismatch.",
-      recommendedFix: data.ssl.valid
+          : data.ssl.date_valid === false
+            ? "The certificate has expired or its start date is in the future."
+          : data.ssl.hostname_valid === false
+            ? "The server returned a certificate that does not cover the requested hostname."
+          : data.ssl.chain_authorized === false
+            ? "The certificate is self-signed or missing intermediate certificates."
+          : "TLS handshake failed due to a network reset, protocol mismatch, or firewall block.",
+      recommendedFix: sslValid
         ? sslSoon
-          ? "Renew the certificate and verify the CDN/origin chain before expiry."
+          ? "Renew the certificate before expiry."
           : copy.noIssueFix
         : isIpOrVisitor
           ? "Test the hostname that users visit when validating TLS."
-          : "Install a valid certificate for the hostname and verify the full chain at the CDN and origin.",
-      verificationSteps: data.ssl.valid
+          : data.ssl.date_valid === false
+            ? "Renew and install the updated certificate on your server or CDN."
+          : data.ssl.hostname_valid === false
+            ? "Ensure the server is configured to serve the correct certificate for this hostname (SNI)."
+          : data.ssl.chain_authorized === false
+            ? "Install a trusted certificate and ensure all intermediate certificates are included."
+          : "Review server access logs and check if the origin allows traffic from OpsKitPro.",
+      verificationSteps: sslValid
         ? [
             "Check the certificate expiry in your CDN or certificate manager.",
             "Run Website Check after renewal.",
@@ -365,6 +388,50 @@ export function buildWebsiteCheckReport(
       relatedToolHref: `/${lang}/tools/ssl`,
     }),
   );
+
+  if (data.ssl.legacy_tls_accepted && data.ssl.legacy_tls_accepted !== "unknown") {
+    const protoName = typeof data.ssl.legacy_tls_accepted === "string" ? data.ssl.legacy_tls_accepted : "Unknown Legacy";
+    findings.push(
+      makeFinding({
+        id: "ssl.legacy-supported",
+        key: "ssl",
+        severity: "warning",
+        title: "Legacy TLS Support",
+        summary: "A handshake allowing up to TLS 1.1 succeeded.",
+        evidence: [
+          `Legacy Handshake (TLSv1.1 max): Accepted`,
+          `Negotiated Protocol: ${protoName}`
+        ],
+        likelyCause: "The server or edge proxy is configured to allow outdated TLS protocols for legacy client compatibility.",
+        recommendedFix: "Disable TLS 1.0 and TLS 1.1 in your web server or CDN SSL/TLS settings.",
+        verificationSteps: [
+          "Update your web server configuration (e.g., ssl_protocols TLSv1.2 TLSv1.3 in Nginx).",
+          "Re-run Website Check after deploying the config.",
+        ],
+      })
+    );
+  }
+
+  if (isCdn) {
+    findings.push(
+      makeFinding({
+        id: "ssl.cdn-termination",
+        key: "ssl",
+        severity: "info",
+        title: "Edge TLS Termination",
+        summary: `TLS appears terminated by ${data.cdn.provider} edge. Findings describe the public edge certificate, not necessarily the origin certificate.`,
+        evidence: [
+          `CDN detected: ${data.cdn.provider}`,
+          `Server header: ${data.cdn.server || "Unknown"}`,
+        ],
+        likelyCause: copy.noIssueCause,
+        recommendedFix: "Ensure your origin server also has a valid certificate installed (e.g., Full Strict mode in Cloudflare) to encrypt traffic between the edge and origin.",
+        verificationSteps: [
+          "Check origin certificate status manually via server IP.",
+        ],
+      })
+    );
+  }
 
   findings.push(
     makeFinding({
@@ -489,9 +556,10 @@ export function buildWebsiteCheckReport(
   const evidence = [
     `DNS: ${data.dns.success ? "OK" : "FAIL"} · ${data.dns.latency} · ${data.dns.resolved_ip}`,
     `HTTP: ${data.http.success ? "OK" : blocked ? "BLOCKED" : "FAIL"} · ${data.http.status_code || "ERR"} · ${data.http.latency}`,
-    `SSL: ${data.ssl.valid ? "OK" : "FAIL"} · ${data.ssl.grade || "Unknown"} · expires ${data.ssl.expiry}`,
+    `SSL: ${data.ssl.valid ? "OK" : "FAIL"} · ${data.ssl.protocol || "Unknown"} · expires ${data.ssl.expiry}`,
     `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || "Unknown"}`,
     `CDN: ${data.cdn.is_provider ? data.cdn.provider : "Not detected"} · server ${data.cdn.server || "Unknown"}`,
+    `Observation Point: TLS probe executed from OpsKitPro Probe`,
   ];
 
   return {
@@ -560,6 +628,7 @@ export function buildWebsiteCheckMarkdown(
     `- Full check: ${data.meta?.totalMs ? `${data.meta.totalMs}ms` : "Unknown"}`,
     `- Cache: ${data.meta?.cacheStatus || "MISS"}${data.meta?.cacheAgeSeconds ? ` (${data.meta.cacheAgeSeconds}s old)` : ""}`,
     `- Cloudflare Edge: ${data.meta?.edgeColo || "Unknown"}`,
+    `- Observation Point: TLS probe executed from OpsKitPro Probe`,
     "",
     "## Executive Summary",
     report.summary,
@@ -607,9 +676,14 @@ export function buildWebsiteCheckMarkdown(
     "",
     "## SSL",
     `- Valid: ${data.ssl.valid ? "Yes" : "No"}`,
-    `- Grade: ${data.ssl.grade || "Unknown"}`,
+    `- Protocol: ${data.ssl.protocol || "Unknown"}`,
+    `- Cipher: ${data.ssl.cipher || "Unknown"}`,
+    `- ALPN: ${data.ssl.alpn || "None"}`,
+    `- OCSP Stapled: ${data.ssl.ocsp_stapled === true ? "Yes" : data.ssl.ocsp_stapled === false ? "No" : "Unknown"}`,
     `- Expiry: ${data.ssl.expiry}`,
     `- Issuer: ${data.ssl.issuer}`,
+    data.ssl.subject_alt_name ? `- SANs: ${data.ssl.subject_alt_name}` : "",
+    `- Legacy TLS Accepted: ${data.ssl.legacy_tls_accepted && data.ssl.legacy_tls_accepted !== "unknown" ? `Yes (${data.ssl.legacy_tls_accepted}) (Warning)` : data.ssl.legacy_tls_accepted === false ? "No (Secure)" : "Unknown"}`,
     "",
     "## CDN",
     `- Provider: ${data.cdn.provider}`,

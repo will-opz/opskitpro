@@ -5,6 +5,12 @@ type CloudflareRuntimeContext = {
   env?: Record<string, any>;
 };
 
+/**
+ * Extracts the client IP from the request.
+ * SECURITY BOUNDARY: This function inherently trusts `cf-connecting-ip` and `x-forwarded-for`.
+ * It is only safe to use because OpsKitPro is deployed behind Cloudflare and an Nginx reverse proxy,
+ * which strip or overwrite these headers from malicious direct external requests.
+ */
 export function getClientIp(request: NextRequest) {
   return (
     request.headers.get("cf-connecting-ip") ||

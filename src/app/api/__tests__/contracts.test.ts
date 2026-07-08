@@ -1,4 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn(() => ({
+    success: true,
+    limit: 100,
+    remaining: 99,
+    resetAt: Date.now() + 60000,
+    retryAfterSeconds: 0,
+    ipHash: "12345678"
+  })),
+  createRateLimitHeaders: vi.fn(() => ({
+    "X-RateLimit-Limit": "100",
+    "X-RateLimit-Remaining": "99",
+    "X-RateLimit-Reset": String(Math.floor(Date.now() / 1000) + 60)
+  })),
+  rateLimitResponse: vi.fn()
+}));
 import { NextRequest } from "next/server";
 import {
   GET as diagnosticGET,

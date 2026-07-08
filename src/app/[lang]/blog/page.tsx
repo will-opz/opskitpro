@@ -99,7 +99,7 @@ export default async function BlogPage({
       subtitle: isZh
           ? "把 Vibe Coding 整理成有边界、有验证、有记录的 AI 辅助工程流程。"
           : "Turns vibe coding into a guarded workflow with scope, verification, notes, and deployment checks.",
-      slugs: ["vibe-coding-workflow"],
+      slugs: ["vibe-coding-workflow", "ai-coding-playwright-smoke-test"],
     },
   ].map((group) => ({
     ...group,
@@ -118,10 +118,31 @@ export default async function BlogPage({
     <>
       <SiteHeader dict={dict} lang={lang} />
 
-      <main className="relative mx-auto mb-28 w-full max-w-7xl flex-grow px-6 pt-6 z-10 md:pt-8">
+      <main className="relative mx-auto mb-28 w-full max-w-7xl flex-grow px-6 pt-6 z-10 md:pt-8 flex flex-col lg:flex-row lg:items-start gap-10">
         <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[600px] w-full max-w-[1000px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
 
-        <div className="mb-12 border-b border-zinc-100 pb-10 text-center md:text-left">
+        {/* Sidebar Navigation */}
+        <aside className="hidden lg:block w-[240px] shrink-0 sticky top-28">
+          <div className="mb-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+            {isZh ? "知识地图" : "Knowledge Map"}
+          </div>
+          <nav className="space-y-1">
+            <a href="#all" className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-emerald-50 hover:text-emerald-600">
+              <span>{isZh ? "所有文章" : "All posts"}</span>
+              <span className="text-zinc-400 text-xs">{totalPosts}</span>
+            </a>
+            {articleGroups.map((group) => (
+              <a key={group.id} href={`#${group.id}`} className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-emerald-50 hover:text-emerald-600">
+                <span>{group.title}</span>
+                <span className="text-zinc-400 text-xs">{group.posts.length}</span>
+              </a>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Content Area */}
+        <div className="flex-1 min-w-0" id="all">
+          <div className="mb-12 border-b border-zinc-100 pb-10 text-center md:text-left">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-white/75 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-600 shadow-sm backdrop-blur-md">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             {kbLabel}
@@ -172,9 +193,21 @@ export default async function BlogPage({
               </div>
             ))}
           </div>
+          </div>
+
+        {/* Mobile Navigation */}
+        <div className="-mx-6 mb-8 flex items-center gap-2 overflow-x-auto px-6 pb-2 lg:hidden hide-scrollbar">
+          <a href="#all" className="shrink-0 rounded-full bg-zinc-100 px-4 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-emerald-100 hover:text-emerald-700">
+            {isZh ? "全部" : "All"}
+          </a>
+          {articleGroups.map((group) => (
+            <a key={group.id} href={`#${group.id}`} className="shrink-0 rounded-full bg-zinc-100 px-4 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-emerald-100 hover:text-emerald-700">
+              {group.title}
+            </a>
+          ))}
         </div>
 
-        <div className="mb-14 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-14 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {articleSeries.map((series) => (
             <a
               key={series.id}
@@ -202,7 +235,7 @@ export default async function BlogPage({
 
         <div className="space-y-14">
           {articleGroups.map((group) => (
-            <section key={group.id} id={group.id} className="scroll-mt-24">
+            <section key={group.id} id={group.id} className="scroll-mt-28">
               <div className="mb-6 border-b border-zinc-100 pb-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="rounded-full border border-emerald-500/15 bg-emerald-500/8 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-emerald-600">
@@ -328,7 +361,8 @@ export default async function BlogPage({
             </div>
           </div>
         </div>
-      </main>
+      </div>
+    </main>
 
       <SiteFooter dict={dict} />
     </>

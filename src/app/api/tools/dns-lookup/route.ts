@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { checkRateLimit } from "@/lib/validators";
+import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
 import { performDnsLookup } from "@/lib/tools/dns";
 import { getClientIp } from "@/lib/runtime-context";
 
@@ -13,16 +13,18 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const ip = getClientIp(request);
 
-  if (!checkRateLimit(ip)) {
-    return errorResponse({
-      tool: "dns-lookup",
-      input: {},
-      code: "RATE_LIMIT_EXCEEDED",
-      message: "Too many requests, please try again later.",
-      status: 429,
-      startTime,
-    });
+  const rateLimit = checkRateLimit({
+    ip,
+    route: "/api/tools/dns-lookup",
+    costClass: "LOW",
+    limit: 60,
+  });
+
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit);
   }
+
+  const rateLimitHeaders = createRateLimitHeaders(rateLimit);
 
   const { searchParams } = new URL(request.url);
   const domain = searchParams.get("domain");
@@ -36,6 +38,7 @@ export async function GET(request: NextRequest) {
       message: 'The "domain" parameter is required.',
       status: 400,
       startTime,
+      extraHeaders: rateLimitHeaders,
     });
   }
 
@@ -47,6 +50,7 @@ export async function GET(request: NextRequest) {
       message: "Invalid domain format.",
       status: 400,
       startTime,
+      extraHeaders: rateLimitHeaders,
     });
   }
 
@@ -57,6 +61,7 @@ export async function GET(request: NextRequest) {
       input: { domain, type: type.toLowerCase() },
       result: result.records,
       startTime,
+      extraHeaders: rateLimitHeaders,
     });
   } catch (error: any) {
     return errorResponse({
@@ -66,6 +71,7 @@ export async function GET(request: NextRequest) {
       message: error.message || "DNS lookup failed.",
       status: 500,
       startTime,
+      extraHeaders: rateLimitHeaders,
     });
   }
 }

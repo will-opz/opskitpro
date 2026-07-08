@@ -282,8 +282,8 @@ test('knowledge base exposes public article groups and article links', async ({ 
   await page.goto('/blog')
 
   await expect(page.getByRole('heading', { name: /Knowledge Base/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /AI engineering/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Vibe Coding in practice/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /AI engineering/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Vibe Coding in practice/i }).first()).toBeVisible()
 })
 
 test('mobile menu opens and exposes primary navigation', async ({ page }) => {

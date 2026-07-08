@@ -127,6 +127,17 @@ export interface DiagnosticSslSummary {
   valid: boolean;
   issuer: string;
   expiry: string;
+  subject_alt_name?: string;
+  protocol?: string;
+  cipher?: string;
+  alpn?: string | null;
+  legacy_tls_accepted?: string | false | "unknown";
+  authorized?: boolean;
+  date_valid?: boolean;
+  hostname_valid?: boolean;
+  chain_authorized?: boolean;
+  ocsp_stapled?: boolean | "unknown";
+  error_reason?: string;
   grade?: string;
   factors?: string[];
   tls_version?: string;
