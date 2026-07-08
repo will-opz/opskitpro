@@ -1,0 +1,67 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="150" y1="70" x2="1060" y2="660" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="0.55" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F0F9FF"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 360) rotate(90) scale(260 440)">
+      <stop stop-color="#0EA5E9" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#0EA5E9" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#0F172A" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="120" y="88" width="960" height="560" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="28" stdDeviation="28" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  
+  <rect width="1200" height="720" rx="48" fill="url(#bg)"/>
+  <rect width="1200" height="720" rx="48" fill="url(#grid)"/>
+  <circle cx="600" cy="360" r="290" fill="url(#halo)"/>
+
+  <g filter="url(#shadow)">
+    <!-- Browser Window Outline -->
+    <rect x="200" y="140" width="800" height="460" rx="24" fill="#FFFFFF" fill-opacity="0.95" stroke="#E0F2FE"/>
+    
+    <!-- Browser Top Bar -->
+    <rect x="200" y="140" width="800" height="60" rx="24" fill="#F8FAFC" stroke="#E0F2FE"/>
+    <circle cx="240" cy="170" r="8" fill="#FCA5A5"/>
+    <circle cx="270" cy="170" r="8" fill="#FCD34D"/>
+    <circle cx="300" cy="170" r="8" fill="#86EFAC"/>
+    
+    <!-- URL Bar -->
+    <rect x="340" y="155" width="400" height="30" rx="15" fill="#FFFFFF" stroke="#E2E8F0"/>
+    <text x="360" y="175" font-family="Inter, ui-sans-serif, system-ui" font-size="14" font-weight="500" fill="#64748B">https://opskitpro.com/article</text>
+    
+    <!-- Social Card Mockup -->
+    <rect x="350" y="240" width="500" height="300" rx="16" fill="#F8FAFC" stroke="#E2E8F0"/>
+    <!-- Image Placeholder -->
+    <rect x="350" y="240" width="500" height="180" rx="16" fill="#E0F2FE"/>
+    <path d="M560 310 L600 270 L650 330" stroke="#0284C7" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="530" cy="280" r="20" fill="#BAE6FD"/>
+    
+    <!-- Title Placeholder -->
+    <rect x="380" y="450" width="300" height="20" rx="8" fill="#94A3B8"/>
+    <!-- Description Placeholder -->
+    <rect x="380" y="490" width="440" height="12" rx="6" fill="#CBD5E1"/>
+    <rect x="380" y="510" width="360" height="12" rx="6" fill="#CBD5E1"/>
+
+    <!-- Annotations & Pointers -->
+    <!-- og:image -->
+    <path d="M260 300 L340 300" stroke="#0EA5E9" stroke-width="3" stroke-dasharray="6,6" fill="none" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <rect x="110" y="280" width="140" height="40" rx="8" fill="#F0F9FF" stroke="#38BDF8"/>
+    <text x="180" y="305" text-anchor="middle" font-family="monospace" font-size="16" font-weight="700" fill="#0284C7">og:image</text>
+    
+    <!-- twitter:card -->
+    <path d="M930 330 L860 330" stroke="#0EA5E9" stroke-width="3" stroke-dasharray="6,6" fill="none" stroke-linecap="round"/>
+    <rect x="940" y="310" width="160" height="40" rx="8" fill="#F0F9FF" stroke="#38BDF8"/>
+    <text x="1020" y="335" text-anchor="middle" font-family="monospace" font-size="16" font-weight="700" fill="#0284C7">twitter:card</text>
+    
+    <!-- og:title -->
+    <path d="M260 460 L370 460" stroke="#0EA5E9" stroke-width="3" stroke-dasharray="6,6" fill="none" stroke-linecap="round"/>
+    <rect x="110" y="440" width="140" height="40" rx="8" fill="#F0F9FF" stroke="#38BDF8"/>
+    <text x="180" y="465" text-anchor="middle" font-family="monospace" font-size="16" font-weight="700" fill="#0284C7">og:title</text>
+  </g>
+</svg>
