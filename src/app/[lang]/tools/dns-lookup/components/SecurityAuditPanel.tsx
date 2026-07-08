@@ -20,42 +20,24 @@ export function SecurityAuditPanel({
   result: SecurityAuditResult;
   lang: "zh" | "en";
 }) {
-  const isJapanese = false;
   const isZh = lang === "zh";
-  const isTw = false;
 
   const t = {
-    scoreTitle: isJapanese
-      ? "ドメインセキュリティスコア"
-      : isZh
+    scoreTitle: isZh
         ? "域名安全评分"
-        : isTw
-          ? "網域名稱安全評分"
-          : "Domain Security Score",
+        : "Domain Security Score",
     spfTitle: "SPF",
-    spfDesc: isJapanese
-      ? "送信元認証"
-      : isZh
+    spfDesc: isZh
         ? "发件人身份验证"
-        : isTw
-          ? "寄件者身分驗證"
-          : "Sender Policy Framework",
+        : "Sender Policy Framework",
     dmarcTitle: "DMARC",
-    dmarcDesc: isJapanese
-      ? "メール認証・レポート"
-      : isZh
+    dmarcDesc: isZh
         ? "邮件认证与报告"
-        : isTw
-          ? "郵件認證與報告"
-          : "Domain-based Message Authentication",
+        : "Domain-based Message Authentication",
     caaTitle: "CAA",
-    caaDesc: isJapanese
-      ? "証明書発行の制限"
-      : isZh
+    caaDesc: isZh
         ? "证书颁发机构授权"
-        : isTw
-          ? "憑證發行機構授權"
-          : "Certificate Authority Authorization",
+        : "Certificate Authority Authorization",
   };
 
   const getStatusColor = (status: AuditStatus) => {
@@ -200,20 +182,12 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
             <Download className="w-4 h-4" />
           )}
           {exporting
-            ? isJapanese
-              ? "エクスポート完了"
-              : isZh
+            ? isZh
                 ? "已导出"
-                : isTw
-                  ? "已匯出"
-                  : "Exported"
-            : isJapanese
-              ? "レポート出力"
-              : isZh
+                : "Exported"
+            : isZh
                 ? "导出 Markdown"
-                : isTw
-                  ? "匯出 Markdown"
-                  : "Export Report"}
+                : "Export Report"}
         </button>
       </div>
 

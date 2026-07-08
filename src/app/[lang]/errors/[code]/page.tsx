@@ -66,48 +66,26 @@ export default async function ErrorDetailPage({
   const dict = await getDictionary(lang);
 
   const isZh = lang === "zh";
-  const isJapanese = false;
-  const isTw = false;
 
   const localizedTitle = localize(error.title, lang);
   const localizedSummary = localize(error.summary, lang);
   const localizedCauses = localize(error.causes, lang);
 
-  const causeLabel = isJapanese
-    ? "主な原因"
-    : isZh
+  const causeLabel = isZh
       ? "常见原因"
-      : isTw
-        ? "常見原因"
-        : "Common Causes";
-  const responsibilityLabel = isJapanese
-    ? "責任範囲"
-    : isZh
+      : "Common Causes";
+  const responsibilityLabel = isZh
       ? "责任方"
-      : isTw
-        ? "責任方"
-        : "Responsibility";
-  const guideLabel = isJapanese
-    ? "トラブルシューティング手順"
-    : isZh
+      : "Responsibility";
+  const guideLabel = isZh
       ? "排障指南"
-      : isTw
-        ? "排障指南"
-        : "Troubleshooting Guide";
-  const relatedLabel = isJapanese
-    ? "関連ツール"
-    : isZh
+      : "Troubleshooting Guide";
+  const relatedLabel = isZh
       ? "关联工具"
-      : isTw
-        ? "關聯工具"
-        : "Related Tools";
-  const relatedErrorsLabel = isJapanese
-    ? "関連エラー"
-    : isZh
+      : "Related Tools";
+  const relatedErrorsLabel = isZh
       ? "关联错误"
-      : isTw
-        ? "關聯錯誤"
-        : "Related Errors";
+      : "Related Errors";
 
   const severityConfig = {
     critical: {
@@ -115,33 +93,27 @@ export default async function ErrorDetailPage({
       icon: <ShieldAlert className="h-4 w-4" />,
       label: "Critical",
       desc:
-        isZh || isTw
+        isZh
           ? "影响：网站完全不可访问"
-          : isJapanese
-            ? "影響：Webサイトにアクセスできません"
-            : "Impact: Website completely inaccessible",
+          : "Impact: Website completely inaccessible",
     },
     warning: {
       color: "text-amber-600 bg-amber-100 border-amber-500/20",
       icon: <AlertCircle className="h-4 w-4" />,
       label: "Warning",
       desc:
-        isZh || isTw
+        isZh
           ? "影响：部分请求被拦截或受限"
-          : isJapanese
-            ? "影響：一部のリクエストがブロック・制限されています"
-            : "Impact: Requests partially blocked or limited",
+          : "Impact: Requests partially blocked or limited",
     },
     info: {
       color: "text-blue-600 bg-blue-100 border-blue-500/20",
       icon: <Info className="h-4 w-4" />,
       label: "Info",
       desc:
-        isZh || isTw
+        isZh
           ? "影响：提示性信息"
-          : isJapanese
-            ? "影響：参考情報"
-            : "Impact: Informational",
+          : "Impact: Informational",
     },
   };
 
@@ -299,20 +271,14 @@ export default async function ErrorDetailPage({
             </div>
             <p className="mt-4 text-xs leading-5 text-zinc-500">
               {error.responsibility === "Origin Server"
-                ? isJapanese
-                  ? "このエラーはオリジンサーバーに起因します。サーバーログを確認してください。"
-                  : isZh
+                ? isZh
                     ? "此错误由源站服务器引起，请优先排查源站负载与日志。"
                     : "This error originates from your origin server. Check origin load and logs."
                 : error.responsibility === "Configuration"
-                  ? isJapanese
-                    ? "DNS や SSL 設定の不備に起因します。"
-                    : isZh
+                  ? isZh
                       ? "此错误通常由 DNS、SSL 或防火墙配置不当引起。"
                       : "This error is usually caused by incorrect DNS, SSL, or firewall configurations."
-                  : isJapanese
-                    ? "クライアントやネットワークの問題です。"
-                    : isZh
+                  : isZh
                       ? "此错误由客户端请求或网络层引起。"
                       : "This error is triggered by the client or network layer."}
             </p>
@@ -375,13 +341,9 @@ export default async function ErrorDetailPage({
             <div>
               <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
                 <Activity className="h-4 w-4 text-emerald-500" />
-                {isJapanese
-                  ? "診断ツール"
-                  : isZh
+                {isZh
                     ? "诊断工具"
-                    : isTw
-                      ? "診斷工具"
-                      : "Diagnostics"}
+                    : "Diagnostics"}
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <TrackedLink
@@ -391,13 +353,9 @@ export default async function ErrorDetailPage({
                 >
                   <Globe className="h-6 w-6 text-emerald-600 mb-1 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-bold text-zinc-900">
-                    {isJapanese
-                      ? "サイトを診断する"
-                      : isZh
+                    {isZh
                         ? "诊断你的站点"
-                        : isTw
-                          ? "診斷你的站點"
-                          : "Diagnose Your Site"}
+                        : "Diagnose Your Site"}
                   </span>
                   <span className="text-xs text-zinc-500 font-medium">
                     Website Check
@@ -409,13 +367,9 @@ export default async function ErrorDetailPage({
                 >
                   <Activity className="h-6 w-6 text-sky-600 mb-1 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-bold text-zinc-900">
-                    {isJapanese
-                      ? "接続をトレース"
-                      : isZh
+                    {isZh
                         ? "追踪边缘连接"
-                        : isTw
-                          ? "追蹤邊緣連接"
-                          : "Check Cloudflare Trace"}
+                        : "Check Cloudflare Trace"}
                   </span>
                   <span className="text-xs text-zinc-500 font-medium">
                     Cloudflare Trace

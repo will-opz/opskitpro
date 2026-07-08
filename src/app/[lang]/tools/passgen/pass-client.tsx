@@ -15,7 +15,6 @@ import { QRCodeSVG } from "qrcode.react";
 type Lang = "zh" | "en";
 
 export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
-  const isJapanese = false;
   const [password, setPassword] = useState("");
   const [length, setLength] = useState(16);
   const [options, setOptions] = useState({
@@ -166,14 +165,14 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
         <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href={`/`} className="hover:text-emerald-600 transition-colors">
-            {isJapanese ? "ホーム" : "Home"}
+            {"Home"}
           </Link>
           <span className="text-zinc-300">/</span>
           <Link
             href={`/tools`}
             className="hover:text-emerald-600 transition-colors"
           >
-            {isJapanese ? "ツール" : "Tools"}
+            {"Tools"}
           </Link>
           <span className="text-zinc-300">/</span>
           <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
@@ -341,9 +340,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
               <div className="space-y-4">
                 <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                  {isJapanese
-                    ? "特別形式"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "特殊格式"
                       : "Special Formats"}
                 </h3>
@@ -449,16 +446,12 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
             <div className="text-center space-y-2">
               <p className="text-zinc-900 font-medium flex items-center justify-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                {isJapanese
-                  ? "安全な共有"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "安全传输"
                     : "Secure Transfer"}
               </p>
               <p className="text-sm text-zinc-600 leading-relaxed px-2">
-                {isJapanese
-                  ? "モバイル端末で読み取ると、クリップボードを使わずに安全に共有できます。"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "使用移动设备扫描即可安全传输密码，无需使用剪贴板。"
                     : "Scan with your mobile device to securely transfer this password without using the clipboard."}
               </p>
@@ -467,7 +460,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
               onClick={() => setShowQR(false)}
               className="mt-4 w-full py-3 bg-zinc-100 hover:bg-zinc-800 text-zinc-700 hover:text-white rounded-xl transition-colors font-medium"
             >
-              {isJapanese ? "閉じる" : lang === "zh" ? "关闭" : "Close"}
+              {lang === "zh" ? "关闭" : "Close"}
             </button>
           </div>
         </div>

@@ -263,7 +263,6 @@ const posts: BlogPost[] = [
           "所以你会看到首页、about、website-check、ip-lookup 这些页面的共同变化：更短的标题、更自然的文案、更低噪音的间距，以及更少的装饰性元素。",
         ],
         files: [
-          "src/dictionaries/ja.json",
           "src/app/tools/website-check/WebsiteCheckClient.tsx",
           "src/app/tools/ip-lookup/IPLookupClient.tsx",
         ],
@@ -575,9 +574,7 @@ const posts: BlogPost[] = [
         files: [
           "src/app/services/ServicesClient.tsx",
           "src/dictionaries/zh.json",
-          "src/dictionaries/ja.json",
           "src/dictionaries/en.json",
-          "src/dictionaries/tw.json",
         ],
       },
       {
@@ -654,7 +651,6 @@ const posts: BlogPost[] = [
         files: [
           "src/app/tools/passgen/pass-client.tsx",
           "src/dictionaries/zh.json",
-          "src/dictionaries/ja.json",
         ],
       },
       {
@@ -709,7 +705,6 @@ const posts: BlogPost[] = [
         files: [
           "src/app/tools/qrgen/qr-client.tsx",
           "src/dictionaries/zh.json",
-          "src/dictionaries/ja.json",
         ],
       },
       {

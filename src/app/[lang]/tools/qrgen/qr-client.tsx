@@ -8,7 +8,6 @@ import { QRCodeSVG } from "qrcode.react";
 type Lang = "zh" | "en";
 
 export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
-  const isJapanese = false;
   const [text, setText] = useState("");
 
   const downloadQR = () => {
@@ -43,14 +42,14 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
 
         <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
           <Link href={`/`} className="hover:text-emerald-600 transition-colors">
-            {isJapanese ? "ホーム" : "Home"}
+            {"Home"}
           </Link>
           <span className="text-zinc-300">/</span>
           <Link
             href={`/tools`}
             className="hover:text-emerald-600 transition-colors"
           >
-            {isJapanese ? "ツール" : "Tools"}
+            {"Tools"}
           </Link>
           <span className="text-zinc-300">/</span>
           <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
@@ -112,9 +111,7 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
                 />
               ) : (
                 <div className="w-[256px] h-[256px] border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center text-zinc-600 italic text-center px-8">
-                  {isJapanese
-                    ? "内容を入力すると QR を表示できます。"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "输入内容后即可预览二维码。"
                       : "Enter content to preview QR."}
                 </div>

@@ -10,15 +10,12 @@ interface RelatedToolsProps {
 export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
   const isZh = lang === "zh";
   const isJa = false;
-  const isTw = false;
 
   const sectionTitle = isJa
     ? "関連ツール"
     : isZh
       ? "关联诊断工具"
-      : isTw
-        ? "關聯診斷工具"
-        : "Related Diagnostics";
+      : "Related Diagnostics";
 
   const allTools = [
     {
@@ -29,16 +26,12 @@ export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
         ? "Webサイト診断"
         : isZh
           ? "网站综合诊断"
-          : isTw
-            ? "網站綜合診斷"
-            : "Website Check",
+          : "Website Check",
       desc: isJa
         ? "DNS、SSL、レスポンスの総合チェック"
         : isZh
           ? "DNS、SSL、连通性综合检测"
-          : isTw
-            ? "DNS、SSL、連通性綜合檢測"
-            : "Comprehensive DNS, SSL, & latency check",
+          : "Comprehensive DNS, SSL, & latency check",
       color: "emerald",
     },
     {
@@ -49,16 +42,12 @@ export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
         ? "Cloudflare トレース"
         : isZh
           ? "边缘追踪 (Trace)"
-          : isTw
-            ? "邊緣追蹤 (Trace)"
-            : "Cloudflare Trace",
+          : "Cloudflare Trace",
       desc: isJa
         ? "エッジノードのルーティング分析"
         : isZh
           ? "边缘节点路由与请求分析"
-          : isTw
-            ? "邊緣節點路由與請求分析"
-            : "Edge node routing & request analysis",
+          : "Edge node routing & request analysis",
       color: "sky",
     },
     {
@@ -69,16 +58,12 @@ export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
         ? "DNS セキュリティ監査"
         : isZh
           ? "DNS 安全审计"
-          : isTw
-            ? "DNS 安全審計"
-            : "DNS Security Audit",
+          : "DNS Security Audit",
       desc: isJa
         ? "SPF、DMARC、CAA の検証"
         : isZh
           ? "验证 SPF、DMARC、CAA 记录"
-          : isTw
-            ? "驗證 SPF、DMARC、CAA 記錄"
-            : "Verify SPF, DMARC, and CAA records",
+          : "Verify SPF, DMARC, and CAA records",
       color: "indigo",
     },
     {
@@ -89,16 +74,12 @@ export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
         ? "IP アドレス検索"
         : isZh
           ? "IP 归属查询"
-          : isTw
-            ? "IP 歸屬查詢"
-            : "IP Lookup",
+          : "IP Lookup",
       desc: isJa
         ? "IPの地理的位置とASN情報"
         : isZh
           ? "IP 地理位置与 ASN 信息"
-          : isTw
-            ? "IP 地理位置與 ASN 信息"
-            : "Geolocation and ASN details",
+          : "Geolocation and ASN details",
       color: "amber",
     },
   ];

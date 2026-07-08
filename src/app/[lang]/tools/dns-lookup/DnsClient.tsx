@@ -42,9 +42,7 @@ export default function DnsClient({
   const { loading, result, error, lookup, history } = useDnsLookup();
 
   const searchParams = useSearchParams();
-  const isJapanese = false;
   const isZh = lang === "zh";
-  const isTw = false;
 
   const [domain, setDomain] = useState("");
   const [selectedType, setSelectedType] = useState<DnsRecordType>("A");
@@ -215,7 +213,7 @@ export default function DnsClient({
       <div className="min-h-[60vh] flex flex-col items-center justify-center font-sans">
         <Activity className="w-10 h-10 text-orange-500 animate-pulse mb-6" />
         <p className="text-zinc-400 tracking-[0.24em] text-[10px]">
-          {isJapanese ? "DNS 環境を初期化中..." : "Loading DNS environment..."}
+          {"Loading DNS environment..."}
         </p>
       </div>
     );
@@ -225,13 +223,9 @@ export default function DnsClient({
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 mb-12 text-[10px] tracking-[0.24em] text-zinc-400">
         <Link href="/" className="hover:text-zinc-900 transition-colors">
-          {isJapanese
-            ? "ホーム"
-            : lang === "zh"
+          {lang === "zh"
               ? "首页"
-              : false
-                ? "首頁"
-                : "Home"}
+              : "Home"}
         </Link>
         <span>/</span>
         <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
@@ -270,13 +264,9 @@ export default function DnsClient({
               : "text-zinc-500 hover:text-zinc-900"
           }`}
         >
-          {isJapanese
-            ? "標準検索"
-            : isZh
+          {isZh
               ? "标准查询"
-              : isTw
-                ? "標準查詢"
-                : "Standard Lookup"}
+              : "Standard Lookup"}
         </button>
         <button
           onClick={() => setActiveTab("security")}
@@ -287,13 +277,9 @@ export default function DnsClient({
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          {isJapanese
-            ? "セキュリティ監査"
-            : isZh
+          {isZh
               ? "安全审计"
-              : isTw
-                ? "安全審計"
-                : "Security Audit"}
+              : "Security Audit"}
         </button>
       </div>
 
@@ -366,13 +352,9 @@ export default function DnsClient({
             )}
             <span className="tracking-[0.18em]">
               {activeTab === "security"
-                ? isJapanese
-                  ? "監査開始"
-                  : isZh
+                ? isZh
                     ? "开始审计"
-                    : isTw
-                      ? "開始審計"
-                      : "Run Audit"
+                    : "Run Audit"
                 : dict.tools.dns.btn}
             </span>
           </button>
@@ -384,13 +366,9 @@ export default function DnsClient({
           <AlertCircle className="w-8 h-8 shrink-0" />
           <div>
             <h3 className="text-xl font-semibold tracking-tight mb-2">
-              {isJapanese
-                ? "診断エラー"
-                : lang === "zh"
+              {lang === "zh"
                   ? "查询异常"
-                  : false
-                    ? "查詢異常"
-                    : "Lookup error"}
+                  : "Lookup error"}
             </h3>
             <p className="text-sm opacity-80 leading-relaxed">
               {activeTab === "standard" ? error : auditError}
@@ -417,22 +395,14 @@ export default function DnsClient({
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-zinc-900 tracking-tight">
-                  {isJapanese
-                    ? "ローカル照合"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "本地联查"
-                      : false
-                        ? "本地聯查"
-                        : "Local Perspective"}
+                      : "Local Perspective"}
                 </h3>
                 <p className="text-[10px] text-zinc-400 tracking-[0.18em]">
-                  {isJapanese
-                    ? "クライアント側の複数リゾルバで確認"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "通过多个本地解析器交叉确认"
-                      : false
-                        ? "透過多個本地解析器交叉確認"
-                        : "Client-side multi-resolver checks"}
+                      : "Client-side multi-resolver checks"}
                 </p>
               </div>
             </div>
@@ -482,75 +452,51 @@ export default function DnsClient({
                 <ShieldCheck className="w-12 h-12" />
               </div>
               <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
-                {isJapanese
-                  ? "解析状態"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "解析状态"
-                    : false
-                      ? "解析狀態"
-                      : "Resolver Status"}
+                    : "Resolver Status"}
               </span>
               <div className="flex items-center gap-3 relative z-10">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 <span className="text-2xl font-semibold text-emerald-500 tracking-tighter">
-                  {isJapanese
-                    ? "安全な DoH"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "安全 DoH"
-                      : false
-                        ? "安全 DoH"
-                        : "Secure DoH"}
+                      : "Secure DoH"}
                 </span>
               </div>
             </div>
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
               <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
-                {isJapanese
-                  ? "応答時間"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "响应时间"
-                    : false
-                      ? "回應時間"
-                      : "Response Time"}
+                    : "Response Time"}
               </span>
               <div>
                 <div className="text-4xl font-semibold text-zinc-900 tracking-tighter">
                   {result.responseTime}
                 </div>
                 <div className="text-[10px] text-emerald-500 font-semibold tracking-[0.18em] mt-1">
-                  {isJapanese
-                    ? "ミリ秒"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "毫秒"
-                      : false
-                        ? "毫秒"
-                        : "Milliseconds"}
+                      : "Milliseconds"}
                 </div>
               </div>
             </div>
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
               <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
-                {isJapanese
-                  ? "プロトコル"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "协议"
-                    : false
-                      ? "協議"
-                      : "Protocol"}
+                    : "Protocol"}
               </span>
               <div className="text-xl font-semibold text-zinc-900">
-                {isJapanese ? "TLS 1.3 / ECH" : "TLS 1.3 / ECH"}
+                {"TLS 1.3 / ECH"}
               </div>
             </div>
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
               <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
-                {isJapanese
-                  ? "レコード種別"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "记录类型"
-                    : false
-                      ? "記錄類型"
-                      : "Record Type"}
+                    : "Record Type"}
               </span>
               <div className="text-4xl font-semibold text-emerald-600 tracking-tighter underline decoration-2 underline-offset-8 decoration-emerald-500/30">
                 {result.type}
@@ -563,13 +509,9 @@ export default function DnsClient({
             <div className="px-6 sm:px-10 py-6 bg-zinc-50 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em] flex items-center gap-3">
                 <Database className="w-4 h-4 text-emerald-500" />{" "}
-                {isJapanese
-                  ? "応答記録 JSON"
-                  : lang === "zh"
+                {lang === "zh"
                     ? "响应记录 JSON"
-                    : false
-                      ? "回應記錄 JSON"
-                      : "Resolution Manifest JSON"}
+                    : "Resolution Manifest JSON"}
               </h3>
               <button
                 onClick={() => copyData(JSON.stringify(result.answers))}
@@ -581,20 +523,12 @@ export default function DnsClient({
                   <Copy className="w-4 h-4 group-hover:scale-110" />
                 )}
                 {copied
-                  ? isJapanese
-                    ? "コピー完了"
-                    : lang === "zh"
+                  ? lang === "zh"
                       ? "已复制"
-                      : false
-                        ? "已複製"
-                        : "Copied"
-                  : isJapanese
-                    ? "全件コピー"
-                    : lang === "zh"
+                      : "Copied"
+                  : lang === "zh"
                       ? "复制全部"
-                      : false
-                        ? "複製全部"
-                        : "Copy all"}
+                      : "Copy all"}
               </button>
             </div>
 
@@ -632,7 +566,7 @@ export default function DnsClient({
                       <div className="flex flex-col md:items-end gap-1">
                         <div className="text-[10px] text-zinc-400 font-semibold tracking-[0.18em] flex items-center gap-2">
                           <Clock className="w-3 h-3" />{" "}
-                          {isJapanese ? "TTL" : "Time_To_Live"}
+                          {"Time_To_Live"}
                         </div>
                         <div className="text-lg font-semibold text-zinc-900">
                           {answer.ttl}
@@ -655,13 +589,9 @@ export default function DnsClient({
                     {dict.tools.dns.no_records}
                   </p>
                   <p className="text-[10px] text-zinc-300 mt-2">
-                    {isJapanese
-                      ? "NXDOMAIN / タイムアウトを確認してください"
-                      : lang === "zh"
+                    {lang === "zh"
                         ? "请检查 NXDOMAIN / 超时"
-                        : false
-                          ? "請檢查 NXDOMAIN / 逾時"
-                          : "Check NXDOMAIN / timeout"}
+                        : "Check NXDOMAIN / timeout"}
                   </p>
                 </div>
               )}
@@ -677,13 +607,9 @@ export default function DnsClient({
               <ChevronDown
                 className={`w-3 h-3 transition-transform ${showJson ? "rotate-180" : ""}`}
               />
-              {isJapanese
-                ? "生の DNS 診断 JSON"
-                : lang === "zh"
+              {lang === "zh"
                   ? "原始 DNS 记录 JSON"
-                  : false
-                    ? "原始 DNS 記錄 JSON"
-                    : "Raw DNS Audit JSON"}
+                  : "Raw DNS Audit JSON"}
             </button>
             {showJson && (
               <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-[11px] text-zinc-500 overflow-x-auto border border-zinc-800 shadow-2xl relative">
@@ -718,22 +644,14 @@ export default function DnsClient({
               <div>
                 <h4 className="text-[11px] font-semibold text-zinc-900 tracking-[0.18em] flex items-center gap-3">
                   <History className="w-5 h-5 text-emerald-500" />{" "}
-                  {isJapanese
-                    ? "最近の DNS 診断"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "最近的 DNS 记录"
-                      : false
-                        ? "最近的 DNS 記錄"
-                        : "Recent DNS Checks"}
+                      : "Recent DNS Checks"}
                 </h4>
                 <p className="text-[10px] text-zinc-400 mt-1 tracking-[0.18em]">
-                  {isJapanese
-                    ? "キャッシュされた履歴"
-                    : lang === "zh"
+                  {lang === "zh"
                       ? "缓存查询记录"
-                      : false
-                        ? "快取查詢紀錄"
-                        : "Cached query history"}
+                      : "Cached query history"}
                 </p>
               </div>
             </div>
@@ -758,7 +676,7 @@ export default function DnsClient({
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-[9px] text-zinc-400 font-semibold tracking-[0.18em] group-hover:text-zinc-900 transition-colors">
-                    {isJapanese ? "再実行" : "Replay_Probe"}{" "}
+                    {"Replay_Probe"}{" "}
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                   </div>
                 </button>
@@ -773,12 +691,8 @@ export default function DnsClient({
           <Cpu className="w-16 h-16 text-zinc-100 mx-auto mb-8 animate-pulse text-orange-500/20" />
           <p className="text-zinc-500 text-[10px] leading-relaxed tracking-[0.18em] opacity-40">
             {activeTab === "standard"
-              ? isJapanese
-                ? "A・AAAA・CNAME・MX・NS・TXT・CAA をまとめて確認できます。"
-                : "A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines"
-              : isJapanese
-                ? "ドメインの SPF・DMARC・CAA レコードをまとめて診断します。"
-                : "DMARC • SPF • CAA Security Diagnostics"}
+              ? "A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines"
+              : "DMARC • SPF • CAA Security Diagnostics"}
           </p>
         </div>
       )}

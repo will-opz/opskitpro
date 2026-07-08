@@ -188,7 +188,6 @@ export default function ServicesClient({
   const [searchTerm, setSearchTerm] = useState("");
   const [activeScene, setActiveScene] = useState<Scene | "all">("all");
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const isJapanese = false;
   const copy = text[lang] || text.zh;
 
   const categorizedServices: ToolCategory[] = useMemo(
@@ -213,9 +212,7 @@ export default function ServicesClient({
             name: dict.tools.dns_lookup_title || dict.tools.dns.btn,
             desc:
               dict.tools.dns_lookup_desc ||
-              (isJapanese
-                ? "DNS レコードと解決状態を確認できます。"
-                : "Check DNS records and resolution status."),
+              ("Check DNS records and resolution status."),
             icon: Search,
             status: "operational",
             url: "/tools/dns-lookup",
@@ -312,13 +309,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "コミュニケーション基盤"
-          : lang === "zh"
+        category: lang === "zh"
             ? "通信与协作协议"
-            : false
-              ? "通訊與協作協定"
-              : "Communication Protocols",
+            : "Communication Protocols",
         scene: "knowledge",
         tools: [
           {
@@ -336,13 +329,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "AI エンジニアリング"
-          : lang === "zh"
+        category: lang === "zh"
             ? "AI 工程工作流"
-            : false
-              ? "AI 工程工作流"
-              : "AI Engineering",
+            : "AI Engineering",
         scene: "ai",
         tools: [
           {
@@ -359,13 +348,9 @@ export default function ServicesClient({
           },
           {
             name: "Vibe Coding Workflow",
-            desc: isJapanese
-              ? "AI と進める実装を、計画・検証・記録まで含めて整理。"
-              : lang === "zh"
+            desc: lang === "zh"
                 ? "把 AI 辅助开发整理成有边界、有测试、有记录的工程流程。"
-                : false
-                  ? "把 AI 輔助開發整理成有邊界、有測試、有記錄的工程流程。"
-                  : "A guarded workflow for AI-assisted changes, checks, notes, and deployment.",
+                : "A guarded workflow for AI-assisted changes, checks, notes, and deployment.",
             icon: Workflow,
             status: "operational",
             url: "/blog/vibe-coding-workflow",
@@ -376,13 +361,9 @@ export default function ServicesClient({
           },
           {
             name: "Review & Deploy Checklist",
-            desc: isJapanese
-              ? "公開境界、テスト、build、記録、deploy 前の確認項目。"
-              : lang === "zh"
+            desc: lang === "zh"
                 ? "提交和部署前检查 public/private 边界、测试、构建和记录。"
-                : false
-                  ? "提交和部署前檢查 public/private 邊界、測試、構建和記錄。"
-                  : "Public/private boundary, tests, build, notes, and deployment checks.",
+                : "Public/private boundary, tests, build, notes, and deployment checks.",
             icon: CheckCircle2,
             status: "operational",
             url: "/blog/vibe-coding-workflow",
@@ -394,13 +375,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "SRE ステータス"
-          : lang === "zh"
+        category: lang === "zh"
             ? "SRE 状态面板"
-            : false
-              ? "SRE 狀態面板"
-              : "SRE Status",
+            : "SRE Status",
         scene: "ops",
         tools: [
           {
@@ -471,13 +448,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "パスワード管理・認証情報"
-          : lang === "zh"
+        category: lang === "zh"
             ? "密码管理与凭证"
-            : false
-              ? "密碼管理與憑證"
-              : "Password Management",
+            : "Password Management",
         scene: "security",
         tools: [
           {
@@ -569,13 +542,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "IT 自動化・IaC"
-          : lang === "zh"
+        category: lang === "zh"
             ? "自动化与配置管理"
-            : false
-              ? "自動化與配置管理"
-              : "IT Automation & IaC",
+            : "IT Automation & IaC",
         scene: "ops",
         tools: [
           {
@@ -698,13 +667,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "ゼロトラスト・トンネル"
-          : lang === "zh"
+        category: lang === "zh"
             ? "安全通道与零信任"
-            : false
-              ? "安全通道與零信任"
-              : "Zero Trust & Tunnels",
+            : "Zero Trust & Tunnels",
         scene: "security",
         tools: [
           {
@@ -767,13 +732,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "AI・情報活用"
-          : lang === "zh"
+        category: lang === "zh"
             ? "人工智能体中枢"
-            : false
-              ? "人工智慧中樞"
-              : "AI & Intelligence",
+            : "AI & Intelligence",
         scene: "ai",
         tools: [
           {
@@ -839,13 +800,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "脅威インテリジェンス・偵察"
-          : lang === "zh"
+        category: lang === "zh"
             ? "威胁情报与资产探测"
-            : false
-              ? "威脅情報與資產探測"
-              : "Threat Intel & Recon",
+            : "Threat Intel & Recon",
         scene: "security",
         tools: [
           {
@@ -908,13 +865,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "トラフィック解析・テスト"
-          : lang === "zh"
+        category: lang === "zh"
             ? "渗透拦截与防御抓包"
-            : false
-              ? "滲透攔截與防禦抓包"
-              : "Offensive & Traffic",
+            : "Offensive & Traffic",
         scene: "security",
         tools: [
           {
@@ -953,13 +906,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "クラウド・DevSecOps"
-          : lang === "zh"
+        category: lang === "zh"
             ? "云原生安全与审计"
-            : false
-              ? "雲原生安全與稽核"
-              : "Cloud & DevSecOps",
+            : "Cloud & DevSecOps",
         scene: "dev",
         tools: [
           {
@@ -998,13 +947,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "DNS・診断"
-          : lang === "zh"
+        category: lang === "zh"
             ? "网络与域名诊断"
-            : false
-              ? "網路與網域診斷"
-              : "DNS & Diagnostics",
+            : "DNS & Diagnostics",
         scene: "ops",
         tools: [
           {
@@ -1066,13 +1011,9 @@ export default function ServicesClient({
         ],
       },
       {
-        category: isJapanese
-          ? "ネットワーク調査"
-          : lang === "zh"
+        category: lang === "zh"
             ? "网络取证"
-            : false
-              ? "網路取證"
-              : "Network Forensics",
+            : "Network Forensics",
         scene: "ops",
         tools: [
           {
@@ -1136,7 +1077,7 @@ export default function ServicesClient({
         ],
       },
     ],
-    [dict, isJapanese, lang],
+    [dict, lang],
   );
 
   const allTools = useMemo(
@@ -1453,7 +1394,7 @@ export default function ServicesClient({
           type="button"
           onClick={scrollToTop}
           className="ui-surface fixed bottom-6 right-4 z-50 rounded-full p-3 text-[var(--text-primary)] transition hover:bg-[var(--accent-color)] hover:text-[var(--accent-contrast)] sm:bottom-10 sm:right-10"
-          aria-label={isJapanese ? "ページ上部へ戻る" : "Scroll to top"}
+          aria-label={"Scroll to top"}
         >
           <ArrowUp className="h-5 w-5" />
         </button>

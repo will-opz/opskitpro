@@ -32,85 +32,48 @@ export default async function BlogPage({
   const lang = (params.lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
   const isZh = lang === "zh";
-  const isJapanese = false;
   const posts = getAllBlogPosts(lang);
   const postsBySlug = new Map(posts.map((post) => [post.slug, post]));
   const totalPosts = posts.length;
-  const kbLabel = isJapanese
-    ? "公開ナレッジ"
-    : isZh
+  const kbLabel = isZh
       ? "公开知识库"
-      : false
-        ? "公開知識庫"
-        : "Public Knowledge Base";
-  const publishedLabel = isJapanese
-    ? "公開済み"
-    : isZh
+      : "Public Knowledge Base";
+  const publishedLabel = isZh
       ? "已公开"
-      : false
-        ? "已公開"
-        : "Published";
-  const groupLabel = isJapanese
-    ? "分類"
-    : isZh
+      : "Published";
+  const groupLabel = isZh
       ? "分类"
-      : false
-        ? "分類"
-        : "Sections";
+      : "Sections";
 
   const articleGroups = [
     {
       id: "ops-reflection",
-      title: false
-        ? "運用の振り返り"
-        : isZh
+      title: isZh
           ? "运维复盘"
-          : false
-            ? "維運復盤"
-            : "Ops reflection",
-      subtitle: false
-        ? "過去の判断、ツールの変化、運用現場で残った原則を公開メモとして整理します。"
-        : isZh
+          : "Ops reflection",
+      subtitle: isZh
           ? "把过去的判断、工具演进和排障经验整理成可复用的公开笔记。"
-          : false
-            ? "把過去的判斷、工具演進與排障經驗整理成可複用的公開筆記。"
-            : "Reusable public notes on past decisions, tool shifts, and operations lessons.",
+          : "Reusable public notes on past decisions, tool shifts, and operations lessons.",
       slugs: ["underestimating-git"],
     },
     {
       id: "project-overview",
-      title: false
-        ? "プロジェクト概要"
-        : isZh
+      title: isZh
           ? "项目说明"
-          : false
-            ? "專案說明"
-            : "Project overview",
-      subtitle: false
-        ? "需求、設計原則、工程收口をまとめた導入記事です。"
-        : isZh
+          : "Project overview",
+      subtitle: isZh
           ? "需求、设计原则和工程收口放在一起，先建立项目上下文。"
-          : false
-            ? "需求、設計原則與工程收斂放在一起，先建立專案上下文。"
-            : "Requirements, design principles, and engineering wrap-up in one place.",
+          : "Requirements, design principles, and engineering wrap-up in one place.",
       slugs: ["why-opskitpro", "design-principles", "services-deployment"],
     },
     {
       id: "module-implementation",
-      title: false
-        ? "モジュール実装"
-        : isZh
+      title: isZh
           ? "模块实现"
-          : false
-            ? "模組實作"
-            : "Module implementation",
-      subtitle: false
-        ? "website-check と IP / DNS の設計を、単一の題材ごとに整理しています。"
-        : isZh
+          : "Module implementation",
+      subtitle: isZh
           ? "把 website-check、IP、DNS 这几块按单一题目拆开讲。"
-          : false
-            ? "把 website-check、IP、DNS 這幾塊按單一題目拆開講。"
-            : "Breaks down website-check, IP, and DNS as separate implementation topics.",
+          : "Breaks down website-check, IP, and DNS as separate implementation topics.",
       slugs: [
         "website-check-module",
         "network-doctor-upgrade",
@@ -120,38 +83,22 @@ export default async function BlogPage({
     },
     {
       id: "tool-implementation",
-      title: false
-        ? "ツール実装"
-        : isZh
+      title: isZh
           ? "工具实现"
-          : false
-            ? "工具實作"
-            : "Tool implementation",
-      subtitle: false
-        ? "passgen、qrgen、json、websocket を 1 テーマ 1 記事でまとめています。"
-        : isZh
+          : "Tool implementation",
+      subtitle: isZh
           ? "passgen、qrgen、json、websocket 都按一个工具一篇文章来整理。"
-          : false
-            ? "passgen、qrgen、json、websocket 都按一個工具一篇文章來整理。"
-            : "One article per tool: passgen, qrgen, json, and websocket.",
+          : "One article per tool: passgen, qrgen, json, and websocket.",
       slugs: ["passgen-tool", "qrgen-tool", "json-tool", "websocket-tool"],
     },
     {
       id: "ai-engineering",
-      title: false
-        ? "AI エンジニアリング"
-        : isZh
+      title: isZh
           ? "AI 工程工作流"
-          : false
-            ? "AI 工程工作流"
-            : "AI engineering",
-      subtitle: false
-        ? "Vibe Coding を、境界・検証・記録を含む安全な実装フローとして整理しています。"
-        : isZh
+          : "AI engineering",
+      subtitle: isZh
           ? "把 Vibe Coding 整理成有边界、有验证、有记录的 AI 辅助工程流程。"
-          : false
-            ? "把 Vibe Coding 整理成有邊界、有驗證、有記錄的 AI 輔助工程流程。"
-            : "Turns vibe coding into a guarded workflow with scope, verification, notes, and deployment checks.",
+          : "Turns vibe coding into a guarded workflow with scope, verification, notes, and deployment checks.",
       slugs: ["vibe-coding-workflow"],
     },
   ].map((group) => ({
@@ -183,49 +130,33 @@ export default async function BlogPage({
             {dict.nav.blog}
           </h1>
           <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base md:mx-0">
-            {isJapanese
-              ? "OpsKitPro の公開メモを、ツール、運用、実装の入口として整理しています。"
-              : isZh
+            {isZh
                 ? "这里整理 OpsKitPro 已公开的工具说明、运维笔记和实现记录。"
-                : false
-                  ? "這裡整理 OpsKitPro 已公開的工具說明、運維筆記與實作記錄。"
-                  : "A public hub for OpsKitPro tool notes, operations guides, and implementation records."}
+                : "A public hub for OpsKitPro tool notes, operations guides, and implementation records."}
             <br />
             <span className="mt-2 block opacity-40">
-              {isJapanese
-                ? "草稿や内部記録ではなく、公開できる内容だけをここに置いています。"
-                : isZh
+              {isZh
                   ? "这里只放已整理、可公开复用的内容，不接入内部草稿。"
-                  : false
-                    ? "這裡只放已整理、可公開複用的內容，不接入內部草稿。"
-                    : "Only cleaned, reusable public content lives here; private drafts stay outside the site build."}
+                  : "Only cleaned, reusable public content lives here; private drafts stay outside the site build."}
             </span>
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             {[
               {
                 label: publishedLabel,
-                value: `${String(totalPosts).padStart(2, "0")} ${isJapanese ? "本" : isZh ? "篇" : false ? "篇" : "posts"}`,
+                value: `${String(totalPosts).padStart(2, "0")} ${isZh ? "篇" : "posts"}`,
               },
               {
                 label: groupLabel,
-                value: `${String(articleGroups.length).padStart(2, "0")} ${isJapanese ? "分類" : isZh ? "组" : false ? "組" : "sections"}`,
+                value: `${String(articleGroups.length).padStart(2, "0")} ${isZh ? "组" : "sections"}`,
               },
               {
-                label: isJapanese
-                  ? "範囲"
-                  : isZh
+                label: isZh
                     ? "范围"
-                    : false
-                      ? "範圍"
-                      : "Scope",
-                value: isJapanese
-                  ? "公開情報のみ"
-                  : isZh
+                    : "Scope",
+                value: isZh
                     ? "仅公开内容"
-                    : false
-                      ? "僅公開內容"
-                      : "Public only",
+                    : "Public only",
               },
             ].map((item) => (
               <div
@@ -254,7 +185,7 @@ export default async function BlogPage({
                 <div>
                   <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-500">
                     {String(series.count).padStart(2, "0")}{" "}
-                    {isJapanese ? "本" : isZh ? "篇" : false ? "篇" : "posts"}
+                    {isZh ? "篇" : "posts"}
                   </div>
                   <h2 className="mt-2 text-xl font-black tracking-tighter text-zinc-900">
                     {series.title}
@@ -276,42 +207,26 @@ export default async function BlogPage({
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="rounded-full border border-emerald-500/15 bg-emerald-500/8 px-3 py-1 text-[10px] font-semibold tracking-[0.22em] text-emerald-600">
                     {String(group.posts.length).padStart(2, "0")}{" "}
-                    {isJapanese ? "本" : isZh ? "篇" : false ? "篇" : "posts"}
+                    {isZh ? "篇" : "posts"}
                   </span>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
                     {group.id === "ops-reflection"
-                      ? isJapanese
-                        ? "振り返り"
-                        : isZh
+                      ? isZh
                           ? "复盘"
-                          : false
-                            ? "復盤"
-                            : "Reflection"
+                          : "Reflection"
                       : group.id === "project-overview"
-                        ? isJapanese
-                          ? "概要"
-                          : isZh
+                        ? isZh
                             ? "总览"
-                            : false
-                              ? "總覽"
-                              : "Overview"
+                            : "Overview"
                         : group.id === "module-implementation"
-                          ? isJapanese
-                            ? "実装"
-                            : isZh
+                          ? isZh
                               ? "实现"
-                              : false
-                                ? "實作"
-                                : "Implementation"
+                              : "Implementation"
                           : group.id === "ai-engineering"
                             ? "AI"
-                            : isJapanese
-                              ? "ツール"
-                              : isZh
+                            : isZh
                                 ? "工具"
-                                : false
-                                  ? "工具"
-                                  : "Tools"}
+                                : "Tools"}
                   </span>
                 </div>
                 <h2 className="mt-3 text-2xl font-black tracking-tighter text-zinc-900 sm:text-3xl">
@@ -346,20 +261,12 @@ export default async function BlogPage({
                         </span>
                         <span className="rounded-full border border-white/20 bg-zinc-950/75 px-3 py-1 text-[9px] font-semibold tracking-[0.18em] text-white backdrop-blur-md">
                           {post.actionKind === "tool"
-                            ? isJapanese
-                              ? "ツール"
-                              : isZh
+                            ? isZh
                                 ? "工具"
-                                : false
-                                  ? "工具"
-                                  : "Tool"
-                            : isJapanese
-                              ? "筆記"
-                              : isZh
+                                : "Tool"
+                            : isZh
                                 ? "笔记"
-                                : false
-                                  ? "筆記"
-                                  : "Notes"}
+                                : "Notes"}
                         </span>
                       </div>
                     </div>
@@ -382,13 +289,9 @@ export default async function BlogPage({
 
                       <div className="mt-6 flex items-center justify-between border-t border-zinc-50 pt-5">
                         <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-                          {isJapanese
-                            ? "公開メモ"
-                            : isZh
+                          {isZh
                               ? "公开笔记"
-                              : false
-                                ? "公開筆記"
-                                : "Public note"}
+                              : "Public note"}
                         </span>
                         <ArrowRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
                       </div>
@@ -403,22 +306,14 @@ export default async function BlogPage({
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-xl font-black tracking-tighter text-zinc-900">
-                  {isJapanese
-                    ? "ツールへ戻る"
-                    : isZh
+                  {isZh
                       ? "返回工具"
-                      : false
-                        ? "返回工具"
-                        : "Return to Tools"}
+                      : "Return to Tools"}
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-zinc-600">
-                  {isJapanese
-                    ? "ナレッジベースは公開情報だけを扱い、日常の診断や調査はツールから始められます。"
-                    : isZh
+                  {isZh
                       ? "知识库只展示公开内容，日常诊断、排障和工具入口从工具开始。"
-                      : false
-                        ? "知識庫只展示公開內容，日常診斷、排障和工具入口從工具開始。"
-                        : "The knowledge base stays public and reusable; daily diagnostics and workflows start from Tools."}
+                      : "The knowledge base stays public and reusable; daily diagnostics and workflows start from Tools."}
                 </p>
               </div>
               <Link
@@ -426,13 +321,9 @@ export default async function BlogPage({
                 className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
                 <BookOpen className="h-4 w-4" />
-                {isJapanese
-                  ? "ホームへ戻る"
-                  : isZh
+                {isZh
                     ? "返回首页"
-                    : false
-                      ? "返回首頁"
-                      : "Back to home"}
+                    : "Back to home"}
               </Link>
             </div>
           </div>

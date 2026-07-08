@@ -157,15 +157,12 @@ const homeDashboardCopy = {
 export default async function Home({ params }: { params: { lang: string } }) {
   const lang = (params.lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
-  const isJapanese = false;
   const latestNotes = getBlogPosts(lang)
     .slice()
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 4);
-  const heroBadge = isJapanese ? "運用向け診断" : dict.home.title_part1;
-  const heroSubtitle = isJapanese
-    ? "DNS・SSL・CDN・HTTP を、ひとつの画面で素早く確認できます。ログインは不要です。"
-    : dict.home.subtitle;
+  const heroBadge = dict.home.title_part1;
+  const heroSubtitle = dict.home.subtitle;
   const diagnosticPreview = await getHomeDiagnosticPreview();
   const dashboardCopy = homeDashboardCopy[lang];
   const previewRows = [
@@ -246,21 +243,13 @@ export default async function Home({ params }: { params: { lang: string } }) {
         <section className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
           <div className="ui-surface-elevated rounded-2xl p-5 text-left sm:p-7 lg:p-8">
             <div
-              className={`ui-chip mb-5 ${isJapanese ? "tracking-[0.18em]" : "font-mono tracking-widest"}`}
+              className={`ui-chip mb-5 ${"font-mono tracking-widest"}`}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {heroBadge}
             </div>
             <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-[var(--text-primary)] sm:text-4xl lg:text-5xl">
-              {isJapanese ? (
-                <>
-                  DNS・IP・サイトを
-                  <span className="mx-2 bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent ai-glow">
-                    まとめて
-                  </span>
-                  診断
-                </>
-              ) : (
+              {(
                 <>
                   {dict.home.title_part2_pre}
                   <span className="mx-2 bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent ai-glow">
@@ -507,20 +496,12 @@ export default async function Home({ params }: { params: { lang: string } }) {
                     </span>
                     <span className="rounded-full border border-white/20 bg-zinc-950/70 px-2.5 py-1 text-[9px] font-semibold tracking-[0.16em] text-white backdrop-blur-md">
                       {post.actionKind === "tool"
-                        ? isJapanese
-                          ? "工具"
-                          : lang === "zh"
+                        ? lang === "zh"
                             ? "工具"
-                            : false
-                              ? "工具"
-                              : "Tool"
-                        : isJapanese
-                          ? "筆記"
-                          : lang === "zh"
+                            : "Tool"
+                        : lang === "zh"
                             ? "笔记"
-                            : false
-                              ? "筆記"
-                              : "Notes"}
+                            : "Notes"}
                     </span>
                   </div>
                 </div>

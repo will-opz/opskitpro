@@ -108,7 +108,6 @@ type Lang = "zh" | "en";
 export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
   const searchParams = useSearchParams();
   const { loadFromUrl, isLoading: urlLoading } = useUrlLoader();
-  const isJapanese = false;
   const ui = {
     zh: {
       badge: dict.tools.json_title,
@@ -595,13 +594,9 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
                   <pre className="p-6 pt-8 min-h-[300px] max-h-[400px] overflow-auto font-mono text-[12px] leading-relaxed text-zinc-600 bg-zinc-50/30">
                     {json || (
                       <span className="text-zinc-300 italic">
-                        {isJapanese
-                          ? "入力なし"
-                          : lang === "zh"
+                        {lang === "zh"
                             ? "暂无输入"
-                            : false
-                              ? "尚無輸入"
-                              : "No input"}
+                            : "No input"}
                       </span>
                     )}
                   </pre>
@@ -613,13 +608,9 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
                   <pre className="p-6 pt-8 min-h-[300px] max-h-[400px] overflow-auto font-mono text-[12px] leading-relaxed text-emerald-700 bg-emerald-50/30">
                     {jqOutput || (
                       <span className="text-zinc-300 italic">
-                        {isJapanese
-                          ? "クエリを実行してください"
-                          : lang === "zh"
+                        {lang === "zh"
                             ? "请先执行查询"
-                            : false
-                              ? "請先執行查詢"
-                              : "Run a query"}
+                            : "Run a query"}
                       </span>
                     )}
                   </pre>
@@ -696,21 +687,13 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
               )}
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] shrink-0">
                 {status === "valid"
-                  ? isJapanese
-                    ? "JSON は有効です"
-                    : lang === "zh"
+                  ? lang === "zh"
                       ? "JSON 有效"
-                      : false
-                        ? "JSON 有效"
-                        : "VALID JSON"
+                      : "VALID JSON"
                   : status === "invalid"
-                    ? isJapanese
-                      ? "JSON に問題があります"
-                      : lang === "zh"
+                    ? lang === "zh"
                         ? "JSON 无效"
-                        : false
-                          ? "JSON 無效"
-                          : "INVALID"
+                        : "INVALID"
                     : ui.idle}
               </span>
               {status === "invalid" && errorMsg && (
@@ -724,11 +707,11 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
                 <span>{stats.type}</span>
                 <span className="text-emerald-300">•</span>
                 <span>
-                  {stats.keys} {isJapanese ? "項目" : "keys"}
+                  {stats.keys} {"keys"}
                 </span>
                 <span className="text-emerald-300">•</span>
                 <span>
-                  {isJapanese ? "深さ" : "depth"} {stats.depth}
+                  {"depth"} {stats.depth}
                 </span>
                 <span className="text-emerald-300">•</span>
                 <span>{stats.size}</span>
