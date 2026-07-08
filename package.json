@@ -19,7 +19,8 @@
     "check:forbidden-imports": "grep -R \"cloudflare:sockets\" src >/dev/null && exit 1 || exit 0",
     "verify:content": "node scripts/verify-content.js",
     "verify:fast": "npm run check:forbidden-imports && npm run verify:content && npm run build && npm run test",
-    "verify": "npm run verify:fast && npm run test:e2e:clean"
+    "verify": "npm run verify:fast && npm run test:e2e:clean",
+    "generate:post": "node scripts/generate-post.js"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.5.10",
