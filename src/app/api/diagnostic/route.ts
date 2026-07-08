@@ -287,15 +287,16 @@ type RedirectTrace = Awaited<ReturnType<typeof traceRedirects>>;
 const probeTls = async (hostname: string, port = 443, ip?: string) => {
   return new Promise<any>((resolve) => {
     const targetIp = ip || hostname;
-    const socket = tls.connect({
+    const connectOptions: tls.ConnectionOptions & { requestOCSP: boolean } = {
       host: targetIp,
       port,
       servername: hostname,
       rejectUnauthorized: false,
       requestOCSP: true,
-      ALPNProtocols: ['h2', 'http/1.1'],
+      ALPNProtocols: ["h2", "http/1.1"],
       timeout: 5000,
-    });
+    };
+    const socket = tls.connect(connectOptions);
     
     let ocspStapled: boolean | "unknown" = "unknown";
     
