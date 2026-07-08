@@ -1,57 +1,64 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Search, Server, ChevronDown, Zap, Layers } from 'lucide-react'
-import type { DnsRecordType, DnsProvider } from '../hooks'
+import { useState } from "react";
+import { Search, Server, ChevronDown, Zap, Layers } from "lucide-react";
+import type { DnsRecordType, DnsProvider } from "../hooks";
 
 interface DnsQueryFormProps {
-  onQuery: (domain: string, type: DnsRecordType, provider: DnsProvider) => void
-  onBatchQuery: (domain: string, provider: DnsProvider) => void
-  loading: boolean
+  onQuery: (domain: string, type: DnsRecordType, provider: DnsProvider) => void;
+  onBatchQuery: (domain: string, provider: DnsProvider) => void;
+  loading: boolean;
 }
 
 const RECORD_TYPES: { value: DnsRecordType; label: string; desc: string }[] = [
-  { value: 'A', label: 'A', desc: 'IPv4 Address' },
-  { value: 'AAAA', label: 'AAAA', desc: 'IPv6 Address' },
-  { value: 'CNAME', label: 'CNAME', desc: 'Canonical Name' },
-  { value: 'MX', label: 'MX', desc: 'Mail Exchange' },
-  { value: 'NS', label: 'NS', desc: 'Name Server' },
-  { value: 'TXT', label: 'TXT', desc: 'Text Record' },
-  { value: 'SOA', label: 'SOA', desc: 'Start of Authority' },
-  { value: 'PTR', label: 'PTR', desc: 'Pointer Record' },
-  { value: 'SRV', label: 'SRV', desc: 'Service Record' },
-  { value: 'CAA', label: 'CAA', desc: 'CA Authorization' },
-]
+  { value: "A", label: "A", desc: "IPv4 Address" },
+  { value: "AAAA", label: "AAAA", desc: "IPv6 Address" },
+  { value: "CNAME", label: "CNAME", desc: "Canonical Name" },
+  { value: "MX", label: "MX", desc: "Mail Exchange" },
+  { value: "NS", label: "NS", desc: "Name Server" },
+  { value: "TXT", label: "TXT", desc: "Text Record" },
+  { value: "SOA", label: "SOA", desc: "Start of Authority" },
+  { value: "PTR", label: "PTR", desc: "Pointer Record" },
+  { value: "SRV", label: "SRV", desc: "Service Record" },
+  { value: "CAA", label: "CAA", desc: "CA Authorization" },
+];
 
 const DNS_PROVIDERS: { value: DnsProvider; label: string; ip: string }[] = [
-  { value: 'cloudflare', label: 'Cloudflare', ip: '1.1.1.1' },
-  { value: 'google', label: 'Google', ip: '8.8.8.8' },
-  { value: 'quad9', label: 'Quad9', ip: '9.9.9.9' },
-]
+  { value: "cloudflare", label: "Cloudflare", ip: "1.1.1.1" },
+  { value: "google", label: "Google", ip: "8.8.8.8" },
+  { value: "quad9", label: "Quad9", ip: "9.9.9.9" },
+];
 
-export function DnsQueryForm({ onQuery, onBatchQuery, loading }: DnsQueryFormProps) {
-  const [domain, setDomain] = useState('')
-  const [recordType, setRecordType] = useState<DnsRecordType>('A')
-  const [provider, setProvider] = useState<DnsProvider>('cloudflare')
-  const [showTypeDropdown, setShowTypeDropdown] = useState(false)
-  const [showProviderDropdown, setShowProviderDropdown] = useState(false)
+export function DnsQueryForm({
+  onQuery,
+  onBatchQuery,
+  loading,
+}: DnsQueryFormProps) {
+  const [domain, setDomain] = useState("");
+  const [recordType, setRecordType] = useState<DnsRecordType>("A");
+  const [provider, setProvider] = useState<DnsProvider>("cloudflare");
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showProviderDropdown, setShowProviderDropdown] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!domain.trim()) return
-    onQuery(domain, recordType, provider)
-  }
+    e.preventDefault();
+    if (!domain.trim()) return;
+    onQuery(domain, recordType, provider);
+  };
 
   const handleBatchQuery = () => {
-    if (!domain.trim()) return
-    onBatchQuery(domain, provider)
-  }
+    if (!domain.trim()) return;
+    onBatchQuery(domain, provider);
+  };
 
-  const selectedType = RECORD_TYPES.find(t => t.value === recordType)
-  const selectedProvider = DNS_PROVIDERS.find(p => p.value === provider)
+  const selectedType = RECORD_TYPES.find((t) => t.value === recordType);
+  const selectedProvider = DNS_PROVIDERS.find((p) => p.value === provider);
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card p-6 rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl">
+    <form
+      onSubmit={handleSubmit}
+      className="glass-card p-6 rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl"
+    >
       {/* Domain Input */}
       <div className="mb-4">
         <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
@@ -81,30 +88,48 @@ export function DnsQueryForm({ onQuery, onBatchQuery, loading }: DnsQueryFormPro
           </label>
           <button
             type="button"
-            onClick={() => { setShowTypeDropdown(!showTypeDropdown); setShowProviderDropdown(false) }}
+            onClick={() => {
+              setShowTypeDropdown(!showTypeDropdown);
+              setShowProviderDropdown(false);
+            }}
             className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-all"
           >
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded font-bold text-xs">{selectedType?.value}</span>
-              <span className="text-zinc-500 text-xs hidden sm:inline">{selectedType?.desc}</span>
+              <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded font-bold text-xs">
+                {selectedType?.value}
+              </span>
+              <span className="text-zinc-500 text-xs hidden sm:inline">
+                {selectedType?.desc}
+              </span>
             </div>
-            <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${showTypeDropdown ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-4 h-4 text-zinc-400 transition-transform ${showTypeDropdown ? "rotate-180" : ""}`}
+            />
           </button>
-          
+
           {showTypeDropdown && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 z-50 max-h-64 overflow-auto">
-              {RECORD_TYPES.map(type => (
+              {RECORD_TYPES.map((type) => (
                 <button
                   key={type.value}
                   type="button"
-                  onClick={() => { setRecordType(type.value); setShowTypeDropdown(false) }}
+                  onClick={() => {
+                    setRecordType(type.value);
+                    setShowTypeDropdown(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 transition-colors ${
-                    recordType === type.value ? 'bg-cyan-50' : ''
+                    recordType === type.value ? "bg-cyan-50" : ""
                   }`}
                 >
-                  <span className={`px-2 py-0.5 rounded font-bold text-xs ${
-                    recordType === type.value ? 'bg-cyan-600 text-white' : 'bg-zinc-100 text-zinc-600'
-                  }`}>{type.value}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded font-bold text-xs ${
+                      recordType === type.value
+                        ? "bg-cyan-600 text-white"
+                        : "bg-zinc-100 text-zinc-600"
+                    }`}
+                  >
+                    {type.value}
+                  </span>
                   <span className="text-xs text-zinc-500">{type.desc}</span>
                 </button>
               ))}
@@ -119,31 +144,45 @@ export function DnsQueryForm({ onQuery, onBatchQuery, loading }: DnsQueryFormPro
           </label>
           <button
             type="button"
-            onClick={() => { setShowProviderDropdown(!showProviderDropdown); setShowTypeDropdown(false) }}
+            onClick={() => {
+              setShowProviderDropdown(!showProviderDropdown);
+              setShowTypeDropdown(false);
+            }}
             className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-all"
           >
             <div className="flex items-center gap-2">
               <Server className="w-4 h-4 text-zinc-400" />
               <span>{selectedProvider?.label}</span>
-              <span className="text-xs text-zinc-400 font-mono">{selectedProvider?.ip}</span>
+              <span className="text-xs text-zinc-400 font-mono">
+                {selectedProvider?.ip}
+              </span>
             </div>
-            <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${showProviderDropdown ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`w-4 h-4 text-zinc-400 transition-transform ${showProviderDropdown ? "rotate-180" : ""}`}
+            />
           </button>
-          
+
           {showProviderDropdown && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 z-50">
-              {DNS_PROVIDERS.map(p => (
+              {DNS_PROVIDERS.map((p) => (
                 <button
                   key={p.value}
                   type="button"
-                  onClick={() => { setProvider(p.value); setShowProviderDropdown(false) }}
+                  onClick={() => {
+                    setProvider(p.value);
+                    setShowProviderDropdown(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-cyan-50 transition-colors ${
-                    provider === p.value ? 'bg-cyan-50' : ''
+                    provider === p.value ? "bg-cyan-50" : ""
                   }`}
                 >
-                  <Server className={`w-4 h-4 ${provider === p.value ? 'text-cyan-600' : 'text-zinc-400'}`} />
+                  <Server
+                    className={`w-4 h-4 ${provider === p.value ? "text-cyan-600" : "text-zinc-400"}`}
+                  />
                   <span className="font-medium">{p.label}</span>
-                  <span className="text-xs text-zinc-400 font-mono ml-auto">{p.ip}</span>
+                  <span className="text-xs text-zinc-400 font-mono ml-auto">
+                    {p.ip}
+                  </span>
                 </button>
               ))}
             </div>
@@ -165,7 +204,7 @@ export function DnsQueryForm({ onQuery, onBatchQuery, loading }: DnsQueryFormPro
           )}
           Query
         </button>
-        
+
         <button
           type="button"
           onClick={handleBatchQuery}
@@ -181,17 +220,19 @@ export function DnsQueryForm({ onQuery, onBatchQuery, loading }: DnsQueryFormPro
       {/* Quick domains */}
       <div className="mt-4 flex items-center gap-2 flex-wrap">
         <span className="text-[10px] text-zinc-400">Try:</span>
-        {['google.com', 'cloudflare.com', 'github.com', 'example.com'].map(d => (
-          <button
-            key={d}
-            type="button"
-            onClick={() => setDomain(d)}
-            className="text-[10px] px-2 py-1 bg-zinc-100 hover:bg-cyan-100 hover:text-cyan-700 rounded-lg transition-colors font-mono"
-          >
-            {d}
-          </button>
-        ))}
+        {["google.com", "cloudflare.com", "github.com", "example.com"].map(
+          (d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDomain(d)}
+              className="text-[10px] px-2 py-1 bg-zinc-100 hover:bg-cyan-100 hover:text-cyan-700 rounded-lg transition-colors font-mono"
+            >
+              {d}
+            </button>
+          ),
+        )}
       </div>
     </form>
-  )
+  );
 }

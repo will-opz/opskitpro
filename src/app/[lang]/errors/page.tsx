@@ -1,39 +1,43 @@
-import Link from 'next/link'
+import Link from "next/link";
 import {
   ArrowRight,
   ShieldAlert,
   ServerCrash,
   Globe,
   Settings,
-} from 'lucide-react'
-import { getDictionary } from '@/dictionaries'
-import { SiteHeader } from '@/components/SiteHeader'
-import { SiteFooter } from '@/components/SiteFooter'
-import { getCloudflareErrors, localize } from '@/content/cloudflare-errors'
+} from "lucide-react";
+import { getDictionary } from "@/dictionaries";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { getCloudflareErrors, localize } from "@/content/cloudflare-errors";
 
 function getIconForResponsibility(responsibility: string) {
   switch (responsibility) {
-    case 'Cloudflare Edge':
-      return <Globe className="h-4 w-4 text-emerald-500" />
-    case 'Origin Server':
-      return <ServerCrash className="h-4 w-4 text-red-500" />
-    case 'Configuration':
-      return <Settings className="h-4 w-4 text-sky-500" />
-    case 'Client / Network':
-      return <ShieldAlert className="h-4 w-4 text-orange-500" />
+    case "Cloudflare Edge":
+      return <Globe className="h-4 w-4 text-emerald-500" />;
+    case "Origin Server":
+      return <ServerCrash className="h-4 w-4 text-red-500" />;
+    case "Configuration":
+      return <Settings className="h-4 w-4 text-sky-500" />;
+    case "Client / Network":
+      return <ShieldAlert className="h-4 w-4 text-orange-500" />;
     default:
-      return <ShieldAlert className="h-4 w-4 text-zinc-500" />
+      return <ShieldAlert className="h-4 w-4 text-zinc-500" />;
   }
 }
 
-export default async function ErrorsPage({ params }: { params: { lang: string } }) {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
-  
-  const isZh = lang === 'zh'
-  const isJapanese = lang === 'ja'
-  
-  const errors = getCloudflareErrors()
+export default async function ErrorsPage({
+  params,
+}: {
+  params: { lang: string };
+}) {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
+
+  const isZh = lang === "zh";
+  const isJapanese = false;
+
+  const errors = getCloudflareErrors();
 
   return (
     <>
@@ -45,19 +49,25 @@ export default async function ErrorsPage({ params }: { params: { lang: string } 
         <div className="mb-12 border-b border-zinc-100 pb-10 text-center md:text-left">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-white/75 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-red-600 shadow-sm backdrop-blur-md">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
-            {isJapanese ? 'トラブルシューティング' : isZh ? '排障指南' : lang === 'tw' ? '排障指南' : 'Troubleshooting'}
+            {isJapanese
+              ? "トラブルシューティング"
+              : isZh
+                ? "排障指南"
+                : false
+                  ? "排障指南"
+                  : "Troubleshooting"}
           </div>
           <h1 className="mb-5 text-4xl font-black leading-tight tracking-tighter text-zinc-900 sm:text-5xl md:text-7xl">
             Cloudflare Error Encyclopedia
           </h1>
           <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-zinc-700 sm:text-base md:mx-0">
             {isJapanese
-              ? 'Cloudflare 5xx / 1xxx エラーの原因と、SRE 視点での具体的な解決手順を整理しています。'
+              ? "Cloudflare 5xx / 1xxx エラーの原因と、SRE 視点での具体的な解決手順を整理しています。"
               : isZh
-                ? '整理常见的 Cloudflare 错误代码 (如 522, 1020 等)，提供 SRE 视角下的故障排查指南。'
-                : lang === 'tw'
-                  ? '整理常見的 Cloudflare 錯誤代碼 (如 522, 1020 等)，提供 SRE 視角下的故障排查指南。'
-                  : 'A comprehensive troubleshooting guide for common Cloudflare errors (e.g., 522, 1020) from an SRE perspective.'}
+                ? "整理常见的 Cloudflare 错误代码 (如 522, 1020 等)，提供 SRE 视角下的故障排查指南。"
+                : false
+                  ? "整理常見的 Cloudflare 錯誤代碼 (如 522, 1020 等)，提供 SRE 視角下的故障排查指南。"
+                  : "A comprehensive troubleshooting guide for common Cloudflare errors (e.g., 522, 1020) from an SRE perspective."}
           </p>
         </div>
 
@@ -74,7 +84,9 @@ export default async function ErrorsPage({ params }: { params: { lang: string } 
                     {getIconForResponsibility(error.responsibility)}
                     {error.responsibility}
                   </span>
-                  <span className="font-bold text-red-500">Error {error.code}</span>
+                  <span className="font-bold text-red-500">
+                    Error {error.code}
+                  </span>
                 </div>
 
                 <h3 className="mt-5 text-xl font-black tracking-tight text-zinc-900 transition-colors group-hover:text-red-600">
@@ -86,7 +98,13 @@ export default async function ErrorsPage({ params }: { params: { lang: string } 
 
                 <div className="mt-8 flex items-center justify-between border-t border-zinc-50 pt-5">
                   <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-400 font-semibold group-hover:text-red-500 transition-colors">
-                    {isJapanese ? '解決策を見る' : isZh ? '查看排障指南' : lang === 'tw' ? '查看排障指南' : 'View Guide'}
+                    {isJapanese
+                      ? "解決策を見る"
+                      : isZh
+                        ? "查看排障指南"
+                        : false
+                          ? "查看排障指南"
+                          : "View Guide"}
                   </span>
                   <ArrowRight className="h-4 w-4 text-zinc-400 transition-transform group-hover:translate-x-1 group-hover:text-red-600" />
                 </div>
@@ -98,5 +116,5 @@ export default async function ErrorsPage({ params }: { params: { lang: string } 
 
       <SiteFooter dict={dict} />
     </>
-  )
+  );
 }

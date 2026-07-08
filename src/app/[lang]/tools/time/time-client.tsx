@@ -1,163 +1,140 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import { Check, Clock3, Copy, RefreshCw, TimerReset } from 'lucide-react'
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Check, Clock3, Copy, RefreshCw, TimerReset } from "lucide-react";
 
-type Lang = 'zh' | 'en' | 'ja' | 'tw'
+type Lang = "zh" | "en";
 
 const zones = [
-  { label: 'Local', value: 'local' },
-  { label: 'UTC', value: 'UTC' },
-  { label: 'Tokyo', value: 'Asia/Tokyo' },
-  { label: 'Shanghai', value: 'Asia/Shanghai' },
-  { label: 'Singapore', value: 'Asia/Singapore' },
-  { label: 'London', value: 'Europe/London' },
-  { label: 'New York', value: 'America/New_York' },
-  { label: 'Los Angeles', value: 'America/Los_Angeles' },
-]
+  { label: "Local", value: "local" },
+  { label: "UTC", value: "UTC" },
+  { label: "Tokyo", value: "Asia/Tokyo" },
+  { label: "Shanghai", value: "Asia/Shanghai" },
+  { label: "Singapore", value: "Asia/Singapore" },
+  { label: "London", value: "Europe/London" },
+  { label: "New York", value: "America/New_York" },
+  { label: "Los Angeles", value: "America/Los_Angeles" },
+];
 
 const copy = {
   zh: {
-    home: '首页',
-    tools: '工具',
-    badge: '时间工具',
-    title: '时间与时区转换',
-    desc: 'Unix 时间戳、ISO 时间和常用时区快速互转。',
-    input: '输入时间',
-    placeholder: 'Unix 秒/毫秒或 ISO 时间，例如 1714200000',
-    now: '当前时间',
-    invalid: '无法解析这个时间，请输入 Unix 秒、毫秒或 ISO 字符串。',
-    unixSeconds: 'Unix 秒',
-    unixMs: 'Unix 毫秒',
-    iso: 'ISO 时间',
-    utc: 'UTC',
-    timezone: '常用时区',
-    copy: '复制',
-    copied: '已复制',
+    home: "首页",
+    tools: "工具",
+    badge: "时间工具",
+    title: "时间与时区转换",
+    desc: "Unix 时间戳、ISO 时间和常用时区快速互转。",
+    input: "输入时间",
+    placeholder: "Unix 秒/毫秒或 ISO 时间，例如 1714200000",
+    now: "当前时间",
+    invalid: "无法解析这个时间，请输入 Unix 秒、毫秒或 ISO 字符串。",
+    unixSeconds: "Unix 秒",
+    unixMs: "Unix 毫秒",
+    iso: "ISO 时间",
+    utc: "UTC",
+    timezone: "常用时区",
+    copy: "复制",
+    copied: "已复制",
   },
   en: {
-    home: 'Home',
-    tools: 'Tools',
-    badge: 'Time Toolkit',
-    title: 'Time & Time Zone Converter',
-    desc: 'Convert Unix timestamps, ISO strings, and common time zones quickly.',
-    input: 'Input time',
-    placeholder: 'Unix seconds/ms or ISO time, e.g. 1714200000',
-    now: 'Use current time',
-    invalid: 'Unable to parse this time. Use Unix seconds, milliseconds, or an ISO string.',
-    unixSeconds: 'Unix seconds',
-    unixMs: 'Unix milliseconds',
-    iso: 'ISO time',
-    utc: 'UTC',
-    timezone: 'Common time zones',
-    copy: 'Copy',
-    copied: 'Copied',
+    home: "Home",
+    tools: "Tools",
+    badge: "Time Toolkit",
+    title: "Time & Time Zone Converter",
+    desc: "Convert Unix timestamps, ISO strings, and common time zones quickly.",
+    input: "Input time",
+    placeholder: "Unix seconds/ms or ISO time, e.g. 1714200000",
+    now: "Use current time",
+    invalid:
+      "Unable to parse this time. Use Unix seconds, milliseconds, or an ISO string.",
+    unixSeconds: "Unix seconds",
+    unixMs: "Unix milliseconds",
+    iso: "ISO time",
+    utc: "UTC",
+    timezone: "Common time zones",
+    copy: "Copy",
+    copied: "Copied",
   },
-  ja: {
-    home: 'ホーム',
-    tools: 'ツール',
-    badge: '時間ツール',
-    title: '時刻・タイムゾーン変換',
-    desc: 'Unix タイムスタンプ、ISO 時刻、主要タイムゾーンをすばやく変換します。',
-    input: '入力時刻',
-    placeholder: 'Unix 秒/ミリ秒、または ISO 時刻。例: 1714200000',
-    now: '現在時刻',
-    invalid: '時刻を解析できません。Unix 秒、ミリ秒、ISO 文字列を入力してください。',
-    unixSeconds: 'Unix 秒',
-    unixMs: 'Unix ミリ秒',
-    iso: 'ISO 時刻',
-    utc: 'UTC',
-    timezone: '主要タイムゾーン',
-    copy: 'コピー',
-    copied: 'コピー済み',
-  },
-  tw: {
-    home: '首頁',
-    tools: '工具',
-    badge: '時間工具',
-    title: '時間與時區轉換',
-    desc: 'Unix 時間戳、ISO 時間和常用時區快速互轉。',
-    input: '輸入時間',
-    placeholder: 'Unix 秒/毫秒或 ISO 時間，例如 1714200000',
-    now: '目前時間',
-    invalid: '無法解析這個時間，請輸入 Unix 秒、毫秒或 ISO 字串。',
-    unixSeconds: 'Unix 秒',
-    unixMs: 'Unix 毫秒',
-    iso: 'ISO 時間',
-    utc: 'UTC',
-    timezone: '常用時區',
-    copy: '複製',
-    copied: '已複製',
-  },
-} satisfies Record<Lang, Record<string, string>>
+} satisfies Record<Lang, Record<string, string>>;
 
 function parseInput(value: string): Date | null {
-  const trimmed = value.trim()
-  if (!trimmed) return null
+  const trimmed = value.trim();
+  if (!trimmed) return null;
 
   if (/^-?\d+$/.test(trimmed)) {
-    const raw = Number(trimmed)
-    const ms = Math.abs(raw) < 100000000000 ? raw * 1000 : raw
-    const date = new Date(ms)
-    return Number.isNaN(date.getTime()) ? null : date
+    const raw = Number(trimmed);
+    const ms = Math.abs(raw) < 100000000000 ? raw * 1000 : raw;
+    const date = new Date(ms);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 
-  const date = new Date(trimmed)
-  return Number.isNaN(date.getTime()) ? null : date
+  const date = new Date(trimmed);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function formatInZone(date: Date, timeZone: string, locale: string) {
   const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     hour12: false,
-  }
+  };
 
-  return new Intl.DateTimeFormat(locale, timeZone === 'local' ? options : { ...options, timeZone }).format(date)
+  return new Intl.DateTimeFormat(
+    locale,
+    timeZone === "local" ? options : { ...options, timeZone },
+  ).format(date);
 }
 
 export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
-  const t = copy[lang] || copy.zh
-  const locale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : lang === 'tw' ? 'zh-TW' : 'zh-CN'
-  const [input, setInput] = useState('')
-  const [copied, setCopied] = useState('')
+  const t = copy[lang] || copy.zh;
+  const locale = lang === "en" ? "en-US" : "zh-CN";
+  const [input, setInput] = useState("");
+  const [copied, setCopied] = useState("");
 
   useEffect(() => {
-    setInput(String(Math.floor(Date.now() / 1000)))
-  }, [])
+    setInput(String(Math.floor(Date.now() / 1000)));
+  }, []);
 
-  const parsedDate = useMemo(() => parseInput(input), [input])
+  const parsedDate = useMemo(() => parseInput(input), [input]);
 
   const rows = useMemo(() => {
-    if (!parsedDate) return []
+    if (!parsedDate) return [];
     return zones.map((zone) => ({
       ...zone,
       valueText: formatInZone(parsedDate, zone.value, locale),
-    }))
-  }, [locale, parsedDate])
+    }));
+  }, [locale, parsedDate]);
 
-  const setNow = () => setInput(String(Math.floor(Date.now() / 1000)))
+  const setNow = () => setInput(String(Math.floor(Date.now() / 1000)));
 
   const copyValue = (label: string, value: string) => {
-    navigator.clipboard.writeText(value)
-    setCopied(label)
-    setTimeout(() => setCopied(''), 1600)
-  }
+    navigator.clipboard.writeText(value);
+    setCopied(label);
+    setTimeout(() => setCopied(""), 1600);
+  };
 
   return (
     <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
       <div className="mx-auto max-w-5xl">
         <nav className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">{t.home}</Link>
+          <Link href="/" className="hover:text-emerald-600 transition-colors">
+            {t.home}
+          </Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/tools" className="hover:text-emerald-600 transition-colors">{t.tools}</Link>
+          <Link
+            href="/tools"
+            className="hover:text-emerald-600 transition-colors"
+          >
+            {t.tools}
+          </Link>
           <span className="text-zinc-300">/</span>
-          <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">{dict.tools.time_title}</span>
+          <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">
+            {dict.tools.time_title}
+          </span>
         </nav>
 
         <section className="op-card rounded-[2rem] p-5 sm:p-8">
@@ -172,15 +149,15 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
                 <Clock3 className="h-7 w-7 text-emerald-600" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">{t.title}</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-600">{t.desc}</p>
+                <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">
+                  {t.title}
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-600">
+                  {t.desc}
+                </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={setNow}
-              className="op-action"
-            >
+            <button type="button" onClick={setNow} className="op-action">
               <RefreshCw className="h-4 w-4" />
               {t.now}
             </button>
@@ -189,7 +166,10 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="op-card rounded-[1.5rem] p-5">
-            <label htmlFor="time-input" className="mb-3 block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">
+            <label
+              htmlFor="time-input"
+              className="mb-3 block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500"
+            >
               {t.input}
             </label>
             <input
@@ -201,18 +181,30 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
             />
 
             {!parsedDate && input.trim() && (
-              <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">{t.invalid}</p>
+              <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+                {t.invalid}
+              </p>
             )}
 
             {parsedDate && (
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: t.unixSeconds, value: String(Math.floor(parsedDate.getTime() / 1000)) },
+                  {
+                    label: t.unixSeconds,
+                    value: String(Math.floor(parsedDate.getTime() / 1000)),
+                  },
                   { label: t.unixMs, value: String(parsedDate.getTime()) },
                   { label: t.iso, value: parsedDate.toISOString() },
                   { label: t.utc, value: parsedDate.toUTCString() },
                 ].map((item) => (
-                  <OutputCard key={item.label} label={item.label} value={item.value} copied={copied === item.label} copyLabel={copied === item.label ? t.copied : t.copy} onCopy={() => copyValue(item.label, item.value)} />
+                  <OutputCard
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                    copied={copied === item.label}
+                    copyLabel={copied === item.label ? t.copied : t.copy}
+                    onCopy={() => copyValue(item.label, item.value)}
+                  />
                 ))}
               </div>
             )}
@@ -221,7 +213,9 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
           <aside className="op-card rounded-[1.5rem] p-5">
             <div className="mb-4 flex items-center gap-2">
               <TimerReset className="h-4 w-4 text-emerald-600" />
-              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-700">{t.timezone}</h2>
+              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-700">
+                {t.timezone}
+              </h2>
             </div>
             <div className="space-y-2">
               {rows.map((row) => (
@@ -232,10 +226,18 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
                   className="group flex w-full items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2.5 text-left transition hover:border-emerald-500/20 hover:bg-emerald-50"
                 >
                   <span className="min-w-0">
-                    <span className="block text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">{row.label}</span>
-                    <span className="mt-1 block truncate font-mono text-sm text-zinc-900">{row.valueText}</span>
+                    <span className="block text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                      {row.label}
+                    </span>
+                    <span className="mt-1 block truncate font-mono text-sm text-zinc-900">
+                      {row.valueText}
+                    </span>
                   </span>
-                  {copied === row.label ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 shrink-0 text-zinc-300 transition group-hover:text-emerald-600" />}
+                  {copied === row.label ? (
+                    <Check className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <Copy className="h-4 w-4 shrink-0 text-zinc-300 transition group-hover:text-emerald-600" />
+                  )}
                 </button>
               ))}
             </div>
@@ -243,24 +245,44 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
         </section>
       </div>
     </main>
-  )
+  );
 }
 
-function OutputCard({ label, value, copied, copyLabel, onCopy }: { label: string; value: string; copied: boolean; copyLabel: string; onCopy: () => void }) {
+function OutputCard({
+  label,
+  value,
+  copied,
+  copyLabel,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  copied: boolean;
+  copyLabel: string;
+  onCopy: () => void;
+}) {
   return (
     <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">{label}</div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+          {label}
+        </div>
         <button
           type="button"
           onClick={onCopy}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-500 transition hover:bg-white hover:text-emerald-700"
         >
-          {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-emerald-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
           {copyLabel}
         </button>
       </div>
-      <div className="break-all font-mono text-sm leading-6 text-zinc-900">{value}</div>
+      <div className="break-all font-mono text-sm leading-6 text-zinc-900">
+        {value}
+      </div>
     </div>
-  )
+  );
 }

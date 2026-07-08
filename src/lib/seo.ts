@@ -1,9 +1,9 @@
-import { Metadata } from 'next'
-import { ACTIVE_LOCALES, LOCALE_MAP, type Locale } from '@/lib/i18n'
+import { Metadata } from "next";
+import { ACTIVE_LOCALES, LOCALE_MAP, type Locale } from "@/lib/i18n";
 
-export type Lang = Locale
+export type Lang = Locale;
 
-export const SITE_URL = 'https://opskitpro.com'
+export const SITE_URL = "https://opskitpro.com";
 
 /**
  * Builds language alternates for a given path.
@@ -12,14 +12,17 @@ export const SITE_URL = 'https://opskitpro.com'
  */
 export function buildLanguageAlternates(path: string) {
   // Ensure path starts with a slash if it's not empty
-  const safePath = path && !path.startsWith('/') ? `/${path}` : path
-  
-  return ACTIVE_LOCALES.reduce<Record<string, string>>((alternates, locale) => {
-    alternates[LOCALE_MAP[locale]] = `${SITE_URL}/${locale}${safePath}`
-    return alternates
-  }, {
-    'x-default': `${SITE_URL}/en${safePath}`,
-  })
+  const safePath = path && !path.startsWith("/") ? `/${path}` : path;
+
+  return ACTIVE_LOCALES.reduce<Record<string, string>>(
+    (alternates, locale) => {
+      alternates[LOCALE_MAP[locale]] = `${SITE_URL}/${locale}${safePath}`;
+      return alternates;
+    },
+    {
+      "x-default": `${SITE_URL}/en${safePath}`,
+    },
+  );
 }
 
 /**
@@ -29,8 +32,8 @@ export function buildLanguageAlternates(path: string) {
  * @returns The full canonical URL
  */
 export function buildCanonicalUrl(path: string, lang: Lang) {
-  const safePath = path && !path.startsWith('/') ? `/${path}` : path
-  return `${SITE_URL}/${lang}${safePath}`
+  const safePath = path && !path.startsWith("/") ? `/${path}` : path;
+  return `${SITE_URL}/${lang}${safePath}`;
 }
 
 /**
@@ -41,7 +44,7 @@ export function buildPageMetadata(
   description: string,
   lang: Lang,
   path: string,
-  extraMetadata?: Partial<Metadata>
+  extraMetadata?: Partial<Metadata>,
 ): Metadata {
   return {
     title,
@@ -50,9 +53,9 @@ export function buildPageMetadata(
       title,
       description,
       url: buildCanonicalUrl(path, lang),
-      siteName: 'OpsKitPro',
-      locale: (LOCALE_MAP as Record<string, string>)[lang] || 'en-US',
-      type: 'website',
+      siteName: "OpsKitPro",
+      locale: (LOCALE_MAP as Record<string, string>)[lang] || "en-US",
+      type: "website",
       ...(extraMetadata?.openGraph || {}),
     },
     alternates: {
@@ -60,67 +63,67 @@ export function buildPageMetadata(
       languages: buildLanguageAlternates(path),
     },
     ...extraMetadata,
-  }
+  };
 }
 
 /**
  * Generates JSON-LD for technical blog articles.
  */
 export function buildTechArticleJsonLd(params: {
-  headline: string
-  description: string
-  datePublished: string
-  authorName?: string
-  imageUrl?: string
-  url: string
+  headline: string;
+  description: string;
+  datePublished: string;
+  authorName?: string;
+  imageUrl?: string;
+  url: string;
 }) {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'TechArticle',
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
     headline: params.headline,
     description: params.description,
     datePublished: params.datePublished,
     author: {
-      '@type': 'Person',
-      name: params.authorName || 'OpsKitPro Team',
+      "@type": "Person",
+      name: params.authorName || "OpsKitPro Team",
     },
     publisher: {
-      '@type': 'Organization',
-      name: 'OpsKitPro',
+      "@type": "Organization",
+      name: "OpsKitPro",
       logo: {
-        '@type': 'ImageObject',
+        "@type": "ImageObject",
         url: `${SITE_URL}/logo.svg`,
       },
     },
     mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': params.url,
+      "@type": "WebPage",
+      "@id": params.url,
     },
     ...(params.imageUrl ? { image: [`${SITE_URL}${params.imageUrl}`] } : {}),
-  }
+  };
 }
 
 /**
  * Generates JSON-LD for Web Application / Tools.
  */
 export function buildToolJsonLd(params: {
-  name: string
-  description: string
-  url: string
-  applicationCategory?: string
+  name: string;
+  description: string;
+  url: string;
+  applicationCategory?: string;
 }) {
   return {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
     name: params.name,
     description: params.description,
     url: params.url,
-    applicationCategory: params.applicationCategory || 'DeveloperApplication',
-    operatingSystem: 'Any',
+    applicationCategory: params.applicationCategory || "DeveloperApplication",
+    operatingSystem: "Any",
     offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
     },
-  }
+  };
 }

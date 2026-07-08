@@ -1,23 +1,25 @@
-'use client'
+"use client";
 
-import { Clock, Trash2, RotateCw, CheckCircle, XCircle } from 'lucide-react'
-import type { LookupHistory, DnsRecordType, DnsProvider } from '../hooks'
+import { Clock, Trash2, RotateCw, CheckCircle, XCircle } from "lucide-react";
+import type { LookupHistory, DnsRecordType, DnsProvider } from "../hooks";
 
 interface DnsHistoryProps {
-  history: LookupHistory[]
-  onRerun: (domain: string, type: DnsRecordType, provider: DnsProvider) => void
-  onClear: () => void
+  history: LookupHistory[];
+  onRerun: (domain: string, type: DnsRecordType, provider: DnsProvider) => void;
+  onClear: () => void;
 }
 
 export function DnsHistory({ history, onRerun, onClear }: DnsHistoryProps) {
-  if (history.length === 0) return null
+  if (history.length === 0) return null;
 
   return (
     <div className="glass-card rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-zinc-400" />
-          <h3 className="text-sm font-semibold text-zinc-700 tracking-[0.18em]">Query History</h3>
+          <h3 className="text-sm font-semibold text-zinc-700 tracking-[0.18em]">
+            Query History
+          </h3>
           <span className="px-2 py-0.5 bg-zinc-100 rounded-full text-[10px] font-semibold text-zinc-500">
             {history.length}
           </span>
@@ -31,7 +33,7 @@ export function DnsHistory({ history, onRerun, onClear }: DnsHistoryProps) {
       </div>
 
       <div className="divide-y divide-zinc-50 max-h-64 overflow-auto">
-        {history.map(entry => (
+        {history.map((entry) => (
           <div
             key={entry.id}
             className="px-6 py-3 flex items-center justify-between hover:bg-zinc-50 transition-colors group"
@@ -44,7 +46,9 @@ export function DnsHistory({ history, onRerun, onClear }: DnsHistoryProps) {
               )}
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-zinc-700 truncate">{entry.domain}</span>
+                  <span className="text-sm text-zinc-700 truncate">
+                    {entry.domain}
+                  </span>
                   <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 rounded text-[9px] font-semibold tracking-[0.18em] shrink-0">
                     {entry.type}
                   </span>
@@ -76,15 +80,15 @@ export function DnsHistory({ history, onRerun, onClear }: DnsHistoryProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function formatTime(timestamp: number): string {
-  const now = Date.now()
-  const diff = now - timestamp
-  
-  if (diff < 60000) return 'just now'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
-  return new Date(timestamp).toLocaleDateString()
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return new Date(timestamp).toLocaleDateString();
 }

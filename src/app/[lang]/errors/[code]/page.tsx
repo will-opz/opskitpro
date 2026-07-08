@@ -1,26 +1,46 @@
-import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, ChevronRight, Info, Wrench, ShieldAlert, Activity, Globe, ArrowRight, AlertCircle, Cpu, BookOpen } from 'lucide-react'
-import { getDictionary } from '@/dictionaries'
-import { SiteHeader } from '@/components/SiteHeader'
-import { SiteFooter } from '@/components/SiteFooter'
-import { TrackedLink } from '@/components/TrackedLink'
-import { getCloudflareErrors, getCloudflareError, localize } from '@/content/cloudflare-errors'
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Info,
+  Wrench,
+  ShieldAlert,
+  Activity,
+  Globe,
+  ArrowRight,
+  AlertCircle,
+  Cpu,
+  BookOpen,
+} from "lucide-react";
+import { getDictionary } from "@/dictionaries";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { TrackedLink } from "@/components/TrackedLink";
+import {
+  getCloudflareErrors,
+  getCloudflareError,
+  localize,
+} from "@/content/cloudflare-errors";
 
 export function generateStaticParams() {
   return getCloudflareErrors().map((e) => ({
     code: e.code,
-  }))
+  }));
 }
 
-export async function generateMetadata({ params }: { params: { lang: string, code: string } }): Promise<Metadata> {
-  const error = getCloudflareError(params.code)
-  if (!error) return {}
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  
-  const title = `Cloudflare Error ${error.code}: ${localize(error.title, lang)} | OpsKitPro`
-  const description = localize(error.summary, lang)
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string; code: string };
+}): Promise<Metadata> {
+  const error = getCloudflareError(params.code);
+  if (!error) return {};
+  const lang = (params.lang || "en") as "zh" | "en";
+
+  const title = `Cloudflare Error ${error.code}: ${localize(error.title, lang)} | OpsKitPro`;
+  const description = localize(error.summary, lang);
 
   return {
     title,
@@ -28,106 +48,179 @@ export async function generateMetadata({ params }: { params: { lang: string, cod
     openGraph: {
       title,
       description,
-      type: 'article',
+      type: "article",
     },
-  }
+  };
 }
 
-export default async function ErrorDetailPage({ params }: { params: { lang: string, code: string } }) {
-  const error = getCloudflareError(params.code)
+export default async function ErrorDetailPage({
+  params,
+}: {
+  params: { lang: string; code: string };
+}) {
+  const error = getCloudflareError(params.code);
   if (!error) {
-    notFound()
+    notFound();
   }
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
-  
-  const isZh = lang === 'zh'
-  const isJapanese = lang === 'ja'
-  const isTw = lang === 'tw'
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
 
-  const localizedTitle = localize(error.title, lang)
-  const localizedSummary = localize(error.summary, lang)
-  const localizedCauses = localize(error.causes, lang)
+  const isZh = lang === "zh";
+  const isJapanese = false;
+  const isTw = false;
 
-  const causeLabel = isJapanese ? '主な原因' : isZh ? '常见原因' : isTw ? '常見原因' : 'Common Causes'
-  const responsibilityLabel = isJapanese ? '責任範囲' : isZh ? '责任方' : isTw ? '責任方' : 'Responsibility'
-  const guideLabel = isJapanese ? 'トラブルシューティング手順' : isZh ? '排障指南' : isTw ? '排障指南' : 'Troubleshooting Guide'
-  const relatedLabel = isJapanese ? '関連ツール' : isZh ? '关联工具' : isTw ? '關聯工具' : 'Related Tools'
-  const relatedErrorsLabel = isJapanese ? '関連エラー' : isZh ? '关联错误' : isTw ? '關聯錯誤' : 'Related Errors'
+  const localizedTitle = localize(error.title, lang);
+  const localizedSummary = localize(error.summary, lang);
+  const localizedCauses = localize(error.causes, lang);
+
+  const causeLabel = isJapanese
+    ? "主な原因"
+    : isZh
+      ? "常见原因"
+      : isTw
+        ? "常見原因"
+        : "Common Causes";
+  const responsibilityLabel = isJapanese
+    ? "責任範囲"
+    : isZh
+      ? "责任方"
+      : isTw
+        ? "責任方"
+        : "Responsibility";
+  const guideLabel = isJapanese
+    ? "トラブルシューティング手順"
+    : isZh
+      ? "排障指南"
+      : isTw
+        ? "排障指南"
+        : "Troubleshooting Guide";
+  const relatedLabel = isJapanese
+    ? "関連ツール"
+    : isZh
+      ? "关联工具"
+      : isTw
+        ? "關聯工具"
+        : "Related Tools";
+  const relatedErrorsLabel = isJapanese
+    ? "関連エラー"
+    : isZh
+      ? "关联错误"
+      : isTw
+        ? "關聯錯誤"
+        : "Related Errors";
 
   const severityConfig = {
     critical: {
-      color: 'text-red-600 bg-red-100 border-red-500/20',
+      color: "text-red-600 bg-red-100 border-red-500/20",
       icon: <ShieldAlert className="h-4 w-4" />,
-      label: 'Critical',
-      desc: isZh || isTw ? '影响：网站完全不可访问' : isJapanese ? '影響：Webサイトにアクセスできません' : 'Impact: Website completely inaccessible'
+      label: "Critical",
+      desc:
+        isZh || isTw
+          ? "影响：网站完全不可访问"
+          : isJapanese
+            ? "影響：Webサイトにアクセスできません"
+            : "Impact: Website completely inaccessible",
     },
     warning: {
-      color: 'text-amber-600 bg-amber-100 border-amber-500/20',
+      color: "text-amber-600 bg-amber-100 border-amber-500/20",
       icon: <AlertCircle className="h-4 w-4" />,
-      label: 'Warning',
-      desc: isZh || isTw ? '影响：部分请求被拦截或受限' : isJapanese ? '影響：一部のリクエストがブロック・制限されています' : 'Impact: Requests partially blocked or limited'
+      label: "Warning",
+      desc:
+        isZh || isTw
+          ? "影响：部分请求被拦截或受限"
+          : isJapanese
+            ? "影響：一部のリクエストがブロック・制限されています"
+            : "Impact: Requests partially blocked or limited",
     },
     info: {
-      color: 'text-blue-600 bg-blue-100 border-blue-500/20',
+      color: "text-blue-600 bg-blue-100 border-blue-500/20",
       icon: <Info className="h-4 w-4" />,
-      label: 'Info',
-      desc: isZh || isTw ? '影响：提示性信息' : isJapanese ? '影響：参考情報' : 'Impact: Informational'
-    }
-  }
+      label: "Info",
+      desc:
+        isZh || isTw
+          ? "影响：提示性信息"
+          : isJapanese
+            ? "影響：参考情報"
+            : "Impact: Informational",
+    },
+  };
 
-  const currentSeverity = severityConfig[error.severity || 'info']
+  const currentSeverity = severityConfig[error.severity || "info"];
 
   const jsonLdBreadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://opskitpro.com/' },
-      { '@type': 'ListItem', position: 2, name: 'Errors', item: 'https://opskitpro.com/errors' },
-      { '@type': 'ListItem', position: 3, name: `Error ${error.code}`, item: `https://opskitpro.com/errors/${error.code}` },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://opskitpro.com/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Errors",
+        item: "https://opskitpro.com/errors",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `Error ${error.code}`,
+        item: `https://opskitpro.com/errors/${error.code}`,
+      },
     ],
-  }
+  };
 
   const jsonLdFAQ = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
     mainEntity: [
       {
-        '@type': 'Question',
+        "@type": "Question",
         name: `What causes Cloudflare Error ${error.code}?`,
         acceptedAnswer: {
-          '@type': 'Answer',
-          text: localizedSummary + ' ' + localizedCauses.join(' '),
+          "@type": "Answer",
+          text: localizedSummary + " " + localizedCauses.join(" "),
         },
       },
       ...error.troubleshooting.map((step) => ({
-        '@type': 'Question',
+        "@type": "Question",
         name: `How to fix Cloudflare Error ${error.code} - ${localize(step.title, lang)}?`,
         acceptedAnswer: {
-          '@type': 'Answer',
+          "@type": "Answer",
           text: localize(step.content, lang),
         },
       })),
     ],
-  }
+  };
 
   const jsonLdArticle = {
-    '@context': 'https://schema.org',
-    '@type': 'TechArticle',
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
     headline: `Cloudflare Error ${error.code}: ${localizedTitle}`,
     description: localizedSummary,
-    proficiencyLevel: 'Expert',
+    proficiencyLevel: "Expert",
     author: {
-      '@type': 'Organization',
-      name: 'OpsKitPro',
+      "@type": "Organization",
+      name: "OpsKitPro",
     },
-  }
+  };
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }}
+      />
 
       <SiteHeader dict={dict} lang={lang} />
 
@@ -151,7 +244,9 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
               Cloudflare Error {error.code}
             </div>
             {error.severity && (
-              <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold shadow-sm ${currentSeverity.color}`}>
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold shadow-sm ${currentSeverity.color}`}
+              >
                 {currentSeverity.icon}
                 {currentSeverity.label}
               </div>
@@ -179,25 +274,47 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
               {responsibilityLabel}
             </div>
             <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                error.responsibility === 'Origin Server' ? 'bg-orange-100 text-orange-600' : 
-                error.responsibility === 'Configuration' ? 'bg-indigo-100 text-indigo-600' :
-                error.responsibility === 'Client / Network' ? 'bg-rose-100 text-rose-600' :
-                'bg-sky-100 text-sky-600'
-              }`}>
-                {error.responsibility === 'Origin Server' ? <Cpu className="h-5 w-5" /> :
-                 error.responsibility === 'Configuration' ? <Wrench className="h-5 w-5" /> :
-                 <Globe className="h-5 w-5" />}
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                  error.responsibility === "Origin Server"
+                    ? "bg-orange-100 text-orange-600"
+                    : error.responsibility === "Configuration"
+                      ? "bg-indigo-100 text-indigo-600"
+                      : error.responsibility === "Client / Network"
+                        ? "bg-rose-100 text-rose-600"
+                        : "bg-sky-100 text-sky-600"
+                }`}
+              >
+                {error.responsibility === "Origin Server" ? (
+                  <Cpu className="h-5 w-5" />
+                ) : error.responsibility === "Configuration" ? (
+                  <Wrench className="h-5 w-5" />
+                ) : (
+                  <Globe className="h-5 w-5" />
+                )}
               </div>
-              <div className="text-lg font-bold text-zinc-800">{error.responsibility}</div>
+              <div className="text-lg font-bold text-zinc-800">
+                {error.responsibility}
+              </div>
             </div>
             <p className="mt-4 text-xs leading-5 text-zinc-500">
-              {error.responsibility === 'Origin Server' 
-                ? (isJapanese ? 'このエラーはオリジンサーバーに起因します。サーバーログを確認してください。' : isZh ? '此错误由源站服务器引起，请优先排查源站负载与日志。' : 'This error originates from your origin server. Check origin load and logs.')
-                : error.responsibility === 'Configuration' 
-                  ? (isJapanese ? 'DNS や SSL 設定の不備に起因します。' : isZh ? '此错误通常由 DNS、SSL 或防火墙配置不当引起。' : 'This error is usually caused by incorrect DNS, SSL, or firewall configurations.')
-                  : (isJapanese ? 'クライアントやネットワークの問題です。' : isZh ? '此错误由客户端请求或网络层引起。' : 'This error is triggered by the client or network layer.')
-              }
+              {error.responsibility === "Origin Server"
+                ? isJapanese
+                  ? "このエラーはオリジンサーバーに起因します。サーバーログを確認してください。"
+                  : isZh
+                    ? "此错误由源站服务器引起，请优先排查源站负载与日志。"
+                    : "This error originates from your origin server. Check origin load and logs."
+                : error.responsibility === "Configuration"
+                  ? isJapanese
+                    ? "DNS や SSL 設定の不備に起因します。"
+                    : isZh
+                      ? "此错误通常由 DNS、SSL 或防火墙配置不当引起。"
+                      : "This error is usually caused by incorrect DNS, SSL, or firewall configurations."
+                  : isJapanese
+                    ? "クライアントやネットワークの問題です。"
+                    : isZh
+                      ? "此错误由客户端请求或网络层引起。"
+                      : "This error is triggered by the client or network layer."}
             </p>
           </div>
 
@@ -208,7 +325,10 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
             </div>
             <ul className="space-y-2">
               {localizedCauses.map((cause, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-zinc-700">
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-zinc-700"
+                >
                   <span className="mt-1 block h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
                   <span className="leading-snug">{cause}</span>
                 </li>
@@ -223,12 +343,17 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white">
               <Wrench className="h-4 w-4" />
             </div>
-            <h2 className="text-2xl font-black tracking-tight text-zinc-900">{guideLabel}</h2>
+            <h2 className="text-2xl font-black tracking-tight text-zinc-900">
+              {guideLabel}
+            </h2>
           </div>
 
           <div className="space-y-6">
             {error.troubleshooting.map((step, index) => (
-              <div key={index} className="group relative rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+              <div
+                key={index}
+                className="group relative rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              >
                 <div className="absolute -left-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-red-100 text-sm font-black text-red-600">
                   {index + 1}
                 </div>
@@ -250,7 +375,13 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
             <div>
               <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
                 <Activity className="h-4 w-4 text-emerald-500" />
-                {isJapanese ? '診断ツール' : isZh ? '诊断工具' : isTw ? '診斷工具' : 'Diagnostics'}
+                {isJapanese
+                  ? "診断ツール"
+                  : isZh
+                    ? "诊断工具"
+                    : isTw
+                      ? "診斷工具"
+                      : "Diagnostics"}
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <TrackedLink
@@ -259,20 +390,40 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
                   className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-white p-5 text-center shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
                 >
                   <Globe className="h-6 w-6 text-emerald-600 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-bold text-zinc-900">{isJapanese ? 'サイトを診断する' : isZh ? '诊断你的站点' : isTw ? '診斷你的站點' : 'Diagnose Your Site'}</span>
-                  <span className="text-xs text-zinc-500 font-medium">Website Check</span>
+                  <span className="text-sm font-bold text-zinc-900">
+                    {isJapanese
+                      ? "サイトを診断する"
+                      : isZh
+                        ? "诊断你的站点"
+                        : isTw
+                          ? "診斷你的站點"
+                          : "Diagnose Your Site"}
+                  </span>
+                  <span className="text-xs text-zinc-500 font-medium">
+                    Website Check
+                  </span>
                 </TrackedLink>
                 <Link
                   href="/tools/cloudflare-trace"
                   className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white p-5 text-center shadow-sm transition-all hover:border-sky-500 hover:shadow-md"
                 >
                   <Activity className="h-6 w-6 text-sky-600 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-bold text-zinc-900">{isJapanese ? '接続をトレース' : isZh ? '追踪边缘连接' : isTw ? '追蹤邊緣連接' : 'Check Cloudflare Trace'}</span>
-                  <span className="text-xs text-zinc-500 font-medium">Cloudflare Trace</span>
+                  <span className="text-sm font-bold text-zinc-900">
+                    {isJapanese
+                      ? "接続をトレース"
+                      : isZh
+                        ? "追踪边缘连接"
+                        : isTw
+                          ? "追蹤邊緣連接"
+                          : "Check Cloudflare Trace"}
+                  </span>
+                  <span className="text-xs text-zinc-500 font-medium">
+                    Cloudflare Trace
+                  </span>
                 </Link>
               </div>
             </div>
-            
+
             {error.relatedErrors?.length > 0 && (
               <div>
                 <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
@@ -295,9 +446,8 @@ export default async function ErrorDetailPage({ params }: { params: { lang: stri
             )}
           </section>
         )}
-
       </main>
       <SiteFooter dict={dict} />
     </>
-  )
+  );
 }

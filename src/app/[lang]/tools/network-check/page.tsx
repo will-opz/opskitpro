@@ -1,42 +1,50 @@
-import { Suspense } from 'react'
-import { Metadata } from 'next'
-import { getDictionary } from '@/dictionaries'
-import { SiteHeader } from '@/components/SiteHeader'
-import { SiteFooter } from '@/components/SiteFooter'
-import NetworkCheckClient from './NetworkCheckClient'
+import { Suspense } from "react";
+import { Metadata } from "next";
+import { getDictionary } from "@/dictionaries";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import NetworkCheckClient from "./NetworkCheckClient";
 
-import { buildPageMetadata, buildToolJsonLd } from '@/lib/seo'
+import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
 
-export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
 
-  const title = dict.tools.network_check_title
-  const description = dict.tools.network_check_desc
+  const title = dict.tools.network_check_title;
+  const description = dict.tools.network_check_desc;
 
   return buildPageMetadata(
     `${title} | OpsKitPro`,
     description,
     lang,
-    '/tools/network-check',
+    "/tools/network-check",
     {
       keywords:
-        lang === 'zh' || lang === 'tw'
-          ? '网络测速,网络诊断,IPv6检测,DNS检测,网络质量测试,延迟测试,Ping测试,网速检测'
-          : 'network test,internet speed test,network quality check,ipv6 test,dns test,latency test,ping test,internet diagnostics',
-    }
-  )
+        lang === "zh" || false
+          ? "网络测速,网络诊断,IPv6检测,DNS检测,网络质量测试,延迟测试,Ping测试,网速检测"
+          : "network test,internet speed test,network quality check,ipv6 test,dns test,latency test,ping test,internet diagnostics",
+    },
+  );
 }
 
-export default async function NetworkCheckPage({ params }: { params: { lang: string } }) {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
+export default async function NetworkCheckPage({
+  params,
+}: {
+  params: { lang: string };
+}) {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
 
   const jsonLdWebApp = buildToolJsonLd({
     name: dict.tools.network_check_title,
     description: dict.tools.network_check_desc,
-    url: 'https://opskitpro.com/tools/network-check',
-  })
+    url: "https://opskitpro.com/tools/network-check",
+  });
 
   return (
     <>
@@ -70,5 +78,5 @@ export default async function NetworkCheckPage({ params }: { params: { lang: str
       </div>
       <SiteFooter dict={dict} />
     </>
-  )
+  );
 }

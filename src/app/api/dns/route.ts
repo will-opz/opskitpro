@@ -1,127 +1,131 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 import type {
   DnsBatchResponse,
   DnsLookupResponse,
   DnsProvider,
   DnsRecordType,
-} from '@/lib/api-contracts'
+} from "@/lib/api-contracts";
 
 // export const runtime = 'edge' // Removed to avoid 500 errors on Node.js runtime
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 // DNS Providers
 const DNS_PROVIDERS = {
   google: {
-    name: 'Google',
-    url: 'https://dns.google/resolve'
+    name: "Google",
+    url: "https://dns.google/resolve",
   },
   cloudflare: {
-    name: 'Cloudflare',
-    url: 'https://cloudflare-dns.com/dns-query'
+    name: "Cloudflare",
+    url: "https://cloudflare-dns.com/dns-query",
   },
   aliyun: {
-    name: 'AliDNS',
-    url: 'https://dns.alidns.com/resolve'
+    name: "AliDNS",
+    url: "https://dns.alidns.com/resolve",
   },
   quad9: {
-    name: 'Quad9',
-    url: 'https://dns.quad9.net/dns-query'
-  }
-}
+    name: "Quad9",
+    url: "https://dns.quad9.net/dns-query",
+  },
+};
 
 interface DnsAnswer {
-  name: string
-  type: number
-  TTL: number
-  data: string
+  name: string;
+  type: number;
+  TTL: number;
+  data: string;
 }
 
 interface DnsResponse {
-  Status: number
-  TC: boolean
-  RD: boolean
-  RA: boolean
-  AD: boolean
-  CD: boolean
+  Status: number;
+  TC: boolean;
+  RD: boolean;
+  RA: boolean;
+  AD: boolean;
+  CD: boolean;
   Question: Array<{
-    name: string
-    type: number
-  }>
-  Answer?: DnsAnswer[]
-  Authority?: DnsAnswer[]
-  Comment?: string
+    name: string;
+    type: number;
+  }>;
+  Answer?: DnsAnswer[];
+  Authority?: DnsAnswer[];
+  Comment?: string;
 }
 
 // Type number to name mapping
 const TYPE_MAP: Record<number, string> = {
-  1: 'A',
-  2: 'NS',
-  5: 'CNAME',
-  6: 'SOA',
-  12: 'PTR',
-  15: 'MX',
-  16: 'TXT',
-  28: 'AAAA',
-  33: 'SRV',
-  257: 'CAA'
-}
+  1: "A",
+  2: "NS",
+  5: "CNAME",
+  6: "SOA",
+  12: "PTR",
+  15: "MX",
+  16: "TXT",
+  28: "AAAA",
+  33: "SRV",
+  257: "CAA",
+};
 
 // Status codes
 const STATUS_CODES: Record<number, string> = {
-  0: 'NOERROR',
-  1: 'FORMERR',
-  2: 'SERVFAIL',
-  3: 'NXDOMAIN',
-  4: 'NOTIMP',
-  5: 'REFUSED'
-}
+  0: "NOERROR",
+  1: "FORMERR",
+  2: "SERVFAIL",
+  3: "NXDOMAIN",
+  4: "NOTIMP",
+  5: "REFUSED",
+};
 
 // Allow _ for DMARC records like _dmarc.example.com
-const DOMAIN_REGEX = /^(?:[a-zA-Z0-9_](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
+const DOMAIN_REGEX =
+  /^(?:[a-zA-Z0-9_](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const domain = searchParams.get('domain') || searchParams.get('target')
-  const type = (searchParams.get('type') || 'A').toUpperCase() as DnsRecordType
-  const provider = (searchParams.get('provider') || 'cloudflare') as DnsProvider
+  const { searchParams } = new URL(request.url);
+  const domain = searchParams.get("domain") || searchParams.get("target");
+  const type = (searchParams.get("type") || "A").toUpperCase() as DnsRecordType;
+  const provider = (searchParams.get("provider") ||
+    "cloudflare") as DnsProvider;
 
   if (!domain) {
     return NextResponse.json(
-      { error: 'Missing domain parameter' },
-      { status: 400 }
-    )
+      { error: "Missing domain parameter" },
+      { status: 400 },
+    );
   }
 
   // Validate domain format
   if (!DOMAIN_REGEX.test(domain)) {
     return NextResponse.json(
-      { error: 'Invalid domain format' },
-      { status: 400 }
-    )
+      { error: "Invalid domain format" },
+      { status: 400 },
+    );
   }
 
-  const dnsProvider = DNS_PROVIDERS[provider as keyof typeof DNS_PROVIDERS] || DNS_PROVIDERS.cloudflare
+  const dnsProvider =
+    DNS_PROVIDERS[provider as keyof typeof DNS_PROVIDERS] ||
+    DNS_PROVIDERS.cloudflare;
 
-  const startTime = Date.now()
+  const startTime = Date.now();
 
   try {
-    const url = new URL(dnsProvider.url)
-    url.searchParams.set('name', domain)
-    url.searchParams.set('type', type)
+    const url = new URL(dnsProvider.url);
+    url.searchParams.set("name", domain);
+    url.searchParams.set("type", type);
 
     const response = await fetch(url.toString(), {
       headers: {
-        'Accept': 'application/dns-json'
-      }
-    })
+        Accept: "application/dns-json",
+      },
+    });
 
-    const responseTime = Date.now() - startTime
+    const responseTime = Date.now() - startTime;
 
     if (!response.ok) {
-      throw new Error(`DNS server returned ${response.status}`)
+      throw new Error(`DNS server returned ${response.status}`);
     }
 
-    const data: DnsResponse = await response.json()
+    const data: DnsResponse = await response.json();
 
     // Parse and format the response
     const result: DnsLookupResponse = {
@@ -136,128 +140,139 @@ export async function GET(request: NextRequest) {
       recursionAvailable: data.RA,
       authenticData: data.AD,
       checkingDisabled: data.CD,
-      question: data.Question?.map(q => ({
+      question: data.Question?.map((q) => ({
         name: q.name,
-        type: TYPE_MAP[q.type] || q.type
+        type: TYPE_MAP[q.type] || q.type,
       })),
-      answers: data.Answer?.map(a => ({
+      answers:
+        data.Answer?.map((a) => ({
+          name: a.name,
+          type: TYPE_MAP[a.type] || a.type,
+          ttl: a.TTL,
+          data: a.data,
+          // Parse MX priority
+          ...(a.type === 15 && {
+            priority: parseInt(a.data.split(" ")[0]),
+            exchange: a.data.split(" ").slice(1).join(" "),
+          }),
+        })) || [],
+      authority: data.Authority?.map((a) => ({
         name: a.name,
         type: TYPE_MAP[a.type] || a.type,
         ttl: a.TTL,
         data: a.data,
-        // Parse MX priority
-        ...(a.type === 15 && {
-          priority: parseInt(a.data.split(' ')[0]),
-          exchange: a.data.split(' ').slice(1).join(' ')
-        })
-      })) || [],
-      authority: data.Authority?.map(a => ({
-        name: a.name,
-        type: TYPE_MAP[a.type] || a.type,
-        ttl: a.TTL,
-        data: a.data
       })),
       comment: data.Comment,
-      raw: data
-    }
+      raw: data,
+    };
 
     return NextResponse.json(result, {
       headers: {
-        'Cache-Control': 'public, max-age=60',
-        'X-Response-Time': `${responseTime}ms`
-      }
-    })
+        "Cache-Control": "public, max-age=60",
+        "X-Response-Time": `${responseTime}ms`,
+      },
+    });
   } catch (error: any) {
-    const responseTime = Date.now() - startTime
-    
+    const responseTime = Date.now() - startTime;
+
     return NextResponse.json(
       {
-        error: error.message || 'DNS lookup failed',
+        error: error.message || "DNS lookup failed",
         domain,
         type,
         provider: dnsProvider.name,
-        responseTime
+        responseTime,
       },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 // Also support POST for batch queries
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { domain, types, provider = 'cloudflare' } = body
-    const normalizedProvider = provider as DnsProvider
+    const body = await request.json();
+    const { domain, types, provider = "cloudflare" } = body;
+    const normalizedProvider = provider as DnsProvider;
 
     if (!domain) {
       return NextResponse.json(
-        { error: 'Domain is required' },
-        { status: 400 }
-      )
+        { error: "Domain is required" },
+        { status: 400 },
+      );
     }
 
     if (!DOMAIN_REGEX.test(domain)) {
       return NextResponse.json(
-        { error: 'Invalid domain format' },
-        { status: 400 }
-      )
+        { error: "Invalid domain format" },
+        { status: 400 },
+      );
     }
 
-    const recordTypes: DnsRecordType[] = types || ['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT']
-    const dnsProvider = DNS_PROVIDERS[normalizedProvider as keyof typeof DNS_PROVIDERS] || DNS_PROVIDERS.cloudflare
+    const recordTypes: DnsRecordType[] = types || [
+      "A",
+      "AAAA",
+      "CNAME",
+      "MX",
+      "NS",
+      "TXT",
+    ];
+    const dnsProvider =
+      DNS_PROVIDERS[normalizedProvider as keyof typeof DNS_PROVIDERS] ||
+      DNS_PROVIDERS.cloudflare;
 
-    const startTime = Date.now()
-    
+    const startTime = Date.now();
+
     // Query all types in parallel
     const queries = recordTypes.map(async (type) => {
-      const url = new URL(dnsProvider.url)
-      url.searchParams.set('name', domain)
-      url.searchParams.set('type', type)
+      const url = new URL(dnsProvider.url);
+      url.searchParams.set("name", domain);
+      url.searchParams.set("type", type);
 
       try {
         const response = await fetch(url.toString(), {
-          headers: { 'Accept': 'application/dns-json' }
-        })
-        const data: DnsResponse = await response.json()
-        
+          headers: { Accept: "application/dns-json" },
+        });
+        const data: DnsResponse = await response.json();
+
         return {
           type,
           status: STATUS_CODES[data.Status] || `UNKNOWN(${data.Status})`,
-          answers: data.Answer?.map(a => ({
-            name: a.name,
-            type: TYPE_MAP[a.type] || a.type,
-            ttl: a.TTL,
-            data: a.data,
-            ...(a.type === 15 && {
-              priority: parseInt(a.data.split(' ')[0]),
-              exchange: a.data.split(' ').slice(1).join(' ')
-            })
-          })) || []
-        }
+          answers:
+            data.Answer?.map((a) => ({
+              name: a.name,
+              type: TYPE_MAP[a.type] || a.type,
+              ttl: a.TTL,
+              data: a.data,
+              ...(a.type === 15 && {
+                priority: parseInt(a.data.split(" ")[0]),
+                exchange: a.data.split(" ").slice(1).join(" "),
+              }),
+            })) || [],
+        };
       } catch (e: any) {
         return {
           type,
           error: e.message,
-          answers: []
-        }
+          answers: [],
+        };
       }
-    })
+    });
 
-    const results = await Promise.all(queries)
-    const responseTime = Date.now() - startTime
+    const results = await Promise.all(queries);
+    const responseTime = Date.now() - startTime;
     const batchResponse: DnsBatchResponse = {
       domain,
       provider: dnsProvider.name,
       responseTime,
-      results
-    }
+      results,
+    };
 
-    return NextResponse.json(batchResponse)
+    return NextResponse.json(batchResponse);
   } catch (error: any) {
     return NextResponse.json(
-      { error: error.message || 'Batch query failed' },
-      { status: 500 }
-    )
+      { error: error.message || "Batch query failed" },
+      { status: 500 },
+    );
   }
 }

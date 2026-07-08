@@ -48,6 +48,7 @@ This will not give you the final root cause, but it can reduce the search space 
 "Server is online" and "web service is reachable" are different statements. This is the cheapest thing to verify — run one command before touching firewall rules or DNS.
 
 Examples:
+
 - Nginx stopped
 - the service listens only on `127.0.0.1`
 - a container port is not published correctly
@@ -88,6 +89,7 @@ Important: if ports 80 and 443 are already intentionally open to the public and 
 A running process is not the same as a healthy server that can accept new connections.
 
 Common failure modes:
+
 - sustained CPU saturation
 - memory pressure
 - full TCP listen queues
@@ -100,13 +102,14 @@ A strong signal: the site is usually healthy, but 522 errors appear intermittent
 
 **How to verify**: correlate the exact 522 time window with CPU and load average, memory and swap, TCP connection states, listen queue pressure, file descriptor usage, Nginx error logs, and application logs.
 
-Do not only inspect whether the server looks healthy *now*. Inspect what happened *when the 522 occurred*.
+Do not only inspect whether the server looks healthy _now_. Inspect what happened _when the 522 occurred_.
 
 ### 4. Incorrect A or AAAA records
 
 If Cloudflare DNS still points to the wrong destination, origin health elsewhere does not matter.
 
 Look for records pointing to:
+
 - an old server or released public IP
 - a decommissioned instance
 - the wrong load balancer
@@ -121,6 +124,7 @@ A common migration mistake: the A record is updated to the new origin, but the A
 Your laptop's path to the origin is not the same as Cloudflare's path to the origin. That means this situation is possible: local access works, external monitoring works, but some Cloudflare paths still fail.
 
 Potential causes:
+
 - cloud provider regional network events
 - ISP routing issues
 - upstream ACL changes
@@ -147,16 +151,17 @@ A useful heuristic: if there are **no** corresponding entries in the web server 
 
 ## 522 vs other Cloudflare 5xx errors
 
-| Code | Meaning |
-|------|---------|
-| 521 | Origin refused or could not accept the connection |
+| Code    | Meaning                                                    |
+| ------- | ---------------------------------------------------------- |
+| 521     | Origin refused or could not accept the connection          |
 | **522** | **Connection between Cloudflare and the origin timed out** |
-| 523 | Cloudflare could not reach the origin |
-| 524 | Connection succeeded, but HTTP response took too long |
-| 525 | SSL handshake failed between Cloudflare and the origin |
-| 526 | Cloudflare could not validate the origin SSL certificate |
+| 523     | Cloudflare could not reach the origin                      |
+| 524     | Connection succeeded, but HTTP response took too long      |
+| 525     | SSL handshake failed between Cloudflare and the origin     |
+| 526     | Cloudflare could not validate the origin SSL certificate   |
 
 A simple mental model:
+
 - **521** → connection refused
 - **522** → connection timed out
 - **523** → origin unreachable

@@ -1,27 +1,47 @@
-'use client'
+"use client";
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Braces, Copy, Check, Trash2, AlertTriangle, CheckCircle2, Minimize2, Download, Upload, BookOpen, Wrench, Eye, Code, Terminal, ArrowRightLeft, GitCompare, Shield, Table, FolderOpen } from 'lucide-react'
-import Link from 'next/link'
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import {
+  Braces,
+  Copy,
+  Check,
+  Trash2,
+  AlertTriangle,
+  CheckCircle2,
+  Minimize2,
+  Download,
+  Upload,
+  BookOpen,
+  Wrench,
+  Eye,
+  Code,
+  Terminal,
+  ArrowRightLeft,
+  GitCompare,
+  Shield,
+  Table,
+  FolderOpen,
+} from "lucide-react";
+import Link from "next/link";
 
 // Components
-import { 
-  JsonEditor, 
-  JsonTreeNode, 
-  DiffView, 
-  computeDiff, 
-  JqQueryPanel, 
+import {
+  JsonEditor,
+  JsonTreeNode,
+  DiffView,
+  computeDiff,
+  JqQueryPanel,
   FormatConverter,
   JsonDiffPanel,
   SchemaValidator,
   FieldExtractor,
-  DraftsPanel
-} from './components'
-import type { DiffLine } from './components'
+  DraftsPanel,
+} from "./components";
+import type { DiffLine } from "./components";
 
 // Hooks
-import { repairJson, getJsonStats, useUrlLoader } from './hooks'
+import { repairJson, getJsonStats, useUrlLoader } from "./hooks";
 
 const SAMPLE_JSON = `{
   "project": "OpsKitPro",
@@ -48,7 +68,7 @@ const SAMPLE_JSON = `{
     "auto_remediation": true,
     "alert_threshold": 0.85
   }
-}`
+}`;
 
 const SAMPLE_K8S = `{
   "apiVersion": "v1",
@@ -70,26 +90,35 @@ const SAMPLE_K8S = `{
       "status": { "phase": "Pending", "restartCount": 0 }
     }
   ]
-}`
+}`;
 
-type ViewMode = 'editor' | 'tree' | 'diff' | 'query' | 'convert' | 'compare' | 'schema' | 'extract' | 'drafts'
+type ViewMode =
+  | "editor"
+  | "tree"
+  | "diff"
+  | "query"
+  | "convert"
+  | "compare"
+  | "schema"
+  | "extract"
+  | "drafts";
 
-type Lang = 'zh' | 'en' | 'ja' | 'tw'
+type Lang = "zh" | "en";
 
 export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
-  const searchParams = useSearchParams()
-  const { loadFromUrl, isLoading: urlLoading } = useUrlLoader()
-  const isJapanese = lang === 'ja'
+  const searchParams = useSearchParams();
+  const { loadFromUrl, isLoading: urlLoading } = useUrlLoader();
+  const isJapanese = false;
   const ui = {
     zh: {
       badge: dict.tools.json_title,
-      home: '首页',
-      tools: '工具',
+      home: "首页",
+      tools: "工具",
       title: dict.tools.json_title,
       desc: dict.tools.json_desc,
-      loading: '正在加载 JSON...',
+      loading: "正在加载 JSON...",
       sample: dict.tools.json.sample,
-      demo: 'K8s 示例',
+      demo: "K8s 示例",
       upload: dict.tools.json.upload,
       download: dict.tools.json.download,
       repair: dict.tools.json.repair,
@@ -97,83 +126,28 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
       clear: dict.tools.json.clear,
       format: dict.tools.json.format,
       minify: dict.tools.json.minify,
-      editor: '编辑器',
-      query: 'JQ',
-      convert: '转换',
-      diff: '对比',
-      schema: '校验',
-      extract: '提取',
-      tree: '树状',
-      drafts: '草稿',
-      input: '输入',
-      output: '输出',
-      idle: '空闲',
+      editor: "编辑器",
+      query: "JQ",
+      convert: "转换",
+      diff: "对比",
+      schema: "校验",
+      extract: "提取",
+      tree: "树状",
+      drafts: "草稿",
+      input: "输入",
+      output: "输出",
+      idle: "空闲",
     },
-    tw: {
-      badge: dict.tools.json_title,
-      home: '首頁',
-      tools: '工具',
-      title: dict.tools.json_title,
-      desc: dict.tools.json_desc,
-      loading: '正在載入 JSON...',
-      sample: dict.tools.json.sample,
-      demo: 'K8s 範例',
-      upload: dict.tools.json.upload,
-      download: dict.tools.json.download,
-      repair: dict.tools.json.repair,
-      copy: dict.tools.json.copy,
-      clear: dict.tools.json.clear,
-      format: dict.tools.json.format,
-      minify: dict.tools.json.minify,
-      editor: '編輯器',
-      query: 'JQ',
-      convert: '轉換',
-      diff: '比對',
-      schema: '驗證',
-      extract: '擷取',
-      tree: '樹狀',
-      drafts: '草稿',
-      input: '輸入',
-      output: '輸出',
-      idle: '閒置',
-    },
-    ja: {
-      badge: dict.tools.json_title,
-      home: 'ホーム',
-      tools: 'ツール',
-      title: dict.tools.json_title,
-      desc: dict.tools.json_desc,
-      loading: 'JSON を読み込み中...',
-      sample: dict.tools.json.sample,
-      demo: 'K8s サンプル',
-      upload: dict.tools.json.upload,
-      download: dict.tools.json.download,
-      repair: dict.tools.json.repair,
-      copy: dict.tools.json.copy,
-      clear: dict.tools.json.clear,
-      format: dict.tools.json.format,
-      minify: dict.tools.json.minify,
-      editor: 'エディタ',
-      query: 'JQ',
-      convert: '変換',
-      diff: '比較',
-      schema: '検証',
-      extract: '抽出',
-      tree: 'ツリー',
-      drafts: '下書き',
-      input: '入力',
-      output: '出力',
-      idle: '待機中',
-    },
+
     en: {
       badge: dict.tools.json_title,
-      home: 'Home',
-      tools: 'Tools',
+      home: "Home",
+      tools: "Tools",
       title: dict.tools.json_title,
       desc: dict.tools.json_desc,
-      loading: 'Loading JSON...',
+      loading: "Loading JSON...",
       sample: dict.tools.json.sample,
-      demo: 'K8s Demo',
+      demo: "K8s Demo",
       upload: dict.tools.json.upload,
       download: dict.tools.json.download,
       repair: dict.tools.json.repair,
@@ -181,189 +155,231 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
       clear: dict.tools.json.clear,
       format: dict.tools.json.format,
       minify: dict.tools.json.minify,
-      editor: 'Editor',
-      query: 'JQ',
-      convert: 'Convert',
-      diff: 'Diff',
-      schema: 'Schema',
-      extract: 'Extract',
-      tree: 'Tree',
-      drafts: 'Drafts',
-      input: 'Input',
-      output: 'Output',
-      idle: 'Idle',
+      editor: "Editor",
+      query: "JQ",
+      convert: "Convert",
+      diff: "Diff",
+      schema: "Schema",
+      extract: "Extract",
+      tree: "Tree",
+      drafts: "Drafts",
+      input: "Input",
+      output: "Output",
+      idle: "Idle",
     },
-  }[lang]
-  
-  const [json, setJson] = useState('')
-  const [status, setStatus] = useState<'idle' | 'valid' | 'invalid'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
-  const [copied, setCopied] = useState(false)
-  const [viewMode, setViewMode] = useState<ViewMode>('editor')
-  const [diffData, setDiffData] = useState<DiffLine[] | null>(null)
-  const [repairFixes, setRepairFixes] = useState<string[]>([])
-  const [jqOutput, setJqOutput] = useState('')
+  }[lang];
+
+  const [json, setJson] = useState("");
+  const [status, setStatus] = useState<"idle" | "valid" | "invalid">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("editor");
+  const [diffData, setDiffData] = useState<DiffLine[] | null>(null);
+  const [repairFixes, setRepairFixes] = useState<string[]>([]);
+  const [jqOutput, setJqOutput] = useState("");
 
   // Load from URL param on mount
   useEffect(() => {
-    const urlParam = searchParams.get('url')
+    const urlParam = searchParams.get("url");
     if (urlParam) {
-      loadFromUrl(urlParam).then(content => {
+      loadFromUrl(urlParam).then((content) => {
         if (content) {
-          setJson(content)
-          validate(content)
+          setJson(content);
+          validate(content);
         }
-      })
+      });
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const validate = useCallback((value: string) => {
     if (!value.trim()) {
-      setStatus('idle')
-      setErrorMsg('')
-      return
+      setStatus("idle");
+      setErrorMsg("");
+      return;
     }
     try {
-      JSON.parse(value)
-      setStatus('valid')
-      setErrorMsg('')
+      JSON.parse(value);
+      setStatus("valid");
+      setErrorMsg("");
     } catch (e: any) {
-      setStatus('invalid')
-      setErrorMsg(e.message)
+      setStatus("invalid");
+      setErrorMsg(e.message);
     }
-  }, [])
+  }, []);
 
   const handleJsonChange = (value: string) => {
-    setJson(value)
-    if (viewMode === 'diff') setViewMode('editor')
-  }
+    setJson(value);
+    if (viewMode === "diff") setViewMode("editor");
+  };
 
   const handleLoadJson = (content: string) => {
-    setJson(content)
-    validate(content)
-    setViewMode('editor')
-  }
+    setJson(content);
+    validate(content);
+    setViewMode("editor");
+  };
 
-  const stats = useMemo(() => getJsonStats(json), [json])
+  const stats = useMemo(() => getJsonStats(json), [json]);
   const parsedJson = useMemo(() => {
-    try { return JSON.parse(json) } catch { return null }
-  }, [json])
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
+  }, [json]);
 
   const formatJSON = () => {
     try {
-      const parsed = JSON.parse(json)
-      const formatted = JSON.stringify(parsed, null, 2)
-      setJson(formatted)
-      setStatus('valid')
-      setErrorMsg('')
+      const parsed = JSON.parse(json);
+      const formatted = JSON.stringify(parsed, null, 2);
+      setJson(formatted);
+      setStatus("valid");
+      setErrorMsg("");
     } catch (e: any) {
-      setStatus('invalid')
-      setErrorMsg(e.message)
+      setStatus("invalid");
+      setErrorMsg(e.message);
     }
-  }
+  };
 
   const minifyJSON = () => {
     try {
-      const parsed = JSON.parse(json)
-      const minified = JSON.stringify(parsed)
-      setJson(minified)
-      setStatus('valid')
-      setErrorMsg('')
+      const parsed = JSON.parse(json);
+      const minified = JSON.stringify(parsed);
+      setJson(minified);
+      setStatus("valid");
+      setErrorMsg("");
     } catch (e: any) {
-      setStatus('invalid')
-      setErrorMsg(e.message)
+      setStatus("invalid");
+      setErrorMsg(e.message);
     }
-  }
+  };
 
   const smartRepair = () => {
-    if (!json.trim()) return
-    const originalFormatted = json
-    const { repaired, fixes } = repairJson(json)
+    if (!json.trim()) return;
+    const originalFormatted = json;
+    const { repaired, fixes } = repairJson(json);
 
     try {
-      const parsed = JSON.parse(repaired)
-      const formatted = JSON.stringify(parsed, null, 2)
-      const diff = computeDiff(originalFormatted, formatted)
+      const parsed = JSON.parse(repaired);
+      const formatted = JSON.stringify(parsed, null, 2);
+      const diff = computeDiff(originalFormatted, formatted);
 
-      setRepairFixes(fixes)
-      setDiffData(diff)
-      setJson(formatted)
-      setStatus('valid')
-      setErrorMsg('')
-      setViewMode('diff')
+      setRepairFixes(fixes);
+      setDiffData(diff);
+      setJson(formatted);
+      setStatus("valid");
+      setErrorMsg("");
+      setViewMode("diff");
     } catch (e: any) {
-      setRepairFixes(fixes)
-      setStatus('invalid')
-      setErrorMsg(`Repair attempted (${fixes.length} fix${fixes.length !== 1 ? 'es' : ''}) but JSON is still invalid: ${e.message}`)
+      setRepairFixes(fixes);
+      setStatus("invalid");
+      setErrorMsg(
+        `Repair attempted (${fixes.length} fix${fixes.length !== 1 ? "es" : ""}) but JSON is still invalid: ${e.message}`,
+      );
     }
-  }
+  };
 
   const clearAll = () => {
-    setJson('')
-    setStatus('idle')
-    setErrorMsg('')
-    setDiffData(null)
-    setRepairFixes([])
-    setJqOutput('')
-    setViewMode('editor')
-  }
+    setJson("");
+    setStatus("idle");
+    setErrorMsg("");
+    setDiffData(null);
+    setRepairFixes([]);
+    setJqOutput("");
+    setViewMode("editor");
+  };
 
-  const loadSample = (type: 'basic' | 'k8s' = 'basic') => {
-    const sample = type === 'k8s' ? SAMPLE_K8S : SAMPLE_JSON
-    setJson(sample)
-    setStatus('valid')
-    setErrorMsg('')
-    setDiffData(null)
-  }
+  const loadSample = (type: "basic" | "k8s" = "basic") => {
+    const sample = type === "k8s" ? SAMPLE_K8S : SAMPLE_JSON;
+    setJson(sample);
+    setStatus("valid");
+    setErrorMsg("");
+    setDiffData(null);
+  };
 
   const copyToClipboard = () => {
-    const textToCopy = viewMode === 'query' && jqOutput ? jqOutput : json
-    if (!textToCopy) return
-    navigator.clipboard.writeText(textToCopy)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    const textToCopy = viewMode === "query" && jqOutput ? jqOutput : json;
+    if (!textToCopy) return;
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const downloadJSON = () => {
-    if (!json) return
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `opskitpro-json-${Date.now()}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    if (!json) return;
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `opskitpro-json-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleFileUpload = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json,.yaml,.yml,.toml,.txt'
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,.yaml,.yml,.toml,.txt";
     input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-      const reader = new FileReader()
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
       reader.onload = (ev) => {
-        const content = ev.target?.result as string
-        setJson(content)
-        validate(content)
-        setViewMode('editor')
-      }
-      reader.readAsText(file)
-    }
-    input.click()
-  }
+        const content = ev.target?.result as string;
+        setJson(content);
+        validate(content);
+        setViewMode("editor");
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
 
-  const tabs: { mode: ViewMode; icon: any; label: string; disabled?: boolean; color?: string }[] = [
-    { mode: 'editor', icon: Code, label: ui.editor },
-    { mode: 'query', icon: Terminal, label: ui.query, disabled: status !== 'valid', color: 'emerald' },
-    { mode: 'convert', icon: ArrowRightLeft, label: ui.convert, disabled: !json.trim(), color: 'blue' },
-    { mode: 'compare', icon: GitCompare, label: ui.diff, disabled: !json.trim(), color: 'purple' },
-    { mode: 'schema', icon: Shield, label: ui.schema, disabled: status !== 'valid', color: 'violet' },
-    { mode: 'extract', icon: Table, label: ui.extract, disabled: status !== 'valid', color: 'cyan' },
-    { mode: 'tree', icon: Eye, label: ui.tree, disabled: status !== 'valid' },
-    { mode: 'drafts', icon: FolderOpen, label: ui.drafts, color: 'amber' },
-  ]
+  const tabs: {
+    mode: ViewMode;
+    icon: any;
+    label: string;
+    disabled?: boolean;
+    color?: string;
+  }[] = [
+    { mode: "editor", icon: Code, label: ui.editor },
+    {
+      mode: "query",
+      icon: Terminal,
+      label: ui.query,
+      disabled: status !== "valid",
+      color: "emerald",
+    },
+    {
+      mode: "convert",
+      icon: ArrowRightLeft,
+      label: ui.convert,
+      disabled: !json.trim(),
+      color: "blue",
+    },
+    {
+      mode: "compare",
+      icon: GitCompare,
+      label: ui.diff,
+      disabled: !json.trim(),
+      color: "purple",
+    },
+    {
+      mode: "schema",
+      icon: Shield,
+      label: ui.schema,
+      disabled: status !== "valid",
+      color: "violet",
+    },
+    {
+      mode: "extract",
+      icon: Table,
+      label: ui.extract,
+      disabled: status !== "valid",
+      color: "cyan",
+    },
+    { mode: "tree", icon: Eye, label: ui.tree, disabled: status !== "valid" },
+    { mode: "drafts", icon: FolderOpen, label: ui.drafts, color: "amber" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
@@ -372,11 +388,20 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">{ui.home}</Link>
+          <Link href="/" className="hover:text-emerald-600 transition-colors">
+            {ui.home}
+          </Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/tools" className="hover:text-emerald-600 transition-colors">{ui.tools}</Link>
+          <Link
+            href="/tools"
+            className="hover:text-emerald-600 transition-colors"
+          >
+            {ui.tools}
+          </Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">{ui.title}</span>
+          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
+            {ui.title}
+          </span>
         </nav>
 
         {/* Header */}
@@ -400,7 +425,7 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
                 </p>
               </div>
             </div>
-          
+
             {urlLoading && (
               <div className="flex items-center gap-2 text-blue-600 text-[11px]">
                 <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
@@ -412,43 +437,65 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
 
         {/* Action Bar */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button onClick={() => loadSample('basic')}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-all active:scale-95">
+          <button
+            onClick={() => loadSample("basic")}
+            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-all active:scale-95"
+          >
             <BookOpen className="w-3.5 h-3.5" />
             {ui.sample}
           </button>
-          <button onClick={() => loadSample('k8s')}
-            className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all active:scale-95">
+          <button
+            onClick={() => loadSample("k8s")}
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all active:scale-95"
+          >
             {ui.demo}
           </button>
-          <button onClick={handleFileUpload}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all active:scale-95">
+          <button
+            onClick={handleFileUpload}
+            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all active:scale-95"
+          >
             <Upload className="w-3.5 h-3.5" />
             {ui.upload}
           </button>
-          <button onClick={downloadJSON} disabled={!json || status === 'invalid'}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+          <button
+            onClick={downloadJSON}
+            disabled={!json || status === "invalid"}
+            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
             <Download className="w-3.5 h-3.5" />
             {ui.download}
           </button>
 
           <div className="hidden sm:block h-5 w-px bg-zinc-200 mx-1"></div>
 
-          <button onClick={smartRepair} disabled={!json || status !== 'invalid'}
-            className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+          <button
+            onClick={smartRepair}
+            disabled={!json || status !== "invalid"}
+            className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
             <Wrench className="w-3.5 h-3.5" />
             {ui.repair}
           </button>
 
           <div className="hidden sm:block h-5 w-px bg-zinc-200 mx-1"></div>
 
-          <button onClick={copyToClipboard} disabled={!json && !jqOutput}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:border-emerald-300 hover:text-emerald-700 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm">
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+          <button
+            onClick={copyToClipboard}
+            disabled={!json && !jqOutput}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:border-emerald-300 hover:text-emerald-700 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" />
+            )}
             {copied ? dict.tools.json.copied : ui.copy}
           </button>
-          <button onClick={clearAll} disabled={!json}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+          <button
+            onClick={clearAll}
+            disabled={!json}
+            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
             <Trash2 className="w-3.5 h-3.5" />
             {ui.clear}
           </button>
@@ -467,15 +514,15 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
 
               {/* View mode tabs - scrollable on mobile */}
               <div className="flex gap-1 bg-zinc-100 rounded-lg p-0.5 overflow-x-auto max-w-[calc(100vw-200px)] scrollbar-hide">
-                {tabs.map(tab => (
+                {tabs.map((tab) => (
                   <button
                     key={tab.mode}
                     onClick={() => setViewMode(tab.mode)}
                     disabled={tab.disabled}
                     className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-[0.18em] transition-all whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed ${
-                      viewMode === tab.mode 
-                        ? `bg-white shadow-sm ${tab.color ? `text-${tab.color}-700` : 'text-zinc-900'}`
-                        : 'text-zinc-400 hover:text-zinc-600'
+                      viewMode === tab.mode
+                        ? `bg-white shadow-sm ${tab.color ? `text-${tab.color}-700` : "text-zinc-900"}`
+                        : "text-zinc-400 hover:text-zinc-600"
                     }`}
                   >
                     <tab.icon className="w-3 h-3" />
@@ -484,9 +531,11 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
                 ))}
                 {diffData && (
                   <button
-                    onClick={() => setViewMode('diff')}
+                    onClick={() => setViewMode("diff")}
                     className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-[0.18em] transition-all ${
-                      viewMode === 'diff' ? 'bg-white text-amber-700 shadow-sm' : 'text-amber-400 hover:text-amber-600'
+                      viewMode === "diff"
+                        ? "bg-white text-amber-700 shadow-sm"
+                        : "text-amber-400 hover:text-amber-600"
                     }`}
                   >
                     <Wrench className="w-3 h-3" />
@@ -497,11 +546,16 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={formatJSON} disabled={!json}
-                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-30 shadow-lg shadow-emerald-500/10">
+              <button
+                onClick={formatJSON}
+                disabled={!json}
+                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-30 shadow-lg shadow-emerald-500/10"
+              >
                 {ui.format}
               </button>
-              <button onClick={minifyJSON} disabled={!json}
+              <button
+                onClick={minifyJSON}
+                disabled={!json}
                 className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-semibold hover:from-emerald-400 hover:to-teal-500 transition-all shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-30 flex items-center gap-2"
               >
                 <Minimize2 className="w-4 h-4" />
@@ -511,14 +565,18 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
           </div>
 
           {/* JQ Query Panel */}
-          {viewMode === 'query' && (
-            <JqQueryPanel inputJson={json} onOutputChange={setJqOutput} dict={dict} />
+          {viewMode === "query" && (
+            <JqQueryPanel
+              inputJson={json}
+              onOutputChange={setJqOutput}
+              dict={dict}
+            />
           )}
 
           {/* Content Area */}
           <div className="min-h-[400px]">
             {/* Editor View */}
-            {viewMode === 'editor' && (
+            {viewMode === "editor" && (
               <JsonEditor
                 value={json}
                 onChange={handleJsonChange}
@@ -528,56 +586,80 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
             )}
 
             {/* JQ Query Output */}
-            {viewMode === 'query' && (
+            {viewMode === "query" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-zinc-100">
                 <div className="relative">
-                  <div className="absolute top-2 left-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-300">{ui.input}</div>
+                  <div className="absolute top-2 left-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-300">
+                    {ui.input}
+                  </div>
                   <pre className="p-6 pt-8 min-h-[300px] max-h-[400px] overflow-auto font-mono text-[12px] leading-relaxed text-zinc-600 bg-zinc-50/30">
-                    {json || <span className="text-zinc-300 italic">{isJapanese ? '入力なし' : lang === 'zh' ? '暂无输入' : lang === 'tw' ? '尚無輸入' : 'No input'}</span>}
+                    {json || (
+                      <span className="text-zinc-300 italic">
+                        {isJapanese
+                          ? "入力なし"
+                          : lang === "zh"
+                            ? "暂无输入"
+                            : false
+                              ? "尚無輸入"
+                              : "No input"}
+                      </span>
+                    )}
                   </pre>
                 </div>
                 <div className="relative">
-                  <div className="absolute top-2 left-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-400">{ui.output}</div>
+                  <div className="absolute top-2 left-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
+                    {ui.output}
+                  </div>
                   <pre className="p-6 pt-8 min-h-[300px] max-h-[400px] overflow-auto font-mono text-[12px] leading-relaxed text-emerald-700 bg-emerald-50/30">
-                    {jqOutput || <span className="text-zinc-300 italic">{isJapanese ? 'クエリを実行してください' : lang === 'zh' ? '请先执行查询' : lang === 'tw' ? '請先執行查詢' : 'Run a query'}</span>}
+                    {jqOutput || (
+                      <span className="text-zinc-300 italic">
+                        {isJapanese
+                          ? "クエリを実行してください"
+                          : lang === "zh"
+                            ? "请先执行查询"
+                            : false
+                              ? "請先執行查詢"
+                              : "Run a query"}
+                      </span>
+                    )}
                   </pre>
                 </div>
               </div>
             )}
 
             {/* Convert View */}
-            {viewMode === 'convert' && (
+            {viewMode === "convert" && (
               <div className="p-6">
                 <FormatConverter inputValue={json} dict={dict} />
               </div>
             )}
 
             {/* Compare/Diff View */}
-            {viewMode === 'compare' && (
+            {viewMode === "compare" && (
               <JsonDiffPanel leftJson={json} dict={dict} />
             )}
 
             {/* Schema Validator */}
-            {viewMode === 'schema' && (
+            {viewMode === "schema" && (
               <SchemaValidator inputJson={json} dict={dict} />
             )}
 
             {/* Field Extractor */}
-            {viewMode === 'extract' && (
+            {viewMode === "extract" && (
               <FieldExtractor inputJson={json} dict={dict} />
             )}
 
             {/* Tree View */}
-            {viewMode === 'tree' && parsedJson !== null && (
+            {viewMode === "tree" && parsedJson !== null && (
               <div className="min-h-[300px] max-h-[600px] overflow-auto p-6 font-mono text-[13px] leading-relaxed">
                 <JsonTreeNode value={parsedJson} defaultOpen={true} />
               </div>
             )}
 
             {/* Drafts Panel */}
-            {viewMode === 'drafts' && (
-              <DraftsPanel 
-                currentContent={json} 
+            {viewMode === "drafts" && (
+              <DraftsPanel
+                currentContent={json}
                 onLoad={handleLoadJson}
                 onSave={() => {}}
                 dict={dict}
@@ -585,38 +667,69 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
             )}
 
             {/* Repair Diff View */}
-            {viewMode === 'diff' && diffData && (
-              <DiffView diffData={diffData} repairFixes={repairFixes} dict={dict} />
+            {viewMode === "diff" && diffData && (
+              <DiffView
+                diffData={diffData}
+                repairFixes={repairFixes}
+                dict={dict}
+              />
             )}
           </div>
 
-            {/* Footer */}
-            <footer className={`px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t transition-colors ${
-              status === 'valid' ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700' :
-              status === 'invalid' ? 'bg-red-50/50 border-red-100 text-red-600' :
-              'bg-zinc-50/50 border-zinc-100 text-zinc-400'
-            }`}>
-              <div className="flex items-center gap-3 min-w-0">
-                {status === 'valid' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> :
-                 status === 'invalid' ? <AlertTriangle className="w-4 h-4 shrink-0" /> :
-                 <Braces className="w-4 h-4 shrink-0" />}
+          {/* Footer */}
+          <footer
+            className={`px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t transition-colors ${
+              status === "valid"
+                ? "bg-emerald-50/50 border-emerald-100 text-emerald-700"
+                : status === "invalid"
+                  ? "bg-red-50/50 border-red-100 text-red-600"
+                  : "bg-zinc-50/50 border-zinc-100 text-zinc-400"
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              {status === "valid" ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              ) : status === "invalid" ? (
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+              ) : (
+                <Braces className="w-4 h-4 shrink-0" />
+              )}
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] shrink-0">
-                {status === 'valid' ? (isJapanese ? 'JSON は有効です' : lang === 'zh' ? 'JSON 有效' : lang === 'tw' ? 'JSON 有效' : 'VALID JSON') :
-                 status === 'invalid' ? (isJapanese ? 'JSON に問題があります' : lang === 'zh' ? 'JSON 无效' : lang === 'tw' ? 'JSON 無效' : 'INVALID') : ui.idle}
+                {status === "valid"
+                  ? isJapanese
+                    ? "JSON は有効です"
+                    : lang === "zh"
+                      ? "JSON 有效"
+                      : false
+                        ? "JSON 有效"
+                        : "VALID JSON"
+                  : status === "invalid"
+                    ? isJapanese
+                      ? "JSON に問題があります"
+                      : lang === "zh"
+                        ? "JSON 无效"
+                        : false
+                          ? "JSON 無效"
+                          : "INVALID"
+                    : ui.idle}
               </span>
-              {status === 'invalid' && errorMsg && (
+              {status === "invalid" && errorMsg && (
                 <span className="text-[10px] opacity-70 break-all line-clamp-1 min-w-0">
                   — {errorMsg}
                 </span>
               )}
             </div>
-            {stats && status === 'valid' && (
+            {stats && status === "valid" && (
               <div className="flex items-center gap-3 text-[10px] text-emerald-600/70 uppercase tracking-[0.18em] shrink-0">
                 <span>{stats.type}</span>
                 <span className="text-emerald-300">•</span>
-                <span>{stats.keys} {isJapanese ? '項目' : 'keys'}</span>
+                <span>
+                  {stats.keys} {isJapanese ? "項目" : "keys"}
+                </span>
                 <span className="text-emerald-300">•</span>
-                <span>{isJapanese ? '深さ' : 'depth'} {stats.depth}</span>
+                <span>
+                  {isJapanese ? "深さ" : "depth"} {stats.depth}
+                </span>
                 <span className="text-emerald-300">•</span>
                 <span>{stats.size}</span>
               </div>
@@ -625,5 +738,5 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
         </main>
       </div>
     </div>
-  )
+  );
 }

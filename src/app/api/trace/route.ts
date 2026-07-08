@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 // Disallow SSRF attacks
 const BLOCKED_PATTERNS = [
@@ -9,113 +9,132 @@ const BLOCKED_PATTERNS = [
   /^https?:\/\/10\./,
   /^https?:\/\/172\.(1[6-9]|2\d|3[01])\./,
   /^https?:\/\/192\.168\./,
-  /^https?:\/\/169\.254\./,  // link-local, AWS metadata
+  /^https?:\/\/169\.254\./, // link-local, AWS metadata
   /^https?:\/\/::1/,
-]
+];
 
 // Allow only valid hostnames (no paths, no queries, no ports)
 // We'll enforce this by parsing the hostname and enforcing standard ports for HTTPS.
-const VALID_HOSTNAME_REGEX = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
+const VALID_HOSTNAME_REGEX =
+  /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 
 const parseTraceText = (text: string) => {
   const raw = Object.fromEntries(
     text
       .trim()
-      .split('\n')
-      .map((line) => line.split('='))
+      .split("\n")
+      .map((line) => line.split("="))
       .filter((parts) => parts.length === 2)
       .map(([key, value]) => [key.trim(), value.trim()]),
-  ) as Record<string, string>
+  ) as Record<string, string>;
 
   return {
     raw,
-    ip: raw.ip || '',
-    colo: raw.colo || '',
-    loc: raw.loc || '',
-    warp: raw.warp || 'off',
-    gateway: raw.gateway || 'off',
-    http: raw.http || '',
-    tls: raw.tls || '',
-    sni: raw.sni || '',
-    kex: raw.kex || '',
-    postQuantum: /mlkem|kyber/i.test(raw.kex || ''),
-  }
-}
+    ip: raw.ip || "",
+    colo: raw.colo || "",
+    loc: raw.loc || "",
+    warp: raw.warp || "off",
+    gateway: raw.gateway || "off",
+    http: raw.http || "",
+    tls: raw.tls || "",
+    sni: raw.sni || "",
+    kex: raw.kex || "",
+    postQuantum: /mlkem|kyber/i.test(raw.kex || ""),
+  };
+};
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const domain = searchParams.get('domain')
-  const wantsJson = searchParams.get('format') === 'json'
+  const { searchParams } = new URL(request.url);
+  const domain = searchParams.get("domain");
+  const wantsJson = searchParams.get("format") === "json";
 
   if (!domain) {
-    return NextResponse.json({ error: 'Missing domain parameter' }, { status: 400 })
+    return NextResponse.json(
+      { error: "Missing domain parameter" },
+      { status: 400 },
+    );
   }
 
   // Basic validation: Must be a pure domain/hostname
   if (!VALID_HOSTNAME_REGEX.test(domain)) {
-    return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 })
+    return NextResponse.json(
+      { error: "Invalid domain format" },
+      { status: 400 },
+    );
   }
 
   // Construct strict HTTPS URL to /cdn-cgi/trace
-  const targetUrl = `https://${domain}/cdn-cgi/trace`
+  const targetUrl = `https://${domain}/cdn-cgi/trace`;
 
   // SSRF checks
-  if (BLOCKED_PATTERNS.some(p => p.test(targetUrl))) {
-    return NextResponse.json({ error: 'Target URL not allowed' }, { status: 403 })
+  if (BLOCKED_PATTERNS.some((p) => p.test(targetUrl))) {
+    return NextResponse.json(
+      { error: "Target URL not allowed" },
+      { status: 403 },
+    );
   }
 
   try {
     const response = await fetch(targetUrl, {
       headers: {
-        'Accept': 'text/plain, */*',
-        'User-Agent': 'OpsKitPro-Trace-Client/1.0',
+        Accept: "text/plain, */*",
+        "User-Agent": "OpsKitPro-Trace-Client/1.0",
       },
       signal: AbortSignal.timeout(5000), // 5s timeout
-      redirect: 'manual', // Prevent SSRF via 302 redirects
-    })
+      redirect: "manual", // Prevent SSRF via 302 redirects
+    });
 
     if (response.status >= 300 && response.status < 400) {
       return NextResponse.json(
-        { error: 'Target redirected; Cloudflare Trace not available on this path' },
-        { status: 400 }
-      )
+        {
+          error:
+            "Target redirected; Cloudflare Trace not available on this path",
+        },
+        { status: 400 },
+      );
     }
 
-    const text = await response.text()
-    const parsed = parseTraceText(text)
-    const isCloudflare = response.headers.get('server')?.toLowerCase().includes('cloudflare') || false
+    const text = await response.text();
+    const parsed = parseTraceText(text);
+    const isCloudflare =
+      response.headers.get("server")?.toLowerCase().includes("cloudflare") ||
+      false;
 
     // Heuristics to confirm it's actually CF trace
-    const isValidTrace = text.includes('ip=') && text.includes('colo=') && text.includes('ts=')
+    const isValidTrace =
+      text.includes("ip=") && text.includes("colo=") && text.includes("ts=");
 
     if (!response.ok || (!isValidTrace && !isCloudflare)) {
-      return NextResponse.json({ 
-        error: `Could not verify Cloudflare Trace on ${domain}`, 
-        status: response.status,
-        text: text.slice(0, 500) // just a snippet if it's not a trace
-      }, { status: 404 })
+      return NextResponse.json(
+        {
+          error: `Could not verify Cloudflare Trace on ${domain}`,
+          status: response.status,
+          text: text.slice(0, 500), // just a snippet if it's not a trace
+        },
+        { status: 404 },
+      );
     }
 
     if (wantsJson) {
       return NextResponse.json(parsed, {
         headers: {
-          'Cache-Control': 'no-store',
-          'X-Target-Server': response.headers.get('server') || 'unknown',
+          "Cache-Control": "no-store",
+          "X-Target-Server": response.headers.get("server") || "unknown",
         },
-      })
+      });
     }
 
     return new NextResponse(text, {
       status: 200,
       headers: {
-        'Content-Type': 'text/plain',
-        'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Target-Server': response.headers.get('server') || 'unknown'
+        "Content-Type": "text/plain",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "X-Target-Server": response.headers.get("server") || "unknown",
       },
-    })
+    });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Trace request failed'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    const msg = e instanceof Error ? e.message : "Trace request failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

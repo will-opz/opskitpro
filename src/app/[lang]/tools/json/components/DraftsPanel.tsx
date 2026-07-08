@@ -1,67 +1,86 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { FileJson, Trash2, Edit3, Check, X, Clock, Link2, Loader2 } from 'lucide-react'
-import { useJsonStorage, useUrlLoader } from '../hooks/useJsonStorage'
-import type { JsonDraft } from '../hooks/useJsonStorage'
+import { useState } from "react";
+import {
+  FileJson,
+  Trash2,
+  Edit3,
+  Check,
+  X,
+  Clock,
+  Link2,
+  Loader2,
+} from "lucide-react";
+import { useJsonStorage, useUrlLoader } from "../hooks/useJsonStorage";
+import type { JsonDraft } from "../hooks/useJsonStorage";
 
 interface DraftsPanelProps {
-  currentContent: string
-  onLoad: (content: string) => void
-  onSave: () => void
-  dict: any
+  currentContent: string;
+  onLoad: (content: string) => void;
+  onSave: () => void;
+  dict: any;
 }
 
-export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPanelProps) {
-  const { drafts, isLoaded, saveDraft, deleteDraft, renameDraft } = useJsonStorage()
-  const { loadFromUrl, isLoading: urlLoading, error: urlError } = useUrlLoader()
-  
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [urlInput, setUrlInput] = useState('')
-  const [saveName, setSaveName] = useState('')
-  const [showSaveDialog, setShowSaveDialog] = useState(false)
+export function DraftsPanel({
+  currentContent,
+  onLoad,
+  onSave,
+  dict,
+}: DraftsPanelProps) {
+  const { drafts, isLoaded, saveDraft, deleteDraft, renameDraft } =
+    useJsonStorage();
+  const {
+    loadFromUrl,
+    isLoading: urlLoading,
+    error: urlError,
+  } = useUrlLoader();
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [urlInput, setUrlInput] = useState("");
+  const [saveName, setSaveName] = useState("");
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   const handleSave = () => {
-    if (!currentContent.trim()) return
-    saveDraft(saveName || '', currentContent)
-    setSaveName('')
-    setShowSaveDialog(false)
-  }
+    if (!currentContent.trim()) return;
+    saveDraft(saveName || "", currentContent);
+    setSaveName("");
+    setShowSaveDialog(false);
+  };
 
   const handleLoadUrl = async () => {
-    if (!urlInput.trim()) return
-    const content = await loadFromUrl(urlInput)
+    if (!urlInput.trim()) return;
+    const content = await loadFromUrl(urlInput);
     if (content) {
-      onLoad(content)
-      setUrlInput('')
+      onLoad(content);
+      setUrlInput("");
     }
-  }
+  };
 
   const startEdit = (draft: JsonDraft) => {
-    setEditingId(draft.id)
-    setEditName(draft.name)
-  }
+    setEditingId(draft.id);
+    setEditName(draft.name);
+  };
 
   const confirmEdit = (id: string) => {
-    renameDraft(id, editName)
-    setEditingId(null)
-  }
+    renameDraft(id, editName);
+    setEditingId(null);
+  };
 
   const formatDate = (ts: number) => {
-    const date = new Date(ts)
-    const now = new Date()
-    const diffMs = now.getTime() - ts
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+    const date = new Date(ts);
+    const now = new Date();
+    const diffMs = now.getTime() - ts;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
-  }
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -69,14 +88,16 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
       <div className="px-4 py-3 border-b border-zinc-100 bg-gradient-to-r from-blue-50 to-white">
         <div className="flex items-center gap-2 mb-2">
           <Link2 className="w-4 h-4 text-blue-500" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600">Load from URL</span>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600">
+            Load from URL
+          </span>
         </div>
         <div className="flex gap-2">
           <input
             type="url"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLoadUrl()}
+            onKeyDown={(e) => e.key === "Enter" && handleLoadUrl()}
             placeholder="https://api.example.com/data.json"
             className="flex-1 px-3 py-2 text-[11px] font-mono bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
           />
@@ -85,11 +106,17 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
             disabled={!urlInput.trim() || urlLoading}
             className="px-3 py-2 bg-blue-600 text-white rounded-lg text-[11px] font-bold hover:bg-blue-500 transition-all disabled:opacity-50 flex items-center gap-1"
           >
-            {urlLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Fetch'}
+            {urlLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              "Fetch"
+            )}
           </button>
         </div>
         {urlError && (
-          <p className="mt-1.5 text-[10px] text-red-500 font-mono">{urlError}</p>
+          <p className="mt-1.5 text-[10px] text-red-500 font-mono">
+            {urlError}
+          </p>
         )}
       </div>
 
@@ -101,7 +128,7 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
               type="text"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
               placeholder="Draft name (optional)"
               className="flex-1 px-3 py-2 text-[11px] font-mono bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               autoFocus
@@ -150,7 +177,7 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
           </div>
         ) : (
           <div className="divide-y divide-zinc-50">
-            {drafts.map(draft => (
+            {drafts.map((draft) => (
               <div
                 key={draft.id}
                 className="px-4 py-3 hover:bg-zinc-50 transition-colors group"
@@ -164,16 +191,22 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') confirmEdit(draft.id)
-                            if (e.key === 'Escape') setEditingId(null)
+                            if (e.key === "Enter") confirmEdit(draft.id);
+                            if (e.key === "Escape") setEditingId(null);
                           }}
                           className="flex-1 px-2 py-1 text-[11px] font-mono bg-white border border-blue-300 rounded focus:outline-none"
                           autoFocus
                         />
-                        <button onClick={() => confirmEdit(draft.id)} className="p-1 text-emerald-600">
+                        <button
+                          onClick={() => confirmEdit(draft.id)}
+                          className="p-1 text-emerald-600"
+                        >
                           <Check className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setEditingId(null)} className="p-1 text-zinc-400">
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="p-1 text-zinc-400"
+                        >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -190,7 +223,9 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
                             <Clock className="w-3 h-3" />
                             {formatDate(draft.updatedAt)}
                             <span className="text-zinc-300">•</span>
-                            {Math.round(draft.content.length / 1024 * 10) / 10} KB
+                            {Math.round((draft.content.length / 1024) * 10) /
+                              10}{" "}
+                            KB
                           </p>
                         </button>
                       </>
@@ -222,5 +257,5 @@ export function DraftsPanel({ currentContent, onLoad, onSave, dict }: DraftsPane
         )}
       </div>
     </div>
-  )
+  );
 }

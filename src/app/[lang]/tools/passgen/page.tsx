@@ -1,32 +1,40 @@
-import { Metadata } from 'next'
-import { getDictionary } from '@/dictionaries'
-import { SiteHeader } from '@/components/SiteHeader'
-import { SiteFooter } from '@/components/SiteFooter'
-import PassClient from './pass-client'
+import { Metadata } from "next";
+import { getDictionary } from "@/dictionaries";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import PassClient from "./pass-client";
 
-import { buildPageMetadata, buildToolJsonLd } from '@/lib/seo'
+import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
 
-export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
-  
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
+
   return buildPageMetadata(
     `${dict.tools.passgen_title} - OpsKitPro`,
     dict.tools.passgen_desc,
     lang,
-    '/tools/passgen'
-  )
+    "/tools/passgen",
+  );
 }
 
-export default async function PassPage({ params }: { params: { lang: string } }) {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
-  
+export default async function PassPage({
+  params,
+}: {
+  params: { lang: string };
+}) {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
+
   const jsonLdWebApp = buildToolJsonLd({
     name: dict.tools.passgen_title,
     description: dict.tools.passgen_desc,
-    url: 'https://opskitpro.com/tools/passgen',
-  })
+    url: "https://opskitpro.com/tools/passgen",
+  });
 
   return (
     <>
@@ -38,5 +46,5 @@ export default async function PassPage({ params }: { params: { lang: string } })
       <PassClient dict={dict} lang={lang} />
       <SiteFooter dict={dict} />
     </>
-  )
+  );
 }

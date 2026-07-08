@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Wifi,
   Globe,
@@ -23,7 +23,7 @@ import {
   Server,
   MapPin,
   ChevronRight,
-} from 'lucide-react'
+} from "lucide-react";
 import type {
   NetworkInfoResponse,
   PingResult,
@@ -32,77 +32,80 @@ import type {
   DnsLatencyItem,
   ReachabilityItem,
   NetworkAnalysis,
-} from '@/lib/api-contracts'
+} from "@/lib/api-contracts";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type CardPhase = 'idle' | 'loading' | 'done' | 'error'
+type CardPhase = "idle" | "loading" | "done" | "error";
 
 interface CfTrace {
-  http: string
-  tls: string
-  warp: string
-  gateway?: string
-  loc?: string
-  sni?: string
-  kex?: string
-  ip: string
-  colo: string
+  http: string;
+  tls: string;
+  warp: string;
+  gateway?: string;
+  loc?: string;
+  sni?: string;
+  kex?: string;
+  ip: string;
+  colo: string;
 }
 
 function parseCfTrace(text: string): CfTrace {
   return Object.fromEntries(
     text
       .trim()
-      .split('\n')
-      .map((l) => l.split('='))
+      .split("\n")
+      .map((l) => l.split("="))
       .filter((p) => p.length === 2)
-      .map(([k, v]) => [k.trim(), v.trim()])
-  ) as unknown as CfTrace
+      .map(([k, v]) => [k.trim(), v.trim()]),
+  ) as unknown as CfTrace;
 }
 
-function buildNetworkInfoFromTrace(trace: CfTrace, ua: string): NetworkInfoResponse {
-  const ip = trace.ip || 'Unknown'
+function buildNetworkInfoFromTrace(
+  trace: CfTrace,
+  ua: string,
+): NetworkInfoResponse {
+  const ip = trace.ip || "Unknown";
   return {
     ip,
-    ipv6: ip.includes(':') ? ip : null,
+    ipv6: ip.includes(":") ? ip : null,
     asn: null,
-    org: 'Unknown',
-    country: trace.loc || 'Unknown',
-    city: 'Unknown',
-    colo: trace.colo || 'Unknown',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    org: "Unknown",
+    country: trace.loc || "Unknown",
+    city: "Unknown",
+    colo: trace.colo || "Unknown",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     ua,
     trace: {
-      http: trace.http || 'Unknown',
-      tls: trace.tls || 'Unknown',
-      warp: trace.warp || 'off',
-      gateway: trace.gateway || 'off',
-      loc: trace.loc || 'Unknown',
-      sni: trace.sni || 'Unknown',
-      kex: trace.kex || 'Unknown',
+      http: trace.http || "Unknown",
+      tls: trace.tls || "Unknown",
+      warp: trace.warp || "off",
+      gateway: trace.gateway || "off",
+      loc: trace.loc || "Unknown",
+      sni: trace.sni || "Unknown",
+      kex: trace.kex || "Unknown",
       ip,
-      colo: trace.colo || 'Unknown',
+      colo: trace.colo || "Unknown",
     },
-    _source: 'fallback',
-  }
+    _source: "fallback",
+  };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const PING_SAMPLES = 10
-const UPLOAD_SIZE_BYTES = 2 * 1024 * 1024 // 2 MB
+const PING_SAMPLES = 10;
+const UPLOAD_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
 
 // ─── Locale helpers ──────────────────────────────────────────────────────────
 
 function t(dict: any, key: string): string {
-  const keys = key.split('.')
-  let val: any = dict
+  const keys = key.split(".");
+  let val: any = dict;
   for (const k of keys) {
-    val = val?.[k]
-    if (val === undefined) return key
+    val = val?.[k];
+    if (val === undefined) return key;
   }
-  return String(val)
+  return String(val);
 }
 
 // ─── AI Analysis engine ──────────────────────────────────────────────────────
@@ -114,261 +117,278 @@ function analyzeNetwork(
   trace: CfTrace | null,
   dnsLatency: DnsLatencyItem[],
   reachability: ReachabilityItem[],
-  lang: string
+  lang: string,
 ): NetworkAnalysis {
-  let score = 0
+  let score = 0;
 
   // Latency (30 pts)
   if (ping) {
-    if (ping.avg < 50) score += 30
-    else if (ping.avg < 100) score += 24
-    else if (ping.avg < 200) score += 16
-    else if (ping.avg < 300) score += 8
+    if (ping.avg < 50) score += 30;
+    else if (ping.avg < 100) score += 24;
+    else if (ping.avg < 200) score += 16;
+    else if (ping.avg < 300) score += 8;
   }
 
   // Download (40 pts)
   if (speed?.downloadMbps != null) {
-    const dl = speed.downloadMbps
-    if (dl > 100) score += 40
-    else if (dl > 50) score += 30
-    else if (dl > 20) score += 20
-    else if (dl > 5) score += 10
-    else score += 2
+    const dl = speed.downloadMbps;
+    if (dl > 100) score += 40;
+    else if (dl > 50) score += 30;
+    else if (dl > 20) score += 20;
+    else if (dl > 5) score += 10;
+    else score += 2;
   }
 
   // Jitter (15 pts)
   if (ping) {
-    if (ping.jitter < 5) score += 15
-    else if (ping.jitter < 15) score += 10
-    else if (ping.jitter < 30) score += 5
+    if (ping.jitter < 5) score += 15;
+    else if (ping.jitter < 15) score += 10;
+    else if (ping.jitter < 30) score += 5;
   }
 
   // IPv6 (10 pts)
-  const hasIPv6 = info?.ipv6 != null
-  if (hasIPv6) score += 10
+  const hasIPv6 = info?.ipv6 != null;
+  if (hasIPv6) score += 10;
 
   // Reachability (5 pts)
   if (reachability.length > 0) {
-    const okCount = reachability.filter((r) => r.reachable).length
-    const ratio = okCount / reachability.length
-    if (ratio >= 1) score += 5
-    else if (ratio >= 0.75) score += 3
-    else if (ratio >= 0.5) score += 1
+    const okCount = reachability.filter((r) => r.reachable).length;
+    const ratio = okCount / reachability.length;
+    if (ratio >= 1) score += 5;
+    else if (ratio >= 0.75) score += 3;
+    else if (ratio >= 0.5) score += 1;
   }
 
-  score = Math.min(100, Math.max(0, score))
+  score = Math.min(100, Math.max(0, score));
 
-  const grade: NetworkAnalysis['grade'] =
-    score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 55 ? 'C' : score >= 40 ? 'D' : 'F'
+  const grade: NetworkAnalysis["grade"] =
+    score >= 85
+      ? "A"
+      : score >= 70
+        ? "B"
+        : score >= 55
+          ? "C"
+          : score >= 40
+            ? "D"
+            : "F";
 
-  const ipVersion: NetworkAnalysis['ipVersion'] =
-    info?.ipv6 ? (info?.ip ? 'dual-stack' : 'ipv6-only') : 'ipv4-only'
+  const ipVersion: NetworkAnalysis["ipVersion"] = info?.ipv6
+    ? info?.ip
+      ? "dual-stack"
+      : "ipv6-only"
+    : "ipv4-only";
 
-  const isCN = lang === 'zh' || lang === 'tw'
-  const isJA = lang === 'ja'
+  const isCN = lang === "zh" || false;
+  const isJA = false;
 
-  const colo = info?.colo || '—'
-  const avgMs = ping ? `${ping.avg.toFixed(0)} ms` : '—'
-  const dlMbps = speed?.downloadMbps ? `${speed.downloadMbps.toFixed(1)} Mbps` : '—'
-  const traceData = trace || info?.trace || null
-  const edgeColo = traceData?.colo || colo
-  const warp = traceData?.warp || 'off'
-  const gateway = traceData?.gateway || 'off'
-  const kex = traceData?.kex || ''
-  const hasPostQuantumKex = /mlkem|kyber/i.test(kex)
-  const slowReachability = reachability.filter((item) => item.status === 'slow' || item.status === 'failed')
+  const colo = info?.colo || "—";
+  const avgMs = ping ? `${ping.avg.toFixed(0)} ms` : "—";
+  const dlMbps = speed?.downloadMbps
+    ? `${speed.downloadMbps.toFixed(1)} Mbps`
+    : "—";
+  const traceData = trace || info?.trace || null;
+  const edgeColo = traceData?.colo || colo;
+  const warp = traceData?.warp || "off";
+  const gateway = traceData?.gateway || "off";
+  const kex = traceData?.kex || "";
+  const hasPostQuantumKex = /mlkem|kyber/i.test(kex);
+  const slowReachability = reachability.filter(
+    (item) => item.status === "slow" || item.status === "failed",
+  );
   const fastestDns = dnsLatency
-    .filter((item) => item.status === 'ok' && item.latencyMs !== null)
-    .sort((a, b) => Number(a.latencyMs) - Number(b.latencyMs))[0]
+    .filter((item) => item.status === "ok" && item.latencyMs !== null)
+    .sort((a, b) => Number(a.latencyMs) - Number(b.latencyMs))[0];
 
   // Summary
   const summaries: Record<string, string[]> = {
     zh: [
       `当前 Cloudflare Trace 显示连接命中 ${edgeColo} 节点。`,
-      warp === 'plus'
-        ? `WARP+ 已开启，Gateway ${gateway === 'on' ? '已启用' : '未启用'}。`
-        : warp === 'on'
-          ? `WARP 已开启，Gateway ${gateway === 'on' ? '已启用' : '未启用'}。`
-          : 'WARP 未开启。',
-      hasPostQuantumKex ? '已启用后量子密钥交换，首次 TLS 握手可能略有额外耗时。' : '',
-      ping ? `平均延迟 ${avgMs}，${ping.avg < 80 ? '延迟优秀，非常适合实时应用。' : ping.avg < 150 ? '延迟正常，适合日常使用。' : '延迟偏高，可能影响实时通信。'}` : '',
-      speed?.downloadMbps ? `下载速度 ${dlMbps}。` : '',
-      fastestDns ? `服务器侧公共 DNS 探测中，最快的是 ${fastestDns.provider}（${fastestDns.latencyMs} ms）。` : '',
-      ping && ping.avg < 100 && slowReachability.length > 0 ? '基础延迟正常，但部分目标可达性较慢，实时通信或长连接体验可能受路由影响。' : '',
-      hasIPv6 ? '你的网络已启用 IPv6 双栈，支持新一代互联网服务。' : '你的网络尚未启用 IPv6。',
+      warp === "plus"
+        ? `WARP+ 已开启，Gateway ${gateway === "on" ? "已启用" : "未启用"}。`
+        : warp === "on"
+          ? `WARP 已开启，Gateway ${gateway === "on" ? "已启用" : "未启用"}。`
+          : "WARP 未开启。",
+      hasPostQuantumKex
+        ? "已启用后量子密钥交换，首次 TLS 握手可能略有额外耗时。"
+        : "",
+      ping
+        ? `平均延迟 ${avgMs}，${ping.avg < 80 ? "延迟优秀，非常适合实时应用。" : ping.avg < 150 ? "延迟正常，适合日常使用。" : "延迟偏高，可能影响实时通信。"}`
+        : "",
+      speed?.downloadMbps ? `下载速度 ${dlMbps}。` : "",
+      fastestDns
+        ? `服务器侧公共 DNS 探测中，最快的是 ${fastestDns.provider}（${fastestDns.latencyMs} ms）。`
+        : "",
+      ping && ping.avg < 100 && slowReachability.length > 0
+        ? "基础延迟正常，但部分目标可达性较慢，实时通信或长连接体验可能受路由影响。"
+        : "",
+      hasIPv6
+        ? "你的网络已启用 IPv6 双栈，支持新一代互联网服务。"
+        : "你的网络尚未启用 IPv6。",
     ],
     en: [
       `Cloudflare Trace reports the ${edgeColo} edge node for this connection.`,
-      warp === 'plus'
-        ? `WARP+ is enabled and Gateway is ${gateway === 'on' ? 'on' : 'off'}.`
-        : warp === 'on'
-          ? `WARP is enabled and Gateway is ${gateway === 'on' ? 'on' : 'off'}.`
-          : 'WARP is not enabled.',
-      hasPostQuantumKex ? 'Post-quantum key exchange is enabled; first TLS handshakes may carry slight extra cost.' : '',
-      ping ? `Average latency ${avgMs} — ${ping.avg < 80 ? 'excellent for real-time applications.' : ping.avg < 150 ? 'good for everyday use.' : 'latency is elevated, may impact real-time communication.'}` : '',
-      speed?.downloadMbps ? `Download speed: ${dlMbps}.` : '',
-      fastestDns ? `Fastest server-side public DNS probe: ${fastestDns.provider} (${fastestDns.latencyMs} ms).` : '',
-      ping && ping.avg < 100 && slowReachability.length > 0 ? 'Baseline latency is healthy, but some targets are slow; real-time apps or long-lived connections may be affected by routing.' : '',
-      hasIPv6 ? 'Your network supports IPv6 dual-stack.' : 'IPv6 is not yet enabled on your network.',
+      warp === "plus"
+        ? `WARP+ is enabled and Gateway is ${gateway === "on" ? "on" : "off"}.`
+        : warp === "on"
+          ? `WARP is enabled and Gateway is ${gateway === "on" ? "on" : "off"}.`
+          : "WARP is not enabled.",
+      hasPostQuantumKex
+        ? "Post-quantum key exchange is enabled; first TLS handshakes may carry slight extra cost."
+        : "",
+      ping
+        ? `Average latency ${avgMs} — ${ping.avg < 80 ? "excellent for real-time applications." : ping.avg < 150 ? "good for everyday use." : "latency is elevated, may impact real-time communication."}`
+        : "",
+      speed?.downloadMbps ? `Download speed: ${dlMbps}.` : "",
+      fastestDns
+        ? `Fastest server-side public DNS probe: ${fastestDns.provider} (${fastestDns.latencyMs} ms).`
+        : "",
+      ping && ping.avg < 100 && slowReachability.length > 0
+        ? "Baseline latency is healthy, but some targets are slow; real-time apps or long-lived connections may be affected by routing."
+        : "",
+      hasIPv6
+        ? "Your network supports IPv6 dual-stack."
+        : "IPv6 is not yet enabled on your network.",
     ],
-    ja: [
-      `Cloudflare Trace では ${edgeColo} エッジノードが表示されています。`,
-      warp === 'plus'
-        ? `WARP+ が有効で、Gateway は ${gateway === 'on' ? '有効' : '無効'} です。`
-        : warp === 'on'
-          ? `WARP が有効で、Gateway は ${gateway === 'on' ? '有効' : '無効'} です。`
-          : 'WARP は有効ではありません。',
-      hasPostQuantumKex ? 'ポスト量子鍵交換が有効です。初回 TLS ハンドシェイクの時間がわずかに増える可能性があります。' : '',
-      ping ? `平均遅延 ${avgMs} — ${ping.avg < 80 ? 'リアルタイムアプリケーションに最適です。' : ping.avg < 150 ? '日常利用に適しています。' : '遅延がやや高く、リアルタイム通信に影響する可能性があります。'}` : '',
-      speed?.downloadMbps ? `ダウンロード速度: ${dlMbps}。` : '',
-      fastestDns ? `サーバー側の Public DNS 探測では ${fastestDns.provider}（${fastestDns.latencyMs} ms）が最速です。` : '',
-      ping && ping.avg < 100 && slowReachability.length > 0 ? '基本遅延は良好ですが、一部ターゲットが遅く、リアルタイム通信や長時間接続に影響する可能性があります。' : '',
-      hasIPv6 ? 'IPv6 デュアルスタックに対応しています。' : 'IPv6 はまだ有効ではありません。',
-    ],
-  }
+  };
 
-  const summary = (summaries[isCN ? 'zh' : isJA ? 'ja' : 'en'] || summaries.en)
+  const summary = (summaries[isCN ? "zh" : "en"] || summaries.en)
     .filter(Boolean)
-    .join(' ')
+    .join(" ");
 
   // Suitable for
   const suitableMap = {
     zh: {
-      videoConf: '视频会议',
-      remoteWork: '远程办公',
-      cloudOps: '云端运维',
-      streaming4K: '4K 流媒体',
-      gaming: '在线游戏',
-      browsing: '日常浏览',
+      videoConf: "视频会议",
+      remoteWork: "远程办公",
+      cloudOps: "云端运维",
+      streaming4K: "4K 流媒体",
+      gaming: "在线游戏",
+      browsing: "日常浏览",
     },
     en: {
-      videoConf: 'Video Conferencing',
-      remoteWork: 'Remote Work',
-      cloudOps: 'Cloud Operations',
-      streaming4K: '4K Streaming',
-      gaming: 'Online Gaming',
-      browsing: 'Web Browsing',
+      videoConf: "Video Conferencing",
+      remoteWork: "Remote Work",
+      cloudOps: "Cloud Operations",
+      streaming4K: "4K Streaming",
+      gaming: "Online Gaming",
+      browsing: "Web Browsing",
     },
-    ja: {
-      videoConf: 'ビデオ会議',
-      remoteWork: 'テレワーク',
-      cloudOps: 'クラウド運用',
-      streaming4K: '4K 動画視聴',
-      gaming: 'オンラインゲーム',
-      browsing: 'ウェブブラウジング',
-    },
-  }
+  };
 
-  const sm = isCN ? suitableMap.zh : isJA ? suitableMap.ja : suitableMap.en
-  const suitableFor: string[] = []
+  const sm = isCN ? suitableMap.zh : suitableMap.en;
+  const suitableFor: string[] = [];
   if (ping && speed) {
-    if (ping.avg < 100 && ping.jitter < 15 && (speed.downloadMbps ?? 0) > 5) suitableFor.push(sm.videoConf)
-    if (score >= 60) suitableFor.push(sm.remoteWork)
-    if (score >= 75 && hasIPv6) suitableFor.push(sm.cloudOps)
-    if ((speed.downloadMbps ?? 0) > 25) suitableFor.push(sm.streaming4K)
-    if (ping.avg < 80 && ping.jitter < 10) suitableFor.push(sm.gaming)
+    if (ping.avg < 100 && ping.jitter < 15 && (speed.downloadMbps ?? 0) > 5)
+      suitableFor.push(sm.videoConf);
+    if (score >= 60) suitableFor.push(sm.remoteWork);
+    if (score >= 75 && hasIPv6) suitableFor.push(sm.cloudOps);
+    if ((speed.downloadMbps ?? 0) > 25) suitableFor.push(sm.streaming4K);
+    if (ping.avg < 80 && ping.jitter < 10) suitableFor.push(sm.gaming);
   }
-  if (suitableFor.length === 0) suitableFor.push(sm.browsing)
+  if (suitableFor.length === 0) suitableFor.push(sm.browsing);
 
   // Potential issues
   const issueMap = {
     zh: {
-      highLatency: '延迟偏高（可能为物理距离或网络拥塞）',
-      highJitter: '抖动较大（不稳定，影响实时通信）',
-      slowDl: '下载速度较慢',
-      slowUl: '上传速度较慢',
-      noIPv6: '未启用 IPv6（可能影响部分服务）',
-      lowReach: '部分网站不可达（可能存在网络限制）',
+      highLatency: "延迟偏高（可能为物理距离或网络拥塞）",
+      highJitter: "抖动较大（不稳定，影响实时通信）",
+      slowDl: "下载速度较慢",
+      slowUl: "上传速度较慢",
+      noIPv6: "未启用 IPv6（可能影响部分服务）",
+      lowReach: "部分网站不可达（可能存在网络限制）",
     },
     en: {
-      highLatency: 'High latency (distance or congestion)',
-      highJitter: 'High jitter (unstable connection)',
-      slowDl: 'Slow download speed',
-      slowUl: 'Slow upload speed',
-      noIPv6: 'No IPv6 (may affect some modern services)',
-      lowReach: 'Some sites unreachable (possible restrictions)',
+      highLatency: "High latency (distance or congestion)",
+      highJitter: "High jitter (unstable connection)",
+      slowDl: "Slow download speed",
+      slowUl: "Slow upload speed",
+      noIPv6: "No IPv6 (may affect some modern services)",
+      lowReach: "Some sites unreachable (possible restrictions)",
     },
-    ja: {
-      highLatency: '遅延が高い（距離または輻輳の可能性）',
-      highJitter: 'ジッターが大きい（接続が不安定）',
-      slowDl: 'ダウンロード速度が遅い',
-      slowUl: 'アップロード速度が遅い',
-      noIPv6: 'IPv6 未対応（一部サービスに影響する可能性）',
-      lowReach: '一部サイトへの接続不可（制限の可能性）',
-    },
-  }
-  const im = isCN ? issueMap.zh : isJA ? issueMap.ja : issueMap.en
-  const potentialIssues: string[] = []
-  if (ping && ping.avg > 150) potentialIssues.push(im.highLatency)
-  if (ping && ping.jitter > 20) potentialIssues.push(im.highJitter)
-  if (speed?.downloadMbps != null && speed.downloadMbps < 10) potentialIssues.push(im.slowDl)
-  if (!hasIPv6) potentialIssues.push(im.noIPv6)
-  const unreachableCount = reachability.filter((r) => !r.reachable).length
-  if (unreachableCount > 2) potentialIssues.push(im.lowReach)
+  };
+  const im = isCN ? issueMap.zh : issueMap.en;
+  const potentialIssues: string[] = [];
+  if (ping && ping.avg > 150) potentialIssues.push(im.highLatency);
+  if (ping && ping.jitter > 20) potentialIssues.push(im.highJitter);
+  if (speed?.downloadMbps != null && speed.downloadMbps < 10)
+    potentialIssues.push(im.slowDl);
+  if (!hasIPv6) potentialIssues.push(im.noIPv6);
+  const unreachableCount = reachability.filter((r) => !r.reachable).length;
+  if (unreachableCount > 2) potentialIssues.push(im.lowReach);
   if (hasPostQuantumKex) {
     potentialIssues.push(
       isCN
-        ? '后量子密钥交换已启用，首次连接握手可能略慢'
+        ? "后量子密钥交换已启用，首次连接握手可能略慢"
         : isJA
-          ? 'ポスト量子鍵交換が有効で、初回接続がわずかに遅くなる可能性'
-          : 'Post-quantum key exchange may add slight first-connection latency'
-    )
+          ? "ポスト量子鍵交換が有効で、初回接続がわずかに遅くなる可能性"
+          : "Post-quantum key exchange may add slight first-connection latency",
+    );
   }
-  if ((warp === 'on' || warp === 'plus') && ping && ping.avg < 100 && slowReachability.length > 0) {
+  if (
+    (warp === "on" || warp === "plus") &&
+    ping &&
+    ping.avg < 100 &&
+    slowReachability.length > 0
+  ) {
     potentialIssues.push(
       isCN
-        ? 'WARP 路由下部分目标较慢，可能影响即时通讯/长连接'
+        ? "WARP 路由下部分目标较慢，可能影响即时通讯/长连接"
         : isJA
-          ? 'WARP ルーティングで一部ターゲットが遅く、長時間接続に影響する可能性'
-          : 'Some targets are slow under WARP routing; realtime or long-lived connections may suffer'
-    )
+          ? "WARP ルーティングで一部ターゲットが遅く、長時間接続に影響する可能性"
+          : "Some targets are slow under WARP routing; realtime or long-lived connections may suffer",
+    );
   }
 
   // Recommendations
   const recMap = {
     zh: {
-      wifi5: '尽量使用 5GHz Wi-Fi，减少干扰',
-      ipv6svc: '优先选择支持 IPv6 的服务',
-      wiredConn: '改用有线连接以降低延迟和抖动',
-      vpn: '考虑使用 Cloudflare WARP 加速跨区流量',
-      reboot: '尝试重启路由器以改善网络质量',
-      contactISP: '联系 ISP 升级宽带套餐',
+      wifi5: "尽量使用 5GHz Wi-Fi，减少干扰",
+      ipv6svc: "优先选择支持 IPv6 的服务",
+      wiredConn: "改用有线连接以降低延迟和抖动",
+      vpn: "考虑使用 Cloudflare WARP 加速跨区流量",
+      reboot: "尝试重启路由器以改善网络质量",
+      contactISP: "联系 ISP 升级宽带套餐",
     },
     en: {
-      wifi5: 'Use 5GHz Wi-Fi to reduce interference',
-      ipv6svc: 'Prefer IPv6-capable services when available',
-      wiredConn: 'Switch to wired Ethernet for lower latency and jitter',
-      vpn: 'Consider Cloudflare WARP to accelerate cross-region traffic',
-      reboot: 'Try rebooting your router to improve network quality',
-      contactISP: 'Contact your ISP to upgrade your bandwidth plan',
+      wifi5: "Use 5GHz Wi-Fi to reduce interference",
+      ipv6svc: "Prefer IPv6-capable services when available",
+      wiredConn: "Switch to wired Ethernet for lower latency and jitter",
+      vpn: "Consider Cloudflare WARP to accelerate cross-region traffic",
+      reboot: "Try rebooting your router to improve network quality",
+      contactISP: "Contact your ISP to upgrade your bandwidth plan",
     },
-    ja: {
-      wifi5: '5GHz Wi-Fi を使用して干渉を減らす',
-      ipv6svc: '可能な限り IPv6 対応サービスを優先',
-      wiredConn: '有線 LAN に切り替えて遅延とジッターを改善',
-      vpn: 'Cloudflare WARP でクロスリージョントラフィックを高速化',
-      reboot: 'ルーターを再起動してネットワーク品質を改善',
-      contactISP: 'ISP に帯域プランのアップグレードを相談',
-    },
-  }
-  const rm = isCN ? recMap.zh : isJA ? recMap.ja : recMap.en
-  const recommendations: string[] = [rm.wifi5]
-  if (!hasIPv6) recommendations.push(rm.ipv6svc)
-  if (ping && ping.jitter > 15) recommendations.push(rm.wiredConn)
-  if (unreachableCount > 0) recommendations.push(rm.vpn)
-  if (speed?.downloadMbps != null && speed.downloadMbps < 10) recommendations.push(rm.contactISP)
-  if ((warp === 'on' || warp === 'plus') && gateway === 'off' && slowReachability.length > 0) {
+  };
+  const rm = isCN ? recMap.zh : recMap.en;
+  const recommendations: string[] = [rm.wifi5];
+  if (!hasIPv6) recommendations.push(rm.ipv6svc);
+  if (ping && ping.jitter > 15) recommendations.push(rm.wiredConn);
+  if (unreachableCount > 0) recommendations.push(rm.vpn);
+  if (speed?.downloadMbps != null && speed.downloadMbps < 10)
+    recommendations.push(rm.contactISP);
+  if (
+    (warp === "on" || warp === "plus") &&
+    gateway === "off" &&
+    slowReachability.length > 0
+  ) {
     recommendations.push(
       isCN
-        ? '日常使用可考虑 DNS Only，需要 Zero Trust 应用时再开启 WARP'
+        ? "日常使用可考虑 DNS Only，需要 Zero Trust 应用时再开启 WARP"
         : isJA
-          ? '普段は DNS Only を使い、Zero Trust が必要なときだけ WARP を有効化'
-          : 'Use DNS Only for daily browsing; enable WARP when Zero Trust access is needed'
-    )
+          ? "普段は DNS Only を使い、Zero Trust が必要なときだけ WARP を有効化"
+          : "Use DNS Only for daily browsing; enable WARP when Zero Trust access is needed",
+    );
   }
-  if (recommendations.length < 2) recommendations.push(rm.reboot)
+  if (recommendations.length < 2) recommendations.push(rm.reboot);
 
-  return { score, grade, ipVersion, summary, suitableFor, potentialIssues, recommendations }
+  return {
+    score,
+    grade,
+    ipVersion,
+    summary,
+    suitableFor,
+    potentialIssues,
+    recommendations,
+  };
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -380,48 +400,57 @@ function SectionCard({
   pendingText,
   children,
 }: {
-  title: string
-  icon: React.ReactNode
-  phase: CardPhase
-  pendingText?: string
-  children?: React.ReactNode
+  title: string;
+  icon: React.ReactNode;
+  phase: CardPhase;
+  pendingText?: string;
+  children?: React.ReactNode;
 }) {
-  const isPending = phase === 'idle' || (phase !== 'done' && !children)
+  const isPending = phase === "idle" || (phase !== "done" && !children);
 
   return (
     <div className="op-card rounded-2xl overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5 sm:py-4 border-b border-[var(--border-subtle)]">
         <span className="text-[var(--accent-color)]">{icon}</span>
-        <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">{title}</h2>
-        {phase === 'loading' && (
+        <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
+          {title}
+        </h2>
+        {phase === "loading" && (
           <Loader2 className="w-4 h-4 text-[var(--accent-color)] animate-spin" />
         )}
-        {phase === 'done' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-        {phase === 'error' && <AlertCircle className="w-4 h-4 text-amber-500" />}
+        {phase === "done" && (
+          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        )}
+        {phase === "error" && (
+          <AlertCircle className="w-4 h-4 text-amber-500" />
+        )}
       </div>
       <div className="p-4 sm:p-5">
-        {phase === 'error' && !children ? (
+        {phase === "error" && !children ? (
           <div className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
             <p className="text-xs font-medium text-[var(--text-muted)]">
-              {pendingText || 'Check failed. Try again later.'}
+              {pendingText || "Check failed. Try again later."}
             </p>
           </div>
         ) : isPending ? (
           <div className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-soft)]/50 px-3 py-3">
-            {phase === 'loading' ? (
+            {phase === "loading" ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--accent-color)]" />
             ) : (
               <div className="h-2 w-2 shrink-0 rounded-full bg-[var(--text-faint)]" />
             )}
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-[var(--text-muted)]">
-                {pendingText || (phase === 'loading' ? 'Checking...' : 'Waiting for check')}
+                {pendingText ||
+                  (phase === "loading" ? "Checking..." : "Waiting for check")}
               </p>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--border-subtle)]">
                 <div
                   className={`h-full rounded-full bg-[var(--accent-color)] ${
-                    phase === 'loading' ? 'w-2/3 animate-pulse' : 'w-1/4 opacity-30'
+                    phase === "loading"
+                      ? "w-2/3 animate-pulse"
+                      : "w-1/4 opacity-30"
                   }`}
                 />
               </div>
@@ -432,18 +461,28 @@ function SectionCard({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-function MetaRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function MetaRow({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--border-subtle)] last:border-0">
       <span className="text-xs text-[var(--text-muted)]">{label}</span>
-      <span className={`text-xs font-semibold text-[var(--text-primary)] ${mono ? 'font-mono' : ''}`}>
-        {value || '—'}
+      <span
+        className={`text-xs font-semibold text-[var(--text-primary)] ${mono ? "font-mono" : ""}`}
+      >
+        {value || "—"}
       </span>
     </div>
-  )
+  );
 }
 
 function StatBox({
@@ -452,25 +491,31 @@ function StatBox({
   unit,
   quality,
 }: {
-  label: string
-  value: string | null
-  unit?: string
-  quality?: 'good' | 'ok' | 'bad'
+  label: string;
+  value: string | null;
+  unit?: string;
+  quality?: "good" | "ok" | "bad";
 }) {
   const colors = {
-    good: 'text-emerald-500',
-    ok: 'text-amber-500',
-    bad: 'text-red-500',
-  }
+    good: "text-emerald-500",
+    ok: "text-amber-500",
+    bad: "text-red-500",
+  };
   return (
     <div className="op-card-soft rounded-xl p-3 text-center sm:p-4">
       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:mb-2 sm:tracking-[0.18em]">
         {label}
       </p>
       {value !== null ? (
-        <p className={`text-xl font-bold leading-tight sm:text-2xl ${quality ? colors[quality] : 'text-[var(--text-primary)]'}`}>
+        <p
+          className={`text-xl font-bold leading-tight sm:text-2xl ${quality ? colors[quality] : "text-[var(--text-primary)]"}`}
+        >
           {value}
-          {unit && <span className="text-xs ml-1 text-[var(--text-muted)]">{unit}</span>}
+          {unit && (
+            <span className="text-xs ml-1 text-[var(--text-muted)]">
+              {unit}
+            </span>
+          )}
         </p>
       ) : (
         <div className="h-7 sm:h-8 flex items-center justify-center">
@@ -478,27 +523,34 @@ function StatBox({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function ScoreRing({ score, grade }: { score: number; grade: string }) {
-  const circumference = 2 * Math.PI * 42
-  const offset = circumference - (score / 100) * circumference
+  const circumference = 2 * Math.PI * 42;
+  const offset = circumference - (score / 100) * circumference;
   const gradeColor =
-    grade === 'A'
-      ? '#10b981'
-      : grade === 'B'
-        ? '#34d399'
-        : grade === 'C'
-          ? '#f59e0b'
-          : grade === 'D'
-            ? '#f97316'
-            : '#ef4444'
+    grade === "A"
+      ? "#10b981"
+      : grade === "B"
+        ? "#34d399"
+        : grade === "C"
+          ? "#f59e0b"
+          : grade === "D"
+            ? "#f97316"
+            : "#ef4444";
 
   return (
     <div className="relative flex items-center justify-center w-28 h-28">
       <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border-subtle)" strokeWidth="8" />
+        <circle
+          cx="50"
+          cy="50"
+          r="42"
+          fill="none"
+          stroke="var(--border-subtle)"
+          strokeWidth="8"
+        />
         <circle
           cx="50"
           cy="50"
@@ -509,54 +561,70 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+          style={{ transition: "stroke-dashoffset 1s ease-out" }}
         />
       </svg>
       <div className="text-center z-10">
         <p className="text-3xl font-black" style={{ color: gradeColor }}>
           {grade}
         </p>
-        <p className="text-[10px] font-semibold text-[var(--text-muted)]">{score}/100</p>
+        <p className="text-[10px] font-semibold text-[var(--text-muted)]">
+          {score}/100
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
 function PingChart({ samples }: { samples: number[] }) {
-  if (samples.length === 0) return null
-  const max = Math.max(...samples)
+  if (samples.length === 0) return null;
+  const max = Math.max(...samples);
   return (
     <div className="flex items-end gap-1 h-10 mt-3">
       {samples.map((s, i) => {
-        const h = Math.max(4, Math.round((s / max) * 40))
-        const color = s < 100 ? 'bg-emerald-500' : s < 200 ? 'bg-amber-400' : 'bg-red-400'
+        const h = Math.max(4, Math.round((s / max) * 40));
+        const color =
+          s < 100 ? "bg-emerald-500" : s < 200 ? "bg-amber-400" : "bg-red-400";
         return (
-          <div key={i} title={`${s}ms`} className={`flex-1 rounded-sm ${color}`} style={{ height: h }} />
-        )
+          <div
+            key={i}
+            title={`${s}ms`}
+            className={`flex-1 rounded-sm ${color}`}
+            style={{ height: h }}
+          />
+        );
       })}
     </div>
-  )
+  );
 }
 
-function StatusDot({ status }: { status: 'ok' | 'slow' | 'failed' }) {
+function StatusDot({ status }: { status: "ok" | "slow" | "failed" }) {
   const map = {
-    ok: 'bg-emerald-500',
-    slow: 'bg-amber-400',
-    failed: 'bg-red-400',
-  }
-  return <span className={`inline-block w-2.5 h-2.5 rounded-full ${map[status]}`} />
+    ok: "bg-emerald-500",
+    slow: "bg-amber-400",
+    failed: "bg-red-400",
+  };
+  return (
+    <span className={`inline-block w-2.5 h-2.5 rounded-full ${map[status]}`} />
+  );
 }
 
-function SpeedBar({ value, max = 200 }: { value: number | null; max?: number }) {
-  const pct = value != null ? Math.min(100, (value / max) * 100) : 0
+function SpeedBar({
+  value,
+  max = 200,
+}: {
+  value: number | null;
+  max?: number;
+}) {
+  const pct = value != null ? Math.min(100, (value / max) * 100) : 0;
   return (
     <div className="w-full h-2 rounded-full bg-[var(--border-subtle)] overflow-hidden mt-2">
       <div
         className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
-        style={{ width: `${pct}%`, transition: 'width 0.8s ease-out' }}
+        style={{ width: `${pct}%`, transition: "width 0.8s ease-out" }}
       />
     </div>
-  )
+  );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -565,61 +633,62 @@ export default function NetworkCheckClient({
   dict,
   lang,
 }: {
-  dict: any
-  lang: 'zh' | 'en' | 'ja' | 'tw'
+  dict: any;
+  lang: "zh" | "en";
 }) {
-  const nc = dict.tools.network_check
-  const waitingText =
-    lang === 'ja'
-      ? '前のチェックを待っています'
-      : lang === 'zh'
-        ? '等待前序检测'
-        : lang === 'tw'
-          ? '等待前序檢測'
-          : 'Waiting for previous check'
+  const nc = dict.tools.network_check;
+  const waitingText = false
+    ? "前のチェックを待っています"
+    : lang === "zh"
+      ? "等待前序检测"
+      : false
+        ? "等待前序檢測"
+        : "Waiting for previous check";
 
   // State
-  const [phase, setPhase] = useState<'idle' | 'running' | 'done'>('idle')
-  const [currentStep, setCurrentStep] = useState('')
+  const [phase, setPhase] = useState<"idle" | "running" | "done">("idle");
+  const [currentStep, setCurrentStep] = useState("");
 
-  const [netInfo, setNetInfo] = useState<NetworkInfoResponse | null>(null)
-  const [netInfoPhase, setNetInfoPhase] = useState<CardPhase>('idle')
+  const [netInfo, setNetInfo] = useState<NetworkInfoResponse | null>(null);
+  const [netInfoPhase, setNetInfoPhase] = useState<CardPhase>("idle");
 
-  const [pingResult, setPingResult] = useState<PingResult | null>(null)
-  const [pingPhase, setPingPhase] = useState<CardPhase>('idle')
+  const [pingResult, setPingResult] = useState<PingResult | null>(null);
+  const [pingPhase, setPingPhase] = useState<CardPhase>("idle");
 
-  const [speedResult, setSpeedResult] = useState<SpeedResult | null>(null)
-  const [speedPhase, setSpeedPhase] = useState<CardPhase>('idle')
-  const [selectedSizeMb, setSelectedSizeMb] = useState<1 | 10 | 50>(10)
-  const [dlProgress, setDlProgress] = useState(0)
+  const [speedResult, setSpeedResult] = useState<SpeedResult | null>(null);
+  const [speedPhase, setSpeedPhase] = useState<CardPhase>("idle");
+  const [selectedSizeMb, setSelectedSizeMb] = useState<1 | 10 | 50>(10);
+  const [dlProgress, setDlProgress] = useState(0);
 
-  const [dnsPerfResult, setDnsPerfResult] = useState<DnsPerfResult | null>(null)
-  const [dnsPerfPhase, setDnsPerfPhase] = useState<CardPhase>('idle')
-  const [dnsLatency, setDnsLatency] = useState<DnsLatencyItem[]>([])
-  const [dnsLatencyPhase, setDnsLatencyPhase] = useState<CardPhase>('idle')
+  const [dnsPerfResult, setDnsPerfResult] = useState<DnsPerfResult | null>(
+    null,
+  );
+  const [dnsPerfPhase, setDnsPerfPhase] = useState<CardPhase>("idle");
+  const [dnsLatency, setDnsLatency] = useState<DnsLatencyItem[]>([]);
+  const [dnsLatencyPhase, setDnsLatencyPhase] = useState<CardPhase>("idle");
 
-  const [reachability, setReachability] = useState<ReachabilityItem[]>([])
-  const [reachPhase, setReachPhase] = useState<CardPhase>('idle')
+  const [reachability, setReachability] = useState<ReachabilityItem[]>([]);
+  const [reachPhase, setReachPhase] = useState<CardPhase>("idle");
 
-  const [cfTrace, setCfTrace] = useState<CfTrace | null>(null)
-  const [tracePhase, setTracePhase] = useState<CardPhase>('idle')
+  const [cfTrace, setCfTrace] = useState<CfTrace | null>(null);
+  const [tracePhase, setTracePhase] = useState<CardPhase>("idle");
 
-  const [analysis, setAnalysis] = useState<NetworkAnalysis | null>(null)
+  const [analysis, setAnalysis] = useState<NetworkAnalysis | null>(null);
 
-  const abortRef = useRef<AbortController | null>(null)
+  const abortRef = useRef<AbortController | null>(null);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   const runPing = useCallback(async (): Promise<PingResult> => {
-    const samples: number[] = []
+    const samples: number[] = [];
     for (let i = 0; i < PING_SAMPLES; i++) {
-      const t0 = performance.now()
+      const t0 = performance.now();
       try {
-        await fetch('/api/network/ping', { cache: 'no-store' })
+        await fetch("/api/network/ping", { cache: "no-store" });
       } catch {
         // ignore
       }
-      samples.push(Math.round(performance.now() - t0))
+      samples.push(Math.round(performance.now() - t0));
       // Update state progressively
       setPingResult({
         samples: [...samples],
@@ -627,156 +696,173 @@ export default function NetworkCheckClient({
         avg: Math.round(samples.reduce((a, b) => a + b, 0) / samples.length),
         max: Math.max(...samples),
         jitter: Math.round(
-          samples.slice(1).reduce((acc, s, i) => acc + Math.abs(s - samples[i]), 0) /
-            Math.max(1, samples.length - 1)
+          samples
+            .slice(1)
+            .reduce((acc, s, i) => acc + Math.abs(s - samples[i]), 0) /
+            Math.max(1, samples.length - 1),
         ),
-      })
+      });
     }
-    const min = Math.min(...samples)
-    const avg = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length)
-    const max = Math.max(...samples)
+    const min = Math.min(...samples);
+    const avg = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length);
+    const max = Math.max(...samples);
     const jitter = Math.round(
-      samples.slice(1).reduce((acc, s, i) => acc + Math.abs(s - samples[i]), 0) /
-        Math.max(1, samples.length - 1)
-    )
-    return { min, avg, max, jitter, samples }
-  }, [])
+      samples
+        .slice(1)
+        .reduce((acc, s, i) => acc + Math.abs(s - samples[i]), 0) /
+        Math.max(1, samples.length - 1),
+    );
+    return { min, avg, max, jitter, samples };
+  }, []);
 
   const runDownload = useCallback(
-    async (sizeMb: number): Promise<{ mbps: number; bytes: number; durationMs: number }> => {
-      setDlProgress(0)
-      const t0 = performance.now()
-      const response = await fetch(`/api/network/download?size=${sizeMb}`, { cache: 'no-store' })
-      const contentLength = parseInt(response.headers.get('content-length') ?? '0', 10)
-      const reader = response.body!.getReader()
-      let received = 0
+    async (
+      sizeMb: number,
+    ): Promise<{ mbps: number; bytes: number; durationMs: number }> => {
+      setDlProgress(0);
+      const t0 = performance.now();
+      const response = await fetch(`/api/network/download?size=${sizeMb}`, {
+        cache: "no-store",
+      });
+      const contentLength = parseInt(
+        response.headers.get("content-length") ?? "0",
+        10,
+      );
+      const reader = response.body!.getReader();
+      let received = 0;
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        received += value?.byteLength ?? 0
-        if (contentLength > 0) setDlProgress(Math.round((received / contentLength) * 100))
+        const { done, value } = await reader.read();
+        if (done) break;
+        received += value?.byteLength ?? 0;
+        if (contentLength > 0)
+          setDlProgress(Math.round((received / contentLength) * 100));
       }
-      const durationMs = performance.now() - t0
-      const mbps = (received * 8) / (durationMs / 1000) / 1_000_000
-      setDlProgress(100)
-      return { mbps, bytes: received, durationMs }
+      const durationMs = performance.now() - t0;
+      const mbps = (received * 8) / (durationMs / 1000) / 1_000_000;
+      setDlProgress(100);
+      return { mbps, bytes: received, durationMs };
     },
-    []
-  )
-
-
+    [],
+  );
 
   const getDnsPerf = useCallback((): DnsPerfResult => {
     try {
-      const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
-      const nav = entries[0]
-      if (!nav) return { dnsMs: null, tcpMs: null, tlsMs: null, ttfbMs: null }
-      const dnsMs = Math.round(nav.domainLookupEnd - nav.domainLookupStart)
-      const tcpMs = Math.round(nav.connectEnd - nav.connectStart)
+      const entries = performance.getEntriesByType(
+        "navigation",
+      ) as PerformanceNavigationTiming[];
+      const nav = entries[0];
+      if (!nav) return { dnsMs: null, tcpMs: null, tlsMs: null, ttfbMs: null };
+      const dnsMs = Math.round(nav.domainLookupEnd - nav.domainLookupStart);
+      const tcpMs = Math.round(nav.connectEnd - nav.connectStart);
       const tlsMs =
         nav.secureConnectionStart > 0
           ? Math.round(nav.connectEnd - nav.secureConnectionStart)
-          : null
-      const ttfbMs = Math.round(nav.responseStart - nav.requestStart)
-      return { dnsMs, tcpMs, tlsMs, ttfbMs }
+          : null;
+      const ttfbMs = Math.round(nav.responseStart - nav.requestStart);
+      return { dnsMs, tcpMs, tlsMs, ttfbMs };
     } catch {
-      return { dnsMs: null, tcpMs: null, tlsMs: null, ttfbMs: null }
+      return { dnsMs: null, tcpMs: null, tlsMs: null, ttfbMs: null };
     }
-  }, [])
+  }, []);
 
   // ── Main flow ──────────────────────────────────────────────────────────────
 
   const startCheck = useCallback(async () => {
-    abortRef.current = new AbortController()
-    setPhase('running')
-    setNetInfo(null)
-    setNetInfoPhase('idle')
-    setPingResult(null)
-    setPingPhase('idle')
-    setSpeedResult(null)
-    setSpeedPhase('idle')
-    setDlProgress(0)
-    setDnsPerfResult(null)
-    setDnsPerfPhase('idle')
-    setDnsLatency([])
-    setDnsLatencyPhase('idle')
-    setReachability([])
-    setReachPhase('idle')
-    setCfTrace(null)
-    setTracePhase('idle')
-    setAnalysis(null)
+    abortRef.current = new AbortController();
+    setPhase("running");
+    setNetInfo(null);
+    setNetInfoPhase("idle");
+    setPingResult(null);
+    setPingPhase("idle");
+    setSpeedResult(null);
+    setSpeedPhase("idle");
+    setDlProgress(0);
+    setDnsPerfResult(null);
+    setDnsPerfPhase("idle");
+    setDnsLatency([]);
+    setDnsLatencyPhase("idle");
+    setReachability([]);
+    setReachPhase("idle");
+    setCfTrace(null);
+    setTracePhase("idle");
+    setAnalysis(null);
 
-    let finalNetInfo: NetworkInfoResponse | null = null
-    let finalPing: PingResult | null = null
-    let finalSpeed: SpeedResult | null = null
-    let finalReach: ReachabilityItem[] = []
-    let finalTrace: CfTrace | null = null
-    let finalDnsLatency: DnsLatencyItem[] = []
+    let finalNetInfo: NetworkInfoResponse | null = null;
+    let finalPing: PingResult | null = null;
+    let finalSpeed: SpeedResult | null = null;
+    let finalReach: ReachabilityItem[] = [];
+    let finalTrace: CfTrace | null = null;
+    let finalDnsLatency: DnsLatencyItem[] = [];
 
     // Step 1 — Network info
-    setCurrentStep(nc.info_title)
-    setNetInfoPhase('loading')
+    setCurrentStep(nc.info_title);
+    setNetInfoPhase("loading");
     try {
-      const res = await fetch('/api/network/info', { cache: 'no-store' })
-      if (!res.ok) throw new Error(`network info failed: ${res.status}`)
-      finalNetInfo = await res.json()
-      setNetInfo(finalNetInfo)
-      setNetInfoPhase('done')
+      const res = await fetch("/api/network/info", { cache: "no-store" });
+      if (!res.ok) throw new Error(`network info failed: ${res.status}`);
+      finalNetInfo = await res.json();
+      setNetInfo(finalNetInfo);
+      setNetInfoPhase("done");
     } catch {
       try {
-        const traceRes = await fetch('/cdn-cgi/trace', { cache: 'no-store' })
-        const traceText = await traceRes.text()
-        finalTrace = parseCfTrace(traceText)
-        finalNetInfo = buildNetworkInfoFromTrace(finalTrace, navigator.userAgent || 'Unknown')
-        setCfTrace(finalTrace)
-        setNetInfo(finalNetInfo)
-        setNetInfoPhase('done')
+        const traceRes = await fetch("/cdn-cgi/trace", { cache: "no-store" });
+        const traceText = await traceRes.text();
+        finalTrace = parseCfTrace(traceText);
+        finalNetInfo = buildNetworkInfoFromTrace(
+          finalTrace,
+          navigator.userAgent || "Unknown",
+        );
+        setCfTrace(finalTrace);
+        setNetInfo(finalNetInfo);
+        setNetInfoPhase("done");
       } catch {
-        setNetInfoPhase('error')
+        setNetInfoPhase("error");
       }
     }
 
     // Step 2 — DNS perf (from page load timing)
-    setDnsPerfPhase('loading')
-    const dnsPerf = getDnsPerf()
-    setDnsPerfResult(dnsPerf)
-    setDnsPerfPhase(dnsPerf.dnsMs !== null ? 'done' : 'error')
+    setDnsPerfPhase("loading");
+    const dnsPerf = getDnsPerf();
+    setDnsPerfResult(dnsPerf);
+    setDnsPerfPhase(dnsPerf.dnsMs !== null ? "done" : "error");
 
     // Step 2b — Public resolver latency from edge/server perspective
-    setDnsLatencyPhase('loading')
+    setDnsLatencyPhase("loading");
     try {
-      const res = await fetch('/api/network/dns-latency', { cache: 'no-store' })
-      const data = await res.json()
-      finalDnsLatency = data.results ?? []
-      setDnsLatency(finalDnsLatency)
-      setDnsLatencyPhase(finalDnsLatency.length > 0 ? 'done' : 'error')
+      const res = await fetch("/api/network/dns-latency", {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      finalDnsLatency = data.results ?? [];
+      setDnsLatency(finalDnsLatency);
+      setDnsLatencyPhase(finalDnsLatency.length > 0 ? "done" : "error");
     } catch {
-      setDnsLatencyPhase('error')
+      setDnsLatencyPhase("error");
     }
 
     // Step 3 — Ping
-    setCurrentStep(nc.ping_title)
-    setPingPhase('loading')
+    setCurrentStep(nc.ping_title);
+    setPingPhase("loading");
     try {
-      finalPing = await runPing()
-      setPingResult(finalPing)
-      setPingPhase('done')
+      finalPing = await runPing();
+      setPingResult(finalPing);
+      setPingPhase("done");
     } catch {
-      setPingPhase('error')
+      setPingPhase("error");
     }
 
     // Step 4 — Download
-    setCurrentStep(nc.speed_title)
-    setSpeedPhase('loading')
-    let dlMbps: number | null = null
-    let dlBytes = 0
-    let dlDuration = 0
+    setCurrentStep(nc.speed_title);
+    setSpeedPhase("loading");
+    let dlMbps: number | null = null;
+    let dlBytes = 0;
+    let dlDuration = 0;
 
     try {
-      const dl = await runDownload(selectedSizeMb)
-      dlMbps = parseFloat(dl.mbps.toFixed(2))
-      dlBytes = dl.bytes
-      dlDuration = dl.durationMs
+      const dl = await runDownload(selectedSizeMb);
+      dlMbps = parseFloat(dl.mbps.toFixed(2));
+      dlBytes = dl.bytes;
+      dlDuration = dl.durationMs;
     } catch {
       // ignore
     }
@@ -785,56 +871,66 @@ export default function NetworkCheckClient({
       downloadMbps: dlMbps,
       downloadDurationMs: dlDuration,
       downloadBytes: dlBytes,
-    }
-    setSpeedResult(finalSpeed)
-    setSpeedPhase(dlMbps !== null ? 'done' : 'error')
+    };
+    setSpeedResult(finalSpeed);
+    setSpeedPhase(dlMbps !== null ? "done" : "error");
 
     // Step 5 — Reachability
-    setCurrentStep(nc.reach_title)
-    setReachPhase('loading')
+    setCurrentStep(nc.reach_title);
+    setReachPhase("loading");
     try {
-      const res = await fetch('/api/network/reachability', { cache: 'no-store' })
-      const data = await res.json()
-      finalReach = data.results ?? []
-      setReachability(finalReach)
-      setReachPhase('done')
+      const res = await fetch("/api/network/reachability", {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      finalReach = data.results ?? [];
+      setReachability(finalReach);
+      setReachPhase("done");
     } catch {
-      setReachPhase('error')
+      setReachPhase("error");
     }
 
     // Step 6 — CF Trace
-    setCurrentStep(nc.trace_title)
-    setTracePhase('loading')
+    setCurrentStep(nc.trace_title);
+    setTracePhase("loading");
     try {
-      const res = await fetch('/cdn-cgi/trace')
-      const text = await res.text()
-      const parsed = parseCfTrace(text)
-      finalTrace = parsed
-      setCfTrace(parsed)
-      setTracePhase('done')
+      const res = await fetch("/cdn-cgi/trace");
+      const text = await res.text();
+      const parsed = parseCfTrace(text);
+      finalTrace = parsed;
+      setCfTrace(parsed);
+      setTracePhase("done");
     } catch {
-      setTracePhase('error')
+      setTracePhase("error");
     }
 
     // Step 7 — Analysis
-    setCurrentStep(nc.ai_title)
-    const result = analyzeNetwork(finalNetInfo, finalPing, finalSpeed, finalTrace, finalDnsLatency, finalReach, lang)
-    setAnalysis(result)
+    setCurrentStep(nc.ai_title);
+    const result = analyzeNetwork(
+      finalNetInfo,
+      finalPing,
+      finalSpeed,
+      finalTrace,
+      finalDnsLatency,
+      finalReach,
+      lang,
+    );
+    setAnalysis(result);
 
-    setCurrentStep('')
-    setPhase('done')
-  }, [nc, selectedSizeMb, lang, runPing, runDownload, getDnsPerf])
+    setCurrentStep("");
+    setPhase("done");
+  }, [nc, selectedSizeMb, lang, runPing, runDownload, getDnsPerf]);
 
   // ── Metric quality helpers ─────────────────────────────────────────────────
 
-  const latencyQuality = (ms: number): 'good' | 'ok' | 'bad' =>
-    ms < 80 ? 'good' : ms < 200 ? 'ok' : 'bad'
+  const latencyQuality = (ms: number): "good" | "ok" | "bad" =>
+    ms < 80 ? "good" : ms < 200 ? "ok" : "bad";
 
-  const speedQuality = (mbps: number): 'good' | 'ok' | 'bad' =>
-    mbps > 50 ? 'good' : mbps > 10 ? 'ok' : 'bad'
+  const speedQuality = (mbps: number): "good" | "ok" | "bad" =>
+    mbps > 50 ? "good" : mbps > 10 ? "ok" : "bad";
 
-  const jitterQuality = (ms: number): 'good' | 'ok' | 'bad' =>
-    ms < 10 ? 'good' : ms < 25 ? 'ok' : 'bad'
+  const jitterQuality = (ms: number): "good" | "ok" | "bad" =>
+    ms < 10 ? "good" : ms < 25 ? "ok" : "bad";
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -845,12 +941,12 @@ export default function NetworkCheckClient({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebApplication',
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
             name: nc.title,
-            url: 'https://opskitpro.com/tools/network-check',
-            applicationCategory: 'UtilitiesApplication',
-            offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            url: "https://opskitpro.com/tools/network-check",
+            applicationCategory: "UtilitiesApplication",
+            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
             description: dict.tools.network_check_desc,
           }),
         }}
@@ -859,51 +955,63 @@ export default function NetworkCheckClient({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'FAQPage',
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
             mainEntity: [
               {
-                '@type': 'Question',
-                name: lang === 'zh' ? '如何检测我的网络速度？' : 'How do I test my network speed?',
+                "@type": "Question",
+                name:
+                  lang === "zh"
+                    ? "如何检测我的网络速度？"
+                    : "How do I test my network speed?",
                 acceptedAnswer: {
-                  '@type': 'Answer',
+                  "@type": "Answer",
                   text:
-                    lang === 'zh'
+                    lang === "zh"
                       ? '点击"开始检测"按钮，OpsKitPro 将自动测试你的下载速度、上传速度、延迟和 IPv6 支持。无需安装任何软件。'
                       : 'Click "Start Check" and OpsKitPro will automatically test your download speed, upload speed, latency and IPv6 support. No software installation required.',
                 },
               },
               {
-                '@type': 'Question',
-                name: lang === 'zh' ? '什么是 IPv6？我的网络支持吗？' : 'What is IPv6 and does my network support it?',
+                "@type": "Question",
+                name:
+                  lang === "zh"
+                    ? "什么是 IPv6？我的网络支持吗？"
+                    : "What is IPv6 and does my network support it?",
                 acceptedAnswer: {
-                  '@type': 'Answer',
+                  "@type": "Answer",
                   text:
-                    lang === 'zh'
-                      ? 'IPv6 是新一代互联网地址协议，提供更多地址空间。OpsKitPro 会自动检测你的网络是否支持 IPv6。'
-                      : 'IPv6 is the next-generation internet addressing protocol. OpsKitPro automatically detects whether your network supports IPv6.',
+                    lang === "zh"
+                      ? "IPv6 是新一代互联网地址协议，提供更多地址空间。OpsKitPro 会自动检测你的网络是否支持 IPv6。"
+                      : "IPv6 is the next-generation internet addressing protocol. OpsKitPro automatically detects whether your network supports IPv6.",
                 },
               },
               {
-                '@type': 'Question',
-                name: lang === 'zh' ? '延迟多少毫秒算正常？' : 'What is a normal ping latency?',
+                "@type": "Question",
+                name:
+                  lang === "zh"
+                    ? "延迟多少毫秒算正常？"
+                    : "What is a normal ping latency?",
                 acceptedAnswer: {
-                  '@type': 'Answer',
+                  "@type": "Answer",
                   text:
-                    lang === 'zh'
-                      ? '一般来说，低于 50ms 为优秀，50-100ms 为良好，100-200ms 为一般，超过 200ms 会影响实时应用使用体验。'
-                      : 'Generally, under 50ms is excellent, 50-100ms is good, 100-200ms is average, and above 200ms may impact real-time applications.',
+                    lang === "zh"
+                      ? "一般来说，低于 50ms 为优秀，50-100ms 为良好，100-200ms 为一般，超过 200ms 会影响实时应用使用体验。"
+                      : "Generally, under 50ms is excellent, 50-100ms is good, 100-200ms is average, and above 200ms may impact real-time applications.",
                 },
               },
               {
-                '@type': 'Question',
-                name: lang === 'zh' ? '什么是 Jitter（抖动）？' : 'What is network jitter?',
+                "@type": "Question",
+                name:
+                  lang === "zh"
+                    ? "什么是 Jitter（抖动）？"
+                    : "What is network jitter?",
                 acceptedAnswer: {
-                  '@type': 'Answer',
+                  "@type": "Answer",
                   text:
-                    lang === 'zh'
-                      ? '抖动是延迟的波动幅度，数值越小代表连接越稳定。低于 10ms 对视频会议非常有利。'
-                      : 'Jitter measures the variation in latency. Lower jitter means a more stable connection. Under 10ms is great for video calls.',
+                    lang === "zh"
+                      ? "抖动是延迟的波动幅度，数值越小代表连接越稳定。低于 10ms 对视频会议非常有利。"
+                      : "Jitter measures the variation in latency. Lower jitter means a more stable connection. Under 10ms is great for video calls.",
                 },
               },
             ],
@@ -928,17 +1036,19 @@ export default function NetworkCheckClient({
         </p>
 
         {/* Size selector (visible before run) */}
-        {phase === 'idle' && (
+        {phase === "idle" && (
           <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-xs text-[var(--text-muted)]">{nc.speed_select}:</span>
+            <span className="text-xs text-[var(--text-muted)]">
+              {nc.speed_select}:
+            </span>
             {([1, 10, 50] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setSelectedSizeMb(s)}
                 className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
                   selectedSizeMb === s
-                    ? 'border-[var(--accent-color)] bg-[var(--accent-soft)] text-[var(--accent-color)]'
-                    : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-color)]/50'
+                    ? "border-[var(--accent-color)] bg-[var(--accent-soft)] text-[var(--accent-color)]"
+                    : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-color)]/50"
                 }`}
               >
                 {s} MB
@@ -948,7 +1058,7 @@ export default function NetworkCheckClient({
         )}
 
         {/* CTA */}
-        {phase === 'idle' && (
+        {phase === "idle" && (
           <button
             id="start-network-check"
             onClick={startCheck}
@@ -959,23 +1069,26 @@ export default function NetworkCheckClient({
           </button>
         )}
 
-        {phase === 'running' && (
+        {phase === "running" && (
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
               <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
               <span className="text-sm font-semibold text-[var(--text-secondary)]">
                 {nc.checking}
-                {currentStep ? ` — ${currentStep}` : ''}
+                {currentStep ? ` — ${currentStep}` : ""}
               </span>
             </div>
             {/* overall progress bar */}
             <div className="w-40 h-1.5 rounded-full bg-[var(--border-subtle)] overflow-hidden">
-              <div className="h-full rounded-full bg-[var(--accent-color)] animate-pulse" style={{ width: '60%' }} />
+              <div
+                className="h-full rounded-full bg-[var(--accent-color)] animate-pulse"
+                style={{ width: "60%" }}
+              />
             </div>
           </div>
         )}
 
-        {phase === 'done' && (
+        {phase === "done" && (
           <button
             id="recheck-network"
             onClick={startCheck}
@@ -988,16 +1101,29 @@ export default function NetworkCheckClient({
       </section>
 
       {/* Cards grid */}
-      {(phase === 'running' || phase === 'done') && (
+      {(phase === "running" || phase === "done") && (
         <section className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-16 grid gap-3 sm:gap-4">
           {/* 1. Network Info */}
-          <SectionCard title={nc.info_title} icon={<Globe className="w-4 h-4" />} phase={netInfoPhase} pendingText={currentStep === nc.info_title ? nc.checking : waitingText}>
+          <SectionCard
+            title={nc.info_title}
+            icon={<Globe className="w-4 h-4" />}
+            phase={netInfoPhase}
+            pendingText={
+              currentStep === nc.info_title ? nc.checking : waitingText
+            }
+          >
             {netInfo ? (
               <div className="grid sm:grid-cols-2 gap-x-8">
                 <div>
                   <MetaRow label={nc.info_ip} value={netInfo.ip} mono />
-                  {netInfo.ipv6 && <MetaRow label={nc.info_ipv6} value={netInfo.ipv6} mono />}
-                  <MetaRow label={nc.info_asn} value={netInfo.asn ? `AS${netInfo.asn}` : '—'} mono />
+                  {netInfo.ipv6 && (
+                    <MetaRow label={nc.info_ipv6} value={netInfo.ipv6} mono />
+                  )}
+                  <MetaRow
+                    label={nc.info_asn}
+                    value={netInfo.asn ? `AS${netInfo.asn}` : "—"}
+                    mono
+                  />
                   <MetaRow label={nc.info_org} value={netInfo.org} />
                   <MetaRow label={nc.info_country} value={netInfo.country} />
                 </div>
@@ -1005,22 +1131,38 @@ export default function NetworkCheckClient({
                   <MetaRow label={nc.info_city} value={netInfo.city} />
                   <MetaRow label={nc.info_colo} value={netInfo.colo} mono />
                   <MetaRow label={nc.info_timezone} value={netInfo.timezone} />
-                  <MetaRow label={nc.info_ua} value={netInfo.ua.split('/')[0] ?? netInfo.ua} />
+                  <MetaRow
+                    label={nc.info_ua}
+                    value={netInfo.ua.split("/")[0] ?? netInfo.ua}
+                  />
                 </div>
               </div>
             ) : null}
           </SectionCard>
 
           {/* 2. IPv6 Status */}
-          <SectionCard title={nc.ipv6_title} icon={<Layers className="w-4 h-4" />} phase={netInfoPhase} pendingText={currentStep === nc.info_title ? nc.checking : waitingText}>
+          <SectionCard
+            title={nc.ipv6_title}
+            icon={<Layers className="w-4 h-4" />}
+            phase={netInfoPhase}
+            pendingText={
+              currentStep === nc.info_title ? nc.checking : waitingText
+            }
+          >
             {netInfo ? (
               <div className="flex items-start gap-4">
                 <div
                   className={`flex shrink-0 items-center justify-center w-12 h-12 rounded-2xl ${
-                    netInfo.ipv6 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
+                    netInfo.ipv6
+                      ? "bg-emerald-500/10 text-emerald-500"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
                   }`}
                 >
-                  {netInfo.ipv6 ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+                  {netInfo.ipv6 ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6" />
+                  )}
                 </div>
                 <div>
                   <p className="font-semibold text-[var(--text-primary)] mb-1">
@@ -1035,7 +1177,14 @@ export default function NetworkCheckClient({
           </SectionCard>
 
           {/* 3. Latency */}
-          <SectionCard title={nc.ping_title} icon={<Activity className="w-4 h-4" />} phase={pingPhase} pendingText={currentStep === nc.ping_title ? nc.checking : waitingText}>
+          <SectionCard
+            title={nc.ping_title}
+            icon={<Activity className="w-4 h-4" />}
+            phase={pingPhase}
+            pendingText={
+              currentStep === nc.ping_title ? nc.checking : waitingText
+            }
+          >
             {pingResult ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1075,71 +1224,134 @@ export default function NetworkCheckClient({
           </SectionCard>
 
           {/* 4. Speed */}
-          <SectionCard title={nc.speed_title} icon={<Gauge className="w-4 h-4" />} phase={speedPhase} pendingText={currentStep === nc.speed_title ? nc.checking : waitingText}>
+          <SectionCard
+            title={nc.speed_title}
+            icon={<Gauge className="w-4 h-4" />}
+            phase={speedPhase}
+            pendingText={
+              currentStep === nc.speed_title ? nc.checking : waitingText
+            }
+          >
             <div className="space-y-5">
               {/* Download */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <Download className="w-4 h-4 text-[var(--accent-color)]" />
-                    <span className="text-xs font-semibold text-[var(--text-secondary)]">{nc.speed_download}</span>
+                    <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                      {nc.speed_download}
+                    </span>
                   </div>
                   {speedResult?.downloadMbps != null ? (
-                    <span className={`text-lg font-black ${speedQuality(speedResult.downloadMbps) === 'good' ? 'text-emerald-500' : speedQuality(speedResult.downloadMbps) === 'ok' ? 'text-amber-500' : 'text-red-400'}`}>
+                    <span
+                      className={`text-lg font-black ${speedQuality(speedResult.downloadMbps) === "good" ? "text-emerald-500" : speedQuality(speedResult.downloadMbps) === "ok" ? "text-amber-500" : "text-red-400"}`}
+                    >
                       {speedResult.downloadMbps.toFixed(1)}
-                      <span className="text-xs font-semibold text-[var(--text-muted)] ml-1">Mbps</span>
+                      <span className="text-xs font-semibold text-[var(--text-muted)] ml-1">
+                        Mbps
+                      </span>
                     </span>
-                  ) : speedPhase === 'loading' ? (
-                    <span className="text-xs text-[var(--text-muted)] animate-pulse">{nc.speed_testing_dl}</span>
+                  ) : speedPhase === "loading" ? (
+                    <span className="text-xs text-[var(--text-muted)] animate-pulse">
+                      {nc.speed_testing_dl}
+                    </span>
                   ) : null}
                 </div>
                 <SpeedBar value={speedResult?.downloadMbps ?? null} max={200} />
-                {speedPhase === 'loading' && dlProgress > 0 && dlProgress < 100 && (
-                  <p className="text-[10px] text-right mt-1 text-[var(--text-faint)]">{dlProgress}%</p>
-                )}
+                {speedPhase === "loading" &&
+                  dlProgress > 0 &&
+                  dlProgress < 100 && (
+                    <p className="text-[10px] text-right mt-1 text-[var(--text-faint)]">
+                      {dlProgress}%
+                    </p>
+                  )}
               </div>
-
-
             </div>
           </SectionCard>
 
           {/* 5. DNS / TLS Perf */}
-          <SectionCard title={nc.dns_perf_title} icon={<Clock className="w-4 h-4" />} phase={dnsPerfPhase} pendingText={nc.checking}>
+          <SectionCard
+            title={nc.dns_perf_title}
+            icon={<Clock className="w-4 h-4" />}
+            phase={dnsPerfPhase}
+            pendingText={nc.checking}
+          >
             {dnsPerfResult ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <StatBox
                     label={nc.dns_perf_dns}
-                    value={dnsPerfResult.dnsMs != null ? `${dnsPerfResult.dnsMs}` : null}
+                    value={
+                      dnsPerfResult.dnsMs != null
+                        ? `${dnsPerfResult.dnsMs}`
+                        : null
+                    }
                     unit="ms"
-                    quality={dnsPerfResult.dnsMs != null ? latencyQuality(dnsPerfResult.dnsMs) : undefined}
+                    quality={
+                      dnsPerfResult.dnsMs != null
+                        ? latencyQuality(dnsPerfResult.dnsMs)
+                        : undefined
+                    }
                   />
                   <StatBox
                     label={nc.dns_perf_tcp}
-                    value={dnsPerfResult.tcpMs != null ? `${dnsPerfResult.tcpMs}` : null}
+                    value={
+                      dnsPerfResult.tcpMs != null
+                        ? `${dnsPerfResult.tcpMs}`
+                        : null
+                    }
                     unit="ms"
-                    quality={dnsPerfResult.tcpMs != null ? latencyQuality(dnsPerfResult.tcpMs) : undefined}
+                    quality={
+                      dnsPerfResult.tcpMs != null
+                        ? latencyQuality(dnsPerfResult.tcpMs)
+                        : undefined
+                    }
                   />
                   <StatBox
                     label={nc.dns_perf_tls}
-                    value={dnsPerfResult.tlsMs != null ? `${dnsPerfResult.tlsMs}` : null}
+                    value={
+                      dnsPerfResult.tlsMs != null
+                        ? `${dnsPerfResult.tlsMs}`
+                        : null
+                    }
                     unit="ms"
-                    quality={dnsPerfResult.tlsMs != null ? latencyQuality(dnsPerfResult.tlsMs) : undefined}
+                    quality={
+                      dnsPerfResult.tlsMs != null
+                        ? latencyQuality(dnsPerfResult.tlsMs)
+                        : undefined
+                    }
                   />
                   <StatBox
                     label={nc.dns_perf_ttfb}
-                    value={dnsPerfResult.ttfbMs != null ? `${dnsPerfResult.ttfbMs}` : null}
+                    value={
+                      dnsPerfResult.ttfbMs != null
+                        ? `${dnsPerfResult.ttfbMs}`
+                        : null
+                    }
                     unit="ms"
-                    quality={dnsPerfResult.ttfbMs != null ? latencyQuality(dnsPerfResult.ttfbMs) : undefined}
+                    quality={
+                      dnsPerfResult.ttfbMs != null
+                        ? latencyQuality(dnsPerfResult.ttfbMs)
+                        : undefined
+                    }
                   />
                 </div>
-                <p className="mt-3 text-[10px] text-[var(--text-faint)]">{nc.dns_perf_note}</p>
+                <p className="mt-3 text-[10px] text-[var(--text-faint)]">
+                  {nc.dns_perf_note}
+                </p>
               </>
             ) : null}
           </SectionCard>
 
           {/* 6. Reachability */}
-          <SectionCard title={nc.reach_title} icon={<Globe className="w-4 h-4" />} phase={reachPhase} pendingText={currentStep === nc.reach_title ? nc.checking : waitingText}>
+          <SectionCard
+            title={nc.reach_title}
+            icon={<Globe className="w-4 h-4" />}
+            phase={reachPhase}
+            pendingText={
+              currentStep === nc.reach_title ? nc.checking : waitingText
+            }
+          >
             {reachability.length > 0 ? (
               <div className="grid sm:grid-cols-2 gap-x-6">
                 {reachability.map((item) => (
@@ -1149,22 +1361,30 @@ export default function NetworkCheckClient({
                   >
                     <div className="flex items-center gap-2.5">
                       <StatusDot status={item.status} />
-                      <span className="text-sm font-medium text-[var(--text-primary)]">{item.label}</span>
+                      <span className="text-sm font-medium text-[var(--text-primary)]">
+                        {item.label}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {item.latencyMs != null && (
-                        <span className="text-xs text-[var(--text-muted)]">{item.latencyMs}ms</span>
+                        <span className="text-xs text-[var(--text-muted)]">
+                          {item.latencyMs}ms
+                        </span>
                       )}
                       <span
                         className={`text-[10px] font-semibold uppercase tracking-wider ${
-                          item.status === 'ok'
-                            ? 'text-emerald-500'
-                            : item.status === 'slow'
-                              ? 'text-amber-500'
-                              : 'text-red-400'
+                          item.status === "ok"
+                            ? "text-emerald-500"
+                            : item.status === "slow"
+                              ? "text-amber-500"
+                              : "text-red-400"
                         }`}
                       >
-                        {item.status === 'ok' ? nc.reach_ok : item.status === 'slow' ? nc.reach_slow : nc.reach_failed}
+                        {item.status === "ok"
+                          ? nc.reach_ok
+                          : item.status === "slow"
+                            ? nc.reach_slow
+                            : nc.reach_failed}
                       </span>
                     </div>
                   </div>
@@ -1174,70 +1394,129 @@ export default function NetworkCheckClient({
           </SectionCard>
 
           {/* 7. Cloudflare Trace */}
-          <SectionCard title={nc.trace_title} icon={<Server className="w-4 h-4" />} phase={tracePhase} pendingText={currentStep === nc.trace_title ? nc.checking : waitingText}>
+          <SectionCard
+            title={nc.trace_title}
+            icon={<Server className="w-4 h-4" />}
+            phase={tracePhase}
+            pendingText={
+              currentStep === nc.trace_title ? nc.checking : waitingText
+            }
+          >
             {cfTrace ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <StatBox
                     label={nc.trace_warp}
-                    value={cfTrace.warp === 'plus' ? 'WARP+' : cfTrace.warp === 'on' ? nc.trace_warp_on : nc.trace_warp_off}
-                    quality={cfTrace.warp === 'plus' || cfTrace.warp === 'on' ? 'good' : 'ok'}
+                    value={
+                      cfTrace.warp === "plus"
+                        ? "WARP+"
+                        : cfTrace.warp === "on"
+                          ? nc.trace_warp_on
+                          : nc.trace_warp_off
+                    }
+                    quality={
+                      cfTrace.warp === "plus" || cfTrace.warp === "on"
+                        ? "good"
+                        : "ok"
+                    }
                   />
                   <StatBox
-                    label={nc.trace_gateway || 'Gateway'}
-                    value={cfTrace.gateway === 'on' ? 'On' : 'Off'}
-                    quality={cfTrace.gateway === 'on' ? 'good' : 'ok'}
+                    label={nc.trace_gateway || "Gateway"}
+                    value={cfTrace.gateway === "on" ? "On" : "Off"}
+                    quality={cfTrace.gateway === "on" ? "good" : "ok"}
                   />
-                  <StatBox label={nc.trace_colo} value={cfTrace.colo || '—'} quality="good" />
                   <StatBox
-                    label={nc.trace_kex || 'TLS/KEX'}
-                    value={cfTrace.kex && /mlkem|kyber/i.test(cfTrace.kex) ? 'Post-Quantum' : (cfTrace.kex || cfTrace.tls || '—')}
-                    quality={cfTrace.kex && /mlkem|kyber/i.test(cfTrace.kex) ? 'ok' : 'good'}
+                    label={nc.trace_colo}
+                    value={cfTrace.colo || "—"}
+                    quality="good"
+                  />
+                  <StatBox
+                    label={nc.trace_kex || "TLS/KEX"}
+                    value={
+                      cfTrace.kex && /mlkem|kyber/i.test(cfTrace.kex)
+                        ? "Post-Quantum"
+                        : cfTrace.kex || cfTrace.tls || "—"
+                    }
+                    quality={
+                      cfTrace.kex && /mlkem|kyber/i.test(cfTrace.kex)
+                        ? "ok"
+                        : "good"
+                    }
                   />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-x-8">
                   <MetaRow label={nc.info_ip} value={cfTrace.ip} mono />
                   <MetaRow label={nc.trace_http} value={cfTrace.http} mono />
                   <MetaRow label={nc.trace_tls} value={cfTrace.tls} mono />
-                  <MetaRow label={nc.trace_sni || 'SNI'} value={cfTrace.sni || '—'} mono />
-                  <MetaRow label={nc.info_country} value={cfTrace.loc || '—'} mono />
-                  <MetaRow label={nc.trace_kex || 'KEX'} value={cfTrace.kex || '—'} mono />
+                  <MetaRow
+                    label={nc.trace_sni || "SNI"}
+                    value={cfTrace.sni || "—"}
+                    mono
+                  />
+                  <MetaRow
+                    label={nc.info_country}
+                    value={cfTrace.loc || "—"}
+                    mono
+                  />
+                  <MetaRow
+                    label={nc.trace_kex || "KEX"}
+                    value={cfTrace.kex || "—"}
+                    mono
+                  />
                 </div>
                 <p className="text-[10px] leading-5 text-[var(--text-faint)]">
-                  {lang === 'zh' || lang === 'tw'
-                    ? 'Cloudflare Trace 反映当前请求经过 Cloudflare 时看到的连接信息；在非 Cloudflare 环境下会使用页面侧回退数据。'
-                    : lang === 'ja'
-                      ? 'Cloudflare Trace は、このリクエストが Cloudflare を通過した時点の接続情報です。Cloudflare 以外ではページ側のフォールバックデータを使います。'
-                      : 'Cloudflare Trace reflects connection details observed as this request passes through Cloudflare; non-Cloudflare paths use page-side fallback data.'}
+                  {lang === "zh" || false
+                    ? "Cloudflare Trace 反映当前请求经过 Cloudflare 时看到的连接信息；在非 Cloudflare 环境下会使用页面侧回退数据。"
+                    : false
+                      ? "Cloudflare Trace は、このリクエストが Cloudflare を通過した時点の接続情報です。Cloudflare 以外ではページ側のフォールバックデータを使います。"
+                      : "Cloudflare Trace reflects connection details observed as this request passes through Cloudflare; non-Cloudflare paths use page-side fallback data."}
                 </p>
               </div>
             ) : null}
           </SectionCard>
 
           {/* 8. DNS Resolver Latency */}
-          <SectionCard title={nc.dns_latency_title || 'DNS Resolver Latency'} icon={<Radio className="w-4 h-4" />} phase={dnsLatencyPhase} pendingText={nc.checking}>
+          <SectionCard
+            title={nc.dns_latency_title || "DNS Resolver Latency"}
+            icon={<Radio className="w-4 h-4" />}
+            phase={dnsLatencyPhase}
+            pendingText={nc.checking}
+          >
             {dnsLatency.length > 0 ? (
               <div className="grid sm:grid-cols-2 gap-3">
                 {dnsLatency.map((item) => (
-                  <div key={item.resolver} className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] bg-white/60 px-4 py-3">
+                  <div
+                    key={item.resolver}
+                    className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] bg-white/60 px-4 py-3"
+                  >
                     <div>
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">{item.provider}</p>
-                      <p className="font-mono text-[10px] text-[var(--text-muted)]">{item.resolver}</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
+                        {item.provider}
+                      </p>
+                      <p className="font-mono text-[10px] text-[var(--text-muted)]">
+                        {item.resolver}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-black ${item.status === 'ok' ? 'text-emerald-500' : 'text-red-400'}`}>
-                        {item.latencyMs !== null ? `${item.latencyMs} ms` : 'ERR'}
+                      <p
+                        className={`text-sm font-black ${item.status === "ok" ? "text-emerald-500" : "text-red-400"}`}
+                      >
+                        {item.latencyMs !== null
+                          ? `${item.latencyMs} ms`
+                          : "ERR"}
                       </p>
-                      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-faint)]">{item.status}</p>
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                        {item.status}
+                      </p>
                     </div>
                   </div>
                 ))}
                 <p className="sm:col-span-2 text-[10px] leading-5 text-[var(--text-faint)]">
-                  {lang === 'zh' || lang === 'tw'
-                    ? '这里展示的是 OpsKitPro 服务器侧到公共 DoH 解析器的延迟，不等同于你本机或手机当前 DNS 的真实延迟。'
-                    : lang === 'ja'
-                      ? 'ここに表示されるのは OpsKitPro サーバー側から Public DoH リゾルバーへの遅延で、端末ローカル DNS の実測値ではありません。'
-                      : 'These values are measured from the OpsKitPro server to public DoH resolvers, not from your local device DNS path.'}
+                  {lang === "zh" || false
+                    ? "这里展示的是 OpsKitPro 服务器侧到公共 DoH 解析器的延迟，不等同于你本机或手机当前 DNS 的真实延迟。"
+                    : false
+                      ? "ここに表示されるのは OpsKitPro サーバー側から Public DoH リゾルバーへの遅延で、端末ローカル DNS の実測値ではありません。"
+                      : "These values are measured from the OpsKitPro server to public DoH resolvers, not from your local device DNS path."}
                 </p>
               </div>
             ) : null}
@@ -1247,11 +1526,15 @@ export default function NetworkCheckClient({
           <div className="op-card rounded-2xl overflow-hidden border-[var(--accent-color)]/20 shadow-[0_0_40px_-10px_rgba(16,185,129,0.15)]">
             <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--accent-soft)]">
               <Zap className="w-4 h-4 text-[var(--accent-color)]" />
-              <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">{nc.ai_title}</h2>
-              {!analysis && phase === 'running' && (
+              <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
+                {nc.ai_title}
+              </h2>
+              {!analysis && phase === "running" && (
                 <Loader2 className="w-4 h-4 text-[var(--accent-color)] animate-spin" />
               )}
-              {analysis && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+              {analysis && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              )}
             </div>
 
             <div className="p-5">
@@ -1260,7 +1543,10 @@ export default function NetworkCheckClient({
                   {/* Score + Summary */}
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                     <div className="flex flex-col items-center gap-1 shrink-0">
-                      <ScoreRing score={analysis.score} grade={analysis.grade} />
+                      <ScoreRing
+                        score={analysis.score}
+                        grade={analysis.grade}
+                      />
                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {nc.ai_score}
                       </p>
@@ -1279,7 +1565,10 @@ export default function NetworkCheckClient({
                       </p>
                       <ul className="space-y-1.5">
                         {analysis.suitableFor.map((s) => (
-                          <li key={s} className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                          <li
+                            key={s}
+                            className="flex items-center gap-2 text-xs text-[var(--text-secondary)]"
+                          >
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             {s}
                           </li>
@@ -1295,14 +1584,19 @@ export default function NetworkCheckClient({
                       {analysis.potentialIssues.length > 0 ? (
                         <ul className="space-y-1.5">
                           {analysis.potentialIssues.map((s) => (
-                            <li key={s} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
+                            <li
+                              key={s}
+                              className="flex items-start gap-2 text-xs text-[var(--text-secondary)]"
+                            >
                               <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                               {s}
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-xs text-emerald-500">✓ 未发现明显问题</p>
+                        <p className="text-xs text-emerald-500">
+                          ✓ 未发现明显问题
+                        </p>
                       )}
                     </div>
 
@@ -1313,7 +1607,10 @@ export default function NetworkCheckClient({
                       </p>
                       <ul className="space-y-1.5">
                         {analysis.recommendations.map((s) => (
-                          <li key={s} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
+                          <li
+                            key={s}
+                            className="flex items-start gap-2 text-xs text-[var(--text-secondary)]"
+                          >
                             <ChevronRight className="w-3.5 h-3.5 text-sky-500 shrink-0 mt-0.5" />
                             {s}
                           </li>
@@ -1324,7 +1621,7 @@ export default function NetworkCheckClient({
                 </div>
               ) : (
                 <div className="py-8 text-center text-sm text-[var(--text-muted)]">
-                  {phase === 'running' ? (
+                  {phase === "running" ? (
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="w-6 h-6 text-[var(--accent-color)] animate-spin" />
                       <span>{nc.checking}...</span>
@@ -1340,22 +1637,69 @@ export default function NetworkCheckClient({
       )}
 
       {/* Landing placeholder when idle */}
-      {phase === 'idle' && (
+      {phase === "idle" && (
         <section className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-16">
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              { icon: <Wifi className="w-5 h-5" />, label: lang === 'zh' ? '下载速度' : 'Download', desc: lang === 'zh' ? '实时速度测量' : 'Real-time speed measurement' },
-              { icon: <Activity className="w-5 h-5" />, label: lang === 'zh' ? '延迟 & 抖动' : 'Latency & Jitter', desc: lang === 'zh' ? '10次采样精准测量' : '10-sample precision ping' },
-              { icon: <Shield className="w-5 h-5" />, label: lang === 'zh' ? 'IPv6 & 安全' : 'IPv6 & Security', desc: lang === 'zh' ? '网络配置全面检测' : 'Full network configuration audit' },
-              { icon: <Globe className="w-5 h-5" />, label: lang === 'zh' ? '可达性检测' : 'Reachability', desc: lang === 'zh' ? '8个全球站点探测' : '8 global site probes' },
-              { icon: <BarChart3 className="w-5 h-5" />, label: lang === 'zh' ? 'DNS / TLS 性能' : 'DNS / TLS Perf', desc: lang === 'zh' ? 'Performance API 数据' : 'Performance API data' },
-              { icon: <Zap className="w-5 h-5" />, label: lang === 'zh' ? 'AI 诊断报告' : 'AI Diagnosis', desc: lang === 'zh' ? '评分 + 优化建议' : 'Score + recommendations' },
+              {
+                icon: <Wifi className="w-5 h-5" />,
+                label: lang === "zh" ? "下载速度" : "Download",
+                desc:
+                  lang === "zh"
+                    ? "实时速度测量"
+                    : "Real-time speed measurement",
+              },
+              {
+                icon: <Activity className="w-5 h-5" />,
+                label: lang === "zh" ? "延迟 & 抖动" : "Latency & Jitter",
+                desc:
+                  lang === "zh"
+                    ? "10次采样精准测量"
+                    : "10-sample precision ping",
+              },
+              {
+                icon: <Shield className="w-5 h-5" />,
+                label: lang === "zh" ? "IPv6 & 安全" : "IPv6 & Security",
+                desc:
+                  lang === "zh"
+                    ? "网络配置全面检测"
+                    : "Full network configuration audit",
+              },
+              {
+                icon: <Globe className="w-5 h-5" />,
+                label: lang === "zh" ? "可达性检测" : "Reachability",
+                desc:
+                  lang === "zh" ? "8个全球站点探测" : "8 global site probes",
+              },
+              {
+                icon: <BarChart3 className="w-5 h-5" />,
+                label: lang === "zh" ? "DNS / TLS 性能" : "DNS / TLS Perf",
+                desc:
+                  lang === "zh"
+                    ? "Performance API 数据"
+                    : "Performance API data",
+              },
+              {
+                icon: <Zap className="w-5 h-5" />,
+                label: lang === "zh" ? "AI 诊断报告" : "AI Diagnosis",
+                desc:
+                  lang === "zh" ? "评分 + 优化建议" : "Score + recommendations",
+              },
             ].map((item) => (
-              <div key={item.label} className="glass-card rounded-2xl p-5 flex gap-4">
-                <div className="op-icon-box w-10 h-10 shrink-0">{item.icon}</div>
+              <div
+                key={item.label}
+                className="glass-card rounded-2xl p-5 flex gap-4"
+              >
+                <div className="op-icon-box w-10 h-10 shrink-0">
+                  {item.icon}
+                </div>
                 <div>
-                  <p className="text-sm font-semibold text-[var(--text-primary)] mb-0.5">{item.label}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{item.desc}</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)] mb-0.5">
+                    {item.label}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             ))}
@@ -1363,5 +1707,5 @@ export default function NetworkCheckClient({
         </section>
       )}
     </main>
-  )
+  );
 }

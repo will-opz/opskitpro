@@ -1,54 +1,58 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { Terminal, Play, Clock, Hash, Zap, ChevronDown } from 'lucide-react'
-import { useJqQuery, JQ_SNIPPETS } from '../hooks'
-import type { JqResult } from '../hooks'
+import { useState, useEffect, useCallback } from "react";
+import { Terminal, Play, Clock, Hash, Zap, ChevronDown } from "lucide-react";
+import { useJqQuery, JQ_SNIPPETS } from "../hooks";
+import type { JqResult } from "../hooks";
 
 interface JqQueryPanelProps {
-  inputJson: string
-  onOutputChange?: (output: string) => void
-  dict: any
+  inputJson: string;
+  onOutputChange?: (output: string) => void;
+  dict: any;
 }
 
-export function JqQueryPanel({ inputJson, onOutputChange, dict }: JqQueryPanelProps) {
-  const [filter, setFilter] = useState('.')
-  const [result, setResult] = useState<JqResult | null>(null)
-  const [showSnippets, setShowSnippets] = useState(false)
-  const { runQuery, isLoading, isReady } = useJqQuery()
+export function JqQueryPanel({
+  inputJson,
+  onOutputChange,
+  dict,
+}: JqQueryPanelProps) {
+  const [filter, setFilter] = useState(".");
+  const [result, setResult] = useState<JqResult | null>(null);
+  const [showSnippets, setShowSnippets] = useState(false);
+  const { runQuery, isLoading, isReady } = useJqQuery();
 
   // Auto-run query when input or filter changes (debounced)
   useEffect(() => {
-    if (!isReady || !inputJson.trim()) return
+    if (!isReady || !inputJson.trim()) return;
 
     const timer = setTimeout(async () => {
-      const res = await runQuery(inputJson, filter)
-      setResult(res)
+      const res = await runQuery(inputJson, filter);
+      setResult(res);
       if (!res.error && onOutputChange) {
-        onOutputChange(res.output)
+        onOutputChange(res.output);
       }
-    }, 300)
+    }, 300);
 
-    return () => clearTimeout(timer)
-  }, [inputJson, filter, isReady, runQuery, onOutputChange])
+    return () => clearTimeout(timer);
+  }, [inputJson, filter, isReady, runQuery, onOutputChange]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Cmd/Ctrl + Enter to run immediately
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault()
-      runQuery(inputJson, filter).then(res => {
-        setResult(res)
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      runQuery(inputJson, filter).then((res) => {
+        setResult(res);
         if (!res.error && onOutputChange) {
-          onOutputChange(res.output)
+          onOutputChange(res.output);
         }
-      })
+      });
     }
-  }
+  };
 
   const applySnippet = (snippetFilter: string) => {
-    setFilter(snippetFilter)
-    setShowSnippets(false)
-  }
+    setFilter(snippetFilter);
+    setShowSnippets(false);
+  };
 
   return (
     <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50/80 to-white">
@@ -57,9 +61,11 @@ export function JqQueryPanel({ inputJson, onOutputChange, dict }: JqQueryPanelPr
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-zinc-400">
             <Terminal className="w-4 h-4" />
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider">JQ</span>
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider">
+              JQ
+            </span>
           </div>
-          
+
           <div className="flex-1 relative">
             <input
               type="text"
@@ -87,7 +93,7 @@ export function JqQueryPanel({ inputJson, onOutputChange, dict }: JqQueryPanelPr
               <span className="hidden sm:inline">Snippets</span>
               <ChevronDown className="w-3 h-3" />
             </button>
-            
+
             {showSnippets && (
               <div className="absolute right-0 top-full mt-1 w-64 bg-white border border-zinc-200 rounded-lg shadow-xl z-50 overflow-hidden">
                 <div className="max-h-64 overflow-y-auto">
@@ -98,12 +104,18 @@ export function JqQueryPanel({ inputJson, onOutputChange, dict }: JqQueryPanelPr
                       className="w-full px-3 py-2 text-left hover:bg-emerald-50 transition-colors border-b border-zinc-50 last:border-0"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-zinc-700">{snippet.label}</span>
+                        <span className="text-xs font-semibold text-zinc-700">
+                          {snippet.label}
+                        </span>
                         <code className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                          {snippet.filter.length > 20 ? snippet.filter.slice(0, 20) + '...' : snippet.filter}
+                          {snippet.filter.length > 20
+                            ? snippet.filter.slice(0, 20) + "..."
+                            : snippet.filter}
                         </code>
                       </div>
-                      <p className="text-[10px] text-zinc-400 mt-0.5">{snippet.desc}</p>
+                      <p className="text-[10px] text-zinc-400 mt-0.5">
+                        {snippet.desc}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -133,7 +145,8 @@ export function JqQueryPanel({ inputJson, onOutputChange, dict }: JqQueryPanelPr
               <>
                 <span className="text-emerald-600 flex items-center gap-1">
                   <Hash className="w-3 h-3" />
-                  {result.matchCount} {result.matchCount === 1 ? 'match' : 'matches'}
+                  {result.matchCount}{" "}
+                  {result.matchCount === 1 ? "match" : "matches"}
                 </span>
                 <span className="text-zinc-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
@@ -145,5 +158,5 @@ export function JqQueryPanel({ inputJson, onOutputChange, dict }: JqQueryPanelPr
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,66 +1,72 @@
-'use client'
+"use client";
 
-import { useRef, useMemo, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 
 interface JsonEditorProps {
-  value: string
-  onChange: (value: string) => void
-  onValidate: (value: string) => void
-  placeholder?: string
+  value: string;
+  onChange: (value: string) => void;
+  onValidate: (value: string) => void;
+  placeholder?: string;
 }
 
 export interface JsonEditorRef {
-  focus: () => void
+  focus: () => void;
 }
 
 export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
   function JsonEditor({ value, onChange, onValidate, placeholder }, ref) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const lineNumberRef = useRef<HTMLDivElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const lineNumberRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
-      focus: () => textareaRef.current?.focus()
-    }))
+      focus: () => textareaRef.current?.focus(),
+    }));
 
-    const lineCount = useMemo(() => value ? value.split('\n').length : 1, [value])
+    const lineCount = useMemo(
+      () => (value ? value.split("\n").length : 1),
+      [value],
+    );
 
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newValue = e.target.value
-      onChange(newValue)
-      onValidate(newValue)
-    }
+      const newValue = e.target.value;
+      onChange(newValue);
+      onValidate(newValue);
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Tab') {
-        e.preventDefault()
-        const ta = textareaRef.current
-        if (!ta) return
-        const start = ta.selectionStart
-        const end = ta.selectionEnd
-        const newValue = value.substring(0, start) + '  ' + value.substring(end)
-        onChange(newValue)
-        onValidate(newValue)
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const ta = textareaRef.current;
+        if (!ta) return;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const newValue =
+          value.substring(0, start) + "  " + value.substring(end);
+        onChange(newValue);
+        onValidate(newValue);
         requestAnimationFrame(() => {
-          ta.selectionStart = ta.selectionEnd = start + 2
-        })
+          ta.selectionStart = ta.selectionEnd = start + 2;
+        });
       }
-    }
+    };
 
     const handleScroll = () => {
       if (textareaRef.current && lineNumberRef.current) {
-        lineNumberRef.current.scrollTop = textareaRef.current.scrollTop
+        lineNumberRef.current.scrollTop = textareaRef.current.scrollTop;
       }
-    }
+    };
 
     return (
       <div className="relative flex">
-        <div 
+        <div
           ref={lineNumberRef}
           className="hidden sm:flex flex-col items-end px-3 py-6 bg-zinc-50/50 border-r border-zinc-100 text-[11px] font-mono text-zinc-300 select-none overflow-hidden leading-relaxed shrink-0 min-w-[3rem]"
-          style={{ height: value ? undefined : '400px' }}
+          style={{ height: value ? undefined : "400px" }}
         >
           {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i} className="leading-relaxed">{i + 1}</div>
+            <div key={i} className="leading-relaxed">
+              {i + 1}
+            </div>
           ))}
         </div>
         <textarea
@@ -75,6 +81,6 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
           style={{ tabSize: 2 }}
         />
       </div>
-    )
-  }
-)
+    );
+  },
+);

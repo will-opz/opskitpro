@@ -4,7 +4,7 @@ export const ALL_LOCALES = [...ACTIVE_LOCALES, ...RETIRED_LOCALES] as const
 
 export type ActiveLocale = (typeof ACTIVE_LOCALES)[number]
 export type RetiredLocale = (typeof RETIRED_LOCALES)[number]
-export type Locale = (typeof ALL_LOCALES)[number]
+export type Locale = ActiveLocale
 
 export const DEFAULT_LOCALE: ActiveLocale = 'en'
 

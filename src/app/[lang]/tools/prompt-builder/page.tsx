@@ -1,12 +1,16 @@
-import { Metadata } from 'next'
-import { getDictionary } from '@/dictionaries'
-import { SiteHeader } from '@/components/SiteHeader'
-import { SiteFooter } from '@/components/SiteFooter'
-import PromptBuilderClient from './prompt-builder-client'
+import { Metadata } from "next";
+import { getDictionary } from "@/dictionaries";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import PromptBuilderClient from "./prompt-builder-client";
 
-export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
 
   return {
     title: `${dict.tools.prompt_builder_title} - OpsKitPro`,
@@ -15,12 +19,16 @@ export async function generateMetadata({ params }: { params: { lang: string } })
       title: `${dict.tools.prompt_builder_title} - OpsKitPro`,
       description: dict.tools.prompt_builder_desc,
     },
-  }
+  };
 }
 
-export default async function PromptBuilderPage({ params }: { params: { lang: string } }) {
-  const lang = (params.lang || "en") as "zh" | "en" | "ja" | "tw";
-  const dict = await getDictionary(lang)
+export default async function PromptBuilderPage({
+  params,
+}: {
+  params: { lang: string };
+}) {
+  const lang = (params.lang || "en") as "zh" | "en";
+  const dict = await getDictionary(lang);
 
   return (
     <>
@@ -28,5 +36,5 @@ export default async function PromptBuilderPage({ params }: { params: { lang: st
       <PromptBuilderClient dict={dict} lang={lang} />
       <SiteFooter dict={dict} />
     </>
-  )
+  );
 }
