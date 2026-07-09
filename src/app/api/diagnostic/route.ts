@@ -233,6 +233,7 @@ const fetchDnsJson = async (
 ) =>
   fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=${type}`, {
     headers: { accept: "application/dns-json" },
+    cache: "no-store",
     signal: AbortSignal.timeout(timeoutMs),
   })
     .then((response) => response.json())
@@ -258,6 +259,7 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
     const response = await fetch(currentUrl, {
       method: "GET",
       redirect: "manual",
+      cache: "no-store",
       headers: { "User-Agent": "OpsKitPro-Diagnostic/1.0" },
       signal: AbortSignal.timeout(5000),
     });
@@ -637,12 +639,14 @@ export async function GET(request: NextRequest | Request) {
               const [aData, aaaaData] = await Promise.all([
                 fetch(r.url, {
                   headers: r.headers,
+                  cache: "no-store",
                   signal: AbortSignal.timeout(3000),
                 })
                   .then((res) => res.json())
                   .catch(() => null),
                 fetch(r.url.replace("type=A", "type=AAAA"), {
                   headers: r.headers,
+                  cache: "no-store",
                   signal: AbortSignal.timeout(3000),
                 })
                   .then((res) => res.json())
@@ -752,6 +756,7 @@ export async function GET(request: NextRequest | Request) {
           fetch(redirectTrace.finalUrl, {
             method: "GET",
             redirect: "manual",
+            cache: "no-store",
             headers: { "User-Agent": "OpsKitPro-Diagnostic/1.0" },
             signal: AbortSignal.timeout(8000),
           }).then(async (res) => {
@@ -820,6 +825,7 @@ export async function GET(request: NextRequest | Request) {
           Accept: "application/rdap+json",
           "User-Agent": "OpsKitPro-Diagnostic/1.0",
         },
+        cache: "no-store",
         signal: AbortSignal.timeout(3000),
       })
         .then((r) => (r.ok ? r.json() : null))
@@ -925,6 +931,7 @@ export async function GET(request: NextRequest | Request) {
     } else {
       try {
         const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, {
+          cache: "no-store",
           signal: AbortSignal.timeout(1800),
         }).then((r) => r.json());
         geo = {

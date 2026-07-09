@@ -23,6 +23,7 @@ export async function performHttpCheck(urlStr: string) {
       const response = await fetch(currentUrl, {
         method: "GET",
         redirect: "manual",
+        cache: "no-store",
         signal: AbortSignal.timeout(5000), // 5 seconds per hop
         headers: {
           "User-Agent":
