@@ -1,0 +1,118 @@
+---
+title: "为什么移除 Wrangler Workers，但仍然保留 Cloudflare 边缘层"
+summary: "OpsKitPro 把产品运行时迁移到 Lightsail standalone Node，但 Cloudflare 仍然作为公网 DNS、TLS、CDN 和代理层保留在源站前面。"
+publishedAt: "2026-07-09"
+readTime: "8 min"
+category: "Engineering"
+tags: ["cloudflare", "lightsail", "nextjs", "deployment", "architecture"]
+coverImage: "/blog-covers/services-standardization.svg"
+accent: "from-orange-500/10 via-sky-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/api"
+related: ["services-deployment", "cloudflare-522", "api-v0-release"]
+---
+
+## 架构变化了，但不是很多人第一反应的那种变化
+
+当听到一个项目移除了 Wrangler，或者不再部署到 Cloudflare Workers，很多人会自然理解成：这个项目完全不用 Cloudflare 了。
+
+OpsKitPro 不是这样。
+
+当前生产链路是：
+
+```text
+User -> Cloudflare -> Lightsail -> Next.js standalone Node
+```
+
+Cloudflare 仍然是公网边缘层：DNS、TLS 入口、CDN/缓存层、代理层，以及保护私有 Admin 的 Zero Trust 层。变化的是应用运行时。产品不再通过 Wrangler 部署成 OpenNext/Worker，而是作为 standalone Node.js 应用运行在 AWS Lightsail 上，并放在 Cloudflare 后面。
+
+这个区别很重要，因为这次调整的原因是运行时匹配度，而不是放弃 Cloudflare。
+
+## 为什么 Workers 不再适合作为产品运行时
+
+OpsKitPro 一开始是一个轻量公开工具站。对于静态页面和简单边缘逻辑，Cloudflare Workers 很有吸引力：全球入口快，部署简单，运维面也小。
+
+但产品方向逐渐变成更复杂的诊断工具：
+
+- 实时 DNS 和 HTTP 探测
+- 基于 Node TLS API 的证书检查
+- 带安全约束的跳转链追踪
+- 公开 JSON API
+- SSRF 防护和 route 级限流
+- 可导出的诊断报告
+- 围绕 analytics 和运营的私有中控能力
+
+这些功能更适合标准 Node.js 服务端环境。有些在 edge runtime 里会比较别扭，有些在普通进程、Nginx 和 Linux 主机后面更容易测试、打包和运维。
+
+问题不再是“哪个平台更酷”，而是“哪个运行时能让诊断能力继续增长，而不用每加一个功能都绕平台限制”。
+
+## Lightsail 给 OpsKitPro 带来了什么
+
+这里选择 Lightsail，重点其实是“无聊但稳定”。
+
+它提供一个稳定的 Linux 主机、Nginx、standalone Next.js 进程、可预测的打包方式，以及足够标准的 Node API 行为。
+
+这让很多工作流变简单：
+
+- 打包 Next.js standalone build
+- 像普通服务一样部署
+- 公开路由不经过 Zero Trust
+- `/admin` 和私有区域继续受保护
+- 从 Nginx 读取 origin logs
+- 把 origin logs 和 Cloudflare edge analytics 对照分析
+
+对一人产品来说，基础设施的“无聊”经常是一种优点。它减少了故障时需要记住的平台特殊行为。
+
+## 为什么 Cloudflare 仍然留在边缘
+
+移除 Worker runtime，并不等于移除 Cloudflare 的价值。
+
+Cloudflare 仍然提供 OpsKitPro 需要的公网边缘能力：
+
+- DNS 管理
+- 公网 TLS 入口
+- 静态页面 CDN 和缓存行为
+- 请求元数据和边缘诊断信息
+- 必要时的 WAF 和 bot 控制
+- 用 Cloudflare Access 保护私有 Admin 路径
+- 在公网流量和源站基础设施之间建立清晰边界
+
+所以在线上响应头里看到 `server: cloudflare` 是预期行为。它说明请求仍然先进入公网边缘，再回源到 Lightsail。
+
+当前模型不是 “Cloudflare 或 Lightsail 二选一”，而是 Cloudflare 在 Lightsail 前面。
+
+## 更清楚的职责边界
+
+现在的拆分更容易理解：
+
+- Cloudflare 负责公网边缘能力。
+- Lightsail 承载产品运行时。
+- Nginx 接收回源流量并提供 origin logs。
+- Next.js 提供公开页面和公开 API routes。
+- 私有控制面不放在公开产品仓库里。
+
+这也符合仓库边界。公开的 `opskitpro` 仓库只放产品代码和公开文档。私有 analytics、自动化、凭证和运营状态都属于控制面仓库。
+
+这套架构没有那么“炫”，但边界更清楚。
+
+## 这对排障意味着什么
+
+这套架构也让故障更容易分类。
+
+如果用户看到 Cloudflare 522，说明用户已经到达 Cloudflare，但 Cloudflare 没能在预期时间内完成到源站的连接。这时应该检查 Cloudflare 到 Lightsail 的路径、源站健康、防火墙规则、Nginx 或 Node 服务。
+
+如果静态页面慢，就看 Cloudflare 缓存行为和 Next.js 静态输出。
+
+如果 API route 失败，就看 Node 进程、route 日志、限流逻辑和 origin 请求路径。
+
+如果 Admin 访问失败，就看 Cloudflare Access 和不带语言前缀的 `/admin` 路由边界。
+
+每一层都有自己的职责。这就是新架构最大的价值。
+
+## 这次调整的经验
+
+移除 Wrangler，不是否定 Cloudflare，而是一次运行时决策。
+
+OpsKitPro 保留 Cloudflare 最适合当前产品的位置：边缘、DNS、TLS、缓存、代理和访问控制。应用运行时迁到 Lightsail，是因为更复杂的诊断能力和 Node API 在那里更合适。
+
+对小产品来说，最好的架构往往不是最炫的架构，而是下一次故障来临时最容易理解的架构。

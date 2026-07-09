@@ -1,0 +1,91 @@
+---
+title: "每个网络指标都需要说明观测点"
+summary: "如果把浏览器侧、CDN 边缘侧和服务端探测结果混在一起展示，网络诊断很容易变得误导。"
+publishedAt: "2026-07-09"
+readTime: "7 min"
+category: "Engineering"
+tags: ["network", "sre", "cloudflare", "dns", "diagnostics"]
+coverImage: "/blog-covers/network-doctor.svg"
+accent: "from-cyan-500/10 via-emerald-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/network-check"
+related: ["network-doctor-upgrade", "cloudflare-dual-stack", "ip-dns-module"]
+---
+
+## 网络结果不只是一个数字
+
+很多网络工具会把结果展示得像一个全局事实：
+
+- 延迟是 42 ms
+- DNS 花了 80 ms
+- 服务可达
+- 用户连接到了某个边缘节点
+
+但这些说法只有在知道测量位置时才有意义。
+
+用户浏览器测到的延迟，不等于服务端探针测到的延迟。公共 DoH resolver 的查询延迟，不等于用户本地 resolver 的延迟。Cloudflare edge colo，也不等于源站所在区域。如果工具隐藏这些区别，一个正确的测量结果也可能被用户理解成错误答案。
+
+所以 OpsKitPro 会把观测来源作为 Network Doctor 的一等信息。
+
+## Your Device、Edge 和 Probe
+
+一次有用的网络诊断，通常至少混合三种视角。
+
+**Your Device** 是运行工具的浏览器或客户端。它能观察用户设备侧的连接、公网 IP 上下文、部分浏览器能力，以及用户到公网入口的状态。
+
+**Cloudflare Edge** 是 OpsKitPro 的公网入口层。它可以通过 Cloudflare Trace 暴露 colo、WARP 状态、Gateway 状态、TLS 线索和请求元数据。
+
+**OpsKitPro Probe** 是服务端诊断路径。它可以从 OpsKitPro 运行环境发起后端 fetch、DNS 查询、可达性测试、TLS 探测和 API 检查。
+
+这三种视角都很有用，但任何一种都不应该冒充另一种。
+
+## 标签可以避免错误结论
+
+假设一个东京用户打开网络检查页面。浏览器可能看到自己连接到附近 Cloudflare edge，速度很快。与此同时，OpsKitPro 服务端探针可能从自己的部署区域测试第三方服务。公共 DNS 延迟检查可能从服务端去查询多个 public resolver。
+
+这三个结果可以同时成立：
+
+- 用户到边缘的连接是健康的
+- 从探针到第三方服务的路径比较慢
+- 某个公共 resolver 比另一个慢
+
+但如果 UI 只写一句“网络慢”，这个结论就没有意义了。哪里慢？到什么目标慢？从哪个路径看起来慢？
+
+标签不是装饰，它是数据的一部分。
+
+## Network Doctor 的命名调整
+
+OpsKitPro 之前在可达性区域使用过类似 “Global Reachability” 的表述。这个名字比真实测量范围更大。
+
+后来这个区域改名为 **Service Reachability**，因为它表达的是从 OpsKitPro 观测路径检查部分服务是否可达。这个结果仍然有用，但它不是在承诺全世界每个区域都看到同样结果。
+
+这个小命名变化，其实对应一个更大的规则：网络诊断不要过度承诺。
+
+## DNS 延迟是一个典型例子
+
+DNS 特别容易被误读。
+
+如果工具从后端测量多个公共 resolver 的延迟，这个结果可以帮助比较这些 resolver 在后端环境里的表现。但它不能直接代表用户家用路由器、公司内网 DNS、ISP resolver 或浏览器 DNS 缓存的速度。
+
+在故障中，这个区别很重要。某个域名在公共 resolver 看起来健康，但公司内网 resolver 可能仍然返回旧记录。或者用户本地 resolver 很慢，但全球公共 resolver 都很正常。
+
+解决方式不是隐藏这个结果，而是诚实地标注它。
+
+## 这如何影响 Network Doctor
+
+OpsKitPro Network Doctor 会让每个区域尽量回答两个问题：
+
+- 我们观察到了什么？
+- 我们是从哪里观察到的？
+
+这意味着 Cloudflare Trace 数据应该作为边缘/请求上下文展示。浏览器侧信息应该作为设备上下文展示。服务端检查应该作为 OpsKitPro Probe 上下文展示。
+
+页面会因此稍微更明确，但对真实排障来说更安全。
+
+## 把结果当成地图，而不是判决书
+
+打开 [Network Doctor](/tools/network-check)，阅读每个指标时都先看它的观测点。
+
+如果用户设备侧正常，但服务端服务检查失败，就应该检查探针到目标之间的路径。如果 Cloudflare Trace 显示异常 colo 或 Gateway 状态，就应该检查边缘路由。如果 DNS resolver 结果不一致，就先看 resolver 行为，而不是直接归因到应用。
+
+网络诊断最有价值的形态，不是给一个单一判决，而是画出不同视角的地图。

@@ -1,0 +1,118 @@
+---
+title: "Why We Retired Wrangler Workers but Kept Cloudflare at the Edge"
+summary: "OpsKitPro moved its product runtime to Lightsail standalone Node, but Cloudflare still remains the public DNS, TLS, CDN, and proxy layer in front of the origin."
+publishedAt: "2026-07-09"
+readTime: "8 min"
+category: "Engineering"
+tags: ["cloudflare", "lightsail", "nextjs", "deployment", "architecture"]
+coverImage: "/blog-covers/services-standardization.svg"
+accent: "from-orange-500/10 via-sky-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/api"
+related: ["services-deployment", "cloudflare-522", "api-v0-release"]
+---
+
+## The architecture changed, but not in the obvious way
+
+When people hear that a project removed Wrangler or stopped deploying to Cloudflare Workers, it is easy to assume Cloudflare was removed entirely.
+
+That is not what happened with OpsKitPro.
+
+The current production path is:
+
+```text
+User -> Cloudflare -> Lightsail -> Next.js standalone Node
+```
+
+Cloudflare still remains the public edge: DNS, TLS entrypoint, CDN/cache layer, proxy, and Zero Trust layer for private admin surfaces. What changed is the application runtime. The product no longer runs as an OpenNext/Worker deployment managed by Wrangler. It runs as a standalone Node.js application on AWS Lightsail behind Cloudflare.
+
+That distinction matters because the reasons for the change were about runtime fit, not about abandoning Cloudflare.
+
+## Why Workers became the wrong runtime for this product
+
+OpsKitPro started as a lightweight public tool site. For static pages and simple edge logic, Cloudflare Workers are attractive: fast global entry, simple deployment, and a very small operational surface.
+
+But the product direction moved toward richer diagnostics:
+
+- live DNS and HTTP probes
+- TLS certificate inspection through Node's TLS APIs
+- redirect tracing with safety checks
+- public JSON API endpoints
+- SSRF mitigation and route-level rate limits
+- exportable diagnostic reports
+- private control-plane work around analytics and operations
+
+Those features benefit from a standard Node.js server environment. Some are awkward or constrained in an edge runtime. Others are easier to test, package, and operate when the application runs as a normal process behind Nginx.
+
+The question became less "Which platform is cooler?" and more "Which runtime lets the product grow without turning every diagnostic feature into a workaround?"
+
+## What Lightsail gives OpsKitPro
+
+Lightsail is intentionally boring here.
+
+It gives OpsKitPro a stable Linux host, Nginx, a standalone Next.js process, predictable file packaging, and enough room for Node APIs that need server-side networking behavior.
+
+That makes several workflows simpler:
+
+- package the Next.js standalone build
+- deploy it as a normal service
+- keep public routes outside Zero Trust
+- keep `/admin` and private surfaces protected
+- read origin logs from Nginx
+- compare origin logs with Cloudflare edge analytics
+
+For a one-person product, boring infrastructure is often a feature. It reduces the number of platform-specific behaviors that need to be remembered during incidents.
+
+## Why Cloudflare still stays at the edge
+
+Removing the Worker runtime did not remove the value of Cloudflare.
+
+Cloudflare still provides the public edge layer that OpsKitPro wants:
+
+- DNS management
+- public TLS entrypoint
+- CDN and cache behavior for static pages
+- request metadata and edge diagnostics
+- WAF and bot controls where needed
+- Cloudflare Access for private admin paths
+- a clean boundary between public traffic and origin infrastructure
+
+This is why seeing `server: cloudflare` in production headers is expected. It confirms the request is still entering through the public edge before reaching Lightsail.
+
+The intended model is not "Cloudflare or Lightsail." It is Cloudflare in front of Lightsail.
+
+## A cleaner separation of responsibilities
+
+The current split is easier to reason about:
+
+- Cloudflare handles public edge concerns.
+- Lightsail hosts the product runtime.
+- Nginx receives proxied origin traffic and exposes origin logs.
+- Next.js serves public pages and public API routes.
+- The private control plane lives outside the public product repository.
+
+This also matches the repository boundary. The public `opskitpro` repository contains product code and public documentation. Private analytics, automation, credentials, and operational state belong in the control-plane repository.
+
+The infrastructure is less clever, but the boundaries are clearer.
+
+## What this means for debugging
+
+The architecture also makes incidents easier to classify.
+
+If a user sees a Cloudflare 522, the user reached Cloudflare, but Cloudflare could not complete the origin connection in time. That points toward the path between Cloudflare and Lightsail, origin health, firewall rules, Nginx, or the Node service.
+
+If a static page is slow, inspect Cloudflare cache behavior and Next.js static output.
+
+If an API route fails, inspect the Node process, route logs, rate limits, and origin request path.
+
+If admin access fails, inspect Cloudflare Access and the unlocalized `/admin` routing boundary.
+
+Each layer has a job. That is the main benefit of the new architecture.
+
+## The lesson
+
+Retiring Wrangler was not a rejection of Cloudflare. It was a runtime decision.
+
+OpsKitPro kept Cloudflare where it is strongest for this product: edge, DNS, TLS, cache, proxy, and access control. It moved the application runtime to Lightsail because richer diagnostics and Node APIs fit better there.
+
+For small products, the best architecture is often the one that makes the next incident easier to understand.

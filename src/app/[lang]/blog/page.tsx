@@ -47,49 +47,73 @@ export default async function BlogPage({
 
   const articleGroups = [
     {
-      id: "ops-reflection",
+      id: "start-here",
       title: isZh
-          ? "运维复盘"
-          : "Ops reflection",
+          ? "先从这里开始"
+          : "Start here",
       subtitle: isZh
-          ? "把过去的判断、工具演进和排障经验整理成可复用的公开笔记。"
-          : "Reusable public notes on past decisions, tool shifts, and operations lessons.",
-      slugs: ["underestimating-git"],
-    },
-    {
-      id: "project-overview",
-      title: isZh
-          ? "项目说明"
-          : "Project overview",
-      subtitle: isZh
-          ? "需求、设计原则和工程收口放在一起，先建立项目上下文。"
-          : "Requirements, design principles, and engineering wrap-up in one place.",
-      slugs: ["why-opskitpro", "design-principles", "services-deployment"],
-    },
-    {
-      id: "module-implementation",
-      title: isZh
-          ? "模块实现"
-          : "Module implementation",
-      subtitle: isZh
-          ? "把 website-check、IP、DNS 这几块按单一题目拆开讲。"
-          : "Breaks down website-check, IP, and DNS as separate implementation topics.",
+          ? "先建立 OpsKitPro 的产品定位、诊断入口和证据化报告上下文。"
+          : "Start with OpsKitPro's product context, diagnostic entry point, and evidence-based report model.",
       slugs: [
-        "website-check-module",
-        "network-doctor-upgrade",
-        "ip-dns-module",
-        "cloudflare-dual-stack",
+        "why-opskitpro",
+        "diagnostic-tools-overview",
+        "website-diagnostic-report",
       ],
     },
     {
-      id: "tool-implementation",
+      id: "website-diagnostics",
       title: isZh
-          ? "工具实现"
-          : "Tool implementation",
+          ? "网站诊断方法论"
+          : "Website diagnostics",
       subtitle: isZh
-          ? "passgen、qrgen、json、websocket 都按一个工具一篇文章来整理。"
-          : "One article per tool: passgen, qrgen, json, and websocket.",
-      slugs: ["passgen-tool", "qrgen-tool", "json-tool", "websocket-tool"],
+          ? "围绕 DNS、HTTP、TLS、CDN、安全响应头，把原始信号整理成可执行证据。"
+          : "Turns DNS, HTTP, TLS, CDN, and security header signals into actionable evidence.",
+      slugs: [
+        "diagnostic-tools-evidence-not-scores",
+        "website-check-module",
+        "tls-health-vs-https",
+        "cloudflare-522",
+        "open-graph-social-preview-guide",
+      ],
+    },
+    {
+      id: "network-doctor",
+      title: isZh
+          ? "Network Doctor 与观测点"
+          : "Network Doctor",
+      subtitle: isZh
+          ? "区分 Your Device、Cloudflare Edge 和 OpsKitPro Probe，避免网络指标过度承诺。"
+          : "Separates Your Device, Cloudflare Edge, and OpsKitPro Probe so network metrics do not overclaim.",
+      slugs: [
+        "network-metric-observation-point",
+        "network-doctor-upgrade",
+        "cloudflare-dual-stack",
+        "ip-dns-module",
+      ],
+    },
+    {
+      id: "cloudflare-lightsail",
+      title: isZh
+          ? "Cloudflare 到 Lightsail 架构"
+          : "Cloudflare to Lightsail",
+      subtitle: isZh
+          ? "明确当前生产链路：Cloudflare 继续作为边缘层，Wrangler/Worker 运行时已退役。"
+          : "Clarifies the current production path: Cloudflare remains the edge while Wrangler/Worker runtime is retired.",
+      slugs: [
+        "retired-wrangler-kept-cloudflare-edge",
+        "services-deployment",
+        "api-v0-release",
+      ],
+    },
+    {
+      id: "api-automation",
+      title: isZh
+          ? "API 与自动化"
+          : "API and automation",
+      subtitle: isZh
+          ? "把网页诊断能力整理成脚本、CI 和 Agent 可以复用的公开接口。"
+          : "Turns web diagnostics into public interfaces for scripts, CI, and agent workflows.",
+      slugs: ["api-v0-release", "diagnostic-tools-overview"],
     },
     {
       id: "ai-engineering",
@@ -99,7 +123,31 @@ export default async function BlogPage({
       subtitle: isZh
           ? "把 Vibe Coding 整理成有边界、有验证、有记录的 AI 辅助工程流程。"
           : "Turns vibe coding into a guarded workflow with scope, verification, notes, and deployment checks.",
-      slugs: ["vibe-coding-workflow", "ai-coding-playwright-smoke-test"],
+      slugs: [
+        "vibe-coding-workflow",
+        "ai-coding-playwright-smoke-test",
+        "underestimating-git",
+      ],
+    },
+    {
+      id: "utility-workbenches",
+      title: isZh
+          ? "工具工作台"
+          : "Utility workbenches",
+      subtitle: isZh
+          ? "JSON、WebSocket、密码和二维码等高频小工具，强调快速、稳定、少干扰。"
+          : "High-frequency JSON, WebSocket, password, and QR tools built for fast, predictable use.",
+      slugs: ["json-tool", "websocket-tool", "passgen-tool", "qrgen-tool"],
+    },
+    {
+      id: "product-building",
+      title: isZh
+          ? "产品建设"
+          : "Product building",
+      subtitle: isZh
+          ? "记录 OpsKitPro 为什么这样设计、取舍和收敛。"
+          : "Notes on why OpsKitPro is designed, scoped, and simplified this way.",
+      slugs: ["design-principles", "services-deployment"],
     },
   ].map((group) => ({
     ...group,
@@ -243,23 +291,31 @@ export default async function BlogPage({
                     {isZh ? "篇" : "posts"}
                   </span>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                    {group.id === "ops-reflection"
+                    {group.id === "start-here"
                       ? isZh
-                          ? "复盘"
-                          : "Reflection"
-                      : group.id === "project-overview"
+                          ? "入口"
+                          : "Start"
+                      : group.id === "website-diagnostics"
                         ? isZh
-                            ? "总览"
-                            : "Overview"
-                        : group.id === "module-implementation"
+                            ? "诊断"
+                            : "Diagnostics"
+                        : group.id === "network-doctor"
                           ? isZh
-                              ? "实现"
-                              : "Implementation"
-                          : group.id === "ai-engineering"
-                            ? "AI"
-                            : isZh
-                                ? "工具"
-                                : "Tools"}
+                              ? "网络"
+                              : "Network"
+                          : group.id === "cloudflare-lightsail"
+                            ? "Cloudflare"
+                            : group.id === "api-automation"
+                              ? "API"
+                              : group.id === "ai-engineering"
+                                ? "AI"
+                                : group.id === "product-building"
+                                  ? isZh
+                                      ? "产品"
+                                      : "Product"
+                                  : isZh
+                                      ? "工具"
+                                      : "Tools"}
                   </span>
                 </div>
                 <h2 className="mt-3 text-2xl font-black tracking-tighter text-zinc-900 sm:text-3xl">
