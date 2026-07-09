@@ -1,0 +1,176 @@
+---
+title: "SSRF Protection for Public Diagnostic APIs"
+summary: "Why public website diagnostic APIs need protocol, redirect, DNS, and IP-range guards before they become popular automation endpoints."
+publishedAt: "2026-07-09"
+readTime: "8 min"
+category: "Engineering"
+tags: ["api", "ssrf", "security", "diagnostics", "devops"]
+coverImage: "/blog-covers/website-check.svg"
+accent: "from-emerald-500/10 via-cyan-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/api"
+related: ["single-node-rate-limiting-without-redis", "api-v0-release", "website-diagnostic-report"]
+---
+
+## Public diagnostic APIs fetch untrusted targets
+
+OpsKitPro exposes HTTP and website diagnostic APIs because a web tool becomes much more useful when scripts, CI checks, incident bots, and AI agents can call it directly.
+
+That also means the API accepts user-provided targets and makes outbound requests from the server side.
+
+That is the exact shape of an SSRF risk.
+
+A website check endpoint is not the same as a static JSON endpoint. It may resolve DNS, connect to a host, follow redirects, inspect headers, and repeat that process across multiple hops. If the target is not constrained carefully, the diagnostic server can be tricked into reaching places that the caller should never be able to touch through a public API.
+
+So the first rule is simple:
+
+**A public diagnostic API must treat every target as hostile until it has been resolved, classified, and checked.**
+
+## URL validation is only the first gate
+
+It is tempting to think that SSRF protection starts and ends with parsing a URL.
+
+Parsing matters. The API should reject malformed targets, unsupported schemes, credentials in URLs, fragments that are not relevant to the server request, and other ambiguous input.
+
+But string-level validation is not enough.
+
+These can all look harmless at first glance:
+
+- a public hostname that resolves to a private address
+- a public URL that redirects to `localhost`
+- a hostname that changes DNS answers between checks
+- an IPv6 literal that points to a reserved range
+- an unusual port that reaches an internal service
+- a chain of redirects where only the final hop is dangerous
+
+The dangerous part is not only what the user typed. It is where the server actually connects after DNS resolution and redirects.
+
+## Restrict protocols and ports
+
+For OpsKitPro's public diagnostic APIs, the useful protocols are `http` and `https`.
+
+That sounds obvious, but making it explicit matters. A diagnostic API should not become a generic network fetcher. It should not accept `file:`, `ftp:`, `gopher:`, local socket paths, or application-specific schemes just because a library can parse them.
+
+Ports should also be constrained. A public HTTP checker does not need to probe every possible destination port by default. Standard web ports are usually enough for a free public endpoint, and any wider port support should be a deliberate product decision with separate controls.
+
+The product boundary should be boring:
+
+- accept web URLs or domains
+- fetch only over HTTP(S)
+- block credentials in the URL
+- keep ports narrow
+- fail closed when the input is ambiguous
+
+For public tools, boring boundaries are a feature.
+
+## Resolve before connecting, then classify the IP
+
+The key SSRF step is to validate the resolved destination, not only the hostname.
+
+Before the server connects, the target hostname must resolve to one or more IP addresses. Those IPs should be checked against blocked ranges such as:
+
+- loopback addresses
+- private RFC1918 ranges
+- link-local ranges
+- unique local IPv6 ranges
+- multicast and reserved ranges
+- cloud instance metadata addresses
+
+This prevents a public caller from asking the diagnostic server to fetch internal services, metadata endpoints, or local-only listeners.
+
+The error response should be clear enough for a legitimate user to understand what happened, but it should not leak internal network details. A message such as "The target resolves to a non-public network address" is useful. Returning raw internal routing information is not.
+
+## Redirects must be followed manually
+
+Redirect handling is where many SSRF defenses become too optimistic.
+
+If the HTTP client automatically follows redirects, the application may only validate the first URL. A harmless public URL can return a `302` to an internal address, and the client may follow it before the application gets another chance to inspect the new target.
+
+For a diagnostic API, redirects are part of the evidence. They should be captured and shown as a chain. That means the application should follow redirects deliberately:
+
+1. request the current URL without automatic redirect following
+2. read the `Location` header
+3. normalize the next URL against the current URL
+4. validate the protocol, hostname, and port again
+5. resolve the next hostname
+6. classify the resolved IP before connecting
+7. stop after a small maximum number of hops
+
+This keeps the redirect chain useful for diagnostics while keeping every hop inside the same safety boundary.
+
+## DNS rebinding is the subtle case
+
+DNS rebinding is the case that makes "we checked the hostname once" insufficient.
+
+A hostname can resolve to a public IP during validation and then resolve to a private IP later, or return different answers across lookups. If the code validates one resolution but the HTTP client performs a separate resolution internally, the connection may not go where the validation said it would.
+
+There is no single magic line that solves this for every runtime and HTTP stack. The practical mitigation is to keep resolution and connection behavior close together, revalidate on every redirect hop, reject unsafe ranges consistently, set short timeouts, and avoid handing unchecked hostnames to a client that may do surprising work behind the scenes.
+
+The public contract should also avoid promising that the tool can test arbitrary internal or custom network targets. That is a different product, with different authentication and network placement requirements.
+
+## Timeouts and response limits are security controls
+
+SSRF protection is not only about where the server connects. It is also about how much work one request can make the server do.
+
+A public diagnostic API should set:
+
+- connection and response timeouts
+- maximum redirect hops
+- maximum response body size
+- stable per-route rate limits
+- predictable error shapes
+
+These limits protect availability and make automation safer. A CI job or AI agent can handle a structured timeout or blocked-target error. It cannot reliably handle a request that hangs forever or returns a giant body the caller never needed.
+
+This is why OpsKitPro pairs SSRF protection with cost-based rate limiting. The API should reject dangerous targets, and it should also keep legitimate expensive probes within a sustainable budget.
+
+## The error contract matters
+
+Security errors should be explicit without becoming a reconnaissance tool.
+
+Good public API responses answer three questions:
+
+- Was the request rejected before probing?
+- Is the problem user-fixable?
+- What stable error code can automation use?
+
+For example, a blocked SSRF target should not look like a generic 500. It should be a controlled client-facing rejection with a stable code such as `TARGET_NOT_ALLOWED`, `UNSUPPORTED_PROTOCOL`, or `REDIRECT_TARGET_BLOCKED`.
+
+That gives scripts a clean branch:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TARGET_NOT_ALLOWED",
+    "message": "The target resolves to a non-public network address."
+  }
+}
+```
+
+The response does not need to expose the internal address, resolver path, or server network context. It only needs to explain the public rule that was violated.
+
+## Why this comes before API keys
+
+It is easy to postpone security work until paid accounts, API keys, or enterprise plans exist.
+
+For diagnostic APIs, that order is backwards.
+
+The anonymous public endpoint is the first surface that search traffic, scripts, scanners, and agents will find. API keys can identify users and support quotas, but they do not automatically make outbound fetch behavior safe. A paying customer can still submit a dangerous target by accident, and a leaked key can still be abused.
+
+The safe order is:
+
+1. constrain what the public endpoint is allowed to fetch
+2. make errors explicit and testable
+3. apply rate limits based on endpoint cost
+4. add API keys and paid quotas when product pressure justifies them
+
+Security boundaries should exist before monetization boundaries.
+
+## The OPC lesson
+
+For a one-person product, SSRF protection should be practical and boring.
+
+It does not need to be a grand security platform. It needs to define what the public API is allowed to reach, validate every hop, reject non-public destinations, cap work per request, and return errors that scripts can understand.
+
+That is enough to let the product keep shipping without turning a useful diagnostic tool into an accidental network proxy.

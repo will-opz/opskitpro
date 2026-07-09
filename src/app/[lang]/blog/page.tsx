@@ -114,6 +114,7 @@ export default async function BlogPage({
           ? "把网页诊断能力整理成脚本、CI 和 Agent 可以复用的公开接口。"
           : "Turns web diagnostics into public interfaces for scripts, CI, and agent workflows.",
       slugs: [
+        "ssrf-protection-public-diagnostic-apis",
         "single-node-rate-limiting-without-redis",
         "api-v0-release",
         "diagnostic-tools-overview",
