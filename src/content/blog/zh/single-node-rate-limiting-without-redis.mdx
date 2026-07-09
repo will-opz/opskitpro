@@ -1,0 +1,134 @@
+---
+title: "MVP 阶段，别一上来就 Redis：单节点公开 API 限流"
+summary: "OpsKitPro 如何在引入 Redis、API Key 和付费配额前，用单节点内存限流保护公开诊断 API。"
+publishedAt: "2026-07-09"
+readTime: "7 min"
+category: "Engineering"
+tags: ["api", "rate-limit", "redis", "devops", "indie-hacker"]
+coverImage: "/blog-covers/services-standardization.svg"
+accent: "from-emerald-500/10 via-sky-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/api"
+related: ["api-v0-release", "diagnostic-tools-evidence-not-scores", "website-diagnostic-report"]
+---
+
+## 公开 API 先需要保护，不一定先需要收费系统
+
+OpsKitPro 提供公开诊断 API，是因为网页工具如果也能被脚本、CI 检查和 AI Agent 调用，会更有价值。
+
+但一个诊断工具变成公开 API 的同时，也变成了公开成本入口。
+
+DNS 查询很便宜。一次完整网站诊断会触发 DNS、HTTP、跳转链、TLS、RDAP、安全响应头和 CDN 检测，成本明显更高。HTTP 检查还可能跟随跳转并访问第三方目标。把这些 endpoint 都当成同样成本，是一种偷懒。
+
+所以在引入 API Key、Stripe、Redis 或复杂账号系统之前，OpsKitPro 先需要一个基础规则：
+
+**匿名公开 API 应该可用，但不能无限用。**
+
+## 为什么不一开始就上 Redis？
+
+Redis 是好工具，但它不是零运维成本。
+
+对一人产品来说，每增加一个服务，就多一个要部署、监控、加固、备份、升级和故障恢复的东西。如果产品本身是运行在 Lightsail 上的单个 standalone Node 进程，并且前面有 Cloudflare，那么内存限流就是一个合理的第一步。
+
+当前生产模型很简单：
+
+```text
+Cloudflare -> Lightsail -> Next.js standalone Node
+```
+
+只有一个应用实例。这意味着本地内存 bucket 对匿名 per-IP 防护来说已经足够一致。它不能解决所有未来配额问题，但能在不引入新依赖的情况下解决当前滥用控制问题。
+
+这个取舍是有意为之。
+
+## cost class 比一个全局数字更合理
+
+公开 API 第一版使用过一个简单心智模型：所有 endpoint 都按 60 requests/minute 描述。
+
+这很好解释，但当诊断 API 变得更丰富后，它就不够准确了。
+
+OpsKitPro 现在按 cost class 做限制：
+
+- **低成本查询**：DNS lookup 和 IP lookup，每分钟 60 次。
+- **中成本检查**：HTTP check 和 trace，每分钟 15 次。
+- **完整诊断**：Website diagnostic，每分钟 3 次。
+
+这更接近系统真实成本。便宜查询应该对脚本友好。完整诊断会展开多个 live probe，所以需要更严格保护。
+
+限流应该反映成本，而不只是 endpoint 数量。
+
+## 当前 limiter 的形状
+
+现在的 limiter 刻意保持很小：
+
+- 按 cost class、route 和哈希后的 IP 生成 key
+- 用 LRU cache 保存计数
+- 使用固定时间窗口
+- 返回剩余额度和重置时间
+- 在受控环境里可以通过 `RATE_LIMIT_ENABLED=false` 关闭
+
+IP 在进入 cache key 前会先做哈希。这不等于完整隐私方案，但至少避免在 limiter key 里保存原始 IP。
+
+更重要的是，limiter 放在 route 边界上。请求应该在触发昂贵诊断工作之前被拒绝。
+
+## 好的 429 响应也是 API 契约的一部分
+
+限流不只是后端保护，也是一种开发者体验。
+
+当客户端被限流时，它应该拿到足够信息，知道什么时候重试。OpsKitPro 的 `429 Too Many Requests` 会返回这些 header：
+
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+- `Retry-After`
+
+JSON body 也使用稳定错误码：
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Too many requests. Please retry later.",
+    "retryAfter": 42
+  }
+}
+```
+
+这个结构很重要，因为脚本和 Agent 不应该靠解析自然语言来判断发生了什么。
+
+## 为什么 route-level 测试重要
+
+只测试 limiter 的数学逻辑，很容易漏掉公开 API 行为。
+
+例如，route 可能正确计数，但忘记返回 `Retry-After`。也可能返回了和其他 API 不一致的错误结构。或者参数校验发生在限流之前，导致重复请求仍然触发昂贵初始化。
+
+所以 OpsKitPro 为 HTTP check endpoint 加了真实 route 级 429 contract test。测试会验证真实 route 响应：状态码、headers 和公开错误 body。
+
+对公开 API 来说，契约本身就是功能。
+
+## 什么时候这套方案不够用？
+
+单节点内存限流不是最终架构。
+
+当出现这些情况时，它就不够了：
+
+- 应用运行在多个实例上
+- 付费 API Key 需要持久配额
+- 用户需要月度用量历史
+- 限额必须跨进程重启保留
+- 滥用模式需要跨区域或跨节点统一控制
+- 企业客户需要账号级策略
+
+到那个阶段，Redis、数据库配额系统、Cloudflare 规则或 API Gateway 可能才是更合适的层。
+
+但在产品真正需要之前就引入这些层，只会增加维护成本，不一定改善当前用户体验。
+
+## OPC 模式下的经验
+
+对一人公司来说，架构应该匹配阶段。
+
+公开 API 的第一层保护，不需要一开始就是完美的分布式配额平台。它需要让免费 API 可用、保护昂贵探测、给客户端清晰反馈，并保留明确升级路径。
+
+这就是 OpsKitPro 当前 limiter 解决的问题。
+
+先小步做对。把契约写清楚。等产品压力真实出现，再升级架构。
