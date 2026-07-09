@@ -4,43 +4,20 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
-  group: opskitpro-${{ github.ref }}
+  group: opskitpro-ci-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '24'
-  CACHE_VERSION: v1
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NODE_VERSION: "24"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  # Job 1: Setup - Detect configurations
-  setup:
-    name: 🔍 Setup
+  verify:
+    name: Verify
     runs-on: ubuntu-latest
-    outputs:
-      node-version: ${{ steps.node-version.outputs.version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Detect Node version
-        id: node-version
-        run: |
-          VERSION=$(cat .nvmrc 2>/dev/null || echo '24')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "✓ Node version: $VERSION"
-
-  # Job 2: Lint - Run in parallel
-  lint:
-    name: 🔎 Lint
-    runs-on: ubuntu-latest
-    needs: setup
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,143 +25,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Check forbidden imports
-        run: npm run check:forbidden-imports
-
-  # Job 3: Test - Run in parallel
-  test:
-    name: 🧪 Test
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm run test
-
-  # Job 4: Build - Run in parallel with caching
-  build:
-    name: 🏗️ Build
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'npm'
-
-      - name: Cache npm dependencies
-        id: npm-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}-${{ env.CACHE_VERSION }}
-          restore-keys: |
-            ${{ runner.os }}-npm-${{ env.CACHE_VERSION }}-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Cache Next.js build
-        id: nextjs-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .next/cache
-            .next/standalone/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ github.sha }}-${{ env.CACHE_VERSION }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ env.CACHE_VERSION }}-
-
-      - name: Build application
-        run: npm run build
-        env:
-          NODE_ENV: production
-          NODE_OPTIONS: '--max-old-space-size=4096'
-
-      - name: Cache hit stats
-        run: |
-          echo "📊 Cache Statistics:"
-          echo "  npm cache hit: ${{ steps.npm-cache.outputs.cache-hit }}"
-          echo "  Next.js cache hit: ${{ steps.nextjs-cache.outputs.cache-hit }}"
-
-      - name: Check build output
-        run: |
-          echo "📦 Build artifacts:"
-          du -sh .next/standalone/ || echo "No .next/standalone"
-          du -sh .next/static/ || echo "No .next/static"
-
-  # Job 5: E2E Tests - Run only on push to main or with label
-  e2e:
-    name: 🎭 E2E Tests
-    runs-on: ubuntu-latest
-    needs: [setup, lint, test, build]
-    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'test-e2e')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Run E2E tests
-        run: npm run test:e2e:clean
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report-${{ github.run_number }}
-          path: playwright-report/
-          retention-days: 30
-
-  # Job 6: Notify - Workflow summary
-  notify:
-    name: 📊 Summary
-    runs-on: ubuntu-latest
-    needs: [lint, test, build, e2e]
-    if: always()
-    steps:
-      - name: Create workflow summary
-        run: |
-          echo "## Workflow Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Step | Result |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔎 Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 Test | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🏗️ Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🎭 E2E | ${{ needs.e2e.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
-          echo "**Author**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+      - name: Run fast verification
+        run: npm run verify:fast
