@@ -14,7 +14,7 @@
     "title_part2_pre": "DNS, IP & Site",
     "title_part2_ai": "Online",
     "title_part2_suf": "Diagnostics",
-    "subtitle": "Instant DNS · SSL · CDN · HTTP forensics across global edge nodes. No login required.",
+    "subtitle": "Instant DNS · SSL · CDN · HTTP forensics from an OpsKitPro public probe. No login required.",
     "features": {
       "dns": "DNS_AUDIT",
       "cdn": "CDN_SENSING",

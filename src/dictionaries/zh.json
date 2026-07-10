@@ -14,7 +14,7 @@
     "title_part2_pre": "DNS·IP·网站",
     "title_part2_ai": "在线",
     "title_part2_suf": "诊断分析平台",
-    "subtitle": "极速诊断 DNS · SSL · CDN · HTTP 全链路，覆盖全球边缘节点，无需登录。",
+    "subtitle": "通过 OpsKitPro 公网探针快速诊断 DNS · SSL · CDN · HTTP，无需登录。",
     "features": {
       "dns": "DNS 解析审计",
       "cdn": "CDN 边缘感知",

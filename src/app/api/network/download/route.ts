@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getClientIp } from "@/lib/runtime-context";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +24,15 @@ function buildChunk(): Uint8Array {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimit = checkRateLimit({
+    ip: getClientIp(request),
+    route: "/api/network/download",
+    costClass: "HIGH",
+    limit: 5,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return rateLimitResponse(rateLimit);
+
   const sizeParam = parseInt(
     request.nextUrl.searchParams.get("size") ?? "1",
     10,
@@ -27,20 +42,19 @@ export async function GET(request: NextRequest) {
 
   const chunk = buildChunk();
 
-  const stream = new ReadableStream({
-    start(controller) {
-      let sent = 0;
-      while (sent < totalBytes) {
-        const remaining = totalBytes - sent;
-        if (remaining >= CHUNK_SIZE) {
-          controller.enqueue(chunk);
-          sent += CHUNK_SIZE;
-        } else {
-          controller.enqueue(chunk.slice(0, remaining));
-          sent += remaining;
-        }
+  let sent = 0;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      const remaining = totalBytes - sent;
+      if (remaining <= 0) {
+        controller.close();
+        return;
       }
-      controller.close();
+
+      const nextChunk =
+        remaining >= CHUNK_SIZE ? chunk : chunk.slice(0, remaining);
+      controller.enqueue(nextChunk);
+      sent += nextChunk.byteLength;
     },
   });
 
@@ -52,6 +66,7 @@ export async function GET(request: NextRequest) {
       "Cache-Control": "no-store, no-cache, must-revalidate",
       "X-Size-MB": String(sizeMb),
       "X-Accel-Buffering": "no",
+      ...createRateLimitHeaders(rateLimit),
     },
   });
 }

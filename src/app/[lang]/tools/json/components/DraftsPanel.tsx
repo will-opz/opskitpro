@@ -8,10 +8,9 @@ import {
   Check,
   X,
   Clock,
-  Link2,
   Loader2,
 } from "lucide-react";
-import { useJsonStorage, useUrlLoader } from "../hooks/useJsonStorage";
+import { useJsonStorage } from "../hooks/useJsonStorage";
 import type { JsonDraft } from "../hooks/useJsonStorage";
 
 interface DraftsPanelProps {
@@ -29,15 +28,9 @@ export function DraftsPanel({
 }: DraftsPanelProps) {
   const { drafts, isLoaded, saveDraft, deleteDraft, renameDraft } =
     useJsonStorage();
-  const {
-    loadFromUrl,
-    isLoading: urlLoading,
-    error: urlError,
-  } = useUrlLoader();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [urlInput, setUrlInput] = useState("");
   const [saveName, setSaveName] = useState("");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
 
@@ -46,15 +39,6 @@ export function DraftsPanel({
     saveDraft(saveName || "", currentContent);
     setSaveName("");
     setShowSaveDialog(false);
-  };
-
-  const handleLoadUrl = async () => {
-    if (!urlInput.trim()) return;
-    const content = await loadFromUrl(urlInput);
-    if (content) {
-      onLoad(content);
-      setUrlInput("");
-    }
   };
 
   const startEdit = (draft: JsonDraft) => {
@@ -84,42 +68,6 @@ export function DraftsPanel({
 
   return (
     <div className="h-full flex flex-col">
-      {/* URL Loader */}
-      <div className="px-4 py-3 border-b border-zinc-100 bg-gradient-to-r from-blue-50 to-white">
-        <div className="flex items-center gap-2 mb-2">
-          <Link2 className="w-4 h-4 text-blue-500" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600">
-            Load from URL
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLoadUrl()}
-            placeholder="https://api.example.com/data.json"
-            className="flex-1 px-3 py-2 text-[11px] font-mono bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-          />
-          <button
-            onClick={handleLoadUrl}
-            disabled={!urlInput.trim() || urlLoading}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg text-[11px] font-bold hover:bg-blue-500 transition-all disabled:opacity-50 flex items-center gap-1"
-          >
-            {urlLoading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              "Fetch"
-            )}
-          </button>
-        </div>
-        {urlError && (
-          <p className="mt-1.5 text-[10px] text-red-500 font-mono">
-            {urlError}
-          </p>
-        )}
-      </div>
-
       {/* Save current */}
       <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/50">
         {showSaveDialog ? (

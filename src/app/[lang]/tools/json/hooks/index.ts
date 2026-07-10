@@ -13,5 +13,5 @@ export {
 } from "./useFormatConvert";
 export type { ConvertFormat, ConvertResult } from "./useFormatConvert";
 
-export { useJsonStorage, useUrlLoader } from "./useJsonStorage";
+export { useJsonStorage } from "./useJsonStorage";
 export type { JsonDraft } from "./useJsonStorage";

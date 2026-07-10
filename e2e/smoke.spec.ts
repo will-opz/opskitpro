@@ -286,6 +286,16 @@ test('knowledge base exposes public article groups and article links', async ({ 
   await expect(page.getByRole('link', { name: /Vibe Coding in practice/i }).first()).toBeVisible()
 })
 
+test('localized blog actions keep a single locale prefix', async ({ page }) => {
+  await page.goto('/zh/blog/tls-health-vs-https')
+
+  await expect(page.getByRole('link', { name: '打开工具' })).toHaveCount(2)
+  await expect(page.locator('a[href="/zh/tools/website-check"]')).toHaveCount(3)
+  await expect(page.locator('a[href="/zh/zh/tools/website-check"]')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: '返回博客', exact: true })).toHaveAttribute('href', '/zh/blog')
+  await expect(page.getByRole('link', { name: '返回博客列表', exact: true })).toHaveAttribute('href', '/zh/blog')
+})
+
 test('mobile menu opens and exposes primary navigation', async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) >= 768, 'Mobile menu is only visible on mobile viewports.')
 

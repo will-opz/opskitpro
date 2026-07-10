@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useCallback, useMemo } from "react";
 import {
   Braces,
   Copy,
@@ -41,7 +40,7 @@ import {
 import type { DiffLine } from "./components";
 
 // Hooks
-import { repairJson, getJsonStats, useUrlLoader } from "./hooks";
+import { repairJson, getJsonStats } from "./hooks";
 
 const SAMPLE_JSON = `{
   "project": "OpsKitPro",
@@ -106,8 +105,6 @@ type ViewMode =
 type Lang = "zh" | "en";
 
 export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
-  const searchParams = useSearchParams();
-  const { loadFromUrl, isLoading: urlLoading } = useUrlLoader();
   const ui = {
     zh: {
       badge: dict.tools.json_title,
@@ -115,7 +112,6 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
       tools: "工具",
       title: dict.tools.json_title,
       desc: dict.tools.json_desc,
-      loading: "正在加载 JSON...",
       sample: dict.tools.json.sample,
       demo: "K8s 示例",
       upload: dict.tools.json.upload,
@@ -144,7 +140,6 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
       tools: "Tools",
       title: dict.tools.json_title,
       desc: dict.tools.json_desc,
-      loading: "Loading JSON...",
       sample: dict.tools.json.sample,
       demo: "K8s Demo",
       upload: dict.tools.json.upload,
@@ -176,19 +171,6 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
   const [diffData, setDiffData] = useState<DiffLine[] | null>(null);
   const [repairFixes, setRepairFixes] = useState<string[]>([]);
   const [jqOutput, setJqOutput] = useState("");
-
-  // Load from URL param on mount
-  useEffect(() => {
-    const urlParam = searchParams.get("url");
-    if (urlParam) {
-      loadFromUrl(urlParam).then((content) => {
-        if (content) {
-          setJson(content);
-          validate(content);
-        }
-      });
-    }
-  }, [searchParams]);
 
   const validate = useCallback((value: string) => {
     if (!value.trim()) {
@@ -425,12 +407,6 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
               </div>
             </div>
 
-            {urlLoading && (
-              <div className="flex items-center gap-2 text-blue-600 text-[11px]">
-                <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-                {ui.loading}
-              </div>
-            )}
           </div>
         </header>
 

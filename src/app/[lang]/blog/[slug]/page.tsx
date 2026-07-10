@@ -13,6 +13,7 @@ import { getBlogPostBySlug, getAllBlogPosts } from "@/lib/blog";
 import { mdxComponents } from "@/components/blog/mdx-components";
 import { buildPageMetadata, buildTechArticleJsonLd } from "@/lib/seo";
 import { extractTocFromMarkdown } from "@/lib/toc";
+import { resolveLocalizedHref } from "@/lib/localized-href";
 
 export function generateStaticParams() {
   const posts = getAllBlogPosts("en");
@@ -57,6 +58,8 @@ export default async function BlogPost({
   }
 
   const isToolArticle = post.actionKind === "tool";
+  const blogHref = resolveLocalizedHref(lang, "/blog");
+  const ctaHref = resolveLocalizedHref(lang, post.ctaPath);
   const relatedPosts = getAllBlogPosts(lang)
     .filter((entry) => post.related.includes(entry.slug))
     .slice(0, 3);
@@ -86,7 +89,7 @@ export default async function BlogPost({
 
         <div className="mb-8">
           <Link
-            href="/blog"
+            href={blogHref}
             className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-4 py-2 text-[11px] font-medium tracking-[0.16em] text-zinc-600 transition-colors hover:border-emerald-500/30 hover:text-emerald-600"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -145,7 +148,7 @@ export default async function BlogPost({
                 </div>
 
                 <a
-                  href={post.ctaPath ? `/${lang}${post.ctaPath}` : "#"}
+                  href={ctaHref}
                   target={
                     post.ctaPath?.startsWith("http") ? "_blank" : undefined
                   }
@@ -357,7 +360,7 @@ export default async function BlogPost({
                 </p>
                 <div className="mt-5 flex flex-col gap-3">
                   <Link
-                    href="/blog"
+                    href={blogHref}
                     className="inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:border-emerald-500/20 hover:text-emerald-600"
                   >
                     {false
@@ -370,7 +373,7 @@ export default async function BlogPost({
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
-                    href={post.ctaPath ? `/${lang}${post.ctaPath}` : "#"}
+                    href={ctaHref}
                     target={
                       post.ctaPath?.startsWith("http") ? "_blank" : undefined
                     }

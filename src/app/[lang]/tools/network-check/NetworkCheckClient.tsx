@@ -724,6 +724,9 @@ export default function NetworkCheckClient({
       const response = await fetch(`/api/network/download?size=${sizeMb}`, {
         cache: "no-store",
       });
+      if (!response.ok) {
+        throw new Error(`download failed: ${response.status}`);
+      }
       const contentLength = parseInt(
         response.headers.get("content-length") ?? "0",
         10,
@@ -832,6 +835,7 @@ export default function NetworkCheckClient({
       const res = await fetch("/api/network/dns-latency", {
         cache: "no-store",
       });
+      if (!res.ok) throw new Error(`dns latency failed: ${res.status}`);
       const data = await res.json();
       finalDnsLatency = data.results ?? [];
       setDnsLatency(finalDnsLatency);
@@ -882,6 +886,7 @@ export default function NetworkCheckClient({
       const res = await fetch("/api/network/reachability", {
         cache: "no-store",
       });
+      if (!res.ok) throw new Error(`reachability failed: ${res.status}`);
       const data = await res.json();
       finalReach = data.results ?? [];
       setReachability(finalReach);

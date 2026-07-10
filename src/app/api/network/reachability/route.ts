@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ReachabilityItem } from "@/lib/api-contracts";
+import { getClientIp } from "@/lib/runtime-context";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +23,16 @@ const TARGETS: { url: string; label: string }[] = [
 const SLOW_THRESHOLD_MS = 1500;
 const TIMEOUT_MS = 5000;
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const rateLimit = checkRateLimit({
+    ip: getClientIp(request),
+    route: "/api/network/reachability",
+    costClass: "HIGH",
+    limit: 10,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return rateLimitResponse(rateLimit);
+
   const results: ReachabilityItem[] = await Promise.all(
     TARGETS.map(async ({ url, label }): Promise<ReachabilityItem> => {
       const t0 = Date.now();
@@ -52,6 +67,11 @@ export async function GET(_request: NextRequest) {
 
   return NextResponse.json(
     { results },
-    { headers: { "Cache-Control": "no-store" } },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+        ...createRateLimitHeaders(rateLimit),
+      },
+    },
   );
 }

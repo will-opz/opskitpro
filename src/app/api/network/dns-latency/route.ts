@@ -1,5 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { DnsLatencyItem } from "@/lib/api-contracts";
+import { getClientIp } from "@/lib/runtime-context";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +41,16 @@ const RESOLVERS: Array<{
   },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimit = checkRateLimit({
+    ip: getClientIp(request),
+    route: "/api/network/dns-latency",
+    costClass: "MEDIUM",
+    limit: 15,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) return rateLimitResponse(rateLimit);
+
   const results: DnsLatencyItem[] = await Promise.all(
     RESOLVERS.map(async (resolver): Promise<DnsLatencyItem> => {
       const startedAt = Date.now();
@@ -64,6 +79,11 @@ export async function GET() {
 
   return NextResponse.json(
     { results },
-    { headers: { "Cache-Control": "no-store" } },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+        ...createRateLimitHeaders(rateLimit),
+      },
+    },
   );
 }
