@@ -1,0 +1,260 @@
+---
+title: "Public API Error Contracts for Diagnostic Tools"
+summary: "Diagnostic APIs are easier to automate when validation, blocked targets, timeouts, rate limits, and upstream failures use stable machine-readable error shapes."
+publishedAt: "2026-07-10"
+readTime: "8 min"
+category: "Engineering"
+tags: ["api", "errors", "diagnostics", "automation", "devops"]
+coverImage: "/blog-covers/services-standardization.svg"
+accent: "from-emerald-500/10 via-sky-500/10 to-transparent"
+actionKind: "tool"
+ctaPath: "/tools/api"
+related: ["ssrf-protection-public-diagnostic-apis", "single-node-rate-limiting-without-redis", "api-v0-release"]
+---
+
+## Diagnostic APIs fail in predictable ways
+
+Public diagnostic APIs are built for automation.
+
+A person may open a web page, read the result, and decide what to do next. A script, CI job, incident bot, or AI agent needs something stricter. It needs to know whether a request failed because the input was invalid, the target was blocked, the probe timed out, the caller was rate-limited, or the upstream service was unreachable.
+
+Those are not the same failure.
+
+If they all return a generic `500` with a paragraph of prose, the API becomes hard to use safely. Clients start parsing text, retrying the wrong cases, hiding real failures, or treating security rejections as transient network problems.
+
+That is why a public diagnostic API needs an error contract.
+
+**The error shape is part of the product, not an implementation detail.**
+
+## A simple envelope helps every caller
+
+The most useful API shape is boring and consistent.
+
+For successful responses, the client can expect a result object. For expected failures, the client can still expect a stable error object.
+
+For example:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Too many requests. Please retry later.",
+    "retryAfter": 42
+  }
+}
+```
+
+The exact fields can evolve, but the principle should not:
+
+- `success` tells the caller whether the request produced a usable result.
+- `error.code` gives automation a stable branch.
+- `error.message` gives humans a safe explanation.
+- optional fields such as `retryAfter`, `field`, or `evidence` add context without forcing clients to parse prose.
+
+This is especially important for diagnostic tools because many failures are expected. Bad domains, blocked targets, timeouts, redirects, and upstream errors are part of the domain.
+
+They should not look like server crashes.
+
+## Validation errors should be fixable
+
+Validation errors are usually user-fixable.
+
+If a caller sends an empty domain, an invalid URL, an unsupported record type, or a malformed IP address, the API should say that clearly.
+
+A useful validation error should answer:
+
+- which input is wrong
+- what rule was violated
+- whether the caller can retry after changing the input
+
+Example:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_TARGET",
+    "message": "Enter a valid domain or HTTP URL.",
+    "field": "target"
+  }
+}
+```
+
+That gives a web UI enough information to highlight the field. It gives a script enough information to fail fast instead of retrying. It gives an AI agent a clear correction target.
+
+## Security rejections are not network errors
+
+An SSRF guard may reject a target before any probe runs.
+
+That should not be reported as "connection failed."
+
+If the target uses an unsupported protocol, resolves to a non-public network range, includes credentials in the URL, or redirects to a blocked destination, the API should say that the request was rejected by policy.
+
+For example:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TARGET_NOT_ALLOWED",
+    "message": "The target resolves to a non-public network address."
+  }
+}
+```
+
+This distinction matters.
+
+A blocked target should not be retried aggressively. It should not be treated as proof that the website is down. It also should not expose internal resolver details, private IPs, server network paths, or infrastructure context.
+
+The public message should be enough to explain the rule, not enough to map the server.
+
+## Timeouts need their own category
+
+Timeouts are common in diagnostic APIs.
+
+A target may be slow, a TLS handshake may hang, an origin may accept a connection but never respond, or a redirect chain may consume the probe budget.
+
+That is different from validation failure and different from a policy block.
+
+A timeout response should tell the caller that the probe did not complete within the allowed budget:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PROBE_TIMEOUT",
+    "message": "The target did not respond before the diagnostic timeout.",
+    "timeoutMs": 10000
+  }
+}
+```
+
+This lets a CI job decide whether to mark the check as inconclusive, retry once, or fail the deployment. It lets a human understand that the tool ran out of time, not that the domain format was wrong.
+
+In diagnostics, "unknown because the probe timed out" is a real state.
+
+It should not be collapsed into "failed."
+
+## Rate limits should teach clients how to back off
+
+Rate limiting is both protection and developer experience.
+
+When a public API rejects a request because the caller exceeded a quota, the response should include a stable error code and retry information.
+
+Headers are useful:
+
+- `Retry-After`
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+
+The JSON body should also be machine-readable:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Too many requests. Please retry later.",
+    "retryAfter": 42
+  }
+}
+```
+
+This matters for scripts and agents. A caller that sees `RATE_LIMITED` can wait. A caller that sees `INVALID_TARGET` should fix input. A caller that sees `TARGET_NOT_ALLOWED` should stop.
+
+Different errors need different behavior.
+
+## Upstream failures should preserve evidence
+
+Some diagnostic requests successfully run but discover that the target itself is unhealthy.
+
+For example:
+
+- DNS resolution fails
+- the TCP connection is refused
+- TLS hostname matching fails
+- the HTTP response is `502`
+- the target returns a redirect loop
+
+These cases are not necessarily API failures. They may be successful diagnostics with negative findings.
+
+That suggests a different shape:
+
+```json
+{
+  "success": true,
+  "status": "completed_with_findings",
+  "result": {
+    "target": "example.com",
+    "findings": [
+      {
+        "severity": "warning",
+        "code": "HTTP_5XX_OBSERVED",
+        "message": "The target returned a server error.",
+        "evidence": {
+          "statusCode": 502
+        }
+      }
+    ]
+  }
+}
+```
+
+The API request succeeded. The website may not be healthy.
+
+That distinction keeps automation honest. A monitoring script can say "the diagnostic completed and found a 502" instead of "the diagnostic API failed."
+
+## Errors should not leak internals
+
+A good error contract is not a raw exception serializer.
+
+Public responses should avoid:
+
+- stack traces
+- raw resolver paths
+- private network addresses
+- server hostnames
+- secret names
+- dependency-specific exception messages
+- internal account or deployment identifiers
+
+The public API can keep detailed logs privately, but the client-facing response should use stable, reviewed fields.
+
+For public diagnostic tools, the goal is clarity without turning the API into a reconnaissance surface.
+
+## Test the contract at the route boundary
+
+It is not enough to unit test helper functions.
+
+The real contract is what the route returns: status code, headers, JSON envelope, stable error code, and whether expensive work was skipped when a request is invalid or blocked.
+
+Route-level tests catch practical regressions:
+
+- validation returns a consistent client error
+- blocked SSRF targets do not run probes
+- rate limits include `Retry-After`
+- timeout errors do not become generic 500s
+- expected upstream failures are represented as diagnostic findings when appropriate
+
+For a public API, the wire response is the feature.
+
+## The OPC lesson
+
+For a one-person product, a stable error contract is leverage.
+
+It reduces support questions, makes scripts easier to write, gives AI agents safer branches, and prepares the product for future API keys or paid quotas without forcing a large platform rewrite.
+
+The contract does not need to be huge.
+
+It needs to be predictable:
+
+- validate early
+- reject unsafe targets explicitly
+- separate timeouts from policy blocks
+- teach rate-limited clients when to retry
+- preserve diagnostic evidence when the probe completes
+- keep private internals out of public responses
+
+That is how a small public API becomes reliable enough for real automation.
