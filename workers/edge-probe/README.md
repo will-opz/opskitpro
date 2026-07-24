@@ -30,4 +30,10 @@ requests per hop, one target request per hop, and an eight-second deadline.
 
 ## Routing
 
-Use a dedicated Worker custom domain such as `probe-edge.opskitpro.com`. Never attach this Worker to `opskitpro.com/*`.
+The Worker has a dedicated custom domain at `probe-edge.opskitpro.com`, but the
+Lightsail orchestrator uses the authenticated `workers.dev` endpoint. Requests
+from Lightsail to the custom domain can be challenged by the same zone-level
+Bot/WAF policy before they reach the Worker. The system endpoint avoids spending
+a Free-plan WAF exception while the Bearer token still protects the probe.
+
+Never attach this Worker to `opskitpro.com/*`.

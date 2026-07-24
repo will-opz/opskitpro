@@ -5,7 +5,8 @@
   "compatibility_flags": [
     "global_fetch_strictly_public"
   ],
-  "workers_dev": false,
+  "workers_dev": true,
+  "preview_urls": false,
   "routes": [
     {
       "pattern": "probe-edge.opskitpro.com",
