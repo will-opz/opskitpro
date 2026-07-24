@@ -14,7 +14,10 @@ const fixture: DiagnosticResponse = {
     success: true,
     all_ips: ["93.184.216.34"],
     ns: ["A.IANA-SERVERS.NET."],
-    resolvers: [{ name: "Cloudflare", status: "OK" }],
+    resolvers: [
+      { name: "Cloudflare", status: "OK" },
+      { resolver: "Google", status: "OK" },
+    ],
   },
   http: {
     success: true,
@@ -47,6 +50,8 @@ describe("CLI diagnostic renderer", () => {
     expect(output).toContain("93.184.216.34");
     expect(output).toContain("Example CA");
     expect(output).toContain("a.iana-servers.net");
+    expect(output).toContain("Cloudflare:");
+    expect(output).toContain("Google:");
   });
 
   it("retains the compatibility score calculation", () => {

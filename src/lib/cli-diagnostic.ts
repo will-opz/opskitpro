@@ -54,7 +54,7 @@ export function renderCliDiagnostic(domain: string, data: DiagnosticResponse): s
   const nameservers = Array.from(new Set([...(data.dns.ns || []), ...(data.whois?.nameservers || [])]))
     .map((value) => value.toLowerCase().replace(/\.$/, ""));
   const resolvers = (data.dns.resolvers || []).map((resolver) =>
-    `${resolver.name}: ${resolver.status === "OK" ? c.green + "●" : c.red + "○"}${c.reset}`,
+    `${resolver.name || resolver.resolver || "Resolver"}: ${resolver.status === "OK" ? c.green + "●" : c.red + "○"}${c.reset}`,
   ).join("  ");
 
   return `

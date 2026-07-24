@@ -1,5 +1,6 @@
 export type DiagnosticResolver = {
-  name: string;
+  name?: string;
+  resolver?: string;
   status: string;
   latency?: number | string;
 };
