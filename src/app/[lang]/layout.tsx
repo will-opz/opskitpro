@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Script from "next/script";
 import { getDictionary } from "@/dictionaries";
 import { AdminSessionProvider } from "@/components/AdminSessionProvider";
-import { ACTIVE_LOCALES, LOCALE_MAP, type Locale } from "@/lib/i18n";
+import {
+  ACTIVE_LOCALES,
+  LOCALE_MAP,
+  isActiveLocale,
+  type Locale,
+} from "@/lib/i18n";
 import "../globals.css";
 
 const themeInitScript = `
@@ -16,12 +22,20 @@ const themeInitScript = `
 })();
 `;
 
+async function resolveLocale(params: Promise<{ lang: string }>) {
+  const { lang } = await params;
+  if (!isActiveLocale(lang)) notFound();
+  return lang;
+}
+
+export const dynamicParams = false;
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = ((await params).lang || "en") as Locale;
+  const lang = await resolveLocale(params);
   const dict = await getDictionary(lang);
 
   const baseUrl = "https://opskitpro.com";
@@ -107,7 +121,7 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
-  const lang = ((await params).lang || "en") as Locale;
+  const lang = await resolveLocale(params);
   const dict = await getDictionary(lang);
 
   return (

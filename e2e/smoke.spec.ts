@@ -100,6 +100,13 @@ test.beforeEach(async ({ context, page }) => {
   await page.route('https://pagead2.googlesyndication.com/**', (route) => route.abort())
 })
 
+test('invalid locale-like paths return 404 instead of 500', async ({ request }) => {
+  for (const path of ['/config.json', '/docker-compose.yml', '/unknown']) {
+    const response = await request.get(path)
+    expect(response.status(), `${path} should be a not-found response`).toBe(404)
+  }
+})
+
 test('home page exposes core navigation and tool entry points', async ({ page }) => {
   await page.goto('/')
 
