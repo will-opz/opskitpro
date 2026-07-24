@@ -9,5 +9,6 @@
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "vitest.setup.ts"
-  ]
+  ],
+  "exclude": ["node_modules", "e2e/**"]
 }

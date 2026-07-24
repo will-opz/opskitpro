@@ -276,11 +276,11 @@ describe("API contract integration", () => {
   });
 
   it("returns the ip lookup contract from Cloudflare metadata", async () => {
-    const req = new Request("http://localhost/api/ip", {
+    const req = new NextRequest("http://localhost/api/ip", {
       headers: {
         "cf-connecting-ip": "1.2.3.4",
       },
-    }) as Request & { cf?: Record<string, any> };
+    }) as NextRequest & { cf?: Record<string, any> };
 
     req.cf = {
       country: "JP",
@@ -501,7 +501,7 @@ describe("API contract integration", () => {
     delete (globalThis as any).KV;
   });
 
-  it("uses KV only for authenticated explicit diagnostic cache requests", async () => {
+  it("ignores retired KV requests even when authenticated", async () => {
     vi.stubGlobal("fetch", makeFetchStub());
     const kv = {
       get: vi.fn().mockResolvedValue(null),
@@ -522,16 +522,16 @@ describe("API contract integration", () => {
       ),
     );
     expect(res.status).toBe(200);
-    expect(res.headers.get("X-Cache")).toBe("MISS");
-    expect(kv.get).toHaveBeenCalled();
-    expect(kv.put).toHaveBeenCalled();
+    expect(res.headers.get("X-Cache")).toBe("BYPASS");
+    expect(kv.get).not.toHaveBeenCalled();
+    expect(kv.put).not.toHaveBeenCalled();
 
     delete (globalThis as any).KV;
     delete process.env.OPSKITPRO_ADMIN_PASSWORD;
     delete process.env.OPSKITPRO_ADMIN_SECRET;
   });
 
-  it("uses KV for Cloudflare Access whitelisted diagnostic cache requests", async () => {
+  it("ignores retired KV requests from Cloudflare Access sessions", async () => {
     vi.stubGlobal("fetch", makeFetchStub());
     const kv = {
       get: vi.fn().mockResolvedValue(null),
@@ -552,9 +552,9 @@ describe("API contract integration", () => {
       ),
     );
     expect(res.status).toBe(200);
-    expect(res.headers.get("X-Cache")).toBe("MISS");
-    expect(kv.get).toHaveBeenCalled();
-    expect(kv.put).toHaveBeenCalled();
+    expect(res.headers.get("X-Cache")).toBe("BYPASS");
+    expect(kv.get).not.toHaveBeenCalled();
+    expect(kv.put).not.toHaveBeenCalled();
 
     delete (globalThis as any).KV;
     delete process.env.OPSKITPRO_ADMIN_EMAILS;

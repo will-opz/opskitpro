@@ -10,6 +10,12 @@ import {
   isAllowedAdminEmail,
   isAdminPassword,
 } from "@/lib/admin-auth";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/runtime-context";
 
 export async function GET(request: NextRequest) {
   const passwordConfigured = Boolean(process.env.OPSKITPRO_ADMIN_PASSWORD);
@@ -32,6 +38,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit({
+    ip: getClientIp(request),
+    route: "/api/admin/session",
+    costClass: "HIGH",
+    limit: 5,
+  });
+  if (!rateLimit.success) return rateLimitResponse(rateLimit);
+
   let body: { email?: string; password?: string };
 
   try {
@@ -68,6 +82,8 @@ export async function POST(request: NextRequest) {
     authenticated: true,
     email,
     provider: "password",
+  }, {
+    headers: createRateLimitHeaders(rateLimit),
   });
   response.cookies.set(ADMIN_COOKIE_NAME, await getAdminToken(email), {
     httpOnly: true,

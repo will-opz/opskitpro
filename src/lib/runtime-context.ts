@@ -1,10 +1,5 @@
 import type { NextRequest } from "next/server";
 
-type CloudflareRuntimeContext = {
-  cf?: Record<string, any>;
-  env?: Record<string, any>;
-};
-
 /**
  * Extracts the client IP from the request.
  * SECURITY BOUNDARY: This function inherently trusts `cf-connecting-ip` and `x-forwarded-for`.
@@ -24,8 +19,4 @@ export function getClientIp(request: NextRequest) {
 export function getRequestCloudflareMetadata(request: NextRequest) {
   const cf = (request as any).cf;
   return cf && Object.keys(cf).length > 0 ? cf : null;
-}
-
-export async function getCloudflareRuntimeContext(): Promise<CloudflareRuntimeContext> {
-  return {};
 }

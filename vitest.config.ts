@@ -12,6 +12,25 @@ export default defineConfig({
     typecheck: {
       tsconfig: './tsconfig.test.json',
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary'],
+      include: [
+        'src/lib/cli-diagnostic.ts',
+        'src/lib/diagnostic-types.ts',
+        'src/lib/diagnostic-target.ts',
+        'src/lib/rate-limit.ts',
+        'src/lib/validators.ts',
+        'src/app/[lang]/tools/website-check/_hooks/helpers.ts',
+        'src/app/[lang]/tools/website-check/_lib/report.ts',
+      ],
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        statements: 60,
+        branches: 50,
+      },
+    },
   },
   resolve: {
     alias: {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 
 export const ADMIN_COOKIE_NAME = "opskitpro_admin";
@@ -36,7 +37,13 @@ export function isAdminConfigured() {
 
 export function isAdminPassword(password: string) {
   const expected = process.env.OPSKITPRO_ADMIN_PASSWORD || "";
-  return Boolean(expected && password === expected);
+  if (!expected) return false;
+  const actualBuffer = Buffer.from(password);
+  const expectedBuffer = Buffer.from(expected);
+  return (
+    actualBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(actualBuffer, expectedBuffer)
+  );
 }
 
 export async function getAdminToken(email?: string) {

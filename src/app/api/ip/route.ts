@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import type { IpLookupResponse } from "@/lib/api-contracts";
 import {
   getClientIp,
-  getCloudflareRuntimeContext,
   getRequestCloudflareMetadata,
 } from "@/lib/runtime-context";
 
@@ -127,12 +126,6 @@ export async function GET(request: NextRequest) {
   const requestCf = getRequestCloudflareMetadata(request);
   if (requestCf) {
     return buildCloudflareResponse(requestCf);
-  }
-
-  // Prefer request-scoped CF metadata in tests/local dev, then fall back to OpenNext context.
-  const { cf: cfContext } = await getCloudflareRuntimeContext();
-  if (cfContext && Object.keys(cfContext).length > 0) {
-    return buildCloudflareResponse(cfContext);
   }
 
   // Fallback for local development and standard Node.js server deployments.

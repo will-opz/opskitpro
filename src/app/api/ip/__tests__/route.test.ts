@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
+import { NextRequest } from "next/server";
 import { GET } from "../route";
 
 function makeRequest(
   headers: Record<string, string> = {},
   cf?: Record<string, any>,
-): Request {
-  const req = new Request("http://localhost/api/ip", { headers });
+): NextRequest {
+  const req = new NextRequest("http://localhost/api/ip", { headers });
   // Attach Cloudflare-specific `cf` object to simulate edge runtime data
   (req as any).cf = cf || {};
   return req;
@@ -53,7 +54,7 @@ describe("GET /api/ip — IP detection", () => {
     );
 
     const res = await GET(
-      new Request("http://localhost/api/ip?q=172.67.176.41"),
+      new NextRequest("http://localhost/api/ip?q=172.67.176.41"),
     );
     expect(res.status).toBe(200);
 

@@ -152,6 +152,7 @@ describe("countMessages — session message counting", () => {
   it("excludes info/error/system log types", () => {
     const infoOnly: LogEntry[] = [
       {
+        id: "info-1",
         time: "12:00:00",
         timestamp: 1700000000000,
         type: "info",
@@ -217,6 +218,7 @@ describe("toCsvString — CSV export transformation", () => {
   it("escapes double quotes in message field", () => {
     const logsWithQuotes: LogEntry[] = [
       {
+        id: "sent-quotes-1",
         time: "12:00:00",
         timestamp: 1700000000000,
         type: "sent",

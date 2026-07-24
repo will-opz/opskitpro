@@ -6,82 +6,12 @@ import type {
   DiagnosticPostSuccessResponse,
   DiagnosticSuccessResponse,
 } from "@/lib/api-contracts";
-import {
-  getClientIp,
-  getCloudflareRuntimeContext,
-} from "@/lib/runtime-context";
+import { getClientIp } from "@/lib/runtime-context";
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
+import { normalizeDiagnosticTarget } from "@/lib/diagnostic-target";
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = "force-dynamic";
-
-const ADMIN_COOKIE_NAME = "opskitpro_admin";
-const CLOUDFLARE_ACCESS_EMAIL_HEADER = "cf-access-authenticated-user-email";
-
-async function sha256(value: string) {
-  const input = new TextEncoder().encode(value);
-  const hash = await crypto.subtle.digest("SHA-256", input);
-  return Array.from(new Uint8Array(hash))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function isAdminDiagnosticRequest(request: NextRequest) {
-  const password = process.env.OPSKITPRO_ADMIN_PASSWORD || "";
-  const secret = process.env.OPSKITPRO_ADMIN_SECRET || password;
-  const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const allowedEmails = (process.env.OPSKITPRO_ADMIN_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-  const accessEmail =
-    request.headers.get(CLOUDFLARE_ACCESS_EMAIL_HEADER)?.trim().toLowerCase() ||
-    "";
-
-  if (accessEmail && allowedEmails.includes(accessEmail)) return true;
-  if (!secret || !token) return false;
-
-  const passwordToken = password ? await sha256(`${password}:${secret}`) : "";
-  if (passwordToken && token === passwordToken) return true;
-
-  const accessTokens = await Promise.all(
-    allowedEmails.map((email) =>
-      sha256(`cloudflare-access:${email}:${secret}`),
-    ),
-  );
-  if (accessTokens.some((accessToken) => accessToken === token)) return true;
-
-  const passwordEmailTokens = await Promise.all(
-    allowedEmails.map((email) => sha256(`password:${email}:${secret}`)),
-  );
-  return passwordEmailTokens.some(
-    (passwordEmailToken) => passwordEmailToken === token,
-  );
-}
-
-const normalizeTargetInput = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-
-  if (/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::\d+)?$/.test(trimmed)) {
-    return trimmed.split(":")[0];
-  }
-
-  try {
-    const withScheme = /^https?:\/\//i.test(trimmed)
-      ? trimmed
-      : `https://${trimmed}`;
-    const parsed = new URL(withScheme);
-    return parsed.hostname.replace(/\.$/, "");
-  } catch {
-    return trimmed
-      .replace(/^https?:\/\//i, "")
-      .replace(/\/.*$/, "")
-      .replace(/:\d+$/, "")
-      .replace(/\.$/, "")
-      .trim();
-  }
-};
 
 const ipv4Segment = "(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)";
 const ipv4Regex = new RegExp(`^(?:${ipv4Segment}\\.){3}${ipv4Segment}$`);
@@ -505,7 +435,7 @@ export async function GET(request: NextRequest | Request) {
   const rateLimitHeaders = createRateLimitHeaders(rateLimit);
 
   const { searchParams } = new URL(requestUrl);
-  const query = normalizeTargetInput(
+  const query = normalizeDiagnosticTarget(
     searchParams.get("domain") || searchParams.get("target") || "",
   );
   const cfRay = request.headers.get("cf-ray") || "";
@@ -530,66 +460,6 @@ export async function GET(request: NextRequest | Request) {
   // If no query, default to visitor's own IP
   if (!query) {
     domain = getClientIp(request as NextRequest);
-  }
-
-  const wantsKvCache =
-    searchParams.get("cache") === "kv" && !searchParams.has("_nocache");
-  const useKvCache =
-    wantsKvCache &&
-    "cookies" in request &&
-    (await isAdminDiagnosticRequest(request as NextRequest));
-  const cacheKey = `diag:v2:${domain}`;
-
-  // --- Robust KV Discovery ---
-  let KV: any = null;
-  if (useKvCache) {
-    KV = (process.env as any).KV;
-  }
-  if (useKvCache && !KV) {
-    try {
-      const { env } = await getCloudflareRuntimeContext();
-      KV = (env as any)?.KV || (globalThis as any).KV;
-    } catch (e) {
-      KV = (globalThis as any).KV;
-    }
-  }
-
-  // 1. Global KV Cache Lookup
-  if (KV && useKvCache) {
-    try {
-      const cached = await KV.get(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        const servedAt = new Date().toISOString();
-        const checkedAt = parsed.meta?.checkedAt || servedAt;
-        const checkedAtMs = new Date(checkedAt).getTime();
-        const cacheAgeSeconds = Number.isFinite(checkedAtMs)
-          ? Math.max(0, Math.floor((Date.now() - checkedAtMs) / 1000))
-          : 0;
-        return NextResponse.json(
-          {
-            ...parsed,
-            meta: {
-              ...parsed.meta,
-              checkedAt,
-              servedAt,
-              cacheStatus: "HIT",
-              cacheLookupMs: Date.now() - requestStartedAt,
-              cacheAgeSeconds,
-              edgeColo,
-            },
-          },
-          {
-            headers: {
-              "X-Cache": "HIT",
-              "Cache-Control": "public, s-maxage=60",
-            },
-          },
-        );
-      }
-    } catch (e) {
-      console.error("KV Read Error:", e);
-    }
   }
 
   if (!domain) {
@@ -1100,22 +970,16 @@ export async function GET(request: NextRequest | Request) {
       cdn: { is_provider: isCdn, provider, server: serverHeader },
       geo,
       whois: whoisInfo,
-      meta: buildMeta(useKvCache ? "MISS" : "BYPASS", {
+      meta: buildMeta("BYPASS", {
         coreMs,
         enrichmentMs: Math.max(0, Date.now() - requestStartedAt - coreMs),
       }),
     };
 
-    if (KV && useKvCache) {
-      await KV.put(cacheKey, JSON.stringify(responseData), {
-        expirationTtl: 3600,
-      }).catch(() => null);
-    }
     return NextResponse.json(responseData, {
       headers: {
-        ...(useKvCache
-          ? { "X-Cache": "MISS", "Cache-Control": "no-store" }
-          : { "X-Cache": "BYPASS", "Cache-Control": "no-store" }),
+        "X-Cache": "BYPASS",
+        "Cache-Control": "no-store",
         ...rateLimitHeaders,
       },
     });
@@ -1151,7 +1015,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const target =
-      typeof body?.target === "string" ? normalizeTargetInput(body.target) : "";
+      typeof body?.target === "string"
+        ? normalizeDiagnosticTarget(body.target)
+        : "";
 
     if (!target) {
       return NextResponse.json(

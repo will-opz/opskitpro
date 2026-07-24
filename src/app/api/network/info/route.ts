@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import type { NetworkInfoResponse } from "@/lib/api-contracts";
 import {
   getClientIp,
-  getCloudflareRuntimeContext,
   getRequestCloudflareMetadata,
 } from "@/lib/runtime-context";
 
@@ -34,14 +33,8 @@ export async function GET(request: NextRequest) {
 
   const ua = request.headers.get("user-agent") || "Unknown";
 
-  // --- CF metadata with 3-level fallback ---
+  // Request-scoped metadata is available in compatible proxy/runtime contexts.
   let cfData: any = getRequestCloudflareMetadata(request);
-
-  if (!cfData || Object.keys(cfData).length === 0) {
-    const { cf } = await getCloudflareRuntimeContext();
-    cfData =
-      cf && Object.keys(cf).length > 0 ? cf : (globalThis as any).__cf || null;
-  }
 
   // Cloudflare Trace
   const origin = request.nextUrl.origin;

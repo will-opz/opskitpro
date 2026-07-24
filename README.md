@@ -42,7 +42,7 @@ opskitpro.com (Main Site — Next.js 14)
 ├── /tools/*       Website, DNS, IP, JSON, WebSocket, and utility modules
 ├── /blog          Engineering notes and operating reflections
 ├── /services      Curated external service matrix
-└── /api           Edge diagnostic APIs
+└── /api           Dynamic diagnostic APIs on the Lightsail Node runtime
 ```
 
 ## Repository Model
@@ -180,16 +180,21 @@ Private operations data is kept out of this repository. `opskitpro-ops` contains
 
 ## 🧠 AI Memory System
 
-This repository implements an **Externalized AI Memory** system (located in `AGENTS.md` and the `.ai/` directory) to maintain high-context continuity for AI coding assistants (like Antigravity).
+`AGENTS.md` points coding agents to shared project memory in the private
+`opskitpro-ops/.ai/` directory. This public repository must not contain its own
+`.ai/` directory or copies of private plans, analytics, server notes, or
+operational state.
 
-- **`AGENTS.md`**: The entry-point rules that instruct AI tools on how to behave in this specific codebase.
-- **`.ai/current_state.md`**: The current development phase, focus, and strict architectural boundaries.
-- **`.ai/decisions.md`**: Architecture Decision Records (ADRs) to prevent AI from Hallucinating conflicting designs.
-- **`.ai/task_board.md`**: A lightweight, machine-readable Kanban board for the current sprint.
-- **`.ai/session_log.md`**: The history of previous AI sessions and completed tasks.
+### Runtime and trust boundaries
 
-> [!WARNING]
-> Because this is a **public repository**, absolute data sanitization is required. AI agents and contributors must **never** write API keys, server IP addresses, or internal private system URLs into the `.ai/` tracking files.
+- Cloudflare provides the public edge, TLS, and Access policy.
+- Nginx on Lightsail is the origin proxy and must overwrite trusted forwarding
+  headers such as `CF-Connecting-IP` and the Cloudflare Access identity header.
+- Next.js runs as a standalone Node.js service; Cloudflare Workers and Workers
+  KV are not runtime dependencies.
+- Live diagnostics return `X-Cache: BYPASS` and `Cache-Control: no-store`.
+- `/d/[domain]`, `/chk/[domain]`, and `/api/cli?domain=` are compatibility
+  entrypoints backed by the same CLI renderer.
 
 ---
 

@@ -21,7 +21,7 @@ export const createSafeDiagnosticResult = (
   data: any,
   fallbackDomain: string,
   fallbackError?: string,
-) => {
+): DiagnosticResponse => {
   const domain = data?.domain || fallbackDomain || "opskitpro.com";
   const isVisitor = Boolean(data?.isVisitor);
   const isActuallyIp = Boolean(data?.isActuallyIp);
@@ -168,3 +168,4 @@ export function calculateScore(data: any) {
 
   return Math.max(0, score);
 }
+import type { DiagnosticResponse } from "@/lib/diagnostic-types";

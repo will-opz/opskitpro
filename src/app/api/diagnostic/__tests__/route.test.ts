@@ -20,7 +20,7 @@ import { GET, POST } from "../route";
 
 describe("GET /api/diagnostic — health check", () => {
   it("returns status: ready", async () => {
-    const res = await GET();
+    const res = await GET(undefined as never);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.status).toBe("ready");
