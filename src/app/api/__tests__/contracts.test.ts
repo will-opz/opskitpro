@@ -325,6 +325,8 @@ describe("API contract integration", () => {
     expect(body.http).toMatchObject({
       success: true,
       status_code: 200,
+      classification: "redirected",
+      challenge: false,
       final_url: "https://example.com/en",
       redirect_count: 1,
       page_title: "Example",
@@ -385,6 +387,7 @@ describe("API contract integration", () => {
     expect(body.http).toMatchObject({
       success: false,
       status_code: 403,
+      classification: "probe_blocked",
       final_url: "https://example.com",
       redirect_count: 0,
       page_title: "Access denied",
@@ -406,6 +409,47 @@ describe("API contract integration", () => {
         return url === "https://example.com";
       }),
     ).toHaveLength(1);
+  });
+
+  it("classifies a 200 challenge page as probe blocked", async () => {
+    const baseFetch = makeFetchStub();
+    const fetchStub = vi.fn(async (input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
+
+      if (url === "https://example.com") {
+        return new Response(
+          "<html><title>Just a moment...</title><script src='/cdn-cgi/challenge-platform/x'></script></html>",
+          {
+            status: 200,
+            headers: {
+              "content-type": "text/html",
+              server: "cloudflare",
+              "cf-mitigated": "challenge",
+            },
+          },
+        );
+      }
+      return baseFetch(input);
+    });
+    vi.stubGlobal("fetch", fetchStub);
+
+    const res = await diagnosticGET(
+      new Request("http://localhost/api/diagnostic?domain=example.com") as any,
+    );
+    const body = await res.json();
+
+    expect(body.http).toMatchObject({
+      success: false,
+      status_code: 200,
+      classification: "probe_blocked",
+      challenge: true,
+      page_title: "Just a moment...",
+    });
   });
 
   it("returns the ip lookup contract from Cloudflare metadata", async () => {

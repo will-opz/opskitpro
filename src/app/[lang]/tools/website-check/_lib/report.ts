@@ -43,6 +43,7 @@ export type WebsiteCheckReport = {
   evidence: string[];
   nextActions: string[];
   findings: WebsiteCheckFinding[];
+  observations?: WebsiteCheckResult["observations"];
 };
 
 type ReportCopy = {
@@ -242,7 +243,12 @@ export function buildWebsiteCheckReport(
   const score = calculateScore(data);
   const isIpOrVisitor = Boolean(data.isVisitor || data.isActuallyIp);
   const blocked =
-    !data.http.success && isBlockedHttpStatus(data.http.status_code);
+    !data.http.success &&
+    (data.http.classification === "probe_blocked" ||
+      isBlockedHttpStatus(data.http.status_code));
+  const browserReachable =
+    data.observations?.browser?.status === "reachable" &&
+    data.observations.browser.precision === "full";
   const missingHeaders =
     data.securityHeaders?.checks?.filter((check: any) => !check.present) || [];
   const findings: WebsiteCheckFinding[] = [];
@@ -288,7 +294,10 @@ export function buildWebsiteCheckReport(
   );
 
   const cloudflareHint = getCloudflareHint(data);
-  const httpSeverity: WebsiteCheckFindingSeverity = data.http.success
+  const httpSeverity: WebsiteCheckFindingSeverity =
+    browserReachable && blocked
+      ? "info"
+      : data.http.success
     ? data.http.redirect_warning
       ? "warning"
       : parseLatencyMs(data.http.latency) > 2000
@@ -301,6 +310,8 @@ export function buildWebsiteCheckReport(
     makeFinding({
       id: data.http.success
         ? "http.reachable"
+        : browserReachable && blocked
+          ? "http.browser-reachable-probe-blocked"
         : blocked
           ? "http.blocked"
           : "http.unreachable",
@@ -309,10 +320,18 @@ export function buildWebsiteCheckReport(
       title: copy.labels.http,
       summary: data.http.success
         ? `HTTP returned ${data.http.status_code || "OK"} in ${data.http.latency}.`
+        : browserReachable && blocked
+          ? lang === "zh"
+            ? `用户浏览器访问正常，但 OpsKitPro Probe 被 HTTP ${data.http.status_code || "ERR"} 拒绝。`
+            : `Your browser can reach the site, but OpsKitPro Probe was rejected with HTTP ${data.http.status_code || "ERR"}.`
         : blocked
           ? copy.httpBlockedSummary(data.http.status_code || "ERR")
           : copy.httpFailureSummary(data.http.status_code),
       evidence: [
+        browserReachable
+          ? `Your Browser: HTTP ${data.observations?.browser?.httpStatus || "OK"} · ${data.observations?.browser?.latencyMs ?? "—"}ms`
+          : "",
+        `OpsKitPro Probe: HTTP ${data.http.status_code || "ERR"} · ${data.http.latency}`,
         `HTTP status: ${data.http.status_code || "ERR"}`,
         `Latency: ${data.http.latency}`,
         `Final URL: ${data.http.final_url || "Unknown"}`,
@@ -321,6 +340,10 @@ export function buildWebsiteCheckReport(
       ].filter(Boolean),
       likelyCause: data.http.success
         ? data.http.redirect_warning || copy.noIssueCause
+        : browserReachable && blocked
+          ? lang === "zh"
+            ? "网站对用户可访问，但边缘安全策略限制了来自 Lightsail 的自动化探测。"
+            : "The site is available to the user, while edge security limits the automated Lightsail probe."
         : blocked
           ? copy.httpBlockedCause
           : cloudflareHint
@@ -330,6 +353,10 @@ export function buildWebsiteCheckReport(
         ? data.http.redirect_warning
           ? "Review redirect rules and remove loops or unnecessary hops."
           : copy.noIssueFix
+        : browserReachable && blocked
+          ? lang === "zh"
+            ? "无需按站点宕机处理；如需完整服务端监控，可选择放行已知探针。"
+            : "Do not treat this as downtime; optionally allowlist the known probe for full server-side monitoring."
         : blocked
           ? copy.httpBlockedFix
           : copy.httpFailureFix,
@@ -338,7 +365,13 @@ export function buildWebsiteCheckReport(
             "Open the final URL from a clean browser session.",
             "Re-run Website Check after redirect or application changes.",
           ]
-        : copy.httpFailureVerify,
+        : browserReachable && blocked
+          ? [
+              lang === "zh"
+                ? "继续从用户浏览器确认公开页面可访问。"
+                : "Continue verifying the public page from the user browser.",
+            ]
+          : copy.httpFailureVerify,
     }),
   );
 
@@ -593,7 +626,10 @@ export function buildWebsiteCheckReport(
     `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || "Unknown"}`,
     `CDN: ${data.cdn.is_provider ? data.cdn.provider : "Not detected"} · server ${data.cdn.server || "Unknown"}`,
     `Observation Point: TLS probe executed from OpsKitPro Probe`,
-  ];
+    browserReachable
+      ? `Browser Observation: reachable · HTTP ${data.observations?.browser?.httpStatus || "OK"}`
+      : "",
+  ].filter(Boolean);
 
   return {
     formatVersion: WEBSITE_CHECK_REPORT_FORMAT_VERSION,
@@ -603,12 +639,18 @@ export function buildWebsiteCheckReport(
     score,
     status,
     verdict: copy.verdict[status],
-    summary: copy.summary[status],
+    summary:
+      browserReachable && blocked
+        ? lang === "zh"
+          ? "网站可从用户浏览器正常访问，但 OpsKitPro 服务端探针受到边缘安全策略限制。"
+          : "The site is reachable from your browser, but edge security limits the OpsKitPro server probe."
+        : copy.summary[status],
     impact: copy.impact[status],
     suspectedCause: firstActionable?.likelyCause || copy.noIssueCause,
     evidence,
     nextActions: firstActionable?.verificationSteps || [copy.noIssueVerify],
     findings,
+    observations: data.observations,
   };
 }
 
@@ -662,6 +704,12 @@ export function buildWebsiteCheckMarkdown(
     `- Cache: ${data.meta?.cacheStatus || "MISS"}${data.meta?.cacheAgeSeconds ? ` (${data.meta.cacheAgeSeconds}s old)` : ""}`,
     `- Cloudflare Edge: ${data.meta?.edgeColo || "Unknown"}`,
     `- Observation Point: TLS probe executed from OpsKitPro Probe`,
+    report.observations?.browser
+      ? `- Your Browser: ${report.observations.browser.status} · ${report.observations.browser.precision} precision · HTTP ${report.observations.browser.httpStatus || "Unknown"}`
+      : "- Your Browser: not available",
+    report.observations?.server
+      ? `- OpsKitPro Probe: ${report.observations.server.status} · ${report.observations.server.location}`
+      : "- OpsKitPro Probe: not available",
     "",
     "## Executive Summary",
     report.summary,
@@ -693,6 +741,8 @@ export function buildWebsiteCheckMarkdown(
     "## HTTP",
     `- Reachable: ${data.http.success ? "Yes" : "No"}`,
     `- Status: ${data.http.status_code || "Error"}`,
+    `- Classification: ${data.http.classification || "unknown"}`,
+    `- Challenge detected: ${data.http.challenge ? "Yes" : "No"}`,
     `- Protocol: ${data.http.is_https ? "HTTPS" : "HTTP/TCP"}`,
     `- Response time: ${data.http.latency}`,
     `- Final URL: ${data.http.final_url || "Unknown"}`,

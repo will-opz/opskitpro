@@ -621,6 +621,7 @@ export async function GET(request: NextRequest | Request) {
         number,
         RedirectTrace | undefined,
         string?,
+        boolean?,
       ]
     > = (() => {
       const t0 = Date.now();
@@ -632,6 +633,7 @@ export async function GET(request: NextRequest | Request) {
           }
 
           let title: string | undefined;
+          let challenge = res.headers.get("cf-mitigated") === "challenge";
           try {
             const clone = res.clone();
             const contentType = clone.headers.get("content-type") || "";
@@ -644,18 +646,24 @@ export async function GET(request: NextRequest | Request) {
               if (match?.[1]) {
                 title = match[1].trim().replace(/\s+/g, " ");
               }
+              challenge =
+                challenge ||
+                /just a moment|checking your browser|cf-chl-|challenge-platform|attention required/i.test(
+                  text,
+                );
             }
           } catch {}
 
-          return [res, redirectTrace, title] as const;
+          return [res, redirectTrace, title, challenge] as const;
         })
         .then(
-          ([res, redirectTrace, title]) =>
-            [res, Date.now() - t0, redirectTrace, title] as [
+          ([res, redirectTrace, title, challenge]) =>
+            [res, Date.now() - t0, redirectTrace, title, challenge] as [
               Response,
               number,
               RedirectTrace,
               string?,
+              boolean?,
             ],
         )
         .catch(
@@ -665,11 +673,13 @@ export async function GET(request: NextRequest | Request) {
               Date.now() - t0,
               undefined,
               undefined,
+              false,
             ] as [
               { error: true; message: string },
               number,
               undefined,
               undefined,
+              boolean,
             ],
         );
     })();
@@ -701,7 +711,7 @@ export async function GET(request: NextRequest | Request) {
         .catch(() => null);
     })();
 
-    const [httpResRaw, httpLatency, redirectTrace, pageTitle] =
+    const [httpResRaw, httpLatency, redirectTrace, pageTitle, challenge] =
       await httpPromise;
     const coreMs = Date.now() - requestStartedAt;
     const [tlsData, legacyTlsData, rdapData] = await Promise.all([sslPromise, legacyTlsPromise, whoisPromise]);
@@ -761,6 +771,24 @@ export async function GET(request: NextRequest | Request) {
       : allIps[0] || dnsMatch?.data?.Answer?.[0]?.data || domain;
       
     const hasHttpError = "error" in httpRes;
+    const redirectCount =
+      redirectTrace?.chain.filter((hop) => redirectStatuses.has(hop.status))
+        .length || 0;
+    const httpStatus = hasHttpError ? 0 : httpRes.status;
+    const httpClassification = hasHttpError
+      ? "network_error"
+      : challenge ||
+          httpStatus === 401 ||
+          httpStatus === 403 ||
+          httpStatus === 429
+        ? "probe_blocked"
+        : httpRes.ok
+          ? redirectCount > 0
+            ? "redirected"
+            : "reachable"
+          : httpStatus >= 500
+            ? "origin_error"
+            : "unknown";
     const serverHeader = hasHttpError ? "Unknown" : httpRes.headers.get("server") || "Unknown";
     const hstsEnabled = hasHttpError ? false : Boolean(
       httpRes.headers.get("strict-transport-security"),
@@ -934,19 +962,31 @@ export async function GET(request: NextRequest | Request) {
         resolvers: dnsResults,
       },
       http: {
-        success: !hasHttpError && httpRes.ok,
-        status_code: hasHttpError ? 0 : httpRes.status,
+        success: !hasHttpError && httpRes.ok && !challenge,
+        status_code: httpStatus,
         latency: `${httpLatency}ms`,
         is_https: isHttps,
         final_url: redirectTrace?.finalUrl || (hasHttpError ? targetUrl : httpRes.url) || targetUrl,
         redirect_chain: redirectTrace?.chain || [],
-        redirect_count:
-          redirectTrace?.chain.filter((hop) =>
-            redirectStatuses.has(hop.status),
-          ).length || 0,
+        redirect_count: redirectCount,
         redirect_warning: redirectTrace?.warning || (hasHttpError ? httpRes.message : undefined),
         cf_ray: hasHttpError ? undefined : httpRes.headers.get("cf-ray") || undefined,
         page_title: pageTitle,
+        classification: httpClassification,
+        challenge: Boolean(challenge),
+        observation: {
+          source: "opskitpro_probe",
+          location: "AWS Lightsail",
+          precision: "full",
+        },
+      },
+      observations: {
+        server: {
+          source: "opskitpro_probe",
+          status: httpClassification,
+          precision: "full",
+          location: "AWS Lightsail",
+        },
       },
       securityHeaders,
       ssl: {

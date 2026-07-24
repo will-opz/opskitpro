@@ -220,6 +220,53 @@ test('website diagnostics renders mocked result without external network depende
   await expect(page.getByText('https://opskitpro.com/').first()).toBeVisible()
 })
 
+test('website diagnostics separates a reachable browser from a blocked server probe', async ({ page }) => {
+  let directThirdPartyRequests = 0
+  await page.route('https://example.com/**', async (route) => {
+    directThirdPartyRequests += 1
+    await route.abort()
+  })
+  await page.route('**/api/diagnostic**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ...diagnosticResult,
+        domain: '127.0.0.1',
+        http: {
+          ...diagnosticResult.http,
+          success: false,
+          status_code: 403,
+          classification: 'probe_blocked',
+          challenge: true,
+          redirect_count: 0,
+          redirect_chain: [{ url: 'https://127.0.0.1/', status: 403 }],
+        },
+        observations: {
+          server: {
+            source: 'opskitpro_probe',
+            status: 'probe_blocked',
+            precision: 'full',
+            location: 'AWS Lightsail',
+          },
+        },
+      }),
+    }),
+  )
+
+  await page.goto('/tools/website-check')
+  await page.getByPlaceholder(/Enter domain/i).fill('127.0.0.1')
+  await page.getByRole('button', { name: /Analyze/i }).click()
+
+  await expect(page.getByText('Site reachable, server probe restricted')).toBeVisible()
+  await expect(page.getByText(/should not be treated as downtime/)).toBeVisible()
+  await page.getByRole('button', { name: /Show Details/i }).click()
+  await expect(page.getByText('Browser OK / Probe restricted')).toBeVisible()
+  await expect(page.getByText('Your Browser · full')).toBeVisible()
+  await expect(page.getByText('OpsKitPro Probe · AWS Lightsail · full')).toBeVisible()
+  expect(directThirdPartyRequests).toBe(0)
+})
+
 test('website diagnostics explains partial failures with next actions', async ({ page }) => {
   await page.addInitScript(() => {
     ;(window as any).__copiedText = ''

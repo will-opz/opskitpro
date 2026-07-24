@@ -9,6 +9,40 @@ import {
 
 const LOCAL_RESULT_CACHE_TTL_MS = 10 * 60 * 1000;
 
+async function collectSameOriginBrowserObservation(domain: string) {
+  if (
+    typeof window === "undefined" ||
+    window.location.hostname.toLowerCase() !== domain.toLowerCase()
+  ) {
+    return undefined;
+  }
+
+  const startedAt = performance.now();
+  try {
+    const response = await fetch(`${window.location.origin}/`, {
+      cache: "no-store",
+      redirect: "follow",
+    });
+    return {
+      source: "your_browser" as const,
+      status: response.ok ? ("reachable" as const) : ("failed" as const),
+      precision: "full" as const,
+      httpStatus: response.status,
+      finalUrl: response.url,
+      latencyMs: Math.round(performance.now() - startedAt),
+      checkedAt: new Date().toISOString(),
+    };
+  } catch {
+    return {
+      source: "your_browser" as const,
+      status: "failed" as const,
+      precision: "full" as const,
+      latencyMs: Math.round(performance.now() - startedAt),
+      checkedAt: new Date().toISOString(),
+    };
+  }
+}
+
 export function useWebsiteCheck() {
   const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,7 +83,14 @@ export function useWebsiteCheck() {
           LOCAL_RESULT_CACHE_TTL_MS,
         ).catch(() => null);
         if (cachedResult) {
-          setResult(cachedResult);
+          const browser = await collectSameOriginBrowserObservation(d);
+          setResult({
+            ...cachedResult,
+            observations: {
+              ...cachedResult.observations,
+              ...(browser ? { browser } : {}),
+            },
+          });
           setCurrentStep(3);
           setLoading(false);
           if (cachedResult.domain) {
@@ -61,15 +102,20 @@ export function useWebsiteCheck() {
 
       const expectedStepCount = 3;
 
+      const sameOrigin =
+        typeof window !== "undefined" &&
+        window.location.hostname.toLowerCase() === d.toLowerCase();
       const dnsResolvers = [
-        {
-          id: "system",
-          name: "SYSTEM DNS",
-          url: d
-            ? `https://${d}/favicon.ico`
-            : "https://google.com/favicon.ico",
-          type: "native",
-        },
+        ...(sameOrigin
+          ? [
+              {
+                id: "system",
+                name: "SYSTEM DNS",
+                url: `${window.location.origin}/favicon.ico`,
+                type: "native",
+              },
+            ]
+          : []),
         {
           id: "google",
           name: "GOOGLE (LOCAL)",
@@ -177,6 +223,13 @@ export function useWebsiteCheck() {
 
         if (data?.status === "partial_error") {
           const safeResult = createSafeDiagnosticResult(data, d, data.error);
+          const browser = await collectSameOriginBrowserObservation(d);
+          if (browser) {
+            safeResult.observations = {
+              ...safeResult.observations,
+              browser,
+            };
+          }
           setError(data.error || "Partial diagnostic failure");
           setResult(safeResult);
           if (safeResult.domain) {
@@ -186,6 +239,13 @@ export function useWebsiteCheck() {
         }
 
         const safeResult = createSafeDiagnosticResult(data, d);
+        const browser = await collectSameOriginBrowserObservation(d);
+        if (browser) {
+          safeResult.observations = {
+            ...safeResult.observations,
+            browser,
+          };
+        }
         setResult(safeResult);
         if (!authenticated) {
           await writeCachedDiagnosticResult(

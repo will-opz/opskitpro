@@ -559,6 +559,7 @@ export default function WebsiteCheckClient({
       ({
         zh: {
           blocked: "连接可达，但 HTTP 被拒绝",
+          browserReachableProbeBlocked: "网站可访问，服务端探测受限",
           blockedAdvice:
             "目标拒绝了当前探测请求。若这是你的公网 IP，通常表示没有开放 Web 服务；若这是网站域名，请检查 Cloudflare WAF、Access、Bot Fight Mode、IP 访问规则或源站 Host/SNI 策略。",
           visitorSslNa: "公网 IP 检测不适用 SSL 证书评分。",
@@ -567,6 +568,8 @@ export default function WebsiteCheckClient({
 
         en: {
           blocked: "Reachable, but HTTP is blocked",
+          browserReachableProbeBlocked:
+            "Site reachable, server probe restricted",
           blockedAdvice:
             "The target rejected this probe. For a public IP, this usually means no web service is exposed. For a domain, check Cloudflare WAF, Access, Bot Fight Mode, IP rules, or origin Host/SNI policy.",
           visitorSslNa:
@@ -581,22 +584,33 @@ export default function WebsiteCheckClient({
   const getResultState = useCallback(
     (data: any) => {
       const blocked =
-        !data?.http?.success && isBlockedHttpStatus(data?.http?.status_code);
+        !data?.http?.success &&
+        (data?.http?.classification === "probe_blocked" ||
+          isBlockedHttpStatus(data?.http?.status_code));
+      const browserReachable =
+        data?.observations?.browser?.status === "reachable" &&
+        data?.observations?.browser?.precision === "full";
       const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp);
       const headersScore = data?.securityHeaders?.score ?? 100;
       const whoisHold = data?.whois?.status?.toLowerCase().includes("hold");
-      const healthy = data?.http?.success && headersScore >= 55 && !whoisHold;
+      const healthy =
+        (data?.http?.success || (browserReachable && blocked)) &&
+        headersScore >= 55 &&
+        !whoisHold;
       const warning =
-        blocked ||
+        (blocked && !browserReachable) ||
         (isIpOrVisitor && Number(data?.http?.status_code || 0) >= 400);
 
       return {
         blocked,
+        browserReachable,
         isIpOrVisitor,
         healthy,
         warning,
         verdict: healthy
-          ? dict.tools.website_check.summary_good
+          ? browserReachable && blocked
+            ? statusCopy.browserReachableProbeBlocked
+            : dict.tools.website_check.summary_good
           : warning
             ? statusCopy.blocked
             : dict.tools.website_check.summary_bad,
@@ -634,8 +648,10 @@ export default function WebsiteCheckClient({
       },
       {
         label: localeText.http.title,
-        value: `${result.http.status_code}`,
-        tone: result.http.success
+        value: state.browserReachable
+          ? `${result.observations.browser.httpStatus || "OK"} / Probe ${result.http.status_code}`
+          : `${result.http.status_code}`,
+        tone: result.http.success || state.browserReachable
           ? "emerald"
           : state.blocked
             ? "orange"
@@ -1013,6 +1029,8 @@ export default function WebsiteCheckClient({
       zh: {
         http530: "Cloudflare 530：源站 DNS 出错，CDN 未能找到上游服务器 IP。",
         blocked: statusCopy.blockedAdvice,
+        probeLimited:
+          "用户浏览器已确认站点可访问。当前 403 仅表示 Lightsail 自动化探针受限，无需按站点宕机处理。",
         gateway: "网关超时：源站服务可能已停止，或响应失败。",
         connectivity: "可能存在连接故障。请检查防火墙与 80/443 端口。",
         sslExpired: "SSL 证书存在问题，当前会触发浏览器警告。",
@@ -1030,6 +1048,8 @@ export default function WebsiteCheckClient({
         http530:
           "Cloudflare 530: Origin DNS error. The CDN cannot find your upstream IP.",
         blocked: statusCopy.blockedAdvice,
+        probeLimited:
+          "Your browser confirmed the site is reachable. This 403 only limits the Lightsail probe and should not be treated as downtime.",
         gateway:
           "Gateway timeout: The origin service may be down or failing to respond.",
         connectivity:
@@ -1051,7 +1071,9 @@ export default function WebsiteCheckClient({
     const state = getResultState(data);
 
     if (!data.http.success) {
-      if (isBlockedHttpStatus(data.http.status_code)) {
+      if (state.browserReachable && state.blocked) {
+        advice.push(copy.probeLimited);
+      } else if (isBlockedHttpStatus(data.http.status_code)) {
         advice.push(copy.blocked);
       } else if (data.http.status_code === 530) {
         advice.push(copy.http530);
@@ -1772,7 +1794,7 @@ export default function WebsiteCheckClient({
                   </span>
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${
-                      result.http.success
+                      result.http.success || resultState?.browserReachable
                         ? "border-emerald-100 bg-emerald-50 text-emerald-700"
                         : resultState?.blocked
                           ? "border-orange-100 bg-orange-50 text-orange-600"
@@ -1780,7 +1802,9 @@ export default function WebsiteCheckClient({
                     }`}
                   >
                     <CheckCircle2 className="h-3 w-3" />
-                    {result.http.status_code || "ERR"}
+                    {resultState?.browserReachable
+                      ? `${result.observations.browser.httpStatus || "OK"} / Probe ${result.http.status_code}`
+                      : result.http.status_code || "ERR"}
                   </span>
                 </div>
               </div>
@@ -2002,7 +2026,7 @@ export default function WebsiteCheckClient({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {diagnosticFindings.map((item: any) => (
                   <div
-                    key={item.key}
+                    key={item.id}
                     className={`rounded-2xl border px-4 py-3 ${
                       item.status === "ok"
                         ? "border-emerald-100 bg-emerald-50/40"
@@ -2513,7 +2537,7 @@ export default function WebsiteCheckClient({
 
               {/* Step 3: Server HTTP */}
               <div
-                className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all ${result.http.success ? "bg-white border-black/5" : "bg-red-50 border-red-100"}`}
+                className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all ${result.http.success || resultState?.browserReachable ? "bg-white border-black/5" : resultState?.blocked ? "bg-orange-50 border-orange-100" : "bg-red-50 border-red-100"}`}
               >
                 <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
                   <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
@@ -2521,11 +2545,21 @@ export default function WebsiteCheckClient({
                   </span>
                   <div className="flex items-center gap-2">
                     <Server
-                      className={`w-4 h-4 ${result.http.success ? "text-emerald-500" : "text-red-500"}`}
+                      className={`w-4 h-4 ${result.http.success || resultState?.browserReachable ? "text-emerald-500" : resultState?.blocked ? "text-orange-500" : "text-red-500"}`}
                     />
                     <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
                       {localeText.http.title}
                     </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="rounded-full border border-zinc-200 bg-white px-2 py-1 text-[9px] font-semibold text-zinc-500">
+                      OpsKitPro Probe · AWS Lightsail · full
+                    </span>
+                    {result.observations?.browser && (
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700">
+                        Your Browser · full
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
@@ -2534,9 +2568,13 @@ export default function WebsiteCheckClient({
                       {localeText.http.availability}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.http.success ? "text-emerald-500" : "text-red-500"}`}
+                      className={`text-sm font-semibold ${result.http.success || resultState?.browserReachable ? "text-emerald-500" : resultState?.blocked ? "text-orange-600" : "text-red-500"}`}
                     >
-                      {result.http.success
+                      {resultState?.browserReachable
+                        ? lang === "zh"
+                          ? "浏览器正常 / 探针受限"
+                          : "Browser OK / Probe restricted"
+                        : result.http.success
                         ? localeText.http.success
                         : localeText.http.failure}
                     </p>
@@ -2546,9 +2584,11 @@ export default function WebsiteCheckClient({
                       {localeText.http.status}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.http.success ? "text-zinc-900" : "text-red-500"}`}
+                      className={`text-sm font-semibold ${result.http.success || resultState?.browserReachable ? "text-zinc-900" : "text-red-500"}`}
                     >
-                      {result.http.status_code || "Err"}
+                      {resultState?.browserReachable
+                        ? `${result.observations.browser.httpStatus || "OK"} / ${result.http.status_code}`
+                        : result.http.status_code || "Err"}
                     </p>
                   </div>
                   <div>

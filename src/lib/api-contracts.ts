@@ -104,6 +104,19 @@ export interface DiagnosticHttpSummary {
   redirect_warning?: string;
   cf_ray?: string;
   page_title?: string;
+  classification?:
+    | "reachable"
+    | "redirected"
+    | "probe_blocked"
+    | "origin_error"
+    | "network_error"
+    | "unknown";
+  challenge?: boolean;
+  observation?: {
+    source: "opskitpro_probe";
+    location: string;
+    precision: "full";
+  };
 }
 
 export interface DiagnosticSecurityHeaderCheck {
@@ -191,6 +204,14 @@ export interface DiagnosticSuccessResponse {
   isPrivate: boolean;
   dns: DiagnosticDnsSummary;
   http: DiagnosticHttpSummary;
+  observations?: {
+    server?: {
+      source: "opskitpro_probe";
+      status: NonNullable<DiagnosticHttpSummary["classification"]>;
+      precision: "full";
+      location: string;
+    };
+  };
   securityHeaders?: DiagnosticSecurityHeadersSummary;
   ssl: DiagnosticSslSummary;
   cdn: DiagnosticCdnSummary;

@@ -37,6 +37,36 @@ export type DiagnosticResponse = {
     redirect_warning?: string;
     cf_ray?: string;
     page_title?: string;
+    classification?:
+      | "reachable"
+      | "redirected"
+      | "probe_blocked"
+      | "origin_error"
+      | "network_error"
+      | "unknown";
+    challenge?: boolean;
+    observation?: {
+      source: "opskitpro_probe";
+      location: string;
+      precision: "full";
+    };
+  };
+  observations?: {
+    browser?: {
+      source: "your_browser";
+      status: "reachable" | "failed" | "not_available";
+      precision: "full" | "limited" | "not_available";
+      httpStatus?: number;
+      finalUrl?: string;
+      latencyMs?: number;
+      checkedAt: string;
+    };
+    server?: {
+      source: "opskitpro_probe";
+      status: DiagnosticResponse["http"]["classification"];
+      precision: "full";
+      location: string;
+    };
   };
   securityHeaders?: {
     score: number;

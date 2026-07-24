@@ -195,6 +195,63 @@ describe("website check report builder", () => {
     ).toBe(false);
   });
 
+  it("keeps the site healthy when the browser is reachable but the server probe is blocked", () => {
+    const result = createSafeDiagnosticResult(
+      {
+        ...healthyResult(),
+        http: {
+          success: false,
+          status_code: 403,
+          latency: "38ms",
+          classification: "probe_blocked",
+          challenge: true,
+          observation: {
+            source: "opskitpro_probe",
+            location: "AWS Lightsail",
+            precision: "full",
+          },
+        },
+        observations: {
+          browser: {
+            source: "your_browser",
+            status: "reachable",
+            precision: "full",
+            httpStatus: 200,
+            finalUrl: "https://opskitpro.com/en",
+            latencyMs: 82,
+            checkedAt: "2026-07-24T00:00:00.000Z",
+          },
+          server: {
+            source: "opskitpro_probe",
+            status: "probe_blocked",
+            precision: "full",
+            location: "AWS Lightsail",
+          },
+        },
+      },
+      "opskitpro.com",
+    );
+
+    const report = buildWebsiteCheckReport(result, { lang: "zh" });
+    const httpFinding = report.findings.find(
+      (finding) => finding.key === "http",
+    );
+
+    expect(report.status).toBe("healthy");
+    expect(report.score).toBe(100);
+    expect(report.summary).toContain("用户浏览器正常访问");
+    expect(httpFinding).toMatchObject({
+      id: "http.browser-reachable-probe-blocked",
+      severity: "info",
+    });
+    expect(httpFinding?.summary).toContain("用户浏览器访问正常");
+    expect(report.observations?.browser?.httpStatus).toBe(200);
+
+    const markdown = buildWebsiteCheckMarkdown(report, result);
+    expect(markdown).toContain("Your Browser: reachable");
+    expect(markdown).toContain("OpsKitPro Probe: probe_blocked");
+  });
+
   it("renders markdown with report summary and prioritized findings", () => {
     const result = healthyResult();
     const report = buildWebsiteCheckReport(result, {

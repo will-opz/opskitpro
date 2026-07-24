@@ -39,6 +39,37 @@ describe("website check helpers", () => {
     );
 
     expect(isBlockedHttpStatus(result.http.status_code)).toBe(true);
-    expect(calculateScore(result)).toBe(75);
+    expect(calculateScore(result)).toBe(85);
+  });
+
+  it("does not deduct availability points when the browser succeeds and only the probe is blocked", () => {
+    const result = createSafeDiagnosticResult(
+      {
+        domain: "opskitpro.com",
+        dns: { success: true, latency: "20ms" },
+        http: {
+          success: false,
+          status_code: 403,
+          latency: "300ms",
+          classification: "probe_blocked",
+          challenge: true,
+        },
+        observations: {
+          browser: {
+            source: "your_browser",
+            status: "reachable",
+            precision: "full",
+            httpStatus: 200,
+            checkedAt: "2026-07-24T00:00:00.000Z",
+          },
+        },
+        ssl: { valid: true, grade: "A" },
+        securityHeaders: { score: 100, grade: "A" },
+        cdn: { is_provider: true, provider: "Cloudflare" },
+      },
+      "",
+    );
+
+    expect(calculateScore(result)).toBe(100);
   });
 });

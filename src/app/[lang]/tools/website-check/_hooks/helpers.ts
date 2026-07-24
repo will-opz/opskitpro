@@ -65,7 +65,11 @@ export const createSafeDiagnosticResult = (
       redirect_warning: data?.http?.redirect_warning,
       cf_ray: data?.http?.cf_ray,
       page_title: data?.http?.page_title,
+      classification: data?.http?.classification || "unknown",
+      challenge: Boolean(data?.http?.challenge),
+      observation: data?.http?.observation,
     },
+    observations: data?.observations,
     securityHeaders: {
       score: Number(data?.securityHeaders?.score ?? 0),
       grade: data?.securityHeaders?.grade || "—",
@@ -149,10 +153,22 @@ export function calculateScore(data: any) {
   const statusCode = Number(data?.http?.status_code ?? 0);
   const blocked = isBlockedHttpStatus(statusCode);
   const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp);
+  const browserReachable =
+    data?.observations?.browser?.status === "reachable" &&
+    data?.observations?.browser?.precision === "full";
+  const probeBlocked =
+    data?.http?.classification === "probe_blocked" || blocked;
 
   if (!data?.dns?.success) score -= 25;
-  if (!data?.http?.success) score -= blocked ? 15 : 40;
-  if (statusCode >= 400) score -= blocked ? 10 : 20;
+  if (!data?.http?.success && !(browserReachable && probeBlocked)) {
+    score -= probeBlocked ? 10 : 40;
+  }
+  if (
+    statusCode >= 400 &&
+    !(browserReachable && probeBlocked)
+  ) {
+    score -= probeBlocked ? 5 : 20;
+  }
   if (!data?.ssl?.valid && !isIpOrVisitor) score -= 20;
   if (parseLatencyMs(data?.dns?.latency ?? "0ms") > 300) score -= 10;
   if (parseLatencyMs(data?.http?.latency ?? "0ms") > 2000) score -= 10;
