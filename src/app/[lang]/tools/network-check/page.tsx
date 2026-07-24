@@ -10,9 +10,9 @@ import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   const title = dict.tools.network_check_title;
@@ -35,9 +35,9 @@ export async function generateMetadata({
 export default async function NetworkCheckPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   const jsonLdWebApp = buildToolJsonLd({

@@ -1548,9 +1548,9 @@ export default function WebsiteCheckClient({
                     {localeText.fault.evidence}
                   </p>
                   <div className="mt-2 space-y-1.5">
-                    {faultGuide.evidence.map((item: string) => (
+                    {faultGuide.evidence.map((item: string, index: number) => (
                       <p
-                        key={item}
+                        key={`${item}-${index}`}
                         className="break-all text-xs leading-5 text-zinc-700"
                       >
                         - {item}
@@ -1565,11 +1565,16 @@ export default function WebsiteCheckClient({
                   {localeText.fault.nextAction}
                 </p>
                 <div className="mt-2 space-y-2">
-                  {faultGuide.nextAction.map((item: string) => (
-                    <p key={item} className="text-xs leading-5 text-zinc-700">
+                  {faultGuide.nextAction.map(
+                    (item: string, index: number) => (
+                    <p
+                      key={`${item}-${index}`}
+                      className="text-xs leading-5 text-zinc-700"
+                    >
                       - {item}
                     </p>
-                  ))}
+                    ),
+                  )}
                 </div>
               </div>
             </div>

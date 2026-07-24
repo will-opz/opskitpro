@@ -19,9 +19,9 @@ const themeInitScript = `
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = (params.lang || "en") as Locale;
+  const lang = ((await params).lang || "en") as Locale;
   const dict = await getDictionary(lang);
 
   const baseUrl = "https://opskitpro.com";
@@ -105,13 +105,18 @@ export default async function RootLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang = (params.lang || "en") as Locale;
+  const lang = ((await params).lang || "en") as Locale;
   const dict = await getDictionary(lang);
 
   return (
-    <html lang={lang} className="overflow-x-hidden" suppressHydrationWarning>
+    <html
+      lang={lang}
+      className="overflow-x-hidden"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Script

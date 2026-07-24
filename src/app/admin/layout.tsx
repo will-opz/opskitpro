@@ -16,8 +16,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = cookies();
-  const headerStore = headers();
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "en") as "zh" | "en";
   const authenticated = await isAdminIdentity(
     cookieStore.get(ADMIN_COOKIE_NAME)?.value,

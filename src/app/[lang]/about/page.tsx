@@ -14,9 +14,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 export default async function AboutPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
   const isZh = lang === "zh";
   const aboutCopy = {

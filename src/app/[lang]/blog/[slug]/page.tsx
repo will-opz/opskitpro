@@ -23,10 +23,10 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string; slug: string };
+  params: Promise<{ lang: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = params;
-  const lang = (params.lang || "en") as "zh" | "en";
+  const { lang: langParam, slug } = await params;
+  const lang = (langParam || "en") as "zh" | "en";
   const post = getBlogPostBySlug(lang, slug);
 
   if (!post) {
@@ -46,10 +46,10 @@ export async function generateMetadata({
 export default async function BlogPost({
   params,
 }: {
-  params: { lang: string; slug: string };
+  params: Promise<{ lang: string; slug: string }>;
 }) {
-  const { slug } = params;
-  const lang = (params.lang || "en") as "zh" | "en";
+  const { lang: langParam, slug } = await params;
+  const lang = (langParam || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
   const post = getBlogPostBySlug(lang, slug);
 

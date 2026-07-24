@@ -7,9 +7,9 @@ import TimeClient from "./time-client";
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   return {
@@ -25,9 +25,9 @@ export async function generateMetadata({
 export default async function TimePage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   return (

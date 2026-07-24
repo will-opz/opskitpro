@@ -3,9 +3,9 @@ import { handleCliDiagnostic } from "@/lib/cli-diagnostic";
 
 export const dynamic = "force-dynamic";
 
-export function GET(
+export async function GET(
   request: NextRequest,
-  { params }: { params: { domain: string } },
+  { params }: { params: Promise<{ domain: string }> },
 ) {
-  return handleCliDiagnostic(request, params.domain);
+  return handleCliDiagnostic(request, (await params).domain);
 }

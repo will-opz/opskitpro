@@ -44,8 +44,7 @@ const copy = {
 };
 
 export default async function AdminProfilePage() {
-  const cookieStore = cookies();
-  const headerStore = headers();
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
   const lang = (cookieStore.get("NEXT_LOCALE")?.value ||
     "en") as keyof typeof copy;
   const t = copy[lang] || copy.zh;

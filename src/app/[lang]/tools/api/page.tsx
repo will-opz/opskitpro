@@ -7,9 +7,9 @@ import type { Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
 
   const title = "Public JSON API for DNS, IP and HTTP Checks | OpsKitPro";
   const description =
@@ -21,9 +21,9 @@ export async function generateMetadata({
 export default async function ApiDocsPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   return (

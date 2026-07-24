@@ -29,9 +29,9 @@ function getIconForResponsibility(responsibility: string) {
 export default async function ErrorsPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   const isZh = lang === "zh";

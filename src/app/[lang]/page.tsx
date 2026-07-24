@@ -21,9 +21,9 @@ import { buildPageMetadata } from "@/lib/seo";
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang = (params.lang || "en") as "zh" | "en";
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
   return buildPageMetadata(
@@ -154,8 +154,12 @@ const homeDashboardCopy = {
   },
 } as const;
 
-export default async function Home({ params }: { params: { lang: string } }) {
-  const lang = (params.lang || "en") as "zh" | "en";
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
   const latestNotes = getAllBlogPosts(lang)
     .slice()

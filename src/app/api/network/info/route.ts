@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const ua = request.headers.get("user-agent") || "Unknown";
 
   // Request-scoped metadata is available in compatible proxy/runtime contexts.
-  let cfData: any = getRequestCloudflareMetadata(request);
+  const cfData: any = getRequestCloudflareMetadata(request);
 
   // Cloudflare Trace
   const origin = request.nextUrl.origin;

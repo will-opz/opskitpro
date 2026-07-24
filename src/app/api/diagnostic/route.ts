@@ -645,7 +645,7 @@ export async function GET(request: NextRequest | Request) {
                 }
               }
             } catch (e) {}
-            // @ts-ignore attach title to response object temporarily
+            // @ts-expect-error attach title to response object temporarily
             res._page_title = title;
             return [res, redirectTrace] as const;
           }),
@@ -708,7 +708,7 @@ export async function GET(request: NextRequest | Request) {
     const [tlsData, legacyTlsData, rdapData] = await Promise.all([sslPromise, legacyTlsPromise, whoisPromise]);
 
     const httpRes = httpResRaw as Response | { error: true; message: string };
-    let whoisInfo: any = {
+    const whoisInfo: any = {
       registered: "Unknown",
       registrar: "Unknown",
       status: "Unknown",
