@@ -287,6 +287,63 @@ describe("API contract integration", () => {
     ).toHaveLength(1);
   });
 
+  it("adds the configured Cloudflare Edge observation without exposing its token", async () => {
+    process.env.EDGE_PROBE_URL = "https://probe-edge.example.com/";
+    process.env.EDGE_PROBE_TOKEN = "test-edge-secret";
+    const baseFetch = makeFetchStub();
+    const fetchStub = vi.fn(async (input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
+      if (url === "https://probe-edge.example.com/") {
+        return jsonResponse({
+          ok: true,
+          source: "cloudflare_edge",
+          precision: "full",
+          colo: "NRT",
+          status: "reachable",
+          httpStatus: 200,
+          latencyMs: 44,
+          finalUrl: "https://example.com/",
+          redirectChain: [{ url: "https://example.com/", status: 200 }],
+          checkedAt: "2026-07-25T00:00:00.000Z",
+        });
+      }
+      return baseFetch(input);
+    });
+    vi.stubGlobal("fetch", fetchStub);
+
+    try {
+      const res = await diagnosticGET(
+        new Request("http://localhost/api/diagnostic?domain=example.com") as any,
+      );
+      const body = await res.json();
+
+      expect(body.observations.edge).toMatchObject({
+        source: "cloudflare_edge",
+        status: "reachable",
+        precision: "full",
+        colo: "NRT",
+        httpStatus: 200,
+      });
+      expect(JSON.stringify(body)).not.toContain("test-edge-secret");
+      expect(fetchStub).toHaveBeenCalledWith(
+        "https://probe-edge.example.com/",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer test-edge-secret",
+          }),
+        }),
+      );
+    } finally {
+      delete process.env.EDGE_PROBE_URL;
+      delete process.env.EDGE_PROBE_TOKEN;
+    }
+  });
+
   it("uses one coherent request chain for redirects", async () => {
     const baseFetch = makeFetchStub();
     const fetchStub = vi.fn(async (input: RequestInfo | URL) => {

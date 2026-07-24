@@ -9,6 +9,7 @@ import type {
 import { getClientIp } from "@/lib/runtime-context";
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
 import { normalizeDiagnosticTarget } from "@/lib/diagnostic-target";
+import { requestEdgeProbe } from "@/lib/edge-probe";
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = "force-dynamic";
@@ -683,6 +684,7 @@ export async function GET(request: NextRequest | Request) {
             ],
         );
     })();
+    const edgeProbePromise = requestEdgeProbe(targetUrl);
 
     const targetPort = 443; // Assume 443 for now
     const sslPromise =
@@ -711,8 +713,10 @@ export async function GET(request: NextRequest | Request) {
         .catch(() => null);
     })();
 
-    const [httpResRaw, httpLatency, redirectTrace, pageTitle, challenge] =
-      await httpPromise;
+    const [
+      [httpResRaw, httpLatency, redirectTrace, pageTitle, challenge],
+      edgeObservation,
+    ] = await Promise.all([httpPromise, edgeProbePromise]);
     const coreMs = Date.now() - requestStartedAt;
     const [tlsData, legacyTlsData, rdapData] = await Promise.all([sslPromise, legacyTlsPromise, whoisPromise]);
 
@@ -981,6 +985,7 @@ export async function GET(request: NextRequest | Request) {
         },
       },
       observations: {
+        ...(edgeObservation ? { edge: edgeObservation } : {}),
         server: {
           source: "opskitpro_probe",
           status: httpClassification,

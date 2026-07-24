@@ -156,16 +156,21 @@ export function calculateScore(data: any) {
   const browserReachable =
     data?.observations?.browser?.status === "reachable" &&
     data?.observations?.browser?.precision === "full";
+  const edgeReachable =
+    (data?.observations?.edge?.status === "reachable" ||
+      data?.observations?.edge?.status === "redirected") &&
+    data?.observations?.edge?.precision === "full";
   const probeBlocked =
     data?.http?.classification === "probe_blocked" || blocked;
+  const corroboratedReachable = browserReachable || edgeReachable;
 
   if (!data?.dns?.success) score -= 25;
-  if (!data?.http?.success && !(browserReachable && probeBlocked)) {
+  if (!data?.http?.success && !(corroboratedReachable && probeBlocked)) {
     score -= probeBlocked ? 10 : 40;
   }
   if (
     statusCode >= 400 &&
-    !(browserReachable && probeBlocked)
+    !(corroboratedReachable && probeBlocked)
   ) {
     score -= probeBlocked ? 5 : 20;
   }

@@ -249,6 +249,11 @@ export function buildWebsiteCheckReport(
   const browserReachable =
     data.observations?.browser?.status === "reachable" &&
     data.observations.browser.precision === "full";
+  const edgeReachable =
+    (data.observations?.edge?.status === "reachable" ||
+      data.observations?.edge?.status === "redirected") &&
+    data.observations.edge.precision === "full";
+  const corroboratedReachable = browserReachable || edgeReachable;
   const missingHeaders =
     data.securityHeaders?.checks?.filter((check: any) => !check.present) || [];
   const findings: WebsiteCheckFinding[] = [];
@@ -295,7 +300,7 @@ export function buildWebsiteCheckReport(
 
   const cloudflareHint = getCloudflareHint(data);
   const httpSeverity: WebsiteCheckFindingSeverity =
-    browserReachable && blocked
+    corroboratedReachable && blocked
       ? "info"
       : data.http.success
     ? data.http.redirect_warning
@@ -310,8 +315,10 @@ export function buildWebsiteCheckReport(
     makeFinding({
       id: data.http.success
         ? "http.reachable"
-        : browserReachable && blocked
-          ? "http.browser-reachable-probe-blocked"
+        : corroboratedReachable && blocked
+          ? browserReachable
+            ? "http.browser-reachable-probe-blocked"
+            : "http.edge-reachable-probe-blocked"
         : blocked
           ? "http.blocked"
           : "http.unreachable",
@@ -320,16 +327,19 @@ export function buildWebsiteCheckReport(
       title: copy.labels.http,
       summary: data.http.success
         ? `HTTP returned ${data.http.status_code || "OK"} in ${data.http.latency}.`
-        : browserReachable && blocked
+        : corroboratedReachable && blocked
           ? lang === "zh"
-            ? `用户浏览器访问正常，但 OpsKitPro Probe 被 HTTP ${data.http.status_code || "ERR"} 拒绝。`
-            : `Your browser can reach the site, but OpsKitPro Probe was rejected with HTTP ${data.http.status_code || "ERR"}.`
+            ? `${browserReachable ? "用户浏览器" : "Cloudflare Edge"}访问正常，但 OpsKitPro Probe 被 HTTP ${data.http.status_code || "ERR"} 拒绝。`
+            : `${browserReachable ? "Your browser" : "Cloudflare Edge"} can reach the site, but OpsKitPro Probe was rejected with HTTP ${data.http.status_code || "ERR"}.`
         : blocked
           ? copy.httpBlockedSummary(data.http.status_code || "ERR")
           : copy.httpFailureSummary(data.http.status_code),
       evidence: [
         browserReachable
           ? `Your Browser: HTTP ${data.observations?.browser?.httpStatus || "OK"} · ${data.observations?.browser?.latencyMs ?? "—"}ms`
+          : "",
+        data.observations?.edge
+          ? `Cloudflare Edge Probe (${data.observations.edge.colo}): ${data.observations.edge.status} · HTTP ${data.observations.edge.httpStatus || "—"} · ${data.observations.edge.latencyMs ?? "—"}ms`
           : "",
         `OpsKitPro Probe: HTTP ${data.http.status_code || "ERR"} · ${data.http.latency}`,
         `HTTP status: ${data.http.status_code || "ERR"}`,
@@ -340,10 +350,10 @@ export function buildWebsiteCheckReport(
       ].filter(Boolean),
       likelyCause: data.http.success
         ? data.http.redirect_warning || copy.noIssueCause
-        : browserReachable && blocked
+        : corroboratedReachable && blocked
           ? lang === "zh"
-            ? "网站对用户可访问，但边缘安全策略限制了来自 Lightsail 的自动化探测。"
-            : "The site is available to the user, while edge security limits the automated Lightsail probe."
+            ? `${browserReachable ? "用户浏览器" : "Cloudflare Edge"}确认网站可访问，但安全策略限制了来自 Lightsail 的自动化探测。`
+            : `${browserReachable ? "The user browser" : "Cloudflare Edge"} confirms the site is reachable, while security policy limits the automated Lightsail probe.`
         : blocked
           ? copy.httpBlockedCause
           : cloudflareHint
@@ -353,7 +363,7 @@ export function buildWebsiteCheckReport(
         ? data.http.redirect_warning
           ? "Review redirect rules and remove loops or unnecessary hops."
           : copy.noIssueFix
-        : browserReachable && blocked
+        : corroboratedReachable && blocked
           ? lang === "zh"
             ? "无需按站点宕机处理；如需完整服务端监控，可选择放行已知探针。"
             : "Do not treat this as downtime; optionally allowlist the known probe for full server-side monitoring."
@@ -365,7 +375,7 @@ export function buildWebsiteCheckReport(
             "Open the final URL from a clean browser session.",
             "Re-run Website Check after redirect or application changes.",
           ]
-        : browserReachable && blocked
+        : corroboratedReachable && blocked
           ? [
               lang === "zh"
                 ? "继续从用户浏览器确认公开页面可访问。"
@@ -629,6 +639,9 @@ export function buildWebsiteCheckReport(
     browserReachable
       ? `Browser Observation: reachable · HTTP ${data.observations?.browser?.httpStatus || "OK"}`
       : "",
+    data.observations?.edge
+      ? `Edge Observation: ${data.observations.edge.status} · ${data.observations.edge.colo} · HTTP ${data.observations.edge.httpStatus || "—"}`
+      : "",
   ].filter(Boolean);
 
   return {
@@ -640,10 +653,10 @@ export function buildWebsiteCheckReport(
     status,
     verdict: copy.verdict[status],
     summary:
-      browserReachable && blocked
+      corroboratedReachable && blocked
         ? lang === "zh"
-          ? "网站可从用户浏览器正常访问，但 OpsKitPro 服务端探针受到边缘安全策略限制。"
-          : "The site is reachable from your browser, but edge security limits the OpsKitPro server probe."
+          ? `网站可从${browserReachable ? "用户浏览器" : " Cloudflare Edge"}正常访问，但 OpsKitPro 服务端探针受到安全策略限制。`
+          : `The site is reachable from ${browserReachable ? "your browser" : "Cloudflare Edge"}, but security policy limits the OpsKitPro server probe.`
         : copy.summary[status],
     impact: copy.impact[status],
     suspectedCause: firstActionable?.likelyCause || copy.noIssueCause,
@@ -707,6 +720,9 @@ export function buildWebsiteCheckMarkdown(
     report.observations?.browser
       ? `- Your Browser: ${report.observations.browser.status} · ${report.observations.browser.precision} precision · HTTP ${report.observations.browser.httpStatus || "Unknown"}`
       : "- Your Browser: not available",
+    report.observations?.edge
+      ? `- Cloudflare Edge Probe: ${report.observations.edge.status} · ${report.observations.edge.colo} · full precision · HTTP ${report.observations.edge.httpStatus || "Unknown"}`
+      : "- Cloudflare Edge Probe: not configured",
     report.observations?.server
       ? `- OpsKitPro Probe: ${report.observations.server.status} · ${report.observations.server.location}`
       : "- OpsKitPro Probe: not available",

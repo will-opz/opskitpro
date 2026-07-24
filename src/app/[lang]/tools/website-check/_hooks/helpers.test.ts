@@ -72,4 +72,35 @@ describe("website check helpers", () => {
 
     expect(calculateScore(result)).toBe(100);
   });
+
+  it("accepts a full Cloudflare Edge observation as corroborating reachability", () => {
+    const result = createSafeDiagnosticResult(
+      {
+        domain: "example.com",
+        dns: { success: true, latency: "20ms" },
+        http: {
+          success: false,
+          status_code: 403,
+          latency: "300ms",
+          classification: "probe_blocked",
+        },
+        observations: {
+          edge: {
+            source: "cloudflare_edge",
+            status: "reachable",
+            precision: "full",
+            colo: "NRT",
+            httpStatus: 200,
+            checkedAt: "2026-07-25T00:00:00.000Z",
+          },
+        },
+        ssl: { valid: true, grade: "A" },
+        securityHeaders: { score: 100, grade: "A" },
+        cdn: { is_provider: true, provider: "Cloudflare" },
+      },
+      "",
+    );
+
+    expect(calculateScore(result)).toBe(100);
+  });
 });

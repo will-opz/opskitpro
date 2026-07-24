@@ -1,0 +1,19 @@
+{
+  "name": "opskitpro-edge-probe",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-24",
+  "compatibility_flags": [
+    "global_fetch_strictly_public"
+  ],
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "probe-edge.opskitpro.com",
+      "custom_domain": true
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

@@ -252,6 +252,58 @@ describe("website check report builder", () => {
     expect(markdown).toContain("OpsKitPro Probe: probe_blocked");
   });
 
+  it("uses Cloudflare Edge as a separate corroborating observation", () => {
+    const result = createSafeDiagnosticResult(
+      {
+        ...healthyResult(),
+        http: {
+          success: false,
+          status_code: 403,
+          latency: "38ms",
+          classification: "probe_blocked",
+        },
+        observations: {
+          edge: {
+            source: "cloudflare_edge",
+            status: "reachable",
+            precision: "full",
+            colo: "NRT",
+            httpStatus: 200,
+            latencyMs: 55,
+            finalUrl: "https://opskitpro.com/",
+            checkedAt: "2026-07-25T00:00:00.000Z",
+          },
+          server: {
+            source: "opskitpro_probe",
+            status: "probe_blocked",
+            precision: "full",
+            location: "AWS Lightsail",
+          },
+        },
+      },
+      "opskitpro.com",
+    );
+
+    const report = buildWebsiteCheckReport(result, { lang: "en" });
+    const httpFinding = report.findings.find(
+      (finding) => finding.key === "http",
+    );
+    expect(report).toMatchObject({
+      status: "healthy",
+      score: 100,
+    });
+    expect(report.summary).toContain("Cloudflare Edge");
+    expect(httpFinding).toMatchObject({
+      id: "http.edge-reachable-probe-blocked",
+      severity: "info",
+    });
+
+    const markdown = buildWebsiteCheckMarkdown(report, result);
+    expect(markdown).toContain(
+      "Cloudflare Edge Probe: reachable · NRT · full precision · HTTP 200",
+    );
+  });
+
   it("renders markdown with report summary and prioritized findings", () => {
     const result = healthyResult();
     const report = buildWebsiteCheckReport(result, {

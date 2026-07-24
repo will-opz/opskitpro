@@ -205,6 +205,20 @@ export interface DiagnosticSuccessResponse {
   dns: DiagnosticDnsSummary;
   http: DiagnosticHttpSummary;
   observations?: {
+    edge?: {
+      source: "cloudflare_edge";
+      status: NonNullable<DiagnosticHttpSummary["classification"]>;
+      precision: "full";
+      colo: string;
+      httpStatus?: number;
+      latencyMs?: number;
+      finalUrl?: string;
+      redirectChain?: DiagnosticHttpSummary["redirect_chain"];
+      challenge?: boolean;
+      pageTitle?: string;
+      error?: string;
+      checkedAt: string;
+    };
     server?: {
       source: "opskitpro_probe";
       status: NonNullable<DiagnosticHttpSummary["classification"]>;

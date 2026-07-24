@@ -61,6 +61,20 @@ export type DiagnosticResponse = {
       latencyMs?: number;
       checkedAt: string;
     };
+    edge?: {
+      source: "cloudflare_edge";
+      status: NonNullable<DiagnosticResponse["http"]["classification"]>;
+      precision: "full";
+      colo: string;
+      httpStatus?: number;
+      latencyMs?: number;
+      finalUrl?: string;
+      redirectChain?: unknown[];
+      challenge?: boolean;
+      pageTitle?: string;
+      error?: string;
+      checkedAt: string;
+    };
     server?: {
       source: "opskitpro_probe";
       status: DiagnosticResponse["http"]["classification"];
