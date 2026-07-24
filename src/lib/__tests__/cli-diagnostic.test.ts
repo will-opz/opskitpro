@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateCliScore,
+  getCliRequestOrigin,
   renderCliDiagnostic,
   renderCliUsage,
 } from "@/lib/cli-diagnostic";
 import type { DiagnosticResponse } from "@/lib/diagnostic-types";
+import { NextRequest } from "next/server";
 
 const fixture: DiagnosticResponse = {
   domain: "example.com",
@@ -55,5 +57,15 @@ describe("CLI diagnostic renderer", () => {
       ...fixture,
       http: { ...fixture.http, success: false, status_code: 503 },
     })).toBe(40);
+  });
+
+  it("uses forwarded origin headers behind the Lightsail proxy", () => {
+    const request = new NextRequest("http://localhost:3000/chk/example.com", {
+      headers: {
+        "x-forwarded-host": "opskitpro.com",
+        "x-forwarded-proto": "https",
+      },
+    });
+    expect(getCliRequestOrigin(request)).toBe("https://opskitpro.com");
   });
 });

@@ -93,13 +93,23 @@ ${c.dim}> Full UI Report: https://opskitpro.com/tools/website-check?target=${enc
 `;
 }
 
+export function getCliRequestOrigin(request: NextRequest): string {
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto || request.nextUrl.protocol.replace(":", "");
+
+  if (!host) return request.nextUrl.origin;
+  return `${protocol}://${host}`;
+}
+
 export async function handleCliDiagnostic(request: NextRequest, domain?: string | null) {
   const target = domain || request.nextUrl.searchParams.get("d") || request.nextUrl.searchParams.get("domain");
   if (!target) return new NextResponse(renderCliUsage(), { headers: textHeaders });
 
   try {
     const response = await fetch(
-      `${request.nextUrl.origin}/api/diagnostic?domain=${encodeURIComponent(target)}`,
+      `${getCliRequestOrigin(request)}/api/diagnostic?domain=${encodeURIComponent(target)}`,
       { headers: { "User-Agent": request.headers.get("User-Agent") || "OpsKitPro-CLI/1.0" }, cache: "no-store" },
     );
     const payload: unknown = await response.json();
