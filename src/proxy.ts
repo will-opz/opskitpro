@@ -13,6 +13,16 @@ const ADMIN_COOKIE_NAME = "opskitpro_admin";
 const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const CLOUDFLARE_ACCESS_EMAIL_HEADER = "cf-access-authenticated-user-email";
 
+function isLocaleNeutralPublicPath(pathname: string) {
+  if (pathname === "/" || pathname === "/about" || pathname === "/services") {
+    return true;
+  }
+
+  return ["/blog", "/errors", "/tools"].some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
 async function sha256(value: string) {
   const input = new TextEncoder().encode(value);
   const hash = await crypto.subtle.digest("SHA-256", input);
@@ -149,6 +159,12 @@ export async function proxy(request: NextRequest) {
 
   if (hasLocale || pathname.startsWith("/admin")) {
     // Already localized or is admin path. Let the Next.js page handle it natively.
+    return attachCloudflareAccessAdminCookie(request, NextResponse.next());
+  }
+
+  // Unknown locale-neutral paths should reach the App Router directly so they
+  // return one 404 response instead of a locale redirect followed by a 404.
+  if (!isLocaleNeutralPublicPath(pathname)) {
     return attachCloudflareAccessAdminCookie(request, NextResponse.next());
   }
 

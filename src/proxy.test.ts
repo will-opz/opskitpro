@@ -48,6 +48,26 @@ describe("proxy — locale redirection", () => {
     expect(res.headers.get("location")).toBe("http://localhost/en/blog");
   });
 
+  it.each(["/contact", "/pricing", "/graphql"])(
+    "passes unknown locale-neutral path %s through without a redirect",
+    async (pathname) => {
+      const res = await proxy(makeRequest(pathname));
+      expect(res.status).toBe(200);
+      expect(res.headers.get("location")).toBeNull();
+      expect(res.headers.get("set-cookie")).toBeNull();
+    },
+  );
+
+  it.each([
+    ["/about", "/en/about"],
+    ["/errors/500", "/en/errors/500"],
+    ["/tools/website-check", "/en/tools/website-check"],
+  ])("redirects known public path %s to %s", async (pathname, target) => {
+    const res = await proxy(makeRequest(pathname));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe(`http://localhost${target}`);
+  });
+
   it("passes through admin path without redirecting", async () => {
     const req = makeRequest("/admin");
     const res = await proxy(req);

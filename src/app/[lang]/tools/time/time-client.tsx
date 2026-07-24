@@ -121,12 +121,15 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
     <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
       <div className="mx-auto max-w-5xl">
         <nav className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">
+          <Link
+            href={`/${lang}`}
+            className="hover:text-emerald-600 transition-colors"
+          >
             {t.home}
           </Link>
           <span className="text-zinc-300">/</span>
           <Link
-            href="/tools"
+            href={`/${lang}/tools`}
             className="hover:text-emerald-600 transition-colors"
           >
             {t.tools}

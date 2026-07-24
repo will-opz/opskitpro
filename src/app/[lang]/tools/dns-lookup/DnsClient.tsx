@@ -222,7 +222,10 @@ export default function DnsClient({
     <div className="max-w-6xl mx-auto px-6 py-12 font-sans pb-32">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 mb-12 text-[10px] tracking-[0.24em] text-zinc-400">
-        <Link href="/" className="hover:text-zinc-900 transition-colors">
+        <Link
+          href={`/${lang}`}
+          className="hover:text-zinc-900 transition-colors"
+        >
           {lang === "zh"
               ? "首页"
               : "Home"}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Globe, Activity, ShieldCheck, MapPin } from "lucide-react";
+import { resolveLocalizedHref } from "@/lib/localized-href";
 
 interface RelatedToolsProps {
   currentTool:
@@ -100,7 +101,7 @@ export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
         {relatedTools.map((tool) => (
           <Link
             key={tool.id}
-            href={tool.href}
+            href={resolveLocalizedHref(lang, tool.href)}
             className={`group relative flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:shadow-md ${colorStyles[tool.color].hoverBorder}`}
           >
             <div

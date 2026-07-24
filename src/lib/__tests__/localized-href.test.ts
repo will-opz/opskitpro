@@ -6,6 +6,10 @@ describe("resolveLocalizedHref", () => {
     expect(resolveLocalizedHref("zh", "/tools/website-check")).toBe(
       "/zh/tools/website-check",
     );
+    expect(resolveLocalizedHref("en", "/")).toBe("/en");
+    expect(resolveLocalizedHref("zh", "/tools/dns-lookup?tab=security")).toBe(
+      "/zh/tools/dns-lookup?tab=security",
+    );
   });
 
   it("does not duplicate an existing locale prefix", () => {

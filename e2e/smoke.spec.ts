@@ -107,6 +107,27 @@ test('invalid locale-like paths return 404 instead of 500', async ({ request }) 
   }
 })
 
+test('unknown paths return a direct 404 while known public paths localize', async ({ request }) => {
+  for (const path of ['/contact', '/pricing', '/graphql']) {
+    const response = await request.get(path, { maxRedirects: 0 })
+    expect(response.status(), `${path} should not redirect before 404`).toBe(404)
+    expect(response.headers()['set-cookie']).toBeUndefined()
+  }
+
+  const knownRoute = await request.get('/tools/website-check', {
+    maxRedirects: 0,
+  })
+  expect(knownRoute.status()).toBe(307)
+  expect(knownRoute.headers().location).toBe('/en/tools/website-check')
+})
+
+test('localized pages link directly to the current locale', async ({ page }) => {
+  await page.goto('/en/tools/website-check')
+
+  await expect(page.locator('a[href^="/en/tools/"]')).not.toHaveCount(0)
+  await expect(page.locator('a[href^="/tools"]')).toHaveCount(0)
+})
+
 test('home page exposes core navigation and tool entry points', async ({ page }) => {
   await page.goto('/')
 

@@ -412,7 +412,7 @@ export default async function BlogPage({
                 </p>
               </div>
               <Link
-                href="/"
+                href={`/${lang}`}
                 className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
                 <BookOpen className="h-4 w-4" />

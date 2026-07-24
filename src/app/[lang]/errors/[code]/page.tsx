@@ -204,7 +204,10 @@ export default async function ErrorDetailPage({
 
         {/* Breadcrumb Navigation */}
         <nav className="mb-8 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
-          <Link href="/errors" className="hover:text-red-500 transition-colors">
+          <Link
+            href={`/${lang}/errors`}
+            className="hover:text-red-500 transition-colors"
+          >
             Encyclopedia
           </Link>
           <ChevronRight className="h-3 w-3" />
@@ -349,7 +352,7 @@ export default async function ErrorDetailPage({
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <TrackedLink
-                  href="/tools/website-check"
+                  href={`/${lang}/tools/website-check`}
                   eventName="error_page_to_website_check"
                   className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-white p-5 text-center shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
                 >
@@ -364,7 +367,7 @@ export default async function ErrorDetailPage({
                   </span>
                 </TrackedLink>
                 <Link
-                  href="/tools/cloudflare-trace"
+                  href={`/${lang}/tools/cloudflare-trace`}
                   className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white p-5 text-center shadow-sm transition-all hover:border-sky-500 hover:shadow-md"
                 >
                   <Activity className="h-6 w-6 text-sky-600 mb-1 group-hover:scale-110 transition-transform" />

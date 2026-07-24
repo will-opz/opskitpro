@@ -117,11 +117,17 @@ export default function WebsocketClient({
       <main className="w-full max-w-6xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-sans">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link href="/" className="hover:text-cyan-600 transition-colors">
+          <Link
+            href={`/${lang}`}
+            className="hover:text-cyan-600 transition-colors"
+          >
             {shellText.home}
           </Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/tools" className="hover:text-cyan-600 transition-colors">
+          <Link
+            href={`/${lang}/tools`}
+            className="hover:text-cyan-600 transition-colors"
+          >
             {shellText.tools}
           </Link>
           <span className="text-zinc-300">/</span>

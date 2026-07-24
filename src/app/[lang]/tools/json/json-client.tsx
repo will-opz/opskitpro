@@ -369,12 +369,15 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">
+          <Link
+            href={`/${lang}`}
+            className="hover:text-emerald-600 transition-colors"
+          >
             {ui.home}
           </Link>
           <span className="text-zinc-300">/</span>
           <Link
-            href="/tools"
+            href={`/${lang}/tools`}
             className="hover:text-emerald-600 transition-colors"
           >
             {ui.tools}

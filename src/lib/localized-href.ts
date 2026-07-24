@@ -15,6 +15,7 @@ export function resolveLocalizedHref(
   const path = normalized.startsWith("/") ? normalized : `/${normalized}`;
   const pathLocale = path.split("/")[1];
   if (isActiveLocale(pathLocale)) return path;
+  if (path === "/") return `/${lang}`;
 
   return `/${lang}${path}`;
 }
