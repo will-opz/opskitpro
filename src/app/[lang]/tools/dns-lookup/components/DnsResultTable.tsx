@@ -9,11 +9,9 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  ChevronDown,
-  ChevronRight,
   FileJson,
 } from "lucide-react";
-import type { DnsResult, DnsAnswer } from "../hooks";
+import type { DnsResult } from "../hooks";
 
 interface DnsResultTableProps {
   result: DnsResult | null;

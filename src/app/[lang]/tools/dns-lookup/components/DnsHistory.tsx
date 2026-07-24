@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Trash2, RotateCw, CheckCircle, XCircle } from "lucide-react";
+import { Clock, RotateCw, CheckCircle, XCircle } from "lucide-react";
 import type { LookupHistory, DnsRecordType, DnsProvider } from "../hooks";
 
 interface DnsHistoryProps {

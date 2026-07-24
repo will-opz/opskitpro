@@ -15,7 +15,7 @@ export async function generateMetadata({
   const dict = await getDictionary(lang);
 
   return buildPageMetadata(
-    `${dict.tools.passgen_title} - OpsKitPro`,
+    dict.tools.passgen_title,
     dict.tools.passgen_desc,
     lang,
     "/tools/passgen",

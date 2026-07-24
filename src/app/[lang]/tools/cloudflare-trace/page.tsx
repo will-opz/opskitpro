@@ -14,17 +14,9 @@ export async function generateMetadata({
   params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
   const lang = ((await params).lang || "en") as "zh" | "en";
-  const dict = await getDictionary(lang);
 
-  // Using a fallback directly since it might not be in the dictionary yet
   const title =
-    lang === "zh"
-      ? "Cloudflare Trace 解析"
-      : false
-        ? "Cloudflare Trace 解析"
-        : false
-          ? "Cloudflare Trace 解析"
-          : "Cloudflare Trace Analyzer";
+    lang === "zh" ? "Cloudflare Trace 解析" : "Cloudflare Trace Analyzer";
   const description =
     lang === "zh"
       ? "查看当前浏览器访问 Cloudflare 边缘节点的详细追踪信息，包括 Colo, TLS, HTTP, WARP 等状态。"
@@ -51,13 +43,7 @@ export default async function CloudflareTracePage({
   const dict = await getDictionary(lang);
 
   const title =
-    lang === "zh"
-      ? "Cloudflare Trace 解析"
-      : false
-        ? "Cloudflare Trace 解析"
-        : false
-          ? "Cloudflare Trace 解析"
-          : "Cloudflare Trace Analyzer";
+    lang === "zh" ? "Cloudflare Trace 解析" : "Cloudflare Trace Analyzer";
   const description =
     lang === "zh"
       ? "查看当前浏览器访问 Cloudflare 边缘节点的详细追踪信息，包括 Colo, TLS, HTTP, WARP 等状态。"

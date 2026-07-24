@@ -11,15 +11,6 @@ const TYPE_MAP: Record<number, string> = {
   257: "CAA",
 };
 
-const REVERSE_TYPE_MAP: Record<string, number> = Object.entries(
-  TYPE_MAP,
-).reduce(
-  (acc, [k, v]) => {
-    acc[v] = parseInt(k, 10);
-    return acc;
-  },
-  {} as Record<string, number>,
-);
 
 const STATUS_CODES: Record<number, string> = {
   0: "NOERROR",

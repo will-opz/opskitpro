@@ -7,7 +7,6 @@ import {
   Info,
   Mail,
   Lock,
-  Server,
   Download,
   Check,
 } from "lucide-react";

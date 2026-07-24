@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import tls from "tls";
 import type {
   DiagnosticHealthResponse,
-  DiagnosticPartialErrorResponse,
   DiagnosticPostSuccessResponse,
   DiagnosticSuccessResponse,
 } from "@/lib/api-contracts";

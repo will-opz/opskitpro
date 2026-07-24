@@ -74,7 +74,8 @@ async function getCloudflareAccessAdminToken(request: NextRequest) {
   return sha256(`cloudflare-access:${accessEmail}:${secret}`);
 }
 
-function injectCookie(headers: Headers, name: string, value: string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _injectCookie(headers: Headers, name: string, value: string) {
   const existingCookie = headers.get("cookie") || "";
   const withoutExisting = existingCookie
     .split(";")

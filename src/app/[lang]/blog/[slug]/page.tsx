@@ -93,13 +93,7 @@ export default async function BlogPost({
             className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/80 px-4 py-2 text-[11px] font-medium tracking-[0.16em] text-zinc-600 transition-colors hover:border-emerald-500/30 hover:text-emerald-600"
           >
             <ArrowLeft className="h-4 w-4" />
-            {false
-              ? "ブログへ戻る"
-              : lang === "zh"
-                ? "返回博客"
-                : false
-                  ? "返回部落格"
-                  : "Back to blog"}
+            {lang === "zh" ? "返回博客" : "Back to blog"}
           </Link>
         </div>
 
@@ -131,20 +125,12 @@ export default async function BlogPost({
                 <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-700">
                   <BookOpen className="h-4 w-4" />
                   {isToolArticle
-                    ? false
-                      ? "この記事では設計・実装・使い方を通して読めます。下の本文からそのまま進めます。"
-                      : lang === "zh"
-                        ? "这篇文章按设计、实现和用法完整展开，可以直接往下读。"
-                        : false
-                          ? "這篇文章按設計、實作和用法完整展開，可以直接往下讀。"
-                          : "This article reads through design, implementation, and usage in one flow."
-                    : false
-                      ? "メインサイトの整理版としてまとめています。必要なら下の一覧から他の記事も確認できます。"
-                      : lang === "zh"
-                        ? "这里是主站的整理版，必要时可以回到下方文章列表继续看。"
-                        : false
-                          ? "這裡是主站的整理版，必要時可以回到下方文章列表繼續看。"
-                          : "This is the organized version on the main site. Use the article list below if you want to keep exploring."}
+                    ? lang === "zh"
+                      ? "这篇文章按设计、实现和用法完整展开，可以直接往下读。"
+                      : "This article reads through design, implementation, and usage in one flow."
+                    : lang === "zh"
+                      ? "这里是主站的整理版，必要时可以回到下方文章列表继续看。"
+                      : "This is the organized version on the main site. Use the article list below if you want to keep exploring."}
                 </div>
 
                 <a
@@ -160,20 +146,12 @@ export default async function BlogPost({
                   className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
                 >
                   {isToolArticle
-                    ? false
-                      ? "ツールを開く"
-                      : lang === "zh"
-                        ? "打开工具"
-                        : false
-                          ? "開啟工具"
-                          : "Open tool"
-                    : false
-                      ? "文章一覧を見る"
-                      : lang === "zh"
-                        ? "浏览文章列表"
-                        : false
-                          ? "瀏覽文章列表"
-                          : "Browse articles"}
+                    ? lang === "zh"
+                      ? "打开工具"
+                      : "Open tool"
+                    : lang === "zh"
+                      ? "浏览文章列表"
+                      : "Browse articles"}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
@@ -203,42 +181,22 @@ export default async function BlogPost({
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
                   <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
-                  {false
-                    ? "本文について"
-                    : lang === "zh"
-                      ? "关于正文"
-                      : false
-                        ? "關於正文"
-                        : "About the article"}
+                  {lang === "zh" ? "关于正文" : "About the article"}
                 </div>
                 <p className="mt-4 text-sm leading-7 text-zinc-700">
                   {isToolArticle
-                    ? false
-                      ? "このページは、背景から実装、使い方までを一続きで読めるように整えています。"
-                      : lang === "zh"
-                        ? "这篇文章按完整正文来整理，从背景、实现到用法都可以连起来读。"
-                        : false
-                          ? "這篇文章按完整正文來整理，從背景、實作到用法都可以串起來讀。"
-                          : "This page is organized as a full read-through, from background to implementation and usage."
-                    : false
-                      ? "メインサイトの記事として、要点と構成を読みやすく整理しています。"
-                      : lang === "zh"
-                        ? "这里按主站文章来整理，保留要点和结构，方便快速阅读。"
-                        : false
-                          ? "這裡按主站文章來整理，保留要點與結構，方便快速閱讀。"
-                          : "This page is organized as a main-site article, keeping the key points and structure easy to read."}
+                    ? lang === "zh"
+                      ? "这篇文章按完整正文来整理，从背景、实现到用法都可以连起来读。"
+                      : "This page is organized as a full read-through, from background to implementation and usage."
+                    : lang === "zh"
+                      ? "这里按主站文章来整理，保留要点和结构，方便快速阅读。"
+                      : "This page is organized as a main-site article, keeping the key points and structure easy to read."}
                 </p>
               </div>
 
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {false
-                    ? "本文"
-                    : lang === "zh"
-                      ? "正文"
-                      : false
-                        ? "正文"
-                        : "Article body"}
+                  {lang === "zh" ? "正文" : "Article body"}
                 </div>
                 {post.source === "mdx" && post.content ? (
                   <article className="mt-6 prose prose-zinc prose-emerald max-w-none">
@@ -288,37 +246,19 @@ export default async function BlogPost({
 
               <div className="rounded-[2rem] border border-zinc-100 bg-white p-6 shadow-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {false
-                    ? "関連記事"
-                    : lang === "zh"
-                      ? "相关文章"
-                      : false
-                        ? "相關文章"
-                        : "Related articles"}
+                  {lang === "zh" ? "相关文章" : "Related articles"}
                 </div>
                 <div className="mt-4 space-y-3">
                   {relatedPosts.map((item) => (
                     <a
                       key={item.slug}
-                      href={`/blog/${item.slug}`}
+                      href={`/${lang}/blog/${item.slug}`}
                       className="block rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 transition-colors hover:border-emerald-500/20 hover:bg-emerald-50/40"
                     >
                       <p className="text-xs font-semibold tracking-[0.16em] text-emerald-600">
                         {item.actionKind === "tool"
-                          ? false
-                            ? "ツール"
-                            : lang === "zh"
-                              ? "工具"
-                              : false
-                                ? "工具"
-                                : "Tool"
-                          : false
-                            ? "記事"
-                            : lang === "zh"
-                              ? "文章"
-                              : false
-                                ? "文章"
-                                : "Article"}
+                          ? lang === "zh" ? "工具" : "Tool"
+                          : lang === "zh" ? "文章" : "Article"}
                       </p>
                       <p className="mt-2 text-sm font-semibold leading-6 text-zinc-900">
                         {item.title}
@@ -333,43 +273,23 @@ export default async function BlogPost({
 
               <div className="rounded-[2rem] border border-zinc-100 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
-                  {false
-                    ? "次の一歩"
-                    : lang === "zh"
-                      ? "下一步"
-                      : false
-                        ? "下一步"
-                        : "Next step"}
+                  {lang === "zh" ? "下一步" : "Next step"}
                 </div>
                 <p className="mt-4 text-sm leading-7 text-zinc-700">
                   {isToolArticle
-                    ? false
-                      ? "実際のツールを開いて試しつつ、必要なら関連記事へ戻れます。"
-                      : lang === "zh"
-                        ? "可以先打开实际工具试一试，再回到相关文章继续看。"
-                        : false
-                          ? "可以先打開實際工具試一試，再回到相關文章繼續看。"
-                          : "Open the actual tool to try it, then come back to related articles if needed."
-                    : false
-                      ? "必要なら、ツール一覧や個別ツールの記事を続けて読めます。"
-                      : lang === "zh"
-                        ? "如果想继续深入，可以接着看工具列表或各个工具文章。"
-                        : false
-                          ? "如果想繼續深入，可以接著看工具列表或各個工具文章。"
-                          : "If you want to go deeper, continue with Tools or individual articles."}
+                    ? lang === "zh"
+                      ? "可以先打开实际工具试一试，再回到相关文章继续看。"
+                      : "Open the actual tool to try it, then come back to related articles if needed."
+                    : lang === "zh"
+                      ? "如果想继续深入，可以接着看工具列表或各个工具文章。"
+                      : "If you want to go deeper, continue with Tools or individual articles."}
                 </p>
                 <div className="mt-5 flex flex-col gap-3">
                   <Link
                     href={blogHref}
                     className="inline-flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:border-emerald-500/20 hover:text-emerald-600"
                   >
-                    {false
-                      ? "ブログ一覧へ"
-                      : lang === "zh"
-                        ? "返回博客列表"
-                        : false
-                          ? "返回部落格列表"
-                          : "Back to blog"}
+                    {lang === "zh" ? "返回博客列表" : "Back to blog"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <a
@@ -385,20 +305,8 @@ export default async function BlogPost({
                     className="inline-flex items-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
                   >
                     {isToolArticle
-                      ? false
-                        ? "ツールを開く"
-                        : lang === "zh"
-                          ? "打开工具"
-                          : false
-                            ? "開啟工具"
-                            : "Open tool"
-                      : false
-                        ? "文章一覧を見る"
-                        : lang === "zh"
-                          ? "浏览文章列表"
-                          : false
-                            ? "瀏覽文章列表"
-                            : "Browse articles"}
+                      ? lang === "zh" ? "打开工具" : "Open tool"
+                      : lang === "zh" ? "浏览文章列表" : "Browse articles"}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
