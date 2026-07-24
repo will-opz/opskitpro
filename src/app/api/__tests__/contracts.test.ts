@@ -228,7 +228,8 @@ describe("API contract integration", () => {
   });
 
   it("returns a diagnostic success contract for a real domain lookup", async () => {
-    vi.stubGlobal("fetch", makeFetchStub());
+    const fetchStub = makeFetchStub();
+    vi.stubGlobal("fetch", fetchStub);
 
     const res = await diagnosticGET(
       new Request("http://localhost/api/diagnostic?domain=example.com") as any,
@@ -273,6 +274,138 @@ describe("API contract integration", () => {
     expect(body.meta.coreMs).toBeTypeOf("number");
     expect(body.meta.enrichmentMs).toBeTypeOf("number");
     expect(body.geo.country).toBe("United States");
+    expect(
+      fetchStub.mock.calls.filter(([input]) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : (input as Request).url;
+        return url === "https://example.com";
+      }),
+    ).toHaveLength(1);
+  });
+
+  it("uses one coherent request chain for redirects", async () => {
+    const baseFetch = makeFetchStub();
+    const fetchStub = vi.fn(async (input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
+
+      if (url === "https://example.com") {
+        return new Response(null, {
+          status: 307,
+          headers: { location: "/en" },
+        });
+      }
+      if (url === "https://example.com/en") {
+        return new Response("<title>Example</title>", {
+          status: 200,
+          headers: {
+            "content-type": "text/html",
+            server: "cloudflare",
+            "cf-ray": "abc123",
+          },
+        });
+      }
+      return baseFetch(input);
+    });
+    vi.stubGlobal("fetch", fetchStub);
+
+    const res = await diagnosticGET(
+      new Request("http://localhost/api/diagnostic?domain=example.com") as any,
+    );
+    const body = await res.json();
+
+    expect(body.http).toMatchObject({
+      success: true,
+      status_code: 200,
+      final_url: "https://example.com/en",
+      redirect_count: 1,
+      page_title: "Example",
+      redirect_chain: [
+        {
+          url: "https://example.com",
+          status: 307,
+          location: "/en",
+        },
+        {
+          url: "https://example.com/en",
+          status: 200,
+        },
+      ],
+    });
+    expect(
+      fetchStub.mock.calls.filter(([input]) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : (input as Request).url;
+        return url === "https://example.com/en";
+      }),
+    ).toHaveLength(1);
+  });
+
+  it("keeps a terminal blocked response consistent with its chain", async () => {
+    const baseFetch = makeFetchStub();
+    const fetchStub = vi.fn(async (input: RequestInfo | URL) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
+
+      if (url === "https://example.com") {
+        return new Response("<title>Access denied</title>", {
+          status: 403,
+          headers: {
+            "content-type": "text/html",
+            server: "cloudflare",
+            "cf-ray": "blocked123",
+          },
+        });
+      }
+      return baseFetch(input);
+    });
+    vi.stubGlobal("fetch", fetchStub);
+
+    const res = await diagnosticGET(
+      new Request("http://localhost/api/diagnostic?domain=example.com") as any,
+    );
+    const body = await res.json();
+
+    expect(body.http).toMatchObject({
+      success: false,
+      status_code: 403,
+      final_url: "https://example.com",
+      redirect_count: 0,
+      page_title: "Access denied",
+      redirect_chain: [
+        {
+          url: "https://example.com",
+          status: 403,
+        },
+      ],
+    });
+    expect(
+      fetchStub.mock.calls.filter(([input]) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : (input as Request).url;
+        return url === "https://example.com";
+      }),
+    ).toHaveLength(1);
   });
 
   it("returns the ip lookup contract from Cloudflare metadata", async () => {

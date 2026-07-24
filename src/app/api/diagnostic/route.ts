@@ -176,6 +176,7 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
   const seen = new Set<string>();
   let currentUrl = startUrl;
   let warning: string | undefined;
+  let terminalResponse: Response | undefined;
 
   for (let hop = 0; hop <= maxHops; hop += 1) {
     await assertSafeResolvedHostForUrl(currentUrl);
@@ -193,6 +194,7 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
       headers: { "User-Agent": "OpsKitPro-Diagnostic/1.0" },
       signal: AbortSignal.timeout(5000),
     });
+    terminalResponse = response;
     const location = response.headers.get("location") || undefined;
     chain.push({ url: currentUrl, status: response.status, location });
 
@@ -211,6 +213,7 @@ const traceRedirects = async (startUrl: string, maxHops = 6) => {
     chain,
     finalUrl: chain.length ? chain[chain.length - 1].url : startUrl,
     warning,
+    terminalResponse,
   };
 };
 
@@ -622,37 +625,33 @@ export async function GET(request: NextRequest | Request) {
     > = (() => {
       const t0 = Date.now();
       return traceRedirects(targetUrl)
-        .then((redirectTrace) =>
-          fetch(redirectTrace.finalUrl, {
-            method: "GET",
-            redirect: "manual",
-            cache: "no-store",
-            headers: { "User-Agent": "OpsKitPro-Diagnostic/1.0" },
-            signal: AbortSignal.timeout(8000),
-          }).then(async (res) => {
-            let title: string | undefined = undefined;
-            try {
-              const clone = res.clone();
-              const contentType = clone.headers.get("content-type") || "";
-              if (contentType.includes("text/html")) {
-                const text = await clone
-                  .text()
-                  .then((t) => t.slice(0, 8192))
-                  .catch(() => "");
-                const match = text.match(/<title[^>]*>([^<]+)<\/title>/i);
-                if (match && match[1]) {
-                  title = match[1].trim().replace(/\s+/g, " ");
-                }
+        .then(async (redirectTrace) => {
+          const res = redirectTrace.terminalResponse;
+          if (!res) {
+            throw new Error("HTTP probe completed without a response.");
+          }
+
+          let title: string | undefined;
+          try {
+            const clone = res.clone();
+            const contentType = clone.headers.get("content-type") || "";
+            if (contentType.includes("text/html")) {
+              const text = await clone
+                .text()
+                .then((value) => value.slice(0, 8192))
+                .catch(() => "");
+              const match = text.match(/<title[^>]*>([^<]+)<\/title>/i);
+              if (match?.[1]) {
+                title = match[1].trim().replace(/\s+/g, " ");
               }
-            } catch (e) {}
-            // @ts-expect-error attach title to response object temporarily
-            res._page_title = title;
-            return [res, redirectTrace] as const;
-          }),
-        )
+            }
+          } catch {}
+
+          return [res, redirectTrace, title] as const;
+        })
         .then(
-          ([res, redirectTrace]) =>
-            [res, Date.now() - t0, redirectTrace, (res as any)._page_title] as [
+          ([res, redirectTrace, title]) =>
+            [res, Date.now() - t0, redirectTrace, title] as [
               Response,
               number,
               RedirectTrace,
@@ -941,7 +940,10 @@ export async function GET(request: NextRequest | Request) {
         is_https: isHttps,
         final_url: redirectTrace?.finalUrl || (hasHttpError ? targetUrl : httpRes.url) || targetUrl,
         redirect_chain: redirectTrace?.chain || [],
-        redirect_count: Math.max(0, (redirectTrace?.chain?.length || 1) - 1),
+        redirect_count:
+          redirectTrace?.chain.filter((hop) =>
+            redirectStatuses.has(hop.status),
+          ).length || 0,
         redirect_warning: redirectTrace?.warning || (hasHttpError ? httpRes.message : undefined),
         cf_ray: hasHttpError ? undefined : httpRes.headers.get("cf-ray") || undefined,
         page_title: pageTitle,

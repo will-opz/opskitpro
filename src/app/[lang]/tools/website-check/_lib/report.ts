@@ -52,6 +52,13 @@ type ReportCopy = {
   noIssueCause: string;
   noIssueFix: string;
   noIssueVerify: string;
+  httpBlockedSummary: (status: number | string) => string;
+  httpBlockedCause: string;
+  httpBlockedFix: string;
+  httpFailureSummary: (status?: number) => string;
+  httpFailureCause: string;
+  httpFailureFix: string;
+  httpFailureVerify: string[];
   labels: {
     dns: string;
     http: string;
@@ -88,6 +95,23 @@ const REPORT_COPY: Record<WebsiteCheckLanguage, ReportCopy> = {
       "Continue normal monitoring and keep DNS, TLS, CDN, and header policies under change control.",
     noIssueVerify:
       "Run Website Check again after the next deployment or DNS/TLS change.",
+    httpBlockedSummary: (status) =>
+      `The target is reachable, but this probe was rejected with HTTP ${status}.`,
+    httpBlockedCause:
+      "WAF, access control, bot protection, IP allowlist, or origin Host/SNI policy rejected the probe.",
+    httpBlockedFix:
+      "Review WAF, access, and bot rules, then confirm the origin accepts the expected Host and SNI.",
+    httpFailureSummary: (status) =>
+      `HTTP did not complete successfully${status ? `; status ${status}` : ""}.`,
+    httpFailureCause:
+      "Origin service downtime, firewall policy, routing failure, or application error.",
+    httpFailureFix:
+      "Check origin health, firewall rules, listener ports, upstream logs, and CDN origin configuration.",
+    httpFailureVerify: [
+      "Run curl against the origin and the public hostname.",
+      "Check CDN edge logs and origin access logs for the same timestamp.",
+      "Run Website Check again after the origin or WAF change.",
+    ],
     labels: {
       dns: "DNS",
       http: "HTTP",
@@ -117,6 +141,22 @@ const REPORT_COPY: Record<WebsiteCheckLanguage, ReportCopy> = {
     noIssueCause: "本次探测未发现明显故障。",
     noIssueFix: "继续保持监控，并将 DNS、TLS、CDN 和响应头策略纳入变更管理。",
     noIssueVerify: "下次部署或 DNS/TLS 变更后再次运行 Website Check。",
+    httpBlockedSummary: (status) =>
+      `目标可以访问，但本次探测被 HTTP ${status} 拒绝。`,
+    httpBlockedCause:
+      "WAF、访问控制、机器人防护、IP 白名单或源站 Host/SNI 策略拒绝了探测请求。",
+    httpBlockedFix:
+      "检查 WAF、访问控制和机器人规则，并确认源站接受预期的 Host 与 SNI。",
+    httpFailureSummary: (status) =>
+      `HTTP 探测未成功完成${status ? `；状态码 ${status}` : ""}。`,
+    httpFailureCause: "源站服务、监听端口、防火墙、路由或应用可能发生故障。",
+    httpFailureFix:
+      "检查源站健康状态、防火墙、监听端口、上游日志和 CDN 源站配置。",
+    httpFailureVerify: [
+      "分别使用 curl 检查源站和公开域名。",
+      "根据同一时间点检查 CDN 边缘日志与源站访问日志。",
+      "修复源站或 WAF 后重新运行 Website Check。",
+    ],
     labels: {
       dns: "DNS",
       http: "HTTP",
@@ -243,7 +283,7 @@ export function buildWebsiteCheckReport(
               "Check public resolvers from multiple regions.",
               "Run Website Check again after DNS propagation.",
             ],
-      relatedToolHref: `/${lang}/tools/dns`,
+      relatedToolHref: `/${lang}/tools/dns-lookup`,
     }),
   );
 
@@ -270,8 +310,8 @@ export function buildWebsiteCheckReport(
       summary: data.http.success
         ? `HTTP returned ${data.http.status_code || "OK"} in ${data.http.latency}.`
         : blocked
-          ? `The target is reachable, but this probe was rejected with HTTP ${data.http.status_code || "ERR"}.`
-          : `HTTP did not complete successfully${data.http.status_code ? `; status ${data.http.status_code}` : ""}.`,
+          ? copy.httpBlockedSummary(data.http.status_code || "ERR")
+          : copy.httpFailureSummary(data.http.status_code),
       evidence: [
         `HTTP status: ${data.http.status_code || "ERR"}`,
         `Latency: ${data.http.latency}`,
@@ -282,28 +322,23 @@ export function buildWebsiteCheckReport(
       likelyCause: data.http.success
         ? data.http.redirect_warning || copy.noIssueCause
         : blocked
-          ? "WAF, access control, bot protection, IP allowlist, or origin Host/SNI policy rejected the probe."
+          ? copy.httpBlockedCause
           : cloudflareHint
             ? `${cloudflareHint} usually points to an origin connectivity, TLS, DNS, or edge security rule problem.`
-            : "Origin service downtime, firewall policy, routing failure, or application error.",
+            : copy.httpFailureCause,
       recommendedFix: data.http.success
         ? data.http.redirect_warning
           ? "Review redirect rules and remove loops or unnecessary hops."
           : copy.noIssueFix
         : blocked
-          ? "Review WAF/Access/bot rules and confirm the origin accepts the expected Host and SNI."
-          : "Check origin health, firewall rules, listener ports, upstream logs, and CDN origin configuration.",
+          ? copy.httpBlockedFix
+          : copy.httpFailureFix,
       verificationSteps: data.http.success
         ? [
             "Open the final URL from a clean browser session.",
             "Re-run Website Check after redirect or application changes.",
           ]
-        : [
-            "Run curl against the origin and the public hostname.",
-            "Check CDN edge logs and origin access logs for the same timestamp.",
-            "Re-run Website Check after the origin or WAF change.",
-          ],
-      relatedToolHref: `/${lang}/tools/http-headers`,
+        : copy.httpFailureVerify,
     }),
   );
 
@@ -385,7 +420,6 @@ export function buildWebsiteCheckReport(
             "Confirm the certificate SAN includes the hostname.",
             "Re-run Website Check after replacing the certificate.",
           ],
-      relatedToolHref: `/${lang}/tools/ssl`,
     }),
   );
 
@@ -475,7 +509,6 @@ export function buildWebsiteCheckReport(
             "Re-run Website Check and confirm the header score improves.",
           ]
         : [copy.noIssueVerify],
-      relatedToolHref: `/${lang}/tools/http-headers`,
     }),
   );
 

@@ -149,6 +149,52 @@ describe("website check report builder", () => {
     expect(headersFinding?.summary).toContain("Content-Security-Policy");
   });
 
+  it("reports a blocked probe coherently in Chinese without broken tool links", () => {
+    const result = createSafeDiagnosticResult(
+      {
+        ...healthyResult(),
+        http: {
+          success: false,
+          status_code: 403,
+          latency: "166ms",
+          final_url: "https://opskitpro.com",
+          redirect_chain: [
+            { url: "https://opskitpro.com", status: 403 },
+          ],
+          redirect_count: 0,
+        },
+      },
+      "opskitpro.com",
+    );
+
+    const report = buildWebsiteCheckReport(result, { lang: "zh" });
+    const httpFinding = report.findings.find(
+      (finding) => finding.key === "http",
+    );
+    const dnsFinding = report.findings.find(
+      (finding) => finding.key === "dns",
+    );
+
+    expect(report.status).toBe("degraded");
+    expect(httpFinding).toMatchObject({
+      id: "http.blocked",
+      severity: "warning",
+    });
+    expect(httpFinding?.relatedToolHref).toBeUndefined();
+    expect(httpFinding?.summary).toContain("探测被 HTTP 403 拒绝");
+    expect(httpFinding?.likelyCause).toContain("机器人防护");
+    expect(report.suspectedCause).toContain("机器人防护");
+    expect(report.nextActions.join(" ")).toContain("公开域名");
+    expect(dnsFinding?.relatedToolHref).toBe("/zh/tools/dns-lookup");
+    expect(
+      report.findings.some((finding) =>
+        /\/tools\/(?:dns|http-headers|ssl)$/.test(
+          finding.relatedToolHref || "",
+        ),
+      ),
+    ).toBe(false);
+  });
+
   it("renders markdown with report summary and prioritized findings", () => {
     const result = healthyResult();
     const report = buildWebsiteCheckReport(result, {
