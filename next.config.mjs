@@ -1,4 +1,36 @@
 /** @type {import('next').NextConfig} */
+
+// AdSense domains that Auto ads may use dynamically.
+// This list covers the current known set; use Content-Security-Policy-Report-Only
+// to detect any additional domains before tightening to nonce + strict-dynamic.
+const ADSENSE_SCRIPT_DOMAINS = [
+  'https://pagead2.googlesyndication.com',
+  'https://securepubads.g.doubleclick.net',
+  'https://cdn.jsdelivr.net',
+].join(' ')
+
+const ADSENSE_FRAME_DOMAINS = [
+  'https://googleads.g.doubleclick.net',
+  'https://tpc.googlesyndication.com',
+  'https://*.googlesyndication.com',
+  'https://*.doubleclick.net',
+].join(' ')
+
+const cspDirectives = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${ADSENSE_SCRIPT_DOMAINS}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https: wss: ws:",
+  `frame-src 'self' ${ADSENSE_FRAME_DOMAINS}`,
+  "worker-src 'self' blob:",
+]
+
 const securityHeaders = [
   {
     key: 'Strict-Transport-Security',
@@ -6,20 +38,14 @@ const securityHeaders = [
   },
   {
     key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
-      "base-uri 'self'",
-      "object-src 'none'",
-      "frame-ancestors 'none'",
-      "form-action 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://cdn.jsdelivr.net",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
-      "connect-src 'self' https: wss: ws:",
-      "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
-      "worker-src 'self' blob:",
-    ].join('; '),
+    value: cspDirectives.join('; '),
+  },
+  // Report-Only: same policy as above, violations are reported to DevTools
+  // (Console → CSP) without blocking any resource. Use this to discover
+  // additional AdSense domains before migrating to nonce + strict-dynamic.
+  {
+    key: 'Content-Security-Policy-Report-Only',
+    value: cspDirectives.join('; '),
   },
   {
     key: 'X-Frame-Options',
@@ -38,6 +64,7 @@ const securityHeaders = [
     value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), browsing-topics=()',
   },
 ]
+
 
 const nextConfig = {
   output: 'standalone',

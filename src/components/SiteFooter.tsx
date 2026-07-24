@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-export function SiteFooter({ dict }: { dict: any }) {
+export function SiteFooter({ dict, lang }: { dict: any; lang?: "zh" | "en" }) {
+  const privacyHref = `/${lang ?? "en"}/privacy`;
+  const privacyLabel = lang === "zh" ? "隐私政策" : "Privacy";
+
   return (
     <footer className="z-10 mt-auto w-full border-t border-[var(--border-subtle)] bg-[var(--bg-primary)]/78 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -13,6 +16,13 @@ export function SiteFooter({ dict }: { dict: any }) {
             className="hover:text-[var(--text-primary)]"
           >
             GitHub
+          </Link>
+          <span className="ui-faint hidden md:inline">|</span>
+          <Link
+            href={privacyHref}
+            className="hover:text-[var(--text-primary)]"
+          >
+            {privacyLabel}
           </Link>
           <span className="ui-faint hidden md:inline">|</span>
           <span className="hidden cursor-default md:inline hover:text-[var(--text-primary)]">
@@ -33,3 +43,4 @@ export function SiteFooter({ dict }: { dict: any }) {
     </footer>
   );
 }
+

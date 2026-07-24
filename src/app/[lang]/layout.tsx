@@ -135,7 +135,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Script
           id="adsense-loader"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3793455361566383"
           crossOrigin="anonymous"
         />
