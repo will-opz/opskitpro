@@ -8,7 +8,6 @@ import {
   AlertCircle,
   ShieldCheck,
   TerminalSquare,
-  Server,
 } from "lucide-react";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -17,6 +16,13 @@ import HomeSearch from "@/components/HomeSearch";
 import { getAllBlogPosts } from "@/lib/blog";
 import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import { CoreToolLink } from "@/components/CoreToolLink";
+import { CoreToolImpressions } from "@/components/AnalyticsEvent";
+import {
+  coreTools,
+  localizeTool,
+  type CoreToolId,
+} from "@/lib/tool-catalog";
 
 export async function generateMetadata({
   params,
@@ -78,7 +84,7 @@ const homeDashboardCopy = {
     sslValid: "Valid",
     sslFault: "Validation fault",
     runFullCheck: "Run full check",
-    openDnsLookup: "Open DNS lookup",
+    openDnsLookup: "Open DNS Security",
     featuredToolsTitle: "Quick actions",
     featuredToolsDesc:
       "Keep the homepage focused on the three checks people reach for first.",
@@ -124,7 +130,7 @@ const homeDashboardCopy = {
     sslValid: "有效",
     sslFault: "验证异常",
     runFullCheck: "运行完整检测",
-    openDnsLookup: "打开 DNS 查询",
+    openDnsLookup: "打开 DNS 安全检查",
     featuredToolsTitle: "快速入口",
     featuredToolsDesc: "首页只保留最常用的三个检查入口，避免和工具页重复。",
     openAllTools: "打开全部工具",
@@ -210,38 +216,42 @@ export default async function Home({
           : diagnosticPreview.rows[3].value,
     },
   ].filter(Boolean) as HomeDiagnosticPreview["rows"];
-  const featuredTools = [
-    {
-      href: `/${lang}/tools/website-check`,
-      title: dict.home.card1_title,
-      desc: dict.home.card1_desc,
-      icon: Activity,
-      tag: dashboardCopy.toolTags.web,
-      tone: "text-emerald-500 bg-emerald-500/10",
-    },
-    {
-      href: `/${lang}/tools/dns-lookup`,
-      title: dict.home.card3_title,
-      desc: dict.home.card3_desc,
-      icon: Server,
-      tag: dashboardCopy.toolTags.dns,
-      tone: "text-sky-500 bg-sky-500/10",
-    },
-    {
-      href: `/${lang}/tools/ip-lookup`,
-      title: dict.home.card2_title,
-      desc: dict.home.card2_desc,
-      icon: Globe,
-      tag: dashboardCopy.toolTags.network,
-      tone: "text-purple-500 bg-purple-500/10",
-    },
-  ];
+  const featuredTools = coreTools.map((tool) => {
+    const localized = localizeTool(tool, lang);
+    const presentation = {
+      "website-check": {
+        icon: Activity,
+        tag: dashboardCopy.toolTags.web,
+        tone: "text-emerald-500 bg-emerald-500/10",
+      },
+      "network-doctor": {
+        icon: Globe,
+        tag: dashboardCopy.toolTags.network,
+        tone: "text-purple-500 bg-purple-500/10",
+      },
+      "dns-security": {
+        icon: ShieldCheck,
+        tag: dashboardCopy.toolTags.security,
+        tone: "text-sky-500 bg-sky-500/10",
+      },
+    }[tool.id];
+    return {
+      ...localized,
+      href: `/${lang}${tool.href}`,
+      desc: localized.description,
+      ...presentation,
+    };
+  });
 
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
 
       <main className="relative z-10 flex-grow px-4 pb-20 pt-8 sm:px-6 md:pb-24">
+        <CoreToolImpressions
+          tools={coreTools.map((tool) => tool.id)}
+          placement="home"
+        />
         <div className="pointer-events-none absolute left-1/2 top-0 z-[-1] h-[420px] w-full max-w-6xl -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
 
         <section className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
@@ -368,9 +378,11 @@ export default async function Home({
           </div>
           <div className="ui-surface overflow-hidden rounded-2xl">
             {featuredTools.map((tool, index) => (
-              <Link
+              <CoreToolLink
                 key={tool.href}
                 href={tool.href}
+                tool={tool.id as CoreToolId}
+                placement="home"
                 className={`group flex items-center gap-4 px-4 py-4 hover:bg-[var(--surface-secondary)] sm:px-5 ${index !== featuredTools.length - 1 ? "border-b border-[var(--border-subtle)]" : ""}`}
               >
                 <div
@@ -392,7 +404,7 @@ export default async function Home({
                   </p>
                 </div>
                 <ArrowRight className="h-4 w-4 shrink-0 text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--accent-color)]" />
-              </Link>
+              </CoreToolLink>
             ))}
           </div>
         </section>

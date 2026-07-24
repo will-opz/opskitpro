@@ -77,8 +77,8 @@ const categoryLabels: Record<
 
 const copy = {
   zh: {
-    badge: "个人导航",
-    title: "工具导航",
+    badge: "个人工作台",
+    title: "我的导航",
     subtitle: "把 OpsKitPro 工具、排障入口和日常服务放到一个轻量页面。",
     search: "搜索名称、URL、标签",
     login: "登录编辑",
@@ -111,8 +111,8 @@ const copy = {
   },
 
   en: {
-    badge: "Personal Navigation",
-    title: "Tool Navigator",
+    badge: "Personal Workspace",
+    title: "My Navigation",
     subtitle:
       "OpsKitPro tools, diagnostic links, and daily services in one focused page.",
     search: "Search name, URL, or tags",
@@ -152,7 +152,7 @@ const copy = {
 const defaultItems: NavItem[] = [
   {
     id: "network-check",
-    title: "Network Check",
+    title: "Network Doctor",
     description: "Speed, latency, IPv6 and reachability test",
     url: "/tools/network-check",
     category: "core",
@@ -182,8 +182,8 @@ const defaultItems: NavItem[] = [
   },
   {
     id: "dns-lookup",
-    title: "DNS Lookup",
-    description: "DNS records and resolution checks",
+    title: "DNS Security",
+    description: "DNS records, mail policy and domain security checks",
     url: "/tools/dns-lookup",
     category: "core",
     tags: ["dns", "record"],

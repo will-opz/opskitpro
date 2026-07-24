@@ -8,6 +8,7 @@ import type {
   DnsLookupResponse,
   DnsBatchResponse,
 } from "@/lib/api-contracts";
+import { sendAnalyticsEvent } from "@/components/AnalyticsEvent";
 
 export type {
   DnsRecordType,
@@ -41,6 +42,7 @@ export function useDnsLookup() {
       provider: DnsProvider = "cloudflare",
     ): Promise<DnsLookupResponse | null> => {
       setLoading(true);
+      sendAnalyticsEvent({ event: "core_tool_run", tool: "dns-security" });
       setError(null);
       setResult(null);
 
@@ -56,17 +58,20 @@ export function useDnsLookup() {
 
         if (data.error) {
           setError(data.error);
+          sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
           // Add to history with error
           addToHistory(domain, type, provider, undefined, data.error);
           return null;
         }
 
         setResult(data);
+        sendAnalyticsEvent({ event: "core_tool_success", tool: "dns-security" });
         addToHistory(domain, type, provider, data);
         return data;
       } catch (e: any) {
         const errorMsg = e.message || "DNS lookup failed";
         setError(errorMsg);
+        sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
         addToHistory(domain, type, provider, undefined, errorMsg);
         return null;
       } finally {
@@ -83,6 +88,7 @@ export function useDnsLookup() {
       provider: DnsProvider = "cloudflare",
     ): Promise<DnsBatchResponse | null> => {
       setLoading(true);
+      sendAnalyticsEvent({ event: "core_tool_run", tool: "dns-security" });
       setError(null);
       setBatchResult(null);
 
@@ -101,13 +107,16 @@ export function useDnsLookup() {
 
         if (data.error) {
           setError(data.error);
+          sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
           return null;
         }
 
         setBatchResult(data);
+        sendAnalyticsEvent({ event: "core_tool_success", tool: "dns-security" });
         return data;
       } catch (e: any) {
         setError(e.message || "Batch lookup failed");
+        sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
         return null;
       } finally {
         setLoading(false);

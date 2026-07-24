@@ -5,12 +5,23 @@ const ALLOWED_EVENTS = new Set([
   "website_check_to_trace",
   "website_check_to_dns_audit",
   "dns_audit_export",
+  "core_tool_impression",
+  "core_tool_open",
+  "core_tool_run",
+  "core_tool_success",
+  "core_tool_error",
 ]);
+const ALLOWED_TOOLS = new Set([
+  "website-check",
+  "network-doctor",
+  "dns-security",
+]);
+const ALLOWED_PLACEMENTS = new Set(["home", "catalog"]);
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { event, page, target } = body;
+    const { event, page, target, tool, placement } = body;
 
     if (!event || !ALLOWED_EVENTS.has(event)) {
       return NextResponse.json(
@@ -19,6 +30,17 @@ export async function POST(request: NextRequest) {
           status: 400,
           headers: { "Cache-Control": "no-store" },
         },
+      );
+    }
+    const isCoreFunnelEvent = String(event).startsWith("core_tool_");
+    if (
+      isCoreFunnelEvent &&
+      (!ALLOWED_TOOLS.has(tool) ||
+        (placement !== undefined && !ALLOWED_PLACEMENTS.has(placement)))
+    ) {
+      return NextResponse.json(
+        { ok: false },
+        { status: 400, headers: { "Cache-Control": "no-store" } },
       );
     }
 
@@ -30,7 +52,10 @@ export async function POST(request: NextRequest) {
         type: "analytics_event",
         event,
         page: page ? String(page).split("?")[0] : undefined, // only path, no query
-        target: target ? String(target) : undefined,
+        target:
+          !isCoreFunnelEvent && target ? String(target).slice(0, 120) : undefined,
+        tool: isCoreFunnelEvent ? tool : undefined,
+        placement: isCoreFunnelEvent ? placement : undefined,
         date: today,
         ts: Date.now(),
       }),

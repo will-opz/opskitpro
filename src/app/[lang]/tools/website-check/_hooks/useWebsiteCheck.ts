@@ -6,6 +6,7 @@ import {
   useDiagnosticHistory,
   writeCachedDiagnosticResult,
 } from "./useDiagnosticHistory";
+import { sendAnalyticsEvent } from "@/components/AnalyticsEvent";
 
 const LOCAL_RESULT_CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -73,6 +74,7 @@ export function useWebsiteCheck() {
       }
 
       setLoading(true);
+      sendAnalyticsEvent({ event: "core_tool_run", tool: "website-check" });
       setError(null);
       setCurrentStep(1);
       setLocalResolvers({});
@@ -231,6 +233,7 @@ export function useWebsiteCheck() {
             };
           }
           setError(data.error || "Partial diagnostic failure");
+          sendAnalyticsEvent({ event: "core_tool_error", tool: "website-check" });
           setResult(safeResult);
           if (safeResult.domain) {
             await upsertHistory(safeResult.domain, false).catch(() => null);
@@ -247,6 +250,7 @@ export function useWebsiteCheck() {
           };
         }
         setResult(safeResult);
+        sendAnalyticsEvent({ event: "core_tool_success", tool: "website-check" });
         if (!authenticated) {
           await writeCachedDiagnosticResult(
             safeResult.domain || d,
@@ -259,6 +263,7 @@ export function useWebsiteCheck() {
       } catch (err: any) {
         console.error("Forensics Engine Error:", err);
         setError(err.message || "Unknown forensic engine failure");
+        sendAnalyticsEvent({ event: "core_tool_error", tool: "website-check" });
       } finally {
         clearInterval(stepInterval);
         setLoading(false);

@@ -33,6 +33,7 @@ import type {
   ReachabilityItem,
   NetworkAnalysis,
 } from "@/lib/api-contracts";
+import { sendAnalyticsEvent } from "@/components/AnalyticsEvent";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -771,6 +772,7 @@ export default function NetworkCheckClient({
   // ── Main flow ──────────────────────────────────────────────────────────────
 
   const startCheck = useCallback(async () => {
+    sendAnalyticsEvent({ event: "core_tool_run", tool: "network-doctor" });
     abortRef.current = new AbortController();
     setPhase("running");
     setNetInfo(null);
@@ -924,6 +926,7 @@ export default function NetworkCheckClient({
 
     setCurrentStep("");
     setPhase("done");
+    sendAnalyticsEvent({ event: "core_tool_success", tool: "network-doctor" });
   }, [nc, selectedSizeMb, lang, runPing, runDownload, getDnsPerf]);
 
   // ── Metric quality helpers ─────────────────────────────────────────────────
