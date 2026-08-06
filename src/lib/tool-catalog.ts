@@ -1,9 +1,21 @@
 export type ProductLocale = "en" | "zh";
 export type CoreToolId = "website-check" | "network-doctor" | "dns-security";
+export type ProductToolId =
+  | CoreToolId
+  | "ip-lookup"
+  | "cloudflare-trace"
+  | "api"
+  | "json"
+  | "websocket"
+  | "passgen"
+  | "qrgen"
+  | "encode"
+  | "time"
+  | "prompt-builder";
 export type ToolPlacement = "home" | "catalog";
 
 export type ProductTool = {
-  id: CoreToolId | string;
+  id: ProductToolId;
   href: string;
   category: "core" | "diagnostic" | "developer" | "utility";
   title: Record<ProductLocale, string>;

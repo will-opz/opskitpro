@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import EncodeClient from "./encode-client";
 
 export async function generateMetadata({
@@ -34,6 +35,7 @@ export default async function EncodePage({
     <>
       <SiteHeader dict={dict} lang={lang} />
       <EncodeClient dict={dict} lang={lang} />
+      <ToolGuide id="encode" lang={lang} />
       <SiteFooter dict={dict} />
     </>
   );

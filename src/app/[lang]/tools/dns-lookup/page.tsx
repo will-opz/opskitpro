@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RelatedTools } from "@/components/RelatedTools";
 import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
+import { ToolGuide } from "@/components/ToolGuide";
 import type { Metadata } from "next";
 
 import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
@@ -149,6 +150,7 @@ export default async function DnsPage({
           />
         </div>
 
+        <ToolGuide id="dns-security" lang={lang} />
         <RelatedTools currentTool="dns-lookup" lang={lang} />
       </div>
       <SiteFooter dict={dict} />

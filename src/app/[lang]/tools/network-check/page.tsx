@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import NetworkCheckClient from "./NetworkCheckClient";
 
 import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
@@ -75,6 +76,7 @@ export default async function NetworkCheckPage({
         >
           <NetworkCheckClient dict={dict} lang={lang} />
         </Suspense>
+        <ToolGuide id="network-doctor" lang={lang} />
       </div>
       <SiteFooter dict={dict} />
     </>

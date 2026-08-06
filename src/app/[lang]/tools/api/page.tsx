@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import { getDictionary } from "@/dictionaries";
 import { buildPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -243,6 +244,8 @@ export default async function ApiDocsPage({
           </p>
         </div>
       </main>
+
+      <ToolGuide id="api" lang={lang} />
 
       <SiteFooter dict={dict} />
     </div>

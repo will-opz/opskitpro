@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import PassClient from "./pass-client";
 
 import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
@@ -44,6 +45,7 @@ export default async function PassPage({
       />
       <SiteHeader dict={dict} lang={lang} />
       <PassClient dict={dict} lang={lang} />
+      <ToolGuide id="passgen" lang={lang} />
       <SiteFooter dict={dict} />
     </>
   );

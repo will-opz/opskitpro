@@ -1,6 +1,7 @@
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import WebsocketClient from "./WebsocketClient";
 import type { Metadata } from "next";
 
@@ -44,6 +45,7 @@ export default async function WebsocketPage({
       />
       <SiteHeader dict={dict} lang={lang} />
       <WebsocketClient dict={dict} lang={lang} />
+      <ToolGuide id="websocket" lang={lang} />
       <SiteFooter dict={dict} />
     </>
   );

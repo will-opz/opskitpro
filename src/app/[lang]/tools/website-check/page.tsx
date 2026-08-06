@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RelatedTools } from "@/components/RelatedTools";
 import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
+import { ToolGuide } from "@/components/ToolGuide";
 import WebsiteCheckClient from "./WebsiteCheckClient";
 import type { Metadata } from "next";
 
@@ -156,6 +157,7 @@ export default async function DiagnosticPage({
           />
         </div>
 
+        <ToolGuide id="website-check" lang={lang} />
         <RelatedTools currentTool="website-check" lang={lang} />
       </div>
       <SiteFooter dict={dict} />

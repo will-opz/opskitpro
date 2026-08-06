@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import QRClient from "./qr-client";
 
 import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
@@ -44,6 +45,7 @@ export default async function QRPage({
       />
       <SiteHeader dict={dict} lang={lang} />
       <QRClient dict={dict} lang={lang} />
+      <ToolGuide id="qrgen" lang={lang} />
       <SiteFooter dict={dict} />
     </>
   );

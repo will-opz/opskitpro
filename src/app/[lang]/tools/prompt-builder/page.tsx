@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import PromptBuilderClient from "./prompt-builder-client";
 
 export async function generateMetadata({
@@ -34,6 +35,7 @@ export default async function PromptBuilderPage({
     <>
       <SiteHeader dict={dict} lang={lang} />
       <PromptBuilderClient dict={dict} lang={lang} />
+      <ToolGuide id="prompt-builder" lang={lang} />
       <SiteFooter dict={dict} />
     </>
   );

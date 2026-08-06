@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RelatedTools } from "@/components/RelatedTools";
 import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
+import { ToolGuide } from "@/components/ToolGuide";
 import IPLookupClient from "./IPLookupClient";
 
 import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
@@ -103,6 +104,7 @@ export default async function IPPage({
           />
         </div>
 
+        <ToolGuide id="ip-lookup" lang={lang} />
         <RelatedTools currentTool="ip-lookup" lang={lang} />
       </div>
       <SiteFooter dict={dict} />

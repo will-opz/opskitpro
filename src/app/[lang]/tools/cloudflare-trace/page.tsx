@@ -4,6 +4,7 @@ import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RelatedTools } from "@/components/RelatedTools";
+import { ToolGuide } from "@/components/ToolGuide";
 import CloudflareTraceClient from "./CloudflareTraceClient";
 
 import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
@@ -122,6 +123,7 @@ export default async function CloudflareTracePage({
         <Suspense>
           <CloudflareTraceClient dict={dict} lang={lang} />
         </Suspense>
+        <ToolGuide id="cloudflare-trace" lang={lang} />
         <RelatedTools currentTool="cloudflare-trace" lang={lang} />
       </div>
       <SiteFooter dict={dict} />

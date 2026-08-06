@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ToolGuide } from "@/components/ToolGuide";
 import TimeClient from "./time-client";
 
 export async function generateMetadata({
@@ -34,6 +35,7 @@ export default async function TimePage({
     <>
       <SiteHeader dict={dict} lang={lang} />
       <TimeClient dict={dict} lang={lang} />
+      <ToolGuide id="time" lang={lang} />
       <SiteFooter dict={dict} />
     </>
   );
