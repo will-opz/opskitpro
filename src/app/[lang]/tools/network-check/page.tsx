@@ -4,6 +4,7 @@ import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ToolGuide } from "@/components/ToolGuide";
+import { AiReferralToolOpen } from "@/components/AnalyticsEvent";
 import NetworkCheckClient from "./NetworkCheckClient";
 
 import { buildPageMetadata } from "@/lib/seo";
@@ -44,6 +45,7 @@ export default async function NetworkCheckPage({
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
+      <AiReferralToolOpen tool="network-doctor" />
       <div className="flex-grow">
         <Suspense
           fallback={

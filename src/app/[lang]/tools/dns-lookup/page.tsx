@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { RelatedTools } from "@/components/RelatedTools";
 import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
 import { ToolGuide } from "@/components/ToolGuide";
+import { AiReferralToolOpen } from "@/components/AnalyticsEvent";
 import type { Metadata } from "next";
 
 import { buildPageMetadata } from "@/lib/seo";
@@ -35,6 +36,7 @@ export default async function DnsPage({
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
+      <AiReferralToolOpen tool="dns-security" />
       <div className="flex-grow">
         <Suspense
           fallback={

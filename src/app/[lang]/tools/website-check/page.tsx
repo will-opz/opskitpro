@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { RelatedTools } from "@/components/RelatedTools";
 import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
 import { ToolGuide } from "@/components/ToolGuide";
+import { AiReferralToolOpen } from "@/components/AnalyticsEvent";
 import WebsiteCheckClient from "./WebsiteCheckClient";
 import type { Metadata } from "next";
 
@@ -35,6 +36,7 @@ export default async function DiagnosticPage({
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
+      <AiReferralToolOpen tool="website-check" />
       <div className="flex-grow">
         <Suspense
           fallback={

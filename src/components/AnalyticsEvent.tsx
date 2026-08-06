@@ -2,6 +2,11 @@
 
 import { useEffect } from "react";
 import type { CoreToolId, ToolPlacement } from "@/lib/tool-catalog";
+import {
+  classifyAiReferrer,
+  getAiReferralSource,
+  type AiReferralSource,
+} from "@/lib/ai-referral";
 
 export type FunnelEvent =
   | "core_tool_impression"
@@ -15,9 +20,14 @@ export function sendAnalyticsEvent(input: {
   tool: CoreToolId;
   placement?: ToolPlacement;
   page?: string;
+  source?: AiReferralSource;
 }) {
   try {
-    const payload = JSON.stringify(input);
+    const persistedSource = getAiReferralSource();
+    const payload = JSON.stringify({
+      ...input,
+      source: input.source || persistedSource || undefined,
+    });
     if (navigator.sendBeacon) {
       navigator.sendBeacon(
         "/api/event",
@@ -34,6 +44,22 @@ export function sendAnalyticsEvent(input: {
   } catch {
     // Analytics must never block product usage.
   }
+}
+
+export function AiReferralToolOpen({ tool }: { tool: CoreToolId }) {
+  useEffect(() => {
+    const source = classifyAiReferrer(document.referrer);
+    if (!source) return;
+    sendAnalyticsEvent({
+      event: "core_tool_open",
+      tool,
+      placement: "referral",
+      page: window.location.pathname,
+      source,
+    });
+  }, [tool]);
+
+  return null;
 }
 
 export function CoreToolImpressions({

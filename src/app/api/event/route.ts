@@ -16,12 +16,28 @@ const ALLOWED_TOOLS = new Set([
   "network-doctor",
   "dns-security",
 ]);
-const ALLOWED_PLACEMENTS = new Set(["home", "catalog"]);
+const ALLOWED_PLACEMENTS = new Set(["home", "catalog", "referral"]);
+const ALLOWED_SOURCES = new Set([
+  "chatgpt",
+  "perplexity",
+  "claude",
+  "gemini",
+  "copilot",
+]);
+const FORBIDDEN_ATTRIBUTION_KEYS = new Set([
+  "referer",
+  "referrer",
+  "query",
+  "search",
+  "search_query",
+  "utm_source",
+  "url",
+]);
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { event, page, target, tool, placement } = body;
+    const { event, page, target, tool, placement, source } = body;
 
     if (!event || !ALLOWED_EVENTS.has(event)) {
       return NextResponse.json(
@@ -33,10 +49,15 @@ export async function POST(request: NextRequest) {
       );
     }
     const isCoreFunnelEvent = String(event).startsWith("core_tool_");
+    const hasForbiddenAttribution = Object.keys(body).some((key) =>
+      FORBIDDEN_ATTRIBUTION_KEYS.has(key),
+    );
     if (
       isCoreFunnelEvent &&
       (!ALLOWED_TOOLS.has(tool) ||
-        (placement !== undefined && !ALLOWED_PLACEMENTS.has(placement)))
+        (placement !== undefined && !ALLOWED_PLACEMENTS.has(placement)) ||
+        (source !== undefined && !ALLOWED_SOURCES.has(source)) ||
+        hasForbiddenAttribution)
     ) {
       return NextResponse.json(
         { ok: false },
@@ -56,6 +77,7 @@ export async function POST(request: NextRequest) {
           !isCoreFunnelEvent && target ? String(target).slice(0, 120) : undefined,
         tool: isCoreFunnelEvent ? tool : undefined,
         placement: isCoreFunnelEvent ? placement : undefined,
+        source: isCoreFunnelEvent ? source : undefined,
         date: today,
         ts: Date.now(),
       }),

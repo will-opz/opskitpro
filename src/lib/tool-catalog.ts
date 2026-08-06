@@ -12,7 +12,7 @@ export type ProductToolId =
   | "encode"
   | "time"
   | "prompt-builder";
-export type ToolPlacement = "home" | "catalog";
+export type ToolPlacement = "home" | "catalog" | "referral";
 
 export type ProductTool = {
   id: ProductToolId;

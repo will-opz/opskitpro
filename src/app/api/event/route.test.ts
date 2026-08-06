@@ -51,4 +51,48 @@ describe("analytics event route", () => {
       expect(response.status).toBe(400);
     }
   });
+
+  it("logs only an allowlisted AI source label", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const response = await POST(
+      new NextRequest("https://opskitpro.com/api/event", {
+        method: "POST",
+        body: JSON.stringify({
+          event: "core_tool_open",
+          tool: "website-check",
+          placement: "referral",
+          page: "/zh/tools/website-check?target=private.example",
+          source: "chatgpt",
+        }),
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(JSON.parse(String(log.mock.calls[0][0]))).toMatchObject({
+      page: "/zh/tools/website-check",
+      source: "chatgpt",
+    });
+  });
+
+  it("rejects raw attribution data and unknown source labels", async () => {
+    for (const extra of [
+      { source: "google-ai-overview" },
+      { source: "chatgpt", referrer: "https://chatgpt.com/c/private" },
+      { source: "perplexity", query: "private search" },
+    ]) {
+      const response = await POST(
+        new NextRequest("https://opskitpro.com/api/event", {
+          method: "POST",
+          body: JSON.stringify({
+            event: "core_tool_run",
+            tool: "website-check",
+            ...extra,
+          }),
+          headers: { "content-type": "application/json" },
+        }),
+      );
+      expect(response.status).toBe(400);
+    }
+  });
 });
