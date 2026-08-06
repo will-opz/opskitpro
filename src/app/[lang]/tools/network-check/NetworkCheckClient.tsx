@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Wifi,
   Globe,
   Gauge,
   Download,
-  Upload,
   Clock,
   Radio,
   Layers,
   BarChart3,
   CheckCircle2,
-  XCircle,
   AlertCircle,
   Loader2,
   RefreshCw,
@@ -21,7 +19,6 @@ import {
   Zap,
   Activity,
   Server,
-  MapPin,
   ChevronRight,
 } from "lucide-react";
 import type {
@@ -95,20 +92,6 @@ function buildNetworkInfoFromTrace(
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PING_SAMPLES = 10;
-const UPLOAD_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
-
-// ─── Locale helpers ──────────────────────────────────────────────────────────
-
-function t(dict: any, key: string): string {
-  const keys = key.split(".");
-  let val: any = dict;
-  for (const k of keys) {
-    val = val?.[k];
-    if (val === undefined) return key;
-  }
-  return String(val);
-}
-
 // ─── AI Analysis engine ──────────────────────────────────────────────────────
 
 function analyzeNetwork(

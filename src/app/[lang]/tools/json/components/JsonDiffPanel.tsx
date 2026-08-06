@@ -5,8 +5,6 @@ import {
   GitCompare,
   Upload,
   Trash2,
-  ChevronRight,
-  ChevronDown,
   Equal,
   Plus,
   Minus,
@@ -108,13 +106,11 @@ function deepDiff(left: any, right: any, path = ""): DiffResult[] {
 
 interface JsonDiffPanelProps {
   leftJson: string;
-  dict: any;
 }
 
-export function JsonDiffPanel({ leftJson, dict }: JsonDiffPanelProps) {
+export function JsonDiffPanel({ leftJson }: JsonDiffPanelProps) {
   const [rightJson, setRightJson] = useState("");
   const [showSame, setShowSame] = useState(false);
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
 
   const diffResults = useMemo(() => {
     if (!leftJson.trim() || !rightJson.trim()) return null;
@@ -158,12 +154,6 @@ export function JsonDiffPanel({ leftJson, dict }: JsonDiffPanelProps) {
       reader.readAsText(file);
     };
     input.click();
-  };
-
-  const swapSides = () => {
-    // This would require parent component cooperation
-    // For now, just clear right side
-    setRightJson(leftJson);
   };
 
   const formatValue = (val: any): string => {

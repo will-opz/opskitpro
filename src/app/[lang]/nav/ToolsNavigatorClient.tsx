@@ -388,7 +388,7 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
   const labels = categoryLabels[lang] || categoryLabels.zh;
   const searchParams = useSearchParams();
   const adminMode = searchParams.get("admin") === "1";
-  const { authenticated, openLogin, logout } = useAdminSession();
+  const { authenticated, logout } = useAdminSession();
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<
     NavCategory | "all" | "pinned"

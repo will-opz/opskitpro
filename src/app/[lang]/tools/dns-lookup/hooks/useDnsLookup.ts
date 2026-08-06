@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import type {
   DnsRecordType,
   DnsProvider,
-  DnsAnswer,
   DnsLookupResponse,
   DnsBatchResponse,
 } from "@/lib/api-contracts";

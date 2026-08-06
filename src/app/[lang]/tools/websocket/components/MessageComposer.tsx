@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Send,
-  FileJson,
   Braces,
   ChevronDown,
   Sparkles,

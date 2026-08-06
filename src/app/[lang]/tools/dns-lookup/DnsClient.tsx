@@ -191,7 +191,7 @@ export default function DnsClient({
             status: ip ? "OK" : "EMPTY",
           },
         }));
-      } catch (_e) {
+      } catch {
         setLocalResolvers((prev) => ({
           ...prev,
           [r.id]: { ...r, ip: null, latency: "ERR", status: "FAILED" },

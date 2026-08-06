@@ -37,7 +37,7 @@ test.describe('Cloudflare Error Encyclopedia', () => {
     expect(combinedJsonLd).toContain('Cloudflare Error 522')
   })
 
-  test('should support language switching', async ({ page, request }) => {
+  test('should support language switching', async ({ page }) => {
     // Navigate with zh cookie
     await page.context().addCookies([{ name: 'NEXT_LOCALE', value: 'zh', domain: '127.0.0.1', path: '/' }])
     await page.goto('/errors/522')

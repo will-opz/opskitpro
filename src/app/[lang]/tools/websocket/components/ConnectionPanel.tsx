@@ -8,7 +8,6 @@ import {
   History,
   Trash2,
   Clock,
-  ChevronDown,
   Settings,
   Wifi,
   WifiOff,

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 // Minimal ping endpoint — used by client to measure round-trip latency
 // GET: returns timestamp for latency measurement
-export async function GET(_request: NextRequest) {
+export async function GET() {
   return NextResponse.json(
     { ts: Date.now() },
     {

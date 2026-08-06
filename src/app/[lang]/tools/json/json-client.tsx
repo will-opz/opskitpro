@@ -547,7 +547,6 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
             <JqQueryPanel
               inputJson={json}
               onOutputChange={setJqOutput}
-              dict={dict}
             />
           )}
 
@@ -600,23 +599,23 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
             {/* Convert View */}
             {viewMode === "convert" && (
               <div className="p-6">
-                <FormatConverter inputValue={json} dict={dict} />
+                <FormatConverter inputValue={json} />
               </div>
             )}
 
             {/* Compare/Diff View */}
             {viewMode === "compare" && (
-              <JsonDiffPanel leftJson={json} dict={dict} />
+              <JsonDiffPanel leftJson={json} />
             )}
 
             {/* Schema Validator */}
             {viewMode === "schema" && (
-              <SchemaValidator inputJson={json} dict={dict} />
+              <SchemaValidator inputJson={json} />
             )}
 
             {/* Field Extractor */}
             {viewMode === "extract" && (
-              <FieldExtractor inputJson={json} dict={dict} />
+              <FieldExtractor inputJson={json} />
             )}
 
             {/* Tree View */}
@@ -631,8 +630,6 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
               <DraftsPanel
                 currentContent={json}
                 onLoad={handleLoadJson}
-                onSave={() => {}}
-                dict={dict}
               />
             )}
 

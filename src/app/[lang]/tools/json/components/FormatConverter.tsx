@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ArrowRightLeft, FileJson, FileCode, Copy, Check } from "lucide-react";
+import { ArrowRightLeft, Copy, Check } from "lucide-react";
 import {
   jsonToYaml,
   yamlToJson,
@@ -13,15 +13,7 @@ import type { ConvertFormat } from "../hooks";
 
 interface FormatConverterProps {
   inputValue: string;
-  onConvert?: (output: string, format: ConvertFormat) => void;
-  dict: any;
 }
-
-const FORMAT_ICONS: Record<ConvertFormat, any> = {
-  json: FileJson,
-  yaml: FileCode,
-  toml: FileCode,
-};
 
 const FORMAT_LABELS: Record<ConvertFormat, string> = {
   json: "JSON",
@@ -37,8 +29,6 @@ const FORMAT_COLORS: Record<ConvertFormat, string> = {
 
 export function FormatConverter({
   inputValue,
-  onConvert,
-  dict,
 }: FormatConverterProps) {
   const [targetFormat, setTargetFormat] = useState<ConvertFormat>("yaml");
   const [copied, setCopied] = useState(false);

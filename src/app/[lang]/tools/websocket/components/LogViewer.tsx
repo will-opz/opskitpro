@@ -7,7 +7,6 @@ import {
   Copy,
   Check,
   Download,
-  Filter,
   ArrowDown,
   ArrowUp,
   FileJson,

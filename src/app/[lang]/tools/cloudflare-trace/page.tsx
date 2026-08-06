@@ -48,7 +48,7 @@ export default async function CloudflareTracePage({
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense>
-          <CloudflareTraceClient dict={dict} lang={lang} />
+          <CloudflareTraceClient lang={lang} />
         </Suspense>
         <ToolGuide id="cloudflare-trace" lang={lang} />
         <RelatedTools currentTool="cloudflare-trace" lang={lang} />

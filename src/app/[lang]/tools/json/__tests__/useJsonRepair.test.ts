@@ -59,13 +59,13 @@ describe("repairJson", () => {
 
     it("should replace NaN with null", () => {
       const input = '{"key": NaN}';
-      const { repaired, fixes } = repairJson(input);
+      const { repaired } = repairJson(input);
       expect(JSON.parse(repaired)).toEqual({ key: null });
     });
 
     it("should replace Infinity with null", () => {
       const input = '{"key": Infinity}';
-      const { repaired, fixes } = repairJson(input);
+      const { repaired } = repairJson(input);
       expect(JSON.parse(repaired)).toEqual({ key: null });
     });
   });
@@ -80,13 +80,13 @@ describe("repairJson", () => {
 
     it("should convert False to false", () => {
       const input = '{"key": False}';
-      const { repaired, fixes } = repairJson(input);
+      const { repaired } = repairJson(input);
       expect(JSON.parse(repaired)).toEqual({ key: false });
     });
 
     it("should convert None to null", () => {
       const input = '{"key": None}';
-      const { repaired, fixes } = repairJson(input);
+      const { repaired } = repairJson(input);
       expect(JSON.parse(repaired)).toEqual({ key: null });
     });
   });
@@ -108,7 +108,7 @@ describe("repairJson", () => {
 
     it("should handle nested missing brackets", () => {
       const input = '{"outer": {"inner": "value"';
-      const { repaired, fixes } = repairJson(input);
+      const { repaired } = repairJson(input);
       expect(JSON.parse(repaired)).toEqual({ outer: { inner: "value" } });
     });
   });

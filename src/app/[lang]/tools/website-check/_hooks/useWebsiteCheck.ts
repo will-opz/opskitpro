@@ -192,7 +192,7 @@ export function useWebsiteCheck() {
               status: ip ? "OK" : "EMPTY",
             },
           }));
-        } catch (e) {
+        } catch {
           setLocalResolvers((prev) => ({
             ...prev,
             [r.id]: { ...r, ip: null, latency: "ERR", status: "FAILED" },

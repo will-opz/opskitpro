@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Terminal, Play, Clock, Hash, Zap, ChevronDown } from "lucide-react";
 import { useJqQuery, JQ_SNIPPETS } from "../hooks";
 import type { JqResult } from "../hooks";
@@ -8,13 +8,11 @@ import type { JqResult } from "../hooks";
 interface JqQueryPanelProps {
   inputJson: string;
   onOutputChange?: (output: string) => void;
-  dict: any;
 }
 
 export function JqQueryPanel({
   inputJson,
   onOutputChange,
-  dict,
 }: JqQueryPanelProps) {
   const [filter, setFilter] = useState(".");
   const [result, setResult] = useState<JqResult | null>(null);

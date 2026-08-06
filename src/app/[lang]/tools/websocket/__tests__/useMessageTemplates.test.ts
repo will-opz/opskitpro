@@ -3,15 +3,6 @@ import { describe, it, expect } from "vitest";
 // Since PRESET_TEMPLATES and processTemplate/extractVariables are private to the hook,
 // we replicate the pure logic here to test it in isolation.
 
-const PRESET_TEMPLATE_NAMES = [
-  "ping",
-  "subscribe",
-  "unsubscribe",
-  "auth",
-  "message",
-  "heartbeat",
-];
-
 // Mirror of processTemplate from useMessageTemplates.ts
 function processTemplate(
   template: string,

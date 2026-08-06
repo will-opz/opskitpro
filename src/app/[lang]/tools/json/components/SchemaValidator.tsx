@@ -23,7 +23,6 @@ interface ValidationError {
 
 interface SchemaValidatorProps {
   inputJson: string;
-  dict: any;
 }
 
 // Infer JSON Schema from data
@@ -78,7 +77,7 @@ function inferSchema(data: any, path = ""): any {
   return {};
 }
 
-export function SchemaValidator({ inputJson, dict }: SchemaValidatorProps) {
+export function SchemaValidator({ inputJson }: SchemaValidatorProps) {
   const [schema, setSchema] = useState("");
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [isValid, setIsValid] = useState<boolean | null>(null);

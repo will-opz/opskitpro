@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { checkRateLimit, createRateLimitHeaders } from '../rate-limit';
-import crypto from 'crypto';
 
 describe('rate-limit', () => {
   beforeEach(() => {

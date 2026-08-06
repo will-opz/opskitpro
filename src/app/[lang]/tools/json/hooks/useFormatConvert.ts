@@ -99,7 +99,6 @@ export function tomlToJson(toml: string): ConvertResult {
   try {
     const result: any = {};
     let currentSection = result;
-    let currentPath: string[] = [];
 
     const lines = toml.split("\n");
 
@@ -128,7 +127,6 @@ export function tomlToJson(toml: string): ConvertResult {
           }
         }
         currentSection = target;
-        currentPath = path;
         continue;
       }
 

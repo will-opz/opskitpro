@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Server,
-  Zap,
   Shield,
   Globe,
-  Terminal,
   RefreshCw,
   Search,
-  Layers,
   Activity,
 } from "lucide-react";
 import { ResultPanel, MetaRow, StatusBadge } from "@/components/diagnostic";
@@ -32,13 +29,7 @@ interface CfTrace {
   kex?: string;
 }
 
-export default function CloudflareTraceClient({
-  dict,
-  lang,
-}: {
-  dict: any;
-  lang: "zh" | "en";
-}) {
+export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
   const [activeTab, setActiveTab] = useState<"my" | "target">("my");
   const [myTrace, setMyTrace] = useState<CfTrace | null>(null);
   const [myPhase, setMyPhase] = useState<"idle" | "loading" | "done" | "error">(
@@ -52,7 +43,7 @@ export default function CloudflareTraceClient({
   >("idle");
   const [targetErrorMsg, setTargetErrorMsg] = useState("");
 
-  const fetchMyTrace = async () => {
+  const fetchMyTrace = useCallback(async () => {
     setMyPhase("loading");
     try {
       const res = await fetch("/cdn-cgi/trace");
@@ -63,7 +54,7 @@ export default function CloudflareTraceClient({
     } catch {
       setMyPhase("error");
     }
-  };
+  }, []);
 
   const fetchTargetTrace = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -111,7 +102,7 @@ export default function CloudflareTraceClient({
     if (activeTab === "my" && myPhase === "idle") {
       fetchMyTrace();
     }
-  }, [activeTab, myPhase]);
+  }, [activeTab, fetchMyTrace, myPhase]);
 
   const parseTraceText = (text: string): CfTrace => {
     return Object.fromEntries(

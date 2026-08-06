@@ -6,9 +6,6 @@ import {
   Play,
   Square,
   Zap,
-  TrendingUp,
-  Clock,
-  AlertCircle,
 } from "lucide-react";
 import type { ConnectionStatus } from "../hooks";
 
@@ -29,7 +26,6 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [interval, setIntervalValue] = useState(5);
   const [pingHistory, setPingHistory] = useState<PingRecord[]>([]);
-  const [pingCount, setPingCount] = useState(0);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pendingPingRef = useRef<number | null>(null);
@@ -234,7 +230,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
       {pingHistory.length > 0 && (
         <div className="px-4 pb-4">
           <div className="flex items-end gap-0.5 h-16 bg-zinc-50 rounded-xl p-2">
-            {pingHistory.slice(-50).map((ping, i) => {
+            {pingHistory.slice(-50).map((ping) => {
               const height = ping.timeout
                 ? 100
                 : ping.latency

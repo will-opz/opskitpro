@@ -16,15 +16,11 @@ import type { JsonDraft } from "../hooks/useJsonStorage";
 interface DraftsPanelProps {
   currentContent: string;
   onLoad: (content: string) => void;
-  onSave: () => void;
-  dict: any;
 }
 
 export function DraftsPanel({
   currentContent,
   onLoad,
-  onSave,
-  dict,
 }: DraftsPanelProps) {
   const { drafts, isLoaded, saveDraft, deleteDraft, renameDraft } =
     useJsonStorage();

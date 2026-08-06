@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   ChevronRight,
   Info,
   Wrench,
@@ -82,9 +81,6 @@ export default async function ErrorDetailPage({
   const guideLabel = isZh
       ? "排障指南"
       : "Troubleshooting Guide";
-  const relatedLabel = isZh
-      ? "关联工具"
-      : "Related Tools";
   const relatedErrorsLabel = isZh
       ? "关联错误"
       : "Related Errors";

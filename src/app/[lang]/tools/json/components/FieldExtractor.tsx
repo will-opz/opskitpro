@@ -8,12 +8,10 @@ import {
   Copy,
   Check,
   Download,
-  GripVertical,
 } from "lucide-react";
 
 interface FieldExtractorProps {
   inputJson: string;
-  dict: any;
 }
 
 interface FieldConfig {
@@ -54,7 +52,7 @@ function getAllPaths(obj: any, prefix = ""): string[] {
   return paths;
 }
 
-export function FieldExtractor({ inputJson, dict }: FieldExtractorProps) {
+export function FieldExtractor({ inputJson }: FieldExtractorProps) {
   const [fields, setFields] = useState<FieldConfig[]>([
     { id: "1", path: "", label: "Column 1" },
   ]);
@@ -233,7 +231,7 @@ export function FieldExtractor({ inputJson, dict }: FieldExtractorProps) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {fields.map((field, idx) => (
+          {fields.map((field) => (
             <div
               key={field.id}
               className="flex items-center gap-1 bg-white border border-zinc-200 rounded-lg p-1.5"

@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       { ok: true },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { ok: false },
       {

@@ -9,7 +9,6 @@ import {
   AlertCircle,
   Loader2,
   Edit3,
-  Check,
 } from "lucide-react";
 import type { ConnectionTab } from "../hooks/useMultiConnection";
 

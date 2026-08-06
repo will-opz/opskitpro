@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  useRef,
 } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -18,21 +17,15 @@ import {
   Server,
   Cloud,
   CheckCircle2,
-  Clock,
   ArrowRight,
   ChevronDown,
-  Info,
-  ExternalLink,
   ShieldAlert,
   Search,
   Copy,
   Check,
-  Cpu,
   Monitor,
   Lock,
-  Calendar,
   Database,
-  HelpCircle,
   LayoutGrid,
   Download,
   Star,
@@ -86,7 +79,6 @@ export default function WebsiteCheckClient({
   const [showJson, setShowJson] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedAction, setCopiedAction] = useState<string | null>(null);
-  const [showGradeInfo, setShowGradeInfo] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const [batchInput, setBatchInput] = useState("");

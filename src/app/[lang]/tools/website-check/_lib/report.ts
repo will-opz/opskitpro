@@ -194,12 +194,6 @@ const hasDnsAddress = (data: WebsiteCheckResult) => {
   );
 };
 
-const isExpired = (expiry?: string) => {
-  if (!expiry || expiry === "Unknown") return false;
-  const time = new Date(expiry).getTime();
-  return Number.isFinite(time) && time < Date.now();
-};
-
 const isExpiringSoon = (expiry?: string) => {
   if (!expiry || expiry === "Unknown") return false;
   const time = new Date(expiry).getTime();
@@ -385,7 +379,6 @@ export function buildWebsiteCheckReport(
     }),
   );
 
-  const sslExpired = isExpired(data.ssl.expiry);
   const sslSoon = isExpiringSoon(data.ssl.expiry) || data.ssl.grade === "C";
   const sslValid = data.ssl.valid;
   const isCdn = data.cdn.is_provider;
