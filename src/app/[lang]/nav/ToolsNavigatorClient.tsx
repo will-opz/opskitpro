@@ -266,15 +266,6 @@ const defaultItems: NavItem[] = [
     pinned: true,
   },
   {
-    id: "blog",
-    title: "OpsKitPro Blog",
-    description: "Public notes, tool design and SRE reflections",
-    url: "/blog",
-    category: "docs",
-    tags: ["kb", "notes"],
-    kind: "builtin",
-  },
-  {
     id: "cloudflare",
     title: "Cloudflare Dashboard",
     description: "Edge, DNS and WAF console",

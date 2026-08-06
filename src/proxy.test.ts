@@ -48,6 +48,30 @@ describe("proxy — locale redirection", () => {
     expect(res.headers.get("location")).toBe("http://localhost/en/blog");
   });
 
+  it("permanently redirects the localized Blog index to tools", async () => {
+    const res = await proxy(makeRequest("/en/blog"));
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe("http://localhost/en/tools");
+  });
+
+  it.each([
+    ["/en/blog/cloudflare-522", "/en/tools/website-check"],
+    ["/zh/blog/passgen-tool", "/zh/tools/passgen"],
+    ["/en/blog/public-api-error-contract-for-diagnostic-tools", "/en/tools/api"],
+  ])("redirects retired article %s to %s", async (pathname, destination) => {
+    const res = await proxy(makeRequest(pathname));
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe(
+      `http://localhost${destination}`,
+    );
+  });
+
+  it("leaves unknown Blog slugs to the App Router 404", async () => {
+    const res = await proxy(makeRequest("/en/blog/not-a-real-post"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+  });
+
   it.each(["/contact", "/pricing", "/graphql"])(
     "passes unknown locale-neutral path %s through without a redirect",
     async (pathname) => {

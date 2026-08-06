@@ -36,11 +36,10 @@ OpsKitPro is built around a seamless troubleshooting funnel:
 ## Architecture
 
 ```
-opskitpro.com (Main Site — Next.js 14)
+opskitpro.com (Main Site — Next.js 16)
 ├── /              Home and quick diagnostic entry
 ├── /tools         Toolbox index
 ├── /tools/*       Website, DNS, IP, JSON, WebSocket, and utility modules
-├── /blog          Engineering notes and operating reflections
 ├── /services      Curated external service matrix
 └── /api           Dynamic diagnostic APIs on the Lightsail Node runtime
 ```
@@ -51,7 +50,7 @@ OpsKitPro is split into three long-lived repositories:
 
 | Repository | Visibility | Responsibility |
 |------------|------------|----------------|
-| `opskitpro` | Public | User-facing product, tools, public pages, CI/CD, and open source code |
+| `opskitpro` | Public | User-facing tool collection, public pages, CI/CD, and open source code |
 | `opskitpro-ops` | Private | Django operations backend, analytics, Nginx/Cloudflare imports, Qiita/X publishing workflow, and private automation |
 | `opskitpro-public` | Public | Static knowledge base source for `kb.opskitpro.com`: finished articles, tool docs, and public assets |
 
@@ -63,25 +62,8 @@ Anything involving tokens, traffic analysis, private drafts, publishing queues, 
 
 - **Home**: multilingual landing page with a centered search action and quick entry into diagnostics.
 - **Tools**: website-check, DNS lookup, IP lookup, JSON, WebSocket, QR code, password generation, time, encode, and prompt-builder modules.
-- **Blog**: engineering notes about Cloudflare, troubleshooting, tool design, and operations experience.
 - **Services**: curated external service matrix for common DevOps/SRE workflows.
 - **About**: a condensed project overview focused on operational design, maintainability, and product direction.
-
----
-
-## ✍️ Blog Series
-
-The blog is intentionally secondary to the tool suite. Long-form articles are published directly on the main site so the navigation stays simple:
-
-1. [Why I built OpsKitPro: from troubleshooting pain points to a tool platform](https://opskitpro.com/blog/why-opskitpro)
-2. [OpsKitPro design principles: why the UI became more restrained](https://opskitpro.com/blog/design-principles)
-3. [How the website-check module works: a breakdown of the implementation](https://opskitpro.com/blog/website-check-module)
-4. [IP lookup: returning structured fallback data instead of hard failure](https://opskitpro.com/blog/ip-lookup)
-5. [DNS lookup: why multi-resolver cross-checking matters](https://opskitpro.com/blog/dns-lookup)
-6. [Service matrix standardization and the production deployment path](https://opskitpro.com/blog/services-deployment)
-7. [Looking back at SVN, Git, and the shift toward modern engineering workflows](https://opskitpro.com/blog/underestimating-git)
-
-> The articles are read directly on the main site. The homepage keeps localized titles, summaries, and entry points only.
 
 ---
 
@@ -89,14 +71,13 @@ The blog is intentionally secondary to the tool suite. Long-form articles are pu
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | [Next.js 14](https://nextjs.org/) (App Router + standalone build) |
+| **Framework** | [Next.js 16](https://nextjs.org/) (App Router + standalone build) |
 | **Runtime** | Node.js standalone on AWS Lightsail |
 | **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
 | **CI/CD** | GitHub Actions → AWS Lightsail |
 | **Operations Backend** | `opskitpro-ops` Django admin at `ops.opskitpro.com` |
-| **Knowledge Base** | `opskitpro-public` → [kb.opskitpro.com](https://kb.opskitpro.com) |
 
 ---
 
@@ -195,11 +176,6 @@ operational state.
 - Live diagnostics return `X-Cache: BYPASS` and `Cache-Control: no-store`.
 - `/d/[domain]`, `/chk/[domain]`, and `/api/cli?domain=` are compatibility
   entrypoints backed by the same CLI renderer.
-
----
-
-## 📁 Knowledge Base
-Finished public articles and tool guides live in `opskitpro-public` and are published at [kb.opskitpro.com](https://kb.opskitpro.com). Drafts, queues, and private planning stay in `opskitpro-ops`.
 
 ---
 

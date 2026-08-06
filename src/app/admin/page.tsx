@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   BarChart3,
-  BookOpen,
   CircleUserRound,
   ExternalLink,
   LayoutGrid,
@@ -15,12 +14,6 @@ const sections = [
       "Open Cloudflare traffic analysis and the private operations dashboard.",
     href: "/admin/analytics",
     icon: BarChart3,
-  },
-  {
-    title: "Content",
-    description: "Review public articles and publishing entry points.",
-    href: "/admin/content",
-    icon: BookOpen,
   },
   {
     title: "Navigation",
@@ -48,12 +41,12 @@ export default function AdminPage() {
           OpsKitPro Admin
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
-          A private control surface for analytics, public content, and personal
-          navigation. Public tools remain available without signing in.
+          A private control surface for analytics and personal navigation.
+          Public tools remain available without signing in.
         </p>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <section className="mt-6 grid gap-4 md:grid-cols-3">
         {sections.map((section) => {
           const Icon = section.icon;
           return (

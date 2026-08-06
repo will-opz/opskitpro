@@ -428,22 +428,18 @@ test('qr generator renders a preview for input text', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Download QR/i })).toBeEnabled()
 })
 
-test('knowledge base exposes public article groups and article links', async ({ page }) => {
+test('retired blog index sends visitors to the tool catalog', async ({ page }) => {
   await page.goto('/blog')
 
-  await expect(page.getByRole('heading', { name: /Knowledge Base/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /AI engineering/i }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: /Vibe Coding in practice/i }).first()).toBeVisible()
+  await expect(page).toHaveURL(/\/en\/tools$/)
+  await expect(page.getByRole('heading', { name: /First-party tools/i })).toBeVisible()
 })
 
-test('localized blog actions keep a single locale prefix', async ({ page }) => {
+test('retired localized articles redirect to the matching tool and locale', async ({ page }) => {
   await page.goto('/zh/blog/tls-health-vs-https')
 
-  await expect(page.getByRole('link', { name: '打开工具' })).toHaveCount(2)
-  await expect(page.locator('a[href="/zh/tools/website-check"]')).toHaveCount(3)
-  await expect(page.locator('a[href="/zh/zh/tools/website-check"]')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: '返回博客', exact: true })).toHaveAttribute('href', '/zh/blog')
-  await expect(page.getByRole('link', { name: '返回博客列表', exact: true })).toHaveAttribute('href', '/zh/blog')
+  await expect(page).toHaveURL(/\/zh\/tools\/website-check$/)
+  await expect(page.getByRole('heading', { name: /网站检测|Website Check/i })).toBeVisible()
 })
 
 test('mobile menu opens and exposes primary navigation', async ({ page }) => {

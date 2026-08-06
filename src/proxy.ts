@@ -8,6 +8,7 @@ import {
   isActiveLocale,
   isRetiredLocale,
 } from "@/lib/i18n";
+import { getRetiredBlogDestination } from "@/lib/blog-retirement";
 
 const ADMIN_COOKIE_NAME = "opskitpro_admin";
 const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
@@ -117,6 +118,31 @@ export async function proxy(request: NextRequest) {
   }
 
   const pathLocale = getLocaleFromPathname(pathname);
+
+  if (isActiveLocale(pathLocale)) {
+    const localizedBlogPath = pathname.match(/^\/(en|zh)\/blog(?:\/([^/]+))?$/);
+    if (localizedBlogPath) {
+      const slug = localizedBlogPath[2];
+      const destination = slug
+        ? getRetiredBlogDestination(slug)
+        : "/tools";
+
+      if (destination) {
+        const forwardedHost = getForwardedHost(request);
+        if (forwardedHost) {
+          url.host = forwardedHost;
+          if (!forwardedHost.includes(":")) {
+            url.port = "";
+          }
+        }
+        url.pathname = `/${pathLocale}${destination}`;
+        return attachCloudflareAccessAdminCookie(
+          request,
+          NextResponse.redirect(url, 301),
+        );
+      }
+    }
+  }
 
   if (
     (isActiveLocale(pathLocale) || isRetiredLocale(pathLocale)) &&

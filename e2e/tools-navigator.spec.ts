@@ -41,7 +41,7 @@ test('global sign-in opens the shared admin dialog', async ({ page }) => {
     })
   })
 
-  await page.goto('/blog')
+  await page.goto('/nav')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page.getByRole('heading', { name: 'Admin sign in' })).toBeVisible()

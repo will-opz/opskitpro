@@ -1,8 +1,6 @@
 {
   "nav": {
-    "kb": "运维智能节点",
     "services": "工具",
-    "blog": "知识库",
     "about": "关于我们"
   },
   "home": {
@@ -31,8 +29,6 @@
     "card3_desc": "检查 DNS 记录以及 SPF、DMARC、CAA 策略信号。",
     "card4_title": "运维应急包",
     "card4_desc": "生产环境应急工具集。包含 WebSocket 调试、JSON 审计与紧急密码重置。",
-    "card5_title": "知识库",
-    "card5_desc": "公开整理工具说明、设计决策、模块实现和运维笔记。",
     "quick_access": "立即检测你的网站",
     "tool_passgen": "密码生成",
     "tool_qrgen": "二维码转化",
@@ -51,37 +47,6 @@
       "s2_desc": "定位 403 / 502 / 520 等常见状态码冲突。",
       "s3_title": "🌐 DNS 解析异常？",
       "s3_desc": "检查解析是否生效，防止域名被污染。"
-    },
-    "blog_section": {
-      "title": "知识库",
-      "subtitle": "工具、运维与实现细节的公开索引",
-      "view_all": "打开知识库",
-      "posts": [
-        {
-          "tag": "SRE_INTEL",
-          "date": "2026-03-27",
-          "title": "OpsKitPro 边缘网关稳定性重构：48小时 SRE 运维实战",
-          "desc": "深度复盘 OpsKitPro 在 Cloudflare Edge 环境下的故障排查过程，涵盖已解决的 Next.js 14 兼容性问题。"
-        },
-        {
-          "tag": "DIAGNOSTIC",
-          "date": "2026-03-25",
-          "title": "网站打不开怎么办？5步排查法",
-          "desc": "遇到 502 或解析错误？本文教你如何快速定位故障源。"
-        },
-        {
-          "tag": "SECURITY",
-          "date": "2026-03-25",
-          "title": "如何深度查询 IP 详细信息？",
-          "desc": "掌握 ASN 取证与地理位置解析，识别恶意节点。"
-        },
-        {
-          "tag": "NETWORK",
-          "date": "2026-03-25",
-          "title": "DNS 记录类型全解析：A, MX, CNAME",
-          "desc": "搞不懂 DNS 配置？本文为你梳理常见记录类型。"
-        }
-      ]
     }
   },
   "services": {

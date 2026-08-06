@@ -1,8 +1,6 @@
 {
   "nav": {
-    "kb": "Knowledge Base",
     "services": "Tools",
-    "blog": "Knowledge Base",
     "about": "About"
   },
   "home": {
@@ -31,8 +29,6 @@
     "card3_desc": "Inspect DNS records plus SPF, DMARC, and CAA policy signals.",
     "card4_title": "Ops Survival Kit",
     "card4_desc": "Industrial utilities for prod emergencies. WebSocket debugging, JSON audits, and password recovery.",
-    "card5_title": "Knowledge Base",
-    "card5_desc": "Public notes for requirements, design decisions, module implementation, and tool usage.",
     "quick_access": "Diagnose Website Now",
     "tool_passgen": "Passwords",
     "tool_qrgen": "QR Codes",
@@ -51,37 +47,6 @@
       "s2_desc": "Troubleshoot 403 / 502 / 520 issues quickly.",
       "s3_title": "🌐 DNS problems?",
       "s3_desc": "Check if your DNS is correctly configured."
-    },
-    "blog_section": {
-      "title": "Knowledge Base",
-      "subtitle": "Public notes for tools, operations, and implementation",
-      "view_all": "Open Knowledge Base",
-      "posts": [
-        {
-          "tag": "SRE_INTEL",
-          "date": "2026-03-27",
-          "title": "OpsKitPro Edge Stability Rebuild: A 48-Hour SRE Field Note",
-          "desc": "A deep dive into troubleshooting OpsKitPro on Cloudflare Edge, covering resolved Next.js 14 compatibility issues."
-        },
-        {
-          "tag": "DIAGNOSTIC",
-          "date": "2026-03-25",
-          "title": "Website not loading? 5 steps to fix.",
-          "desc": "Diagnostic guide for 502/DNS/SSL common failures."
-        },
-        {
-          "tag": "SECURITY",
-          "date": "2026-03-25",
-          "title": "Trace IP details like a Pro",
-          "desc": "Understand ASN, ISP and Geolocation forensics."
-        },
-        {
-          "tag": "NETWORK",
-          "date": "2026-03-25",
-          "title": "DNS Records Explained",
-          "desc": "Confused about DNS config? We break down A, MX, and CNAME records."
-        }
-      ]
     }
   },
   "services": {

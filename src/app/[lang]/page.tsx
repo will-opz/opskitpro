@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   Zap,
@@ -8,12 +7,18 @@ import {
   AlertCircle,
   ShieldCheck,
   TerminalSquare,
+  KeyRound,
+  QrCode,
+  Braces,
+  Radio,
+  Code2,
+  Clock3,
+  Sparkles,
 } from "lucide-react";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import HomeSearch from "@/components/HomeSearch";
-import { getAllBlogPosts } from "@/lib/blog";
 import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 import { CoreToolLink } from "@/components/CoreToolLink";
@@ -21,6 +26,7 @@ import { CoreToolImpressions } from "@/components/AnalyticsEvent";
 import {
   coreTools,
   localizeTool,
+  productTools,
   type CoreToolId,
 } from "@/lib/tool-catalog";
 
@@ -92,6 +98,12 @@ const homeDashboardCopy = {
     workflowsTitle: "Operational workflows",
     workflowsDesc:
       "Practical entry points for launch checks, incident response, and everyday edge debugging.",
+    utilitySectionTitle: "Useful tools, ready when you need them",
+    utilitySectionDesc:
+      "Fast, focused utilities that work without an account. Local-first tools keep your input in the browser.",
+    everydayTools: "Everyday tools",
+    buildTools: "Build and debug",
+    localFirst: "Local-first",
     toolTags: {
       web: "Web",
       dns: "DNS",
@@ -136,6 +148,12 @@ const homeDashboardCopy = {
     openAllTools: "打开全部工具",
     workflowsTitle: "运维工作流",
     workflowsDesc: "覆盖上线检查、故障响应和日常边缘排障的实用入口。",
+    utilitySectionTitle: "随手可用的实用工具",
+    utilitySectionDesc:
+      "无需注册，一个工具解决一个问题。支持本地处理的工具不会上传你的输入。",
+    everydayTools: "常用工具",
+    buildTools: "开发与调试",
+    localFirst: "本地处理",
     toolTags: {
       web: "网站",
       dns: "DNS",
@@ -167,10 +185,6 @@ export default async function Home({
 }) {
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
-  const latestNotes = getAllBlogPosts(lang)
-    .slice()
-    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
-    .slice(0, 4);
   const heroBadge = dict.home.title_part1;
   const heroSubtitle = dict.home.subtitle;
   const diagnosticPreview = await getHomeDiagnosticPreview();
@@ -242,6 +256,33 @@ export default async function Home({
       ...presentation,
     };
   });
+  const utilityIcons = {
+    passgen: KeyRound,
+    qrgen: QrCode,
+    encode: Code2,
+    time: Clock3,
+    json: Braces,
+    websocket: Radio,
+    api: TerminalSquare,
+    "prompt-builder": Sparkles,
+  } as const;
+  const toolGroups = [
+    {
+      title: dashboardCopy.everydayTools,
+      ids: ["passgen", "qrgen", "encode", "time"],
+    },
+    {
+      title: dashboardCopy.buildTools,
+      ids: ["json", "websocket", "api", "prompt-builder"],
+    },
+  ].map((group) => ({
+    ...group,
+    tools: group.ids.flatMap((id) => {
+      const tool = productTools.find((entry) => entry.id === id);
+      if (!tool) return [];
+      return [{ ...localizeTool(tool, lang), icon: utilityIcons[id as keyof typeof utilityIcons] }];
+    }),
+  }));
 
   return (
     <>
@@ -468,80 +509,55 @@ export default async function Home({
           </div>
         </div>
 
-        {/* 5. Featured Intel / Technical Notes (Articles) */}
-        <div className="mx-auto mb-12 w-full max-w-7xl text-left">
-          <div className="mb-8 flex items-center justify-between border-b border-[var(--border-subtle)] pb-6">
+        <section className="mx-auto mb-12 w-full max-w-7xl text-left">
+          <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
-                {dict.home.blog_section?.title || "FEATURED_INTEL"}
+                {dashboardCopy.utilitySectionTitle}
               </h2>
-              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                {dict.home.blog_section?.subtitle || "Technical Notes"}
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+                {dashboardCopy.utilitySectionDesc}
               </p>
             </div>
             <Link
-              href={`/${lang}/blog`}
-              className="group flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)] hover:text-[var(--accent-hover)]"
+              href={`/${lang}/tools`}
+              className="group inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)]"
             >
-              {dict.home.blog_section?.view_all || "VIEW_ALL_POSTS"}
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              {dashboardCopy.openAllTools}
+              <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
             </Link>
           </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {latestNotes.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/${lang}/blog/${post.slug}`}
-                className="ui-surface group overflow-hidden rounded-2xl hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-xl"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  {post.coverImage && (
-                    <Image
-                      src={post.coverImage}
-                      alt={post.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                    />
-                  )}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${post.accent} opacity-70`}
-                  />
-                  <div className="absolute left-3 top-3 flex items-center gap-2">
-                    <span className="rounded-full border border-white/30 bg-white/85 px-2.5 py-1 text-[9px] font-bold tracking-[0.2em] text-zinc-700 backdrop-blur-md">
-                      {post.category || post.tags?.[0] || "Blog"}
-                    </span>
-                    <span className="rounded-full border border-white/20 bg-zinc-950/70 px-2.5 py-1 text-[9px] font-semibold tracking-[0.16em] text-white backdrop-blur-md">
-                      {post.actionKind === "tool"
-                        ? lang === "zh"
-                            ? "工具"
-                            : "Tool"
-                        : lang === "zh"
-                            ? "笔记"
-                            : "Notes"}
-                    </span>
-                  </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            {toolGroups.map((group) => (
+              <div key={group.title} className="ui-surface rounded-2xl p-4 sm:p-5">
+                <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
+                  {group.title}
+                </h3>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {group.tools.map((tool) => (
+                    <Link
+                      key={tool.id}
+                      href={`/${lang}${tool.href}`}
+                      className="group flex min-h-20 items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 transition hover:border-emerald-500/30"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                        <tool.icon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-color)]">
+                          {tool.title}
+                        </span>
+                        <span className="mt-0.5 block line-clamp-1 text-xs text-[var(--text-muted)]">
+                          {tool.description}
+                        </span>
+                      </span>
+                    </Link>
+                  ))}
                 </div>
-
-                <div className="p-5 sm:p-6">
-                  <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                    <span>{post.publishedAt}</span>
-                    <span className="text-[var(--accent-color)]">
-                      {post.readTime}
-                    </span>
-                  </div>
-                  <h3 className="mt-3 text-base font-semibold leading-snug text-[var(--text-primary)] group-hover:text-[var(--accent-color)] sm:text-[1.05rem]">
-                    {post.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--text-muted)]">
-                    {post.summary}
-                  </p>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
-        </div>
+        </section>
       </main>
 
       {/* 6. Footer (Handled by component) */}

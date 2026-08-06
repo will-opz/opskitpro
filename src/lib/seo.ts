@@ -7,7 +7,7 @@ export const SITE_URL = "https://opskitpro.com";
 
 /**
  * Builds language alternates for a given path.
- * @param path - The path without language prefix, e.g., '/blog/json-tool' or '' for home
+ * @param path - The path without language prefix, e.g., '/tools/json' or '' for home
  * @returns The alternates.languages object
  */
 export function buildLanguageAlternates(path: string) {
@@ -27,7 +27,7 @@ export function buildLanguageAlternates(path: string) {
 
 /**
  * Builds the canonical URL for a given language and path.
- * @param path - The path without language prefix, e.g., '/blog/json-tool' or ''
+ * @param path - The path without language prefix, e.g., '/tools/json' or ''
  * @param lang - The current language
  * @returns The full canonical URL
  */

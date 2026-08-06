@@ -191,7 +191,7 @@ export default async function AboutPage({
               "CF Edge Runtime",
               "Tailwind CSS v3",
               "Lucide Icons",
-              "Knowledge Base",
+              "Local-first Utilities",
               "i18n Strategy",
             ].map((item) => (
               <div
