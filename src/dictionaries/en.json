@@ -151,7 +151,22 @@
       "history": "History",
       "clear_history": "Clear",
       "history_empty": "None",
-      "history_helper": "Stored as plain text in your browser's localStorage. Clear history after use if you're on a shared device."
+      "history_helper": "Stored as plain text in your browser's localStorage. Clear history after use if you're on a shared device.",
+      "mode": "Generation mode",
+      "password_mode": "Random password",
+      "passphrase_mode": "Memorable phrase",
+      "presets": "Common presets",
+      "preset_account": "Website account",
+      "preset_wifi": "Home Wi-Fi",
+      "preset_api": "Database / API",
+      "preset_easy": "Easy to type",
+      "exclude_ambiguous": "Exclude ambiguous characters",
+      "exclude_custom": "Exclude specific characters",
+      "exclude_placeholder": "For example: 0O1lI",
+      "word_count": "Word count",
+      "separator": "Separator",
+      "include_number": "Append 4 digits",
+      "passphrase_note": "Words are selected securely in this browser. Do not replace them with a familiar quote or sentence."
     },
     "qrgen": {
       "placeholder": "Enter text or URL...",

@@ -151,7 +151,22 @@
       "history": "生成历史",
       "clear_history": "清除记录",
       "history_empty": "暂无历史记录",
-      "history_helper": "历史记录以明文存储在浏览器 localStorage 中，未加密。共享设备上使用后请及时清除。"
+      "history_helper": "历史记录以明文存储在浏览器 localStorage 中，未加密。共享设备上使用后请及时清除。",
+      "mode": "生成模式",
+      "password_mode": "随机密码",
+      "passphrase_mode": "易记短语",
+      "presets": "常用场景",
+      "preset_account": "网站账号",
+      "preset_wifi": "家庭 Wi-Fi",
+      "preset_api": "数据库 / API",
+      "preset_easy": "易输入",
+      "exclude_ambiguous": "排除易混淆字符",
+      "exclude_custom": "排除指定字符",
+      "exclude_placeholder": "例如：0O1lI",
+      "word_count": "单词数量",
+      "separator": "分隔符",
+      "include_number": "追加 4 位数字",
+      "passphrase_note": "短语由浏览器安全随机选择的英文词组成；请勿自行替换为常见句子。"
     },
     "qrgen": {
       "placeholder": "在此输入文字或链接...",

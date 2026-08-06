@@ -11,13 +11,25 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
-import { generateSecurePassword } from "@/lib/password-generator";
+import {
+  generateSecurePassphrase,
+  generateSecurePassword,
+  getPasswordPreset,
+  type PasswordPreset,
+} from "@/lib/password-generator";
 
 type Lang = "zh" | "en";
 
 export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
   const [password, setPassword] = useState("");
   const [length, setLength] = useState(16);
+  const [mode, setMode] = useState<"password" | "passphrase">("password");
+  const [activePreset, setActivePreset] = useState<PasswordPreset | null>(null);
+  const [excludeAmbiguous, setExcludeAmbiguous] = useState(false);
+  const [excludedCharacters, setExcludedCharacters] = useState("");
+  const [wordCount, setWordCount] = useState(6);
+  const [separator, setSeparator] = useState<"-" | "." | "_" | " ">("-");
+  const [includePhraseNumber, setIncludePhraseNumber] = useState(true);
   const [options, setOptions] = useState({
     uppercase: true,
     lowercase: true,
@@ -33,6 +45,8 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
     setOptions((prev) => {
       const next = { ...prev };
       if (key === "uuid" || key === "pin6" || key === "pin8") {
+        setMode("password");
+        setActivePreset(null);
         const val = !prev[key as keyof typeof prev];
         // Reset all special modes first
         next.uuid = false;
@@ -40,6 +54,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
         next.pin8 = false;
         next[key as keyof typeof next] = val;
       } else {
+        setActivePreset(null);
         next[key as keyof typeof next] = !prev[key as keyof typeof next];
         // If we are enabling a character set, disable special modes
         next.uuid = false;
@@ -50,6 +65,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
     });
   };
   const [copied, setCopied] = useState(false);
+  const [generationError, setGenerationError] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
 
@@ -68,7 +84,13 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
     (saveToHistory = true) => {
       let generated = "";
 
-      if (options.uuid) {
+      if (mode === "passphrase") {
+        generated = generateSecurePassphrase({
+          wordCount,
+          separator,
+          includeNumber: includePhraseNumber,
+        });
+      } else if (options.uuid) {
         // UUID v4 generation using cryptographically secure API
         generated = crypto.randomUUID();
       } else if (options.pin6 || options.pin8) {
@@ -87,16 +109,29 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
         ) {
           return "";
         }
-        generated = generateSecurePassword({
-          length,
-          uppercase: options.uppercase,
-          lowercase: options.lowercase,
-          numbers: options.numbers,
-          symbols: options.symbols,
-        });
+        try {
+          generated = generateSecurePassword({
+            length,
+            uppercase: options.uppercase,
+            lowercase: options.lowercase,
+            numbers: options.numbers,
+            symbols: options.symbols,
+            excludeAmbiguous,
+            excludedCharacters,
+          });
+        } catch {
+          setPassword("");
+          setGenerationError(
+            lang === "zh"
+              ? "当前排除规则没有可用字符，请调整选项。"
+              : "No characters remain under the current exclusions.",
+          );
+          return "";
+        }
       }
 
       setPassword(generated);
+      setGenerationError("");
 
       if (saveToHistory) {
         setHistory((prev) => {
@@ -109,8 +144,36 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
         });
       }
     },
-    [length, options],
+    [
+      excludeAmbiguous,
+      excludedCharacters,
+      includePhraseNumber,
+      lang,
+      length,
+      mode,
+      options,
+      separator,
+      wordCount,
+    ],
   );
+
+  const applyPreset = (preset: PasswordPreset) => {
+    const next = getPasswordPreset(preset);
+    setMode("password");
+    setActivePreset(preset);
+    setLength(next.length);
+    setExcludeAmbiguous(Boolean(next.excludeAmbiguous));
+    setExcludedCharacters("");
+    setOptions({
+      uppercase: next.uppercase,
+      lowercase: next.lowercase,
+      numbers: next.numbers,
+      symbols: next.symbols,
+      uuid: false,
+      pin6: false,
+      pin8: false,
+    });
+  };
 
   // Initial generation on mount
   useEffect(() => {
@@ -195,9 +258,16 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
           <div className="bg-zinc-100 rounded-3xl border border-black/10 p-2 backdrop-blur-md relative group overflow-hidden">
             <div className="p-8 text-center bg-[#fafafa]/40 rounded-2xl border border-black/5">
               <span className="text-2xl sm:text-4xl font-mono text-zinc-900 tracking-widest break-all select-all selection:bg-emerald-500/30">
-                {password}
+                <span data-testid="generated-password">
+                  {password}
+                </span>
               </span>
             </div>
+            {generationError && (
+              <p role="alert" className="px-4 pt-2 text-xs text-red-600">
+                {generationError}
+              </p>
+            )}
             {/* Strength indicator */}
             {password &&
               (() => {
@@ -272,32 +342,105 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
           {/* Controls */}
           <div className="bg-white/30 rounded-3xl border border-zinc-200/50 p-8 space-y-10">
-            {/* Length Slider */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
+                {dict.tools.passgen.mode}
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {(["password", "passphrase"] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => {
+                      setMode(item);
+                      setActivePreset(null);
+                      setOptions((current) => ({
+                        ...current,
+                        uuid: false,
+                        pin6: false,
+                        pin8: false,
+                      }));
+                    }}
+                    className={`min-h-12 rounded-xl border px-4 text-xs font-semibold transition ${
+                      mode === item
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                        : "border-black/5 bg-zinc-100/50 text-zinc-500"
+                    }`}
+                  >
+                    {item === "password"
+                      ? dict.tools.passgen.password_mode
+                      : dict.tools.passgen.passphrase_mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {mode === "password" && (
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
+                  {dict.tools.passgen.presets}
+                </h3>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {(["account", "wifi", "api", "easy"] as const).map(
+                    (preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => applyPreset(preset)}
+                        className={`min-h-11 rounded-xl border px-3 text-[11px] font-semibold transition ${
+                          activePreset === preset
+                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                            : "border-black/5 bg-white text-zinc-600"
+                        }`}
+                      >
+                        {dict.tools.passgen[`preset_${preset}`]}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <label className="text-zinc-600 font-medium">
-                  {dict.tools.passgen.length}
+                  {mode === "password"
+                    ? dict.tools.passgen.length
+                    : dict.tools.passgen.word_count}
                 </label>
                 <span className="text-3xl font-mono text-emerald-700">
-                  {length}
+                  {mode === "password" ? length : wordCount}
                 </span>
               </div>
               <input
+                aria-label={
+                  mode === "password"
+                    ? dict.tools.passgen.length
+                    : dict.tools.passgen.word_count
+                }
                 type="range"
-                min="8"
-                max="64"
-                value={length}
-                onChange={(e) => setLength(parseInt(e.target.value))}
+                min={mode === "password" ? 8 : 4}
+                max={mode === "password" ? 64 : 8}
+                value={mode === "password" ? length : wordCount}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (mode === "password") {
+                    setLength(value);
+                    setActivePreset(null);
+                  } else {
+                    setWordCount(value);
+                  }
+                }}
                 className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all"
               />
             </div>
 
-            {/* Toggles */}
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                  {dict.tools.passgen.options}
-                </h3>
+            {mode === "password" ? (
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
+                    {dict.tools.passgen.options}
+                  </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {["uppercase", "lowercase", "numbers", "symbols"].map(
                     (key) => (
@@ -332,6 +475,38 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                     ),
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  aria-pressed={excludeAmbiguous}
+                  onClick={() => {
+                    setExcludeAmbiguous((value) => !value);
+                    setActivePreset(null);
+                  }}
+                  className={`flex min-h-12 w-full items-center justify-between rounded-xl border p-4 text-xs font-medium transition ${
+                    excludeAmbiguous
+                      ? "border-emerald-500/20 bg-emerald-500/5 text-zinc-900"
+                      : "border-black/5 bg-zinc-100/50 text-zinc-500"
+                  }`}
+                >
+                  {dict.tools.passgen.exclude_ambiguous}
+                  <span>{excludeAmbiguous ? "ON" : "OFF"}</span>
+                </button>
+                <label className="block space-y-2 text-xs font-medium text-zinc-600">
+                  <span>{dict.tools.passgen.exclude_custom}</span>
+                  <input
+                    value={excludedCharacters}
+                    maxLength={64}
+                    onChange={(event) => {
+                      setExcludedCharacters(event.target.value);
+                      setActivePreset(null);
+                    }}
+                    placeholder={dict.tools.passgen.exclude_placeholder}
+                    className="min-h-12 w-full rounded-xl border border-black/10 bg-white px-4 font-mono text-zinc-900 outline-none focus:border-emerald-500/40"
+                  />
+                </label>
               </div>
 
               <div className="space-y-4">
@@ -372,8 +547,49 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                     </button>
                   ))}
                 </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
+                    {dict.tools.passgen.separator}
+                  </h3>
+                  <div className="grid grid-cols-4 gap-3">
+                    {(["-", ".", "_", " "] as const).map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setSeparator(item)}
+                        className={`min-h-11 rounded-xl border font-mono text-sm transition ${
+                          separator === item
+                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                            : "border-black/5 bg-zinc-100/50 text-zinc-500"
+                        }`}
+                      >
+                        {item === " " ? "Space" : item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  aria-pressed={includePhraseNumber}
+                  onClick={() => setIncludePhraseNumber((value) => !value)}
+                  className={`flex min-h-12 w-full items-center justify-between rounded-xl border p-4 text-xs font-medium transition ${
+                    includePhraseNumber
+                      ? "border-emerald-500/20 bg-emerald-500/5 text-zinc-900"
+                      : "border-black/5 bg-zinc-100/50 text-zinc-500"
+                  }`}
+                >
+                  {dict.tools.passgen.include_number}
+                  <span>{includePhraseNumber ? "ON" : "OFF"}</span>
+                </button>
+                <p className="text-xs leading-5 text-zinc-500">
+                  {dict.tools.passgen.passphrase_note}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* History Section */}

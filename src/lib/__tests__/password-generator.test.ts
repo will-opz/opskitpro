@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { generateSecurePassword, type PasswordOptions } from "../password-generator";
+import {
+  generateSecurePassphrase,
+  generateSecurePassword,
+  getPasswordPreset,
+  type PasswordOptions,
+} from "../password-generator";
 
 const defaults: PasswordOptions = {
   length: 20,
@@ -43,5 +48,66 @@ describe("generateSecurePassword", () => {
         symbols: false,
       }),
     ).toThrow("At least one character set");
+  });
+
+  it("removes ambiguous and explicitly excluded characters", () => {
+    const password = generateSecurePassword({
+      ...defaults,
+      length: 80,
+      symbols: false,
+      excludeAmbiguous: true,
+      excludedCharacters: "abcXYZ",
+    });
+    expect(password).not.toMatch(/[0O1lIabcXYZ]/);
+  });
+
+  it("rejects an enabled set when every character is excluded", () => {
+    expect(() =>
+      generateSecurePassword({
+        length: 20,
+        uppercase: false,
+        lowercase: false,
+        numbers: true,
+        symbols: false,
+        excludedCharacters: "0123456789",
+      }),
+    ).toThrow("no characters available");
+  });
+
+  it.each(["account", "wifi", "api", "easy"] as const)(
+    "returns a valid %s preset",
+    (preset) => {
+      const options = getPasswordPreset(preset);
+      expect(generateSecurePassword(options)).toHaveLength(options.length);
+    },
+  );
+});
+
+describe("generateSecurePassphrase", () => {
+  it("returns the requested words, separator, and optional number", () => {
+    const phrase = generateSecurePassphrase({
+      wordCount: 6,
+      separator: "-",
+      includeNumber: true,
+    });
+    const parts = phrase.split("-");
+    expect(parts).toHaveLength(7);
+    expect(parts.at(-1)).toMatch(/^\d{4}$/);
+  });
+
+  it("supports a passphrase without a number", () => {
+    const phrase = generateSecurePassphrase({
+      wordCount: 4,
+      separator: "_",
+      includeNumber: false,
+    });
+    expect(phrase.split("_")).toHaveLength(4);
+    expect(phrase).not.toMatch(/\d/);
+  });
+
+  it.each([3, 9, 5.5])("rejects invalid word count %s", (wordCount) => {
+    expect(() =>
+      generateSecurePassphrase({ wordCount, separator: "-", includeNumber: true }),
+    ).toThrow();
   });
 });
