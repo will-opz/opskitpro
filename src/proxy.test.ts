@@ -1,8 +1,6 @@
-import { afterEach, describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { proxy } from "./proxy";
 import { NextRequest } from "next/server";
-
-const originalNodeEnv = process.env.NODE_ENV;
 
 function makeRequest(pathname: string, cookieLocale?: string): NextRequest {
   const req = new NextRequest(`http://localhost${pathname}`);
@@ -15,7 +13,7 @@ function makeRequest(pathname: string, cookieLocale?: string): NextRequest {
 afterEach(() => {
   delete process.env.OPSKITPRO_ADMIN_EMAILS;
   delete process.env.OPSKITPRO_ADMIN_SECRET;
-  process.env.NODE_ENV = originalNodeEnv;
+  vi.unstubAllEnvs();
 });
 
 describe("proxy — locale redirection", () => {
@@ -216,7 +214,7 @@ describe("proxy — Cloudflare Access admin cookie", () => {
 
 describe("proxy — reverse proxy redirects", () => {
   it("uses forwarded host when forcing HTTPS behind a reverse proxy", async () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
 
     const req = new NextRequest("http://localhost:3000/tools/website-check", {
       headers: {
