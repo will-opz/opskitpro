@@ -201,6 +201,11 @@ test('website diagnostics renders mocked result without external network depende
 
   await expect(page.getByPlaceholder(/Enter domain/i)).toHaveValue('opskitpro.com')
   await expect(page.getByText(/All Systems Green/i)).toBeVisible()
+  await expect(page.getByText('AVAILABILITY VERDICT')).toBeVisible()
+  await expect(page.getByText('MULTI-VANTAGE VERIFICATION')).toBeVisible()
+  await expect(page.getByText('Your Browser', { exact: true })).toBeVisible()
+  await expect(page.getByText('Cloudflare Edge', { exact: true })).toBeVisible()
+  await expect(page.getByText('OpsKitPro Probe', { exact: true })).toBeVisible()
   await expect(page.getByText('Cloudflare').first()).toBeVisible()
   await expect(page.getByText('Core Probe')).toBeVisible()
   await expect(page.getByText('Full Check')).toBeVisible()
@@ -270,6 +275,7 @@ test('website diagnostics separates a reachable browser from a blocked server pr
 
   await expect(page.getByText('Site reachable, server probe restricted')).toBeVisible()
   await expect(page.getByText(/should not be treated as downtime/)).toBeVisible()
+  await expect(page.getByText('Probe restricted, not downtime')).toBeVisible()
   await page.getByRole('button', { name: /Show Details/i }).click()
   await expect(page.getByText('Browser OK / Lightsail restricted')).toBeVisible()
   await expect(page.getByText('Your Browser · full')).toBeVisible()

@@ -1198,7 +1198,18 @@ export default function WebsiteCheckClient({
     () => (result ? buildWebsiteCheckReport(result, { lang }) : null),
     [lang, result],
   );
-  const diagnosticFindings = diagnosticReport?.findings || [];
+  const diagnosticFindings = useMemo(
+    () => diagnosticReport?.findings || [],
+    [diagnosticReport],
+  );
+  const prioritizedFindings = useMemo(
+    () =>
+      [...diagnosticFindings].sort((left, right) => {
+        const priority = { critical: 0, warning: 1, info: 2, success: 3 };
+        return priority[left.severity] - priority[right.severity];
+      }),
+    [diagnosticFindings],
+  );
   const faultGuide = useMemo(
     () => (error ? buildFaultGuide(error, result) : null),
     [buildFaultGuide, error, result],
@@ -1738,55 +1749,24 @@ export default function WebsiteCheckClient({
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
             <div className="flex items-center gap-5 z-10 w-full min-w-0">
-              {/* Score Ring */}
-              {(() => {
-                const score = calculateScore(result);
-                const radius = 30;
-                const circumference = 2 * Math.PI * radius;
-                const offset = circumference - (score / 100) * circumference;
-                const color =
-                  score >= 80 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
-                return (
-                  <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
-                    <svg
-                      className="absolute inset-0 w-full h-full -rotate-90"
-                      viewBox="0 0 100 100"
-                    >
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r={radius}
-                        fill="none"
-                        stroke="#f4f4f5"
-                        strokeWidth="6"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r={radius}
-                        fill="none"
-                        stroke={color}
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                        style={{
-                          transition:
-                            "stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)",
-                        }}
-                      />
-                    </svg>
-                    <div className="relative z-10 flex flex-col items-center">
-                      <span className="text-xl font-semibold text-zinc-900 leading-none">
-                        {score}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })()}
+              <div
+                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border ${
+                  resultState?.healthy
+                    ? "border-emerald-100 bg-emerald-50 text-emerald-600"
+                    : resultState?.warning
+                      ? "border-orange-100 bg-orange-50 text-orange-600"
+                      : "border-red-100 bg-red-50 text-red-600"
+                }`}
+              >
+                {resultState?.healthy ? (
+                  <CheckCircle2 className="h-8 w-8" />
+                ) : (
+                  <ShieldAlert className="h-8 w-8" />
+                )}
+              </div>
               <div className="min-w-0">
                 <h2 className="text-[10px] font-semibold text-zinc-400 mb-1 tracking-[0.18em]">
-                  {localeText.summaryScore}
+                  {lang === "zh" ? "可用性结论" : "AVAILABILITY VERDICT"}
                 </h2>
                 <h1
                   className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${
@@ -1799,6 +1779,9 @@ export default function WebsiteCheckClient({
                 >
                   {resultState?.verdict}
                 </h1>
+                <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-600 sm:text-sm">
+                  {diagnosticReport?.impact} {diagnosticReport?.suspectedCause}
+                </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-zinc-500">
                     <Monitor className="h-3 w-3 shrink-0 text-zinc-400" />
@@ -1892,6 +1875,109 @@ export default function WebsiteCheckClient({
               </button>
             </div>
           </div>
+
+          <section className="mb-5 rounded-[2rem] border border-zinc-100 bg-white/90 p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                  {lang === "zh" ? "多观测点复核" : "MULTI-VANTAGE VERIFICATION"}
+                </p>
+                <h3 className="mt-1 text-sm font-semibold text-zinc-900">
+                  {lang === "zh"
+                    ? "分别验证用户、边缘和独立探针看到的结果"
+                    : "Compare what the user, edge, and independent probe can reach"}
+                </h3>
+              </div>
+              <span className="hidden rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 sm:inline-flex">
+                {lang === "zh" ? "避免单点误报" : "False-positive resistant"}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              {[
+                {
+                  key: "browser",
+                  label: lang === "zh" ? "你的浏览器" : "Your Browser",
+                  meta: lang === "zh" ? "真实用户视角" : "Real-user view",
+                  reachable: resultState?.browserReachable,
+                  status: result.observations?.browser?.httpStatus,
+                  detail: result.observations?.browser?.status,
+                  icon: Monitor,
+                },
+                {
+                  key: "edge",
+                  label: "Cloudflare Edge",
+                  meta: result.observations?.edge?.colo || (lang === "zh" ? "边缘视角" : "Edge view"),
+                  reachable: resultState?.edgeReachable,
+                  status: result.observations?.edge?.httpStatus,
+                  detail: result.observations?.edge?.status,
+                  icon: Cloud,
+                },
+                {
+                  key: "probe",
+                  label: "OpsKitPro Probe",
+                  meta: "AWS Lightsail",
+                  reachable: result.http.success,
+                  status: result.http.status_code,
+                  detail: result.http.classification,
+                  icon: Server,
+                },
+              ].map((observation) => {
+                const ObservationIcon = observation.icon;
+                const restricted =
+                  observation.key === "probe" && resultState?.blocked;
+                return (
+                  <div
+                    key={observation.key}
+                    className={`rounded-2xl border px-4 py-4 ${
+                      observation.reachable
+                        ? "border-emerald-100 bg-emerald-50/40"
+                        : restricted
+                          ? "border-orange-100 bg-orange-50/50"
+                          : "border-zinc-200 bg-zinc-50/70"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white bg-white text-zinc-500 shadow-sm">
+                          <ObservationIcon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-zinc-900">
+                            {observation.label}
+                          </p>
+                          <p className="mt-0.5 truncate text-[10px] text-zinc-500">
+                            {observation.meta}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                          observation.reachable
+                            ? "bg-emerald-100 text-emerald-700"
+                            : restricted
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-zinc-200 text-zinc-600"
+                        }`}
+                      >
+                        {observation.status || "—"}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                      {restricted
+                        ? lang === "zh"
+                          ? "探针受限，不代表网站宕机"
+                          : "Probe restricted, not downtime"
+                        : observation.reachable
+                          ? lang === "zh"
+                            ? "可访问"
+                            : "Reachable"
+                          : observation.detail || (lang === "zh" ? "未确认" : "Unconfirmed")}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
             {summaryFacts.slice(2).map((fact) => (
@@ -2036,7 +2122,7 @@ export default function WebsiteCheckClient({
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {diagnosticFindings.map((item: any) => (
+                {prioritizedFindings.map((item) => (
                   <div
                     key={item.id}
                     className={`rounded-2xl border px-4 py-3 ${
