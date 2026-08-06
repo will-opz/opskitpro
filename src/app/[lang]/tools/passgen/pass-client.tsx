@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
+import { generateSecurePassword } from "@/lib/password-generator";
 
 type Lang = "zh" | "en";
 
@@ -78,26 +79,21 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
           generated += (array[i] % 10).toString();
         }
       } else {
-        const charset: Record<string, string> = {
-          uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-          lowercase: "abcdefghijklmnopqrstuvwxyz",
-          numbers: "0123456789",
-          symbols: "!@#$%^&*()_+-=[]{}|;:,.<>?",
-        };
-
-        let characters = "";
-        if (options.uppercase) characters += charset.uppercase;
-        if (options.lowercase) characters += charset.lowercase;
-        if (options.numbers) characters += charset.numbers;
-        if (options.symbols) characters += charset.symbols;
-
-        if (characters.length === 0) return "";
-
-        const array = new Uint32Array(length);
-        window.crypto.getRandomValues(array);
-        for (let i = 0; i < length; i++) {
-          generated += characters[array[i] % characters.length];
+        if (
+          !options.uppercase &&
+          !options.lowercase &&
+          !options.numbers &&
+          !options.symbols
+        ) {
+          return "";
         }
+        generated = generateSecurePassword({
+          length,
+          uppercase: options.uppercase,
+          lowercase: options.lowercase,
+          numbers: options.numbers,
+          symbols: options.symbols,
+        });
       }
 
       setPassword(generated);

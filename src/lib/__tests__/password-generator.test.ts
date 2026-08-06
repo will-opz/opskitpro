@@ -1,0 +1,47 @@
+import { describe, expect, it } from "vitest";
+import { generateSecurePassword, type PasswordOptions } from "../password-generator";
+
+const defaults: PasswordOptions = {
+  length: 20,
+  uppercase: true,
+  lowercase: true,
+  numbers: true,
+  symbols: true,
+};
+
+describe("generateSecurePassword", () => {
+  it("returns the requested length and covers every enabled set", () => {
+    const password = generateSecurePassword(defaults);
+    expect(password).toHaveLength(20);
+    expect(password).toMatch(/[A-Z]/);
+    expect(password).toMatch(/[a-z]/);
+    expect(password).toMatch(/[0-9]/);
+    expect(password).toMatch(/[^A-Za-z0-9]/);
+  });
+
+  it("excludes disabled character sets", () => {
+    const password = generateSecurePassword({
+      ...defaults,
+      uppercase: false,
+      lowercase: false,
+      symbols: false,
+    });
+    expect(password).toMatch(/^\d{20}$/);
+  });
+
+  it.each([3, 129, 12.5])("rejects invalid length %s", (length) => {
+    expect(() => generateSecurePassword({ ...defaults, length })).toThrow();
+  });
+
+  it("rejects an empty character set", () => {
+    expect(() =>
+      generateSecurePassword({
+        length: 20,
+        uppercase: false,
+        lowercase: false,
+        numbers: false,
+        symbols: false,
+      }),
+    ).toThrow("At least one character set");
+  });
+});

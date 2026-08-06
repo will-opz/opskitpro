@@ -23,6 +23,7 @@ import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 import { CoreToolLink } from "@/components/CoreToolLink";
 import { CoreToolImpressions } from "@/components/AnalyticsEvent";
+import { HomePasswordGenerator } from "@/components/HomePasswordGenerator";
 import {
   coreTools,
   localizeTool,
@@ -395,6 +396,8 @@ export default async function Home({
             </div>
           </aside>
         </section>
+
+        <HomePasswordGenerator lang={lang} />
 
         <section className="mx-auto mt-8 w-full max-w-7xl text-left">
           <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
