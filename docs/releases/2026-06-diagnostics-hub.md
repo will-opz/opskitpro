@@ -1,5 +1,11 @@
 # OpsKitPro Release: Diagnostics Hub (2026-06)
 
+> [!NOTE]
+> This is a historical release record. The current product direction is a
+> practical tool collection with Website Check as its professional anchor, not
+> a Diagnostics-Hub-only product. See the current [README](../../README.md),
+> [architecture](../architecture.md), and [roadmap](../roadmap.md).
+
 ## Executive Summary
 This release marks the critical transition of OpsKitPro from a disparate "Developer Toolbox" to a cohesive, workflow-driven "Diagnostics Hub". By strategically linking standalone tools and enriching them with actionable resolutions, we have established a complete diagnostic closed-loop system designed to capture high-intent SEO traffic and significantly increase user retention.
 

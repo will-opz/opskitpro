@@ -1,89 +1,144 @@
-# OpsKitPro (Ops + Kit + Professional) — Cloudflare & DNS Diagnostics Hub
+# OpsKitPro — Practical Browser Tools and Website Diagnostics
 
 [English](./README.md) | [简体中文](./README_zh.md)
 
-**OpsKitPro** is a comprehensive **Diagnostics Hub** for SREs, DevOps engineers, and webmasters. It has evolved from a simple developer toolbox into a closed-loop diagnostic engine designed to quickly identify, explain, and resolve edge networking and DNS issues.
+OpsKitPro is a bilingual collection of focused online tools. It combines quick,
+no-login utilities for everyday tasks with deeper website and network
+diagnostics for developers, site owners, and operations teams.
 
-Public site localization is intentionally focused on English and Simplified Chinese. Retired Japanese and Traditional Chinese URLs redirect to the closest maintained locale.
+The product is intentionally tool-first:
+
+- one task, one clear result;
+- useful on phones and slower networks;
+- browser-local processing whenever practical;
+- no public account required;
+- AI is used only where it materially improves a specific workflow.
+
+Website Check remains the professional anchor, while password security, QR,
+JSON, encoding, time, network, and other small tools provide frequent everyday
+value. The former public Blog module has been retired; valuable legacy URLs are
+redirected to relevant tools.
 
 > [!IMPORTANT]
-> This public repository contains only the user-facing product: the main site, diagnostic tools, public pages, API routes, tests, and deployment workflow. Private operations automation, analytics reports, publishing helpers, and the internal dashboard live in `opskitpro-ops`.
+> This public repository contains the user-facing product only. Private
+> analytics, operational automation, publishing workflows, server notes, and
+> project memory belong in the private `opskitpro-ops` repository.
 
----
+## Product Direction
 
-## 🔍 The Diagnostics Workflow
+OpsKitPro is designed around three layers:
 
-OpsKitPro is built around a seamless troubleshooting funnel:
-1. **Discover**: Start at `Website Check` to automatically uncover hidden CDN/DNS faults.
-2. **Explain**: Issues like a 522 Timeout intelligently prompt the `Cloudflare Error Encyclopedia` for deep root-cause analysis.
-3. **Verify**: Use `Cloudflare Trace` to inspect edge connectivity, or transition to `DNS Security Audit` to evaluate SPF/DMARC/CAA health.
-4. **Report**: Export rich Markdown diagnostic reports directly from your browser.
+1. **Quick utilities** — complete a common task immediately without signing in.
+2. **Professional checks** — explain website, DNS, TLS, CDN, and network behavior
+   with evidence and observation points.
+3. **Task-specific assistance** — add deterministic or AI-assisted help inside a
+   tool, rather than building a general chat product.
 
----
+English and Simplified Chinese are the maintained public languages. Retired
+Japanese and Traditional Chinese URLs redirect to the closest maintained
+locale. Chinese distribution is shifting toward practical demonstrations and
+checklists through the WeChat Official Account; this does not change the public
+repository boundary.
 
-## Core Tool Suite
+## Main Tools
 
-- **Website Check** (`/tools/website-check`): HTTP status, SSL/TLS, DNS, CDN headers. Automatically links to diagnostic encyclopedias when anomalies are found.
-- **DNS Lookup & Security Audit** (`/tools/dns-lookup`): Resolves A/CNAME/MX and proactively scores domain security (SPF/DMARC/CAA) with Markdown export.
-- **Cloudflare Trace** (`/tools/cloudflare-trace`): Diagnoses the edge network path (Colo, TLS, SNI) bypassing local cache issues.
-- **Error Encyclopedia** (`/errors/*`): A structured, SEO-optimized directory explaining Cloudflare errors (522, 1020, 525) with resolution paths.
-- **IP Lookup** (`/tools/ip-lookup`): IP geolocation, network metadata, and structured fallback behavior.
-- **JSON & WebSocket** (`/tools/json`, `/tools/websocket`): Developer utilities for formatting, diffing, and real-time connection debugging.
-- **Utility Tools**: QR generation, password generation, time tools, encoding tools, and prompt builder.
+### Website and network
 
----
+- **Website Check** (`/tools/website-check`) — DNS, HTTP, TLS, CDN, redirects,
+  security headers, and multi-observation diagnostics.
+- **Network Doctor** (`/tools/network-check`) — connectivity context, IPv6, DNS
+  latency, reachability, and Cloudflare request information.
+- **DNS Security** (`/tools/dns-lookup`) — DNS records and SPF, DMARC, and CAA
+  policy signals.
+- **IP Lookup** and **Cloudflare Trace** — network and edge context.
+- **Cloudflare Error Encyclopedia** (`/errors/*`) — evidence-led explanations
+  for common Cloudflare failures.
 
-## Architecture
+### Password security
 
+- A compact secure password generator is available directly on the homepage.
+- The full tool provides account, Wi-Fi, API, and easy-to-type presets;
+  ambiguous/custom character exclusions; UUID/PIN modes; and 4–8 word
+  passphrases.
+- Strength findings are calculated locally and explain length, diversity,
+  repetitions, sequences, keyboard patterns, and common-password indicators.
+- The optional breach check runs only after an explicit click. The browser sends
+  only the first five SHA-1 hash characters to the Have I Been Pwned Pwned
+  Passwords range API with response padding, then matches the suffix locally.
+- The preview vault stores a versioned AES-256-GCM encrypted envelope in
+  IndexedDB. It supports local entries, search, auto-lock, clipboard clearing,
+  and encrypted import/export.
+
+> [!WARNING]
+> The local vault is an unaudited browser-based MVP, not a replacement for a
+> mature password manager. A forgotten master password cannot be recovered.
+> Browser extensions, XSS, malware, keyloggers, screen capture, and an already
+> unlocked device remain outside its protection boundary.
+
+### Everyday and developer utilities
+
+- QR code generation
+- JSON formatting, repair, comparison, conversion, and validation
+- WebSocket testing
+- Encoding and decoding
+- Time conversion
+- Prompt Builder
+
+## Privacy Model
+
+- Generated passwords, strength findings, full hashes, breach results, vault
+  entries, and master passwords are not sent to OpsKitPro.
+- The breach check is the only password-related external request and uses the
+  five-character k-anonymity range protocol after an explicit action.
+- Vault plaintext exists only while unlocked in the current browser page. The
+  stored IndexedDB record and exported backup are encrypted.
+- Clipboard managers and browser extensions may still observe copied content.
+- Public diagnostics that require server-side observation clearly distinguish
+  the OpsKitPro probe from the user's own browser.
+
+## Runtime Architecture
+
+```text
+Browser
+   │
+Cloudflare (DNS, TLS, CDN, WAF, Access for private admin)
+   │
+Nginx on AWS Lightsail
+   │
+Next.js 16 standalone Node.js product
+   ├── /en and /zh static public pages
+   ├── /api dynamic diagnostic endpoints
+   └── /admin private convenience surface
 ```
-opskitpro.com (Main Site — Next.js 16)
-├── /              Home and quick diagnostic entry
-├── /tools         Toolbox index
-├── /tools/*       Website, DNS, IP, JSON, WebSocket, and utility modules
-├── /services      Curated external service matrix
-└── /api           Dynamic diagnostic APIs on the Lightsail Node runtime
-```
+
+Cloudflare Workers and Workers KV are not Product runtime dependencies. See
+[`docs/architecture.md`](./docs/architecture.md) for data flows and trust
+boundaries.
 
 ## Repository Model
 
-OpsKitPro is split into three long-lived repositories:
-
 | Repository | Visibility | Responsibility |
-|------------|------------|----------------|
-| `opskitpro` | Public | User-facing tool collection, public pages, CI/CD, and open source code |
-| `opskitpro-ops` | Private | Django operations backend, analytics, Nginx/Cloudflare imports, Qiita/X publishing workflow, and private automation |
-| `opskitpro-public` | Public | Static knowledge base source for `kb.opskitpro.com`: finished articles, tool docs, and public assets |
+|---|---|---|
+| `opskitpro` | Public | Product UI, public tools/APIs, tests, and deployment workflow |
+| `opskitpro-ops` | Private | Django control plane, analytics, automation, reports, and canonical AI memory |
+| `opskitpro-public` | Public | Finished static knowledge-base material; no private drafts or operations state |
 
-Anything involving tokens, traffic analysis, private drafts, publishing queues, operational reports, or promotion experiments belongs in `opskitpro-ops`, not in this repository.
+Do not add credentials, production traffic data, private plans, publishing
+queues, or `.ai` project memory to this repository.
 
----
-
-## 🧭 What’s in the site today
-
-- **Home**: multilingual landing page with a centered search action and quick entry into diagnostics.
-- **Tools**: website-check, DNS lookup, IP lookup, JSON, WebSocket, QR code, password generation, time, encode, and prompt-builder modules.
-- **Services**: curated external service matrix for common DevOps/SRE workflows.
-- **About**: a condensed project overview focused on operational design, maintainability, and product direction.
-
----
-
-## 🚀 Technical Stack
+## Technology
 
 | Layer | Technology |
-|-------|-----------|
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router + standalone build) |
-| **Runtime** | Node.js standalone on AWS Lightsail |
-| **Styling** | [Tailwind CSS v3](https://tailwindcss.com/) |
-| **Icons** | [Lucide React](https://lucide.dev/) |
-| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) |
-| **CI/CD** | GitHub Actions → AWS Lightsail |
-| **Operations Backend** | `opskitpro-ops` Django admin at `ops.opskitpro.com` |
+|---|---|
+| Framework | Next.js 16 App Router |
+| Runtime | Standalone Node.js on AWS Lightsail |
+| Edge | Cloudflare |
+| Styling | Tailwind CSS 3 |
+| Tests | Vitest + Playwright |
+| Deployment | GitHub Actions → AWS Lightsail |
 
----
+## Development
 
-## 💻 Development & Deployment
-
-### Setup
 ```bash
 git clone https://github.com/will-opz/opskitpro.git
 cd opskitpro
@@ -91,37 +146,19 @@ npm install
 npm run dev
 ```
 
-### Package for AWS Lightsail
+Useful checks:
+
 ```bash
+npm run verify:fast
+npm run test:e2e
 npm run package:standalone
 ```
 
-The standalone archive is written to:
+The standalone archive is written to
+`.deploy/opskitpro-standalone.tar.gz`. Deployment details are in
+[`deploy/lightsail/README.md`](./deploy/lightsail/README.md).
 
-```bash
-.deploy/opskitpro-standalone.tar.gz
-```
-
-Lightsail deployment files live in [`deploy/lightsail`](./deploy/lightsail/README.md). The Node.js server mode expects:
-
-```bash
-OPSKITPRO_RUNTIME=node
-HOSTNAME=127.0.0.1
-PORT=3000
-```
-
-The repository also includes GitHub Actions CI/CD:
-
-- pull requests to `main`: install, test, and build
-- pushes to `main`: install, test, build, package standalone, upload to Lightsail, restart systemd
-
-Lightsail workflow secrets:
-
-- `LIGHTSAIL_HOST`
-- `LIGHTSAIL_USER`
-- `LIGHTSAIL_SSH_KEY`
-
-Runtime environment variables:
+Runtime admin variables:
 
 ```bash
 OPSKITPRO_ADMIN_PASSWORD=
@@ -129,64 +166,18 @@ OPSKITPRO_ADMIN_SECRET=
 OPSKITPRO_ADMIN_EMAILS=
 ```
 
-These variables enable private admin access for the `/admin` dashboard and `/tools` navigation editor. `OPSKITPRO_ADMIN_PASSWORD` keeps the local/password fallback login available. `OPSKITPRO_ADMIN_EMAILS` is a comma-separated Cloudflare Zero Trust Access whitelist, for example `you@example.com,team@example.com`. Set `OPSKITPRO_ADMIN_SECRET` when using the email whitelist so OpsKitPro can mint its own secure admin session cookie after Cloudflare Access authenticates the user.
+Keep real values in server environment files or GitHub Secrets. Public tools do
+not require these variables and must remain usable without login.
 
-Recommended Cloudflare Access policy:
+## Documentation
 
-- create a self-hosted Access application for `opskitpro.com/admin*`
-- allow only the same emails configured in `OPSKITPRO_ADMIN_EMAILS`
-- keep public tools, `/api/admin/session`, and `/api/diagnostic` outside Access so anonymous users can browse and run public diagnostics without a login challenge
+- [Architecture and trust boundaries](./docs/architecture.md)
+- [Product roadmap](./docs/roadmap.md)
+- [Release history](./CHANGELOG.md)
+- [Lightsail deployment](./deploy/lightsail/README.md)
 
-Keep real values in server environment variables or GitHub Secrets, not in Git.
+## Contact
 
----
-
-## Repository Boundary
-
-This public repository intentionally contains only the product-facing project:
-
-- main website and tool code
-- public product pages and blog data required by the site
-- tests and CI/CD workflow
-
-Private operations data is kept out of this repository. `opskitpro-ops` contains:
-
-- Cloudflare and Nginx analytics imports
-- generated daily reports and history snapshots
-- Qiita/X publishing queues, publishing logs, and automation
-- Django admin dashboard
-- promotion planning and private backlog signals
-
----
-
-## 🧠 AI Memory System
-
-`AGENTS.md` points coding agents to shared project memory in the private
-`opskitpro-ops/.ai/` directory. This public repository must not contain its own
-`.ai/` directory or copies of private plans, analytics, server notes, or
-operational state.
-
-### Runtime and trust boundaries
-
-- Cloudflare provides the public edge, TLS, and Access policy.
-- Nginx on Lightsail is the origin proxy and must overwrite trusted forwarding
-  headers such as `CF-Connecting-IP` and the Cloudflare Access identity header.
-- Next.js runs as a standalone Node.js service; Cloudflare Workers and Workers
-  KV are not runtime dependencies.
-- Live diagnostics return `X-Cache: BYPASS` and `Cache-Control: no-store`.
-- `/d/[domain]`, `/chk/[domain]`, and `/api/cli?domain=` are compatibility
-  entrypoints backed by the same CLI renderer.
-
----
-
-## 📬 Contact / Intelligence
-- **Twitter / X**: [@OpsKitPro](https://x.com/OpsKitPro)
-- **Email**: [admin@opskitpro.com](mailto:admin@opskitpro.com)
-- **Status**: [Operational Matrix](https://opskitpro.com/services)
-
----
-
-<p align="center">
-  <b>Deep. Define. Decentralized.</b><br/>
-  Designed by <a href="https://opskitpro.com">OpsKitPro.com</a>
-</p>
+- Website: [opskitpro.com](https://opskitpro.com)
+- Email: [admin@opskitpro.com](mailto:admin@opskitpro.com)
+- X: [@OpsKitPro](https://x.com/OpsKitPro)

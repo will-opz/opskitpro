@@ -1,54 +1,140 @@
-# OpsKitPro Architecture
+# OpsKitPro Architecture and Trust Boundaries
 
-OpsKitPro is built on a modern edge computing stack emphasizing speed, SEO, and deeply linked diagnostic workflows. 
+This document describes the current public Product architecture. It intentionally
+omits credentials, private analytics, origin details, and operational procedures.
 
-## Technology Stack
-- **Framework**: Next.js 14 (App Router)
-- **Deployment Runtime**: Cloudflare Workers via `@opennextjs/cloudflare`
-- **Styling**: Tailwind CSS v3
-- **Testing**: Playwright (E2E) + Vitest (Unit)
-
----
-
-## The Diagnostics Hub Architecture
-
-OpsKitPro operates as a **Diagnostics Hub**. Rather than standalone tools, the application flows in a closed-loop funnel designed to identify an issue, explain it, deeply analyze it, and export a report.
-
-### Diagnostic Flow
+## System Overview
 
 ```mermaid
-graph TD
-    A[Website Check] -->|Detects 522/1020| B(Cloudflare Error Encyclopedia)
-    A -->|Detects Missing Security Records| C(DNS Security Audit)
-    B -->|Provides context & prompts| D(Cloudflare Trace)
-    C -->|Grades SPF/DMARC/CAA| E(Markdown Report Export)
-    D -->|Provides edge routing info| A
+flowchart TD
+    U["Browser"] --> C["Cloudflare: DNS, TLS, CDN, WAF"]
+    C --> N["Nginx on AWS Lightsail"]
+    N --> P["Next.js 16 standalone Node.js"]
+    P --> S["Static EN/ZH pages"]
+    P --> A["Dynamic public APIs"]
+    P --> M["Private admin surface"]
+    P --> E["Authenticated Cloudflare edge probe"]
 ```
 
-### 1. Core Tools Layer
-- **Website Check** (`src/app/tools/website-check`): The entry point for general users. It queries HTTP status, headers, and basic DNS. Its results dictate which contextual banners are shown.
-- **DNS Lookup & Security Audit** (`src/app/tools/dns-lookup`): A specialized tool that queries multiple DNS resolvers and grades domain security against SPF, DMARC, and CAA standards.
-- **Cloudflare Trace** (`src/app/tools/cloudflare-trace`): Calls Cloudflare's `/cdn-cgi/trace` endpoint to inspect edge routing attributes like Colo, SNI, and Ray IDs.
+- Cloudflare is the public edge and private-admin Access layer.
+- Nginx is the Lightsail origin proxy.
+- Next.js runs as a standalone Node.js service.
+- Cloudflare Workers and Workers KV are not the Product runtime.
+- Public pages are localized under `/en` and `/zh` and statically generated
+  where possible. APIs and admin routes are dynamic.
 
-### 2. Content & Knowledge Layer
-- **Cloudflare Error Encyclopedia** (`src/app/errors`): Static, highly-structured informational pages explaining Cloudflare edge errors (e.g. 522, 1020) and their root causes. This layer serves as the SEO backbone.
-- **Case Library** *(Upcoming)*: Real-world, step-by-step troubleshooting templates that combine all tools into a single narrative.
+## Product Layers
 
-### 3. SEO & Distribution Layer
-- **JSON-LD Schema**: Components automatically inject `WebApplication`, `FAQPage`, and `BreadcrumbList` schemas.
-- **Internal Link Graph**: Contextual banners and the `RelatedTools` component ensure crawler bots and users flow continuously between tools.
-- **Dynamic Sitemap**: Built via `src/app/sitemap.ts` to index all tool pages and dynamically generated error routes.
+### Quick utility layer
 
----
+Browser-first tools complete a bounded task with minimal input. Examples include
+password generation, QR codes, encoding, time conversion, and JSON operations.
+These tools should process data locally unless their purpose inherently requires
+a network observation.
 
-## Testing Strategy
+### Professional diagnostic layer
 
-OpsKitPro utilizes a zero-compromise E2E testing methodology heavily focused on the diagnostic closed-loop.
+Website Check, Network Doctor, DNS Security, IP Lookup, and Cloudflare Trace
+combine browser observations with bounded server or edge probes. Every finding
+must identify its observation point; a server probe must not be presented as the
+user's local network result.
 
-- **Smoke Tests**: Verify core functional requirements of the home page, navigation, and independent tool computations.
-- **Diagnostics Hub Closed-Loop** (`e2e/diagnostics-hub.spec.ts`):
-  - Validates correct rendering of contextual banners without UI short-circuiting.
-  - Assertions on `<head>` metadata for structured JSON-LD.
-  - Verifies dynamic sitemap generation.
-  - Internal CTA routing logic.
+### Task-specific assistance layer
 
+Deterministic analysis and future model-backed assistance belong inside a clear
+tool workflow. OpsKitPro does not use a general chat interface as its product
+center. Model-backed features require an explicit data-flow, cost, quota, and
+privacy review before release.
+
+## Password Security Data Flows
+
+```mermaid
+flowchart LR
+    G["Password or passphrase"] --> L["Local generation and strength analysis"]
+    L -->|"Explicit user action"| H["SHA-1 in browser"]
+    H -->|"First 5 hex characters + padding"| P["HIBP range API"]
+    P --> M["Local suffix match"]
+    G --> V["Unlocked vault in page memory"]
+    V --> K["PBKDF2-HMAC-SHA-256"]
+    K --> X["AES-256-GCM envelope"]
+    X --> I["IndexedDB or encrypted backup"]
+```
+
+### Generation and strength
+
+- Random passwords and passphrases use Web Crypto in the browser.
+- Strength evidence is computed locally.
+- Password content and strength findings are not sent to OpsKitPro analytics,
+  APIs, URLs, or logs.
+
+### Pwned Passwords lookup
+
+- No lookup runs while the user types or when the page loads.
+- After an explicit click, the browser computes SHA-1 for HIBP protocol
+  compatibility and sends only the first five uppercase hexadecimal characters.
+- The request uses `Add-Padding: true`; suffix matching is local.
+- The password, full hash, prefix, and result are not persisted by OpsKitPro.
+- "Not found" means only that the current dataset contained no match.
+
+### Local encrypted vault
+
+- Format: `opskitpro.vault.v1`.
+- KDF: PBKDF2-HMAC-SHA-256, currently 310,000 iterations and a random 16-byte
+  salt.
+- Cipher: non-extractable AES-256-GCM key, a new random 12-byte IV for every
+  write, and authenticated version metadata.
+- IndexedDB stores one encrypted envelope; exports use the same encrypted
+  format. Plaintext indexes are not stored.
+- The master password is not persisted. The derived key exists only while the
+  page is unlocked and its reference is cleared on lock.
+- Locking occurs explicitly, after five minutes of inactivity, or when the page
+  becomes hidden.
+- Imports are size/version/parameter bounded and must decrypt successfully
+  before replacing local data.
+- Permanent reset requires typed confirmation.
+
+The vault does not protect against malicious extensions, XSS, compromised
+dependencies, operating-system malware, keyloggers, screen capture, or physical
+access to an unlocked device. It is not independently audited and cannot recover
+a forgotten master password.
+
+## Diagnostic Boundaries
+
+- Target parsing rejects unsupported protocols, credentials, ports, private and
+  reserved destinations, and unsafe redirect targets.
+- Live diagnostics bypass application caching and expose bounded evidence rather
+  than claiming a universal view.
+- Browser, Cloudflare Edge, and Lightsail probe results remain separate
+  observations.
+- Public APIs use route-appropriate quotas and stable error contracts.
+
+## Localization and Discovery
+
+- Maintained locales: English (`en`) and Simplified Chinese (`zh`).
+- Retired `ja` and `tw` routes redirect to maintained equivalents.
+- The tool catalog is the source for localized discovery, structured data,
+  `/api/tools`, and `/llms.txt`.
+- Tool pages expose visible purpose, inputs, outputs, processing location,
+  privacy, limitations, examples, and related tools.
+- The former Blog module is retired; known valuable URLs redirect to tools and
+  unknown routes return 404.
+
+## Repository and Data Ownership
+
+| Area | Owner | Public? |
+|---|---|---|
+| Product UI, public APIs, tests | `opskitpro` | Yes |
+| Operations, analytics, automation, AI memory | `opskitpro-ops` | No |
+| Finished static knowledge material | `opskitpro-public` | Yes |
+
+The Product repository must not contain production credentials, private traffic
+data, publishing queues, internal reports, or copied `.ai` memory.
+
+## Release Gates
+
+- `npm run verify:fast` runs import checks, lint, application/test type checks,
+  production build, and unit/component tests.
+- `npm run test:e2e` covers browser workflows when the change warrants it.
+- `npm run package:standalone` verifies the Lightsail artifact.
+- Security-sensitive features receive focused contract tests, browser checks,
+  production smoke tests, and an independently reversible release.

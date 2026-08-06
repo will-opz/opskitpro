@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Embedded a compact, browser-local password generator on the English and
+  Simplified Chinese homepages.
+- Added password presets, ambiguous/custom character exclusions, and 4–8 word
+  passphrase generation.
+- Added evidence-led local strength analysis and an explicit-click Have I Been
+  Pwned k-anonymity range check with padded responses.
+- Added a preview browser-local encrypted vault with entry management, search,
+  auto-lock, clipboard clearing, encrypted backups, and typed reset.
+- Published answer-ready bilingual tool guidance, consistent tool structured
+  data, a typed `/api/tools` manifest, and `/llms.txt`.
+
+### Changed
+- Repositioned OpsKitPro as a practical tool collection with Website Check as
+  the professional diagnostic anchor.
+- Retired the public Blog module and mapped known valuable legacy URLs to
+  relevant tools.
+- Reduced the public language surface to maintained English and Simplified
+  Chinese while preserving redirects for retired locales.
+- Standardized the Product runtime on Next.js 16 standalone Node.js on AWS
+  Lightsail behind Cloudflare; Cloudflare Workers/KV are no longer Product
+  runtime dependencies.
+
+### Security
+- Password generation and strength analysis stay in the browser.
+- Pwned Passwords checks send only a five-character SHA-1 prefix after explicit
+  user action and do not persist the password, full hash, prefix, or result.
+- Vault records and backups use a versioned PBKDF2-HMAC-SHA-256 and AES-256-GCM
+  encrypted envelope. The master password is not persisted.
+- The UI explicitly states that the browser-local vault is unaudited, cannot
+  recover a forgotten master password, and does not protect a compromised
+  browser or device.
+
+### Testing
+- Password security P0–P2 concluded with 38 test files and 309 passing tests,
+  application/test type checks, production builds, standalone packaging,
+  browser checks, and independently successful production releases.
+
 ## [0.2.0] - 2026-06-07 - Diagnostics Hub Release
 
 ### Added
@@ -31,4 +69,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Testing
 - **E2E Stability**: Fully transitioned to exact match and regex multi-language locators to eliminate test flakiness.
 - **Closed-loop Test Suite**: Added a dedicated `diagnostics-hub.spec.ts` test verifying the full diagnostic graph (JSON-LD, Banners, CTAs, Sitemaps). Total coverage reached 49 passing Playwright tests.
-
