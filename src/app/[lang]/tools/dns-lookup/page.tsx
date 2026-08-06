@@ -8,7 +8,7 @@ import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
 import { ToolGuide } from "@/components/ToolGuide";
 import type { Metadata } from "next";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -32,74 +32,8 @@ export default async function DnsPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://opskitpro.com/",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Tools",
-        item: "https://opskitpro.com/services",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: dict.home.card3_title,
-        item: "https://opskitpro.com/tools/dns-lookup",
-      },
-    ],
-  };
-
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.home.card3_title,
-    description: dict.home.card3_desc,
-    url: "https://opskitpro.com/tools/dns-lookup",
-  });
-
-  const jsonLdFAQ = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What does the DNS Lookup tool do?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "It performs global DNS queries to fetch A, AAAA, MX, TXT, CNAME, NS, and SOA records for any domain, directly from Cloudflare resolvers.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is a DNS Security Audit?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Our DNS Security Audit checks your domain for critical security records like SPF, DMARC, and CAA to ensure your email infrastructure is protected against spoofing and phishing.",
-        },
-      },
-    ],
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
-      />
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense

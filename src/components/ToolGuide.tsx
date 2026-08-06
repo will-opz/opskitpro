@@ -7,6 +7,7 @@ import {
   type ProductToolId,
 } from "@/lib/tool-catalog";
 import { localizeToolGuide } from "@/lib/tool-guides";
+import { buildToolPageJsonLd, serializeJsonLd } from "@/lib/structured-data";
 
 const labels = {
   en: {
@@ -39,6 +40,7 @@ const labels = {
 
 export function ToolGuide({ id, lang }: { id: ProductToolId; lang: ProductLocale }) {
   const guide = localizeToolGuide(id, lang);
+  const jsonLd = buildToolPageJsonLd(id, lang);
   const copy = labels[lang];
   const facts = [
     [copy.purpose, guide.purpose],
@@ -50,12 +52,17 @@ export function ToolGuide({ id, lang }: { id: ProductToolId; lang: ProductLocale
   ];
 
   return (
-    <section
-      aria-labelledby={`${id}-guide-title`}
-      className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14"
-      data-tool-guide={id}
-    >
-      <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
+      <section
+        aria-labelledby={`${id}-guide-title`}
+        className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14"
+        data-tool-guide={id}
+      >
+        <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
           {copy.eyebrow}
         </p>
@@ -99,7 +106,8 @@ export function ToolGuide({ id, lang }: { id: ProductToolId; lang: ProductLocale
             );
           })}
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   );
 }

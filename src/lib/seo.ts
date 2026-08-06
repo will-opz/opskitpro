@@ -102,28 +102,3 @@ export function buildTechArticleJsonLd(params: {
     ...(params.imageUrl ? { image: [`${SITE_URL}${params.imageUrl}`] } : {}),
   };
 }
-
-/**
- * Generates JSON-LD for Web Application / Tools.
- */
-export function buildToolJsonLd(params: {
-  name: string;
-  description: string;
-  url: string;
-  applicationCategory?: string;
-}) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: params.name,
-    description: params.description,
-    url: params.url,
-    applicationCategory: params.applicationCategory || "DeveloperApplication",
-    operatingSystem: "Any",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-    },
-  };
-}

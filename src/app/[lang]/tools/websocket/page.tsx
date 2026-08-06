@@ -5,7 +5,7 @@ import { ToolGuide } from "@/components/ToolGuide";
 import WebsocketClient from "./WebsocketClient";
 import type { Metadata } from "next";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -31,18 +31,8 @@ export default async function WebsocketPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.tools.websocket_title,
-    description: dict.tools.websocket_desc,
-    url: "https://opskitpro.com/tools/websocket",
-  });
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
       <SiteHeader dict={dict} lang={lang} />
       <WebsocketClient dict={dict} lang={lang} />
       <ToolGuide id="websocket" lang={lang} />

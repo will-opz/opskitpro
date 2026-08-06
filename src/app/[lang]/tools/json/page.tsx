@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ToolGuide } from "@/components/ToolGuide";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -32,18 +32,8 @@ export default async function JSONToolPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.tools.json_title,
-    description: dict.tools.json_desc,
-    url: "https://opskitpro.com/tools/json",
-  });
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense

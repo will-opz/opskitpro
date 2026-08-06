@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ToolGuide } from "@/components/ToolGuide";
 import QRClient from "./qr-client";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -31,18 +31,8 @@ export default async function QRPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.tools.qrgen_title,
-    description: dict.tools.qrgen_desc,
-    url: "https://opskitpro.com/tools/qrgen",
-  });
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
       <SiteHeader dict={dict} lang={lang} />
       <QRClient dict={dict} lang={lang} />
       <ToolGuide id="qrgen" lang={lang} />

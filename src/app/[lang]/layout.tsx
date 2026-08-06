@@ -7,9 +7,9 @@ import {
   ACTIVE_LOCALES,
   LOCALE_MAP,
   isActiveLocale,
-  type Locale,
 } from "@/lib/i18n";
 import "../globals.css";
+import { buildSiteJsonLd, serializeJsonLd } from "@/lib/structured-data";
 
 const themeInitScript = `
 (function() {
@@ -122,7 +122,7 @@ export default async function RootLayout({
   params: Promise<{ lang: string }>;
 }) {
   const lang = await resolveLocale(params);
-  const dict = await getDictionary(lang);
+  const siteJsonLd = buildSiteJsonLd(lang);
 
   return (
     <html
@@ -141,6 +141,10 @@ export default async function RootLayout({
         />
       </head>
       <body className="ui-shell selection:bg-emerald-500/20 selection:text-[var(--text-primary)]">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(siteJsonLd) }}
+        />
         {/* Dual Core tech background glow */}
         <div className="glow" />
         <div className="bg-grid-pattern absolute inset-0 opacity-[0.03] pointer-events-none" />

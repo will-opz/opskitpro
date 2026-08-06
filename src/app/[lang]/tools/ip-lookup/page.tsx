@@ -8,7 +8,7 @@ import { ApiUsageSnippet } from "@/components/ApiUsageSnippet";
 import { ToolGuide } from "@/components/ToolGuide";
 import IPLookupClient from "./IPLookupClient";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -34,18 +34,8 @@ export default async function IPPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.tools.ip_title,
-    description: dict.tools.ip_desc,
-    url: "https://opskitpro.com/tools/ip-lookup",
-  });
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense

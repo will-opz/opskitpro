@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ToolGuide } from "@/components/ToolGuide";
 import NetworkCheckClient from "./NetworkCheckClient";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -41,18 +41,8 @@ export default async function NetworkCheckPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.tools.network_check_title,
-    description: dict.tools.network_check_desc,
-    url: "https://opskitpro.com/tools/network-check",
-  });
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense

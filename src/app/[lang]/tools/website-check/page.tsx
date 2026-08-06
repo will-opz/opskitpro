@@ -8,7 +8,7 @@ import { ToolGuide } from "@/components/ToolGuide";
 import WebsiteCheckClient from "./WebsiteCheckClient";
 import type { Metadata } from "next";
 
-import { buildPageMetadata, buildToolJsonLd } from "@/lib/seo";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -32,75 +32,8 @@ export default async function DiagnosticPage({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: "https://opskitpro.com/",
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Tools",
-        item: "https://opskitpro.com/services",
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: dict.home.card1_title,
-        item: "https://opskitpro.com/tools/website-check",
-      },
-    ],
-  };
-
-  const jsonLdWebApp = buildToolJsonLd({
-    name: dict.home.card1_title,
-    description: dict.home.card1_desc,
-    url: "https://opskitpro.com/tools/website-check",
-  });
-
-  const jsonLdFAQ = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What does this website check tool diagnose?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "It performs a comprehensive health check, testing DNS resolution, ping/latency, SSL/TLS certificates, security headers, server connection, and Cloudflare routing.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can it detect Cloudflare errors?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes. It accurately identifies common Cloudflare edge errors (e.g., 522 Connection Timeout, 1020 Access Denied) and links to detailed troubleshooting guides.",
-        },
-      },
-    ],
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebApp) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
-      />
-
       <SiteHeader dict={dict} lang={lang} />
       <div className="flex-grow">
         <Suspense
