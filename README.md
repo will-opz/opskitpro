@@ -62,18 +62,9 @@ repository boundary.
   passphrases.
 - Strength findings are calculated locally and explain length, diversity,
   repetitions, sequences, keyboard patterns, and common-password indicators.
-- The optional breach check runs only after an explicit click. The browser sends
-  only the first five SHA-1 hash characters to the Have I Been Pwned Pwned
-  Passwords range API with response padding, then matches the suffix locally.
-- The preview vault stores a versioned AES-256-GCM encrypted envelope in
-  IndexedDB. It supports local entries, search, auto-lock, clipboard clearing,
-  and encrypted import/export.
-
-> [!WARNING]
-> The local vault is an unaudited browser-based MVP, not a replacement for a
-> mature password manager. A forgotten master password cannot be recovered.
-> Browser extensions, XSS, malware, keyloggers, screen capture, and an already
-> unlocked device remain outside its protection boundary.
+- The focused workbench keeps the result, strength feedback, presets, length,
+  and character controls together; low-frequency settings and the current-page
+  history stay collapsed until needed.
 
 ### Everyday and developer utilities
 
@@ -86,12 +77,11 @@ repository boundary.
 
 ## Privacy Model
 
-- Generated passwords, strength findings, full hashes, breach results, vault
-  entries, and master passwords are not sent to OpsKitPro.
-- The breach check is the only password-related external request and uses the
-  five-character k-anonymity range protocol after an explicit action.
-- Vault plaintext exists only while unlocked in the current browser page. The
-  stored IndexedDB record and exported backup are encrypted.
+- Generated passwords and strength findings are not sent to OpsKitPro.
+- Password history exists only in the current page session and is cleared after
+  a refresh or when the page is closed.
+- The tool does not provide password management, breach checks, accounts, or
+  cloud synchronization.
 - Clipboard managers and browser extensions may still observe copied content.
 - Public diagnostics that require server-side observation clearly distinguish
   the OpsKitPro probe from the user's own browser.

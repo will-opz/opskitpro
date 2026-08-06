@@ -151,7 +151,6 @@
       "history": "生成历史",
       "clear_history": "清除记录",
       "history_empty": "暂无历史记录",
-      "history_helper": "历史记录以明文存储在浏览器 localStorage 中，未加密。共享设备上使用后请及时清除。",
       "mode": "生成模式",
       "password_mode": "随机密码",
       "passphrase_mode": "易记短语",
@@ -181,15 +180,7 @@
       "finding_repeat": "检测到连续重复字符。",
       "finding_sequence": "检测到常见连续序列。",
       "finding_keyboard": "检测到常见键盘排列。",
-      "finding_common": "匹配本地常见弱密码列表，请立即更换。",
-      "breach_title": "公开泄露记录检查",
-      "breach_intro": "仅在点击后发送 SHA-1 哈希的前 5 位；密码和完整哈希不会离开浏览器。",
-      "breach_check": "检查公开泄露记录",
-      "breach_checking": "正在检查…",
-      "breach_found": "该密码曾在公开泄露数据中出现 {count} 次，请勿使用。",
-      "breach_not_found": "未在当前数据集找到，但这不等于绝对安全。",
-      "breach_error": "暂时无法连接泄露数据服务，本地强度分析仍可使用。",
-      "breach_attribution": "数据来源：Have I Been Pwned Pwned Passwords"
+      "finding_common": "匹配本地常见弱密码列表，请立即更换。"
     },
     "qrgen": {
       "placeholder": "在此输入文字或链接...",

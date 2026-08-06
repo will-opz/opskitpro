@@ -151,7 +151,6 @@
       "history": "History",
       "clear_history": "Clear",
       "history_empty": "None",
-      "history_helper": "Stored as plain text in your browser's localStorage. Clear history after use if you're on a shared device.",
       "mode": "Generation mode",
       "password_mode": "Random password",
       "passphrase_mode": "Memorable phrase",
@@ -181,15 +180,7 @@
       "finding_repeat": "Contains repeated character runs.",
       "finding_sequence": "Contains a common sequence.",
       "finding_keyboard": "Contains a common keyboard pattern.",
-      "finding_common": "Matches the local common-password list; replace it now.",
-      "breach_title": "Public breach record check",
-      "breach_intro": "Only after you click, the first 5 SHA-1 hash characters are sent. The password and full hash stay in this browser.",
-      "breach_check": "Check public breach records",
-      "breach_checking": "Checking…",
-      "breach_found": "This password appeared {count} times in public breach data. Do not use it.",
-      "breach_not_found": "Not found in the current dataset. This does not guarantee safety.",
-      "breach_error": "The breach service is unavailable. Local analysis still works.",
-      "breach_attribution": "Data source: Have I Been Pwned Pwned Passwords"
+      "finding_common": "Matches the local common-password list; replace it now."
     },
     "qrgen": {
       "placeholder": "Enter text or URL...",

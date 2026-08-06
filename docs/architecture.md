@@ -51,13 +51,8 @@ privacy review before release.
 ```mermaid
 flowchart LR
     G["Password or passphrase"] --> L["Local generation and strength analysis"]
-    L -->|"Explicit user action"| H["SHA-1 in browser"]
-    H -->|"First 5 hex characters + padding"| P["HIBP range API"]
-    P --> M["Local suffix match"]
-    G --> V["Unlocked vault in page memory"]
-    V --> K["PBKDF2-HMAC-SHA-256"]
-    K --> X["AES-256-GCM envelope"]
-    X --> I["IndexedDB or encrypted backup"]
+    G --> S["Current page session history"]
+    L --> C["Copy or QR transfer"]
 ```
 
 ### Generation and strength
@@ -66,37 +61,10 @@ flowchart LR
 - Strength evidence is computed locally.
 - Password content and strength findings are not sent to OpsKitPro analytics,
   APIs, URLs, or logs.
-
-### Pwned Passwords lookup
-
-- No lookup runs while the user types or when the page loads.
-- After an explicit click, the browser computes SHA-1 for HIBP protocol
-  compatibility and sends only the first five uppercase hexadecimal characters.
-- The request uses `Add-Padding: true`; suffix matching is local.
-- The password, full hash, prefix, and result are not persisted by OpsKitPro.
-- "Not found" means only that the current dataset contained no match.
-
-### Local encrypted vault
-
-- Format: `opskitpro.vault.v1`.
-- KDF: PBKDF2-HMAC-SHA-256, currently 310,000 iterations and a random 16-byte
-  salt.
-- Cipher: non-extractable AES-256-GCM key, a new random 12-byte IV for every
-  write, and authenticated version metadata.
-- IndexedDB stores one encrypted envelope; exports use the same encrypted
-  format. Plaintext indexes are not stored.
-- The master password is not persisted. The derived key exists only while the
-  page is unlocked and its reference is cleared on lock.
-- Locking occurs explicitly, after five minutes of inactivity, or when the page
-  becomes hidden.
-- Imports are size/version/parameter bounded and must decrypt successfully
-  before replacing local data.
-- Permanent reset requires typed confirmation.
-
-The vault does not protect against malicious extensions, XSS, compromised
-dependencies, operating-system malware, keyloggers, screen capture, or physical
-access to an unlocked device. It is not independently audited and cannot recover
-a forgotten master password.
+- Generated history is kept only in React page memory, limited to five entries,
+  and is not written to localStorage, IndexedDB, or a server.
+- The Product intentionally does not provide breach checking, password vaults,
+  user accounts, long-term password storage, or cloud synchronization.
 
 ## Diagnostic Boundaries
 

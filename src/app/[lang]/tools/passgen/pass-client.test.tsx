@@ -1,32 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import zh from "@/dictionaries/zh.json";
 import PassClient from "./pass-client";
 
 describe("PassClient P0 modes", () => {
-  beforeEach(() => {
-    const values = new Map<string, string>();
-    const storage = {
-      clear: vi.fn(() => values.clear()),
-      getItem: vi.fn((key: string) => values.get(key) ?? null),
-      key: vi.fn((index: number) => [...values.keys()][index] ?? null),
-      get length() {
-        return values.size;
-      },
-      removeItem: vi.fn((key: string) => values.delete(key)),
-      setItem: vi.fn((key: string, value: string) => values.set(key, String(value))),
-    } satisfies Storage;
-
-    Object.defineProperty(window, "localStorage", {
-      configurable: true,
-      value: storage,
-    });
-    Object.defineProperty(globalThis, "localStorage", {
-      configurable: true,
-      value: storage,
-    });
-  });
-
   it("applies the Wi-Fi preset", async () => {
     render(<PassClient dict={zh} lang="zh" />);
     fireEvent.click(screen.getByRole("button", { name: "家庭 Wi-Fi" }));
@@ -64,18 +41,11 @@ describe("PassClient P0 modes", () => {
     expect(screen.getByTestId("generated-password")).toHaveTextContent("");
   });
 
-  it("does not check breach records until the user explicitly asks", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response("", { status: 200 }));
+  it("keeps generated history in the current page session", async () => {
     render(<PassClient dict={zh} lang="zh" />);
+    fireEvent.click(screen.getByRole("button", { name: "重新生成" }));
+    fireEvent.click(screen.getByText("生成历史"));
 
-    expect(fetchMock).not.toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByRole("button", { name: "检查公开泄露记录" }),
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole("status")).toHaveTextContent("不等于绝对安全");
+    expect(screen.getByText("仅保留在当前页面会话中，刷新或关闭页面后清空。")).toBeInTheDocument();
   });
 });

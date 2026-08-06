@@ -19,9 +19,7 @@ import {
 } from "@/lib/password-generator";
 import {
   analyzePasswordStrength,
-  checkPwnedPassword,
 } from "@/lib/password-security";
-import PasswordVaultPanel from "./password-vault-panel";
 
 type Lang = "zh" | "en";
 
@@ -73,24 +71,6 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
   const [generationError, setGenerationError] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
-  const [breachState, setBreachState] = useState<
-    | { status: "idle" }
-    | { status: "checking" }
-    | { status: "found"; count: number }
-    | { status: "not_found" }
-    | { status: "error" }
-  >({ status: "idle" });
-
-  useEffect(() => {
-    const saved = localStorage.getItem("opskitpro_pass_history");
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse history", e);
-      }
-    }
-  }, []);
 
   const generatePassword = useCallback(
     (saveToHistory = true) => {
@@ -144,17 +124,9 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
       setPassword(generated);
       setGenerationError("");
-      setBreachState({ status: "idle" });
 
       if (saveToHistory) {
-        setHistory((prev) => {
-          const newHistory = [generated, ...prev].slice(0, 5);
-          localStorage.setItem(
-            "opskitpro_pass_history",
-            JSON.stringify(newHistory),
-          );
-          return newHistory;
-        });
+        setHistory((prev) => [generated, ...prev].slice(0, 5));
       }
     },
     [
@@ -196,20 +168,6 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
   const regenerate = () => generatePassword(true);
 
   const strength = password ? analyzePasswordStrength(password) : null;
-  const checkBreach = async () => {
-    if (!password || breachState.status === "checking") return;
-    setBreachState({ status: "checking" });
-    try {
-      const result = await checkPwnedPassword(password);
-      setBreachState(
-        result.count > 0
-          ? { status: "found", count: result.count }
-          : { status: "not_found" },
-      );
-    } catch {
-      setBreachState({ status: "error" });
-    }
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -219,14 +177,13 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
   const clearHistory = () => {
     setHistory([]);
-    localStorage.removeItem("opskitpro_pass_history");
   };
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
-      <div className="max-w-2xl mx-auto">
+      <div className="mx-auto max-w-6xl">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           {dict.tools.passgen_title}
@@ -263,7 +220,8 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
           </div>
         </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-8 grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="space-y-4 lg:sticky lg:top-24">
           {/* Result Box */}
           <div className="bg-zinc-100 rounded-3xl border border-black/10 p-2 backdrop-blur-md relative group overflow-hidden">
             <div className="p-8 text-center bg-[#fafafa]/40 rounded-2xl border border-black/5">
@@ -351,7 +309,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
           </div>
 
           {strength && (
-            <section className="rounded-3xl border border-zinc-200/70 bg-white/60 p-6 sm:p-8 space-y-6">
+            <section className="rounded-2xl border border-zinc-200/70 bg-white/60 p-5 space-y-4">
               <div>
                 <h2 className="font-bold text-zinc-900">{dict.tools.passgen.strength_title}</h2>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">{dict.tools.passgen.strength_disclaimer}</p>
@@ -364,44 +322,16 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                   </li>
                 ))}
               </ul>
-              <div className="rounded-2xl border border-black/5 bg-zinc-50 p-5 space-y-3">
-                <h3 className="font-semibold text-zinc-900">{dict.tools.passgen.breach_title}</h3>
-                <p className="text-xs leading-5 text-zinc-600">{dict.tools.passgen.breach_intro}</p>
-                <button
-                  type="button"
-                  disabled={breachState.status === "checking"}
-                  onClick={checkBreach}
-                  className="min-h-12 w-full rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
-                >
-                  {breachState.status === "checking"
-                    ? dict.tools.passgen.breach_checking
-                    : dict.tools.passgen.breach_check}
-                </button>
-                {breachState.status === "found" && (
-                  <p role="alert" className="text-sm font-semibold text-red-700">
-                    {dict.tools.passgen.breach_found.replace("{count}", breachState.count.toLocaleString())}
-                  </p>
-                )}
-                {breachState.status === "not_found" && (
-                  <p role="status" className="text-sm text-emerald-700">{dict.tools.passgen.breach_not_found}</p>
-                )}
-                {breachState.status === "error" && (
-                  <p role="alert" className="text-sm text-amber-700">{dict.tools.passgen.breach_error}</p>
-                )}
-                <a
-                  href="https://haveibeenpwned.com/Passwords"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block text-xs text-zinc-500 underline underline-offset-4 hover:text-emerald-700"
-                >
-                  {dict.tools.passgen.breach_attribution}
-                </a>
-              </div>
             </section>
           )}
+          <p className="flex items-center gap-2 px-1 text-xs text-zinc-500">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            {lang === "zh" ? "使用设备加密随机源在本地生成，密码不会上传。" : "Generated locally with your device's secure random source. Passwords are not uploaded."}
+          </p>
+          </div>
 
           {/* Controls */}
-          <div className="bg-white/30 rounded-3xl border border-zinc-200/50 p-8 space-y-10">
+          <div className="rounded-3xl border border-zinc-200/70 bg-white/60 p-5 sm:p-6 space-y-6">
             <div className="space-y-4">
               <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
                 {dict.tools.passgen.mode}
@@ -493,6 +423,27 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                 }}
                 className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all"
               />
+              {mode === "password" && (
+                <div className="grid grid-cols-5 gap-2" aria-label={lang === "zh" ? "常用长度" : "Common lengths"}>
+                  {[12, 16, 20, 24, 32].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setLength(value);
+                        setActivePreset(null);
+                      }}
+                      className={`min-h-9 rounded-lg border text-xs font-semibold transition ${
+                        length === value
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
+                          : "border-black/5 bg-zinc-50 text-zinc-500 hover:text-zinc-900"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {mode === "password" ? (
@@ -537,7 +488,14 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <details className="group rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-zinc-700">
+                  <span className="flex items-center justify-between">
+                    {lang === "zh" ? "高级设置" : "Advanced settings"}
+                    <span className="text-zinc-400 transition group-open:rotate-45">＋</span>
+                  </span>
+                </summary>
+              <div className="mt-5 space-y-4">
                 <button
                   type="button"
                   aria-pressed={excludeAmbiguous}
@@ -569,7 +527,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                 </label>
               </div>
 
-              <div className="space-y-4">
+              <div className="mt-6 space-y-4 border-t border-zinc-200 pt-5">
                 <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
                   {lang === "zh"
                       ? "特殊格式"
@@ -608,6 +566,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                   ))}
                 </div>
                 </div>
+              </details>
               </div>
             ) : (
               <div className="space-y-5">
@@ -652,15 +611,20 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
             )}
           </div>
 
-          <PasswordVaultPanel lang={lang} />
-
           {/* History Section */}
-          <div className="bg-white/30 rounded-3xl border border-zinc-200/50 p-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-zinc-600 font-medium flex items-center gap-2">
+          <details className="group lg:col-span-2 rounded-2xl border border-zinc-200/70 bg-white/50 p-4">
+            <summary className="cursor-pointer list-none">
+              <span className="flex items-center justify-between text-zinc-700 font-medium">
+                <span className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
                 {dict.tools.passgen.history}
-              </h3>
+                {history.length > 0 && <span className="text-xs text-zinc-400">({history.length})</span>}
+                </span>
+                <span className="text-zinc-400 transition group-open:rotate-45">＋</span>
+              </span>
+            </summary>
+            <div className="mt-4 border-t border-zinc-200 pt-4">
+              <div className="mb-3 flex justify-end">
               {history.length > 0 && (
                 <button
                   onClick={clearHistory}
@@ -669,9 +633,9 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                   {dict.tools.passgen.clear_history}
                 </button>
               )}
-            </div>
+              </div>
 
-            <div className="space-y-3">
+            <div className="grid gap-2 sm:grid-cols-2">
               {history.length > 0 ? (
                 history.map((h, idx) => (
                   <div
@@ -690,17 +654,18 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-zinc-700 italic text-sm">
+                <div className="py-3 text-zinc-500 italic text-sm">
                   {dict.tools.passgen.history_empty}
                 </div>
               )}
             </div>
 
-            <p className="mt-6 text-[11px] text-zinc-600 flex items-center gap-1.5 justify-center">
+            <p className="mt-4 text-[11px] text-zinc-500 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5" />
-              {dict.tools.passgen.history_helper}
+              {lang === "zh" ? "仅保留在当前页面会话中，刷新或关闭页面后清空。" : "Kept only for this page session and cleared when you refresh or close the page."}
             </p>
-          </div>
+            </div>
+          </details>
         </div>
       </div>
 
