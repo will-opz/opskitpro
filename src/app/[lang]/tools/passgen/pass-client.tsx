@@ -21,6 +21,7 @@ import {
   analyzePasswordStrength,
   checkPwnedPassword,
 } from "@/lib/password-security";
+import PasswordVaultPanel from "./password-vault-panel";
 
 type Lang = "zh" | "en";
 
@@ -650,6 +651,8 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
               </div>
             )}
           </div>
+
+          <PasswordVaultPanel lang={lang} />
 
           {/* History Section */}
           <div className="bg-white/30 rounded-3xl border border-zinc-200/50 p-8 animate-in fade-in duration-500">
