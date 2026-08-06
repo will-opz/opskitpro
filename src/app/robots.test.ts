@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 import robots from "./robots";
 
 describe("robots metadata", () => {
+  it("has no public file that can shadow the metadata route", () => {
+    expect(existsSync(join(process.cwd(), "public", "robots.txt"))).toBe(false);
+  });
+
   it("allows search and user-request crawlers while blocking training crawlers", () => {
     const metadata = robots();
 

@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://opskitpro.com/sitemap.xml
