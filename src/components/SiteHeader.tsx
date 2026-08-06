@@ -3,59 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Github,
-  Twitter,
-  TerminalSquare,
-  FileText,
-  Menu,
-  X,
-  Fingerprint,
-  CircleUserRound,
-} from "lucide-react";
+import { Activity, KeyRound, Menu, TerminalSquare, X } from "lucide-react";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAdminSession } from "@/components/AdminSessionProvider";
 import { type ActiveLocale, type Locale } from "@/lib/i18n";
 
 export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const pathname = usePathname();
-  const { authenticated, email, provider, loading, openLogin, logout } =
-    useAdminSession();
-  const loginLabel = {
-    zh: "登录",
-    en: "Sign in",
-  }[lang];
-  const accountCopy = {
-    zh: {
-      admin: "管理员",
-      profile: "个人资料",
-      dashboard: "管理后台",
-      editTools: "编辑导航",
-      logout: "退出登录",
-      viaAccess: "Zero Trust 登录",
-      viaPassword: "密码登录",
-    },
-
-    en: {
-      admin: "Admin",
-      profile: "Profile",
-      dashboard: "Dashboard",
-      editTools: "Edit navigation",
-      logout: "Sign out",
-      viaAccess: "Zero Trust",
-      viaPassword: "Password",
-    },
-  }[lang];
-  const providerLabel =
-    provider === "cloudflare_access"
-      ? accountCopy.viaAccess
-      : provider === "password"
-        ? accountCopy.viaPassword
-        : "";
   const localizedHref = (path: string) => `/${lang}${path === "/" ? "" : path}`;
+  const copy = {
+    zh: {
+      allTools: "全部工具",
+      websiteCheck: "网站检测",
+      password: "密码生成器",
+      menu: "打开工具菜单",
+    },
+    en: {
+      allTools: "All tools",
+      websiteCheck: "Website Check",
+      password: "Password Generator",
+      menu: "Open tools menu",
+    },
+  }[lang];
 
   const isActive = (path: string) => {
     const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, "") || "/";
@@ -65,14 +35,24 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
     );
   };
 
+  const navItems = [
+    {
+      href: "/tools/website-check",
+      label: copy.websiteCheck,
+      icon: Activity,
+    },
+    { href: "/tools", label: copy.allTools, icon: TerminalSquare },
+    { href: "/tools/passgen", label: copy.password, icon: KeyRound },
+  ];
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-primary)] backdrop-blur-2xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link
           href={localizedHref("/")}
-          className="group flex items-center gap-3 no-underline outline-none relative z-50"
+          className="group relative z-50 flex items-center gap-3 no-underline outline-none"
         >
-          <div className="relative group-hover:-rotate-6 transition-transform duration-500">
+          <div className="relative transition-transform duration-500 group-hover:-rotate-6">
             <img
               src="/logo.svg"
               alt="OpsKitPro logo"
@@ -82,154 +62,56 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
             />
           </div>
           <span className="text-lg font-semibold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent-color)] sm:text-xl">
-            OpsKit<span className="text-emerald-500 animate-pulse">Pro_</span>
+            OpsKit<span className="text-emerald-500">Pro_</span>
           </span>
           <div className="ui-surface hidden items-center gap-2 rounded-full px-3 py-1.5 lg:flex">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span className="ui-muted mt-0.5 text-[10px] font-semibold leading-none tracking-[0.16em]">
               {dict.home.system_status}
             </span>
           </div>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="ui-surface hidden items-center gap-1 rounded-full px-1.5 py-1.5 text-sm md:flex">
-          <Link
-            href={localizedHref("/tools")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive("/tools") ? "bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"}`}
-          >
-            <TerminalSquare
-              className={`w-4 h-4 ${isActive("/tools") ? "text-emerald-500" : ""}`}
-            />{" "}
-            {dict.nav.services}
-          </Link>
-          <Link
-            href={localizedHref("/blog")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive("/blog") ? "bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"}`}
-          >
-            <FileText
-              className={`w-4 h-4 ${isActive("/blog") ? "text-emerald-500" : ""}`}
-            />{" "}
-            {dict.nav.blog}
-          </Link>
-          <Link
-            href={localizedHref("/about")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${isActive("/about") ? "bg-[var(--accent-soft)] text-[var(--text-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"}`}
-          >
-            <Fingerprint
-              className={`w-4 h-4 ${isActive("/about") ? "text-emerald-500" : ""}`}
-            />{" "}
-            {dict.nav.about}
-          </Link>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={localizedHref(item.href)}
+                className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${
+                  isActive(item.href)
+                    ? "bg-[var(--accent-soft)] font-semibold text-[var(--text-primary)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 ${isActive(item.href) ? "text-emerald-500" : ""}`}
+                />
+                {item.label}
+              </Link>
+            );
+          })}
           <div className="ml-2 flex items-center gap-2 border-l border-[var(--border-subtle)] pl-3">
             <LanguageToggle currentLang={lang as ActiveLocale} />
             <ThemeToggle />
           </div>
-
-          <div className="relative ml-1">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() =>
-                authenticated
-                  ? setIsAccountOpen((open) => !open)
-                  : openLogin(`${pathname}${window.location.search}`)
-              }
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] hover:-translate-y-0.5 hover:border-emerald-500/25 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)] disabled:opacity-50"
-              aria-expanded={authenticated ? isAccountOpen : undefined}
-            >
-              <CircleUserRound className="h-4 w-4" />
-              {authenticated ? accountCopy.admin : loginLabel}
-            </button>
-            {authenticated && isAccountOpen && (
-              <div className="ui-surface-elevated absolute right-0 top-[calc(100%+10px)] z-50 w-56 rounded-xl p-1.5 shadow-xl">
-                <div className="border-b border-[var(--border-subtle)] px-3 py-2">
-                  <div className="truncate text-xs font-semibold text-[var(--text-primary)]">
-                    {email || accountCopy.admin}
-                  </div>
-                  {providerLabel && (
-                    <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">
-                      {providerLabel}
-                    </div>
-                  )}
-                </div>
-                <Link
-                  href="/admin/profile"
-                  onClick={() => setIsAccountOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  {accountCopy.profile}
-                </Link>
-                <Link
-                  href="/admin"
-                  onClick={() => setIsAccountOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  {accountCopy.dashboard}
-                </Link>
-                <Link
-                  href={`${localizedHref("/nav")}?admin=1`}
-                  onClick={() => setIsAccountOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  {accountCopy.editTools}
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => void logout()}
-                  className="mt-1 w-full border-t border-[var(--border-subtle)] px-3 py-2 text-left text-xs font-semibold text-red-500 hover:bg-red-500/5"
-                >
-                  {accountCopy.logout}
-                </button>
-              </div>
-            )}
-          </div>
-          <Link
-            href="https://github.com/will-opz/opskitpro"
-            target="_blank"
-            className="ml-1 flex items-center gap-2 text-[var(--text-muted)] hover:-translate-y-0.5 hover:text-[var(--text-primary)]"
-          >
-            <Github className="w-5 h-5" />
-          </Link>
-          <Link
-            href="https://x.com/deopsai"
-            target="_blank"
-            className="flex items-center gap-2 text-[var(--text-muted)] hover:-translate-y-0.5 hover:text-[#1DA1F2]"
-          >
-            <Twitter className="w-5 h-5" />
-          </Link>
         </nav>
 
         <div className="relative z-50 flex items-center gap-2 md:hidden">
-          <button
-            type="button"
-            aria-label={loginLabel}
-            title={loginLabel}
-            onClick={() =>
-              authenticated
-                ? setIsMenuOpen(true)
-                : openLogin(`${pathname}${window.location.search}`)
-            }
-            className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-color)]"
-          >
-            <CircleUserRound className="h-5 w-5" />
-          </button>
+          <LanguageToggle currentLang={lang as ActiveLocale} />
           <ThemeToggle />
           <button
+            type="button"
             className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle Menu"
+            onClick={() => setIsMenuOpen((open) => !open)}
+            aria-label={copy.menu}
             aria-expanded={isMenuOpen}
           >
-            {isMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
-        {/* Mobile Menu Overlay */}
         {isMenuOpen && (
           <>
             <button
@@ -244,95 +126,22 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
             />
             <div className="fixed inset-x-3 top-[76px] z-40 md:hidden">
               <nav className="ui-surface-elevated flex flex-col rounded-2xl p-3 text-[var(--text-muted)] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-                <Link
-                  href={localizedHref("/tools")}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  <TerminalSquare className="h-4 w-4" /> {dict.nav.services}
-                </Link>
-                <Link
-                  href={localizedHref("/blog")}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  <FileText className="h-4 w-4" /> {dict.nav.blog}
-                </Link>
-                <Link
-                  href={localizedHref("/about")}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  <Fingerprint className="h-4 w-4" /> {dict.nav.about}
-                </Link>
-                {authenticated && (
-                  <>
-                    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3">
-                      <div className="truncate text-sm font-semibold text-[var(--text-primary)]">
-                        {email || accountCopy.admin}
-                      </div>
-                      {providerLabel && (
-                        <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">
-                          {providerLabel}
-                        </div>
-                      )}
-                    </div>
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
                     <Link
-                      href="/admin/profile"
+                      key={item.href}
+                      href={localizedHref(item.href)}
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]"
+                      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] ${
+                        isActive(item.href) ? "bg-[var(--accent-soft)] text-[var(--accent-color)]" : ""
+                      }`}
                     >
-                      <CircleUserRound className="h-4 w-4" />{" "}
-                      {accountCopy.profile}
+                      <Icon className="h-4 w-4" />
+                      {item.label}
                     </Link>
-                    <Link
-                      href="/admin"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--accent-color)] hover:bg-[var(--accent-soft)]"
-                    >
-                      <CircleUserRound className="h-4 w-4" />{" "}
-                      {accountCopy.dashboard}
-                    </Link>
-                    <Link
-                      href={`${localizedHref("/nav")}?admin=1`}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                    >
-                      <TerminalSquare className="h-4 w-4" />{" "}
-                      {accountCopy.editTools}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => void logout()}
-                      className="flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-red-500 hover:bg-red-500/5"
-                    >
-                      <CircleUserRound className="h-4 w-4" />{" "}
-                      {accountCopy.logout}
-                    </button>
-                  </>
-                )}
-
-                <div className="mt-2 flex items-center justify-between border-t border-[var(--border-subtle)] px-1 pt-3">
-                  <LanguageToggle currentLang={lang as ActiveLocale} />
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="https://github.com/will-opz/opskitpro"
-                      target="_blank"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                    >
-                      <Github className="h-5 w-5" />
-                    </Link>
-                    <Link
-                      href="https://x.com/deopsai"
-                      target="_blank"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="rounded-full p-2 text-[var(--text-muted)] hover:bg-[var(--surface-secondary)] hover:text-[#1DA1F2]"
-                    >
-                      <Twitter className="h-5 w-5" />
-                    </Link>
-                  </div>
-                </div>
+                  );
+                })}
               </nav>
             </div>
           </>

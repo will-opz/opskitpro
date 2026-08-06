@@ -19,6 +19,10 @@ test("homepage and public catalog keep the approved core order", async ({
   await expect(page.locator("main h2").filter({ hasText: "Network Doctor" })).toBeVisible();
   await expect(page.locator("main h2").filter({ hasText: "DNS Security" })).toBeVisible();
   await expect(page.getByText("OpsKitPro Probe (AWS Lightsail)").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Everyday utilities" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Password Generator.*Featured/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /QR Generator/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Encode \/ Decode/i })).toBeVisible();
 });
 
 test("personal navigation is separate from the public catalog", async ({

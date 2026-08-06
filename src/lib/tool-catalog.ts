@@ -133,6 +133,61 @@ export const productTools: ProductTool[] = [
     },
     observationPoints: ["browser"],
   },
+  {
+    id: "passgen",
+    href: "/tools/passgen",
+    category: "utility",
+    title: { en: "Password Generator", zh: "密码生成器" },
+    description: {
+      en: "Generate strong passwords locally without sending them to a server.",
+      zh: "在浏览器本地生成高强度密码，不上传服务器。",
+    },
+    observationPoints: ["browser"],
+  },
+  {
+    id: "qrgen",
+    href: "/tools/qrgen",
+    category: "utility",
+    title: { en: "QR Generator", zh: "二维码生成器" },
+    description: {
+      en: "Turn links and short text into downloadable QR codes.",
+      zh: "把链接和短文本转换为可下载的二维码。",
+    },
+    observationPoints: ["browser"],
+  },
+  {
+    id: "encode",
+    href: "/tools/encode",
+    category: "utility",
+    title: { en: "Encode / Decode", zh: "编码 / 解码" },
+    description: {
+      en: "Convert URL, Base64, HTML entities and common text formats locally.",
+      zh: "在本地转换 URL、Base64、HTML 实体和常用文本格式。",
+    },
+    observationPoints: ["browser"],
+  },
+  {
+    id: "time",
+    href: "/tools/time",
+    category: "utility",
+    title: { en: "Time Converter", zh: "时间转换器" },
+    description: {
+      en: "Convert timestamps and compare time zones quickly.",
+      zh: "快速转换时间戳并比较不同时区。",
+    },
+    observationPoints: ["browser"],
+  },
+  {
+    id: "prompt-builder",
+    href: "/tools/prompt-builder",
+    category: "utility",
+    title: { en: "Prompt Builder", zh: "提示词构建器" },
+    description: {
+      en: "Structure reusable prompts with clear context, constraints and output rules.",
+      zh: "用清晰的上下文、约束和输出规则组织可复用提示词。",
+    },
+    observationPoints: ["browser"],
+  },
 ];
 
 export const coreTools = productTools.filter(

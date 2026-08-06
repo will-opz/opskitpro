@@ -3,12 +3,17 @@ import Link from "next/link";
 import {
   Activity,
   ArrowRight,
+  Binary,
   Braces,
+  Clock3,
   Cloud,
   Code2,
   Globe,
+  KeyRound,
   Network,
+  QrCode,
   ShieldCheck,
+  WandSparkles,
 } from "lucide-react";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -33,6 +38,11 @@ const icons = {
   api: Code2,
   json: Braces,
   websocket: Network,
+  passgen: KeyRound,
+  qrgen: QrCode,
+  encode: Binary,
+  time: Clock3,
+  "prompt-builder": WandSparkles,
 } as const;
 
 export async function generateMetadata({
@@ -62,7 +72,10 @@ export default async function ToolsPage({
   const dict = await getDictionary(lang);
   const localized = productTools.map((tool) => localizeTool(tool, lang));
   const core = localized.filter((tool) => tool.category === "core");
-  const secondary = localized.filter((tool) => tool.category !== "core");
+  const utilities = localized.filter((tool) => tool.category === "utility");
+  const secondary = localized.filter(
+    (tool) => tool.category !== "core" && tool.category !== "utility",
+  );
   const pointLabel = (point: "browser" | "edge" | "probe") =>
     observationPointCopy[point][lang].label;
 
@@ -134,6 +147,67 @@ export default async function ToolsPage({
               </CoreToolLink>
             );
           })}
+        </section>
+
+        <section className="mt-12 rounded-3xl border border-emerald-500/15 bg-emerald-500/[0.04] p-5 sm:p-7">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <div className="ui-chip mb-3">
+                <KeyRound className="h-3.5 w-3.5" />
+                {lang === "zh" ? "本地运行 · 无需登录" : "Local-first · No sign-in"}
+              </div>
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] sm:text-2xl">
+                {lang === "zh" ? "常用小工具" : "Everyday utilities"}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">
+                {lang === "zh"
+                  ? "密码、二维码、编码和时间转换都在浏览器本地完成，打开即可使用。"
+                  : "Generate passwords, QR codes, encoded text, and timestamps directly in your browser."}
+              </p>
+            </div>
+            <Link
+              href={`/${lang}/tools/passgen`}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-500 hover:text-emerald-400"
+            >
+              {lang === "zh" ? "生成安全密码" : "Generate a secure password"}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {utilities.map((tool, index) => {
+              const Icon = icons[tool.id as keyof typeof icons] || Code2;
+              return (
+                <Link
+                  key={tool.id}
+                  href={`/${lang}${tool.href}`}
+                  className={`group flex items-start gap-4 rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
+                    index === 0
+                      ? "border-emerald-500/25 bg-[var(--bg-primary)] shadow-sm sm:col-span-2 lg:col-span-1"
+                      : "border-[var(--border-subtle)] bg-[var(--bg-primary)]/75 hover:bg-[var(--surface-secondary)]"
+                  }`}
+                >
+                  <div className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-500">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                        {tool.title}
+                      </h3>
+                      {index === 0 && (
+                        <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-500">
+                          {lang === "zh" ? "推荐" : "Featured"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+                      {tool.description}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </section>
 
         <section className="mt-12">

@@ -11,14 +11,6 @@ export function SiteFooter({ dict, lang }: { dict: any; lang?: "zh" | "en" }) {
           {dict.footer.copyright}
           <span className="ui-faint hidden md:inline">|</span>
           <Link
-            href="https://github.com/will-opz/opskitpro"
-            target="_blank"
-            className="hover:text-[var(--text-primary)]"
-          >
-            GitHub
-          </Link>
-          <span className="ui-faint hidden md:inline">|</span>
-          <Link
             href={privacyHref}
             className="hover:text-[var(--text-primary)]"
           >
@@ -43,4 +35,3 @@ export function SiteFooter({ dict, lang }: { dict: any; lang?: "zh" | "en" }) {
     </footer>
   );
 }
-
