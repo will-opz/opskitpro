@@ -17,6 +17,10 @@ import {
   getPasswordPreset,
   type PasswordPreset,
 } from "@/lib/password-generator";
+import {
+  analyzePasswordStrength,
+  checkPwnedPassword,
+} from "@/lib/password-security";
 
 type Lang = "zh" | "en";
 
@@ -68,6 +72,13 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
   const [generationError, setGenerationError] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
+  const [breachState, setBreachState] = useState<
+    | { status: "idle" }
+    | { status: "checking" }
+    | { status: "found"; count: number }
+    | { status: "not_found" }
+    | { status: "error" }
+  >({ status: "idle" });
 
   useEffect(() => {
     const saved = localStorage.getItem("opskitpro_pass_history");
@@ -132,6 +143,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
       setPassword(generated);
       setGenerationError("");
+      setBreachState({ status: "idle" });
 
       if (saveToHistory) {
         setHistory((prev) => {
@@ -182,23 +194,20 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
   const regenerate = () => generatePassword(true);
 
-  // Password strength calculation (entropy-based)
-  const getStrength = (pwd: string) => {
-    if (!pwd) return { score: 0, label: "", color: "" };
-    let charsetSize = 0;
-    if (/[a-z]/.test(pwd)) charsetSize += 26;
-    if (/[A-Z]/.test(pwd)) charsetSize += 26;
-    if (/[0-9]/.test(pwd)) charsetSize += 10;
-    if (/[^a-zA-Z0-9]/.test(pwd)) charsetSize += 32;
-    const entropy = pwd.length * Math.log2(Math.max(charsetSize, 1));
-    if (entropy < 28) return { score: 1, label: "Weak", color: "bg-red-500" };
-    if (entropy < 36)
-      return { score: 2, label: "Fair", color: "bg-orange-400" };
-    if (entropy < 60)
-      return { score: 3, label: "Good", color: "bg-yellow-400" };
-    if (entropy < 80)
-      return { score: 4, label: "Strong", color: "bg-emerald-400" };
-    return { score: 5, label: "Very Strong", color: "bg-emerald-600" };
+  const strength = password ? analyzePasswordStrength(password) : null;
+  const checkBreach = async () => {
+    if (!password || breachState.status === "checking") return;
+    setBreachState({ status: "checking" });
+    try {
+      const result = await checkPwnedPassword(password);
+      setBreachState(
+        result.count > 0
+          ? { status: "found", count: result.count }
+          : { status: "not_found" },
+      );
+    } catch {
+      setBreachState({ status: "error" });
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -269,29 +278,29 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
               </p>
             )}
             {/* Strength indicator */}
-            {password &&
+            {strength &&
               (() => {
-                const { score, label, color } = getStrength(password);
+                const colors = ["bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-emerald-400", "bg-emerald-600"];
                 return (
                   <div className="px-4 pt-2 pb-1 flex items-center gap-3">
                     <div className="flex gap-1 flex-1">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <div
                           key={i}
-                          className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= score ? color : "bg-zinc-200"}`}
+                          className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= strength.score ? colors[strength.score - 1] : "bg-zinc-200"}`}
                         />
                       ))}
                     </div>
                     <span
                       className={`text-[10px] font-black uppercase tracking-widest transition-colors ${
-                        score <= 2
+                        strength.score <= 2
                           ? "text-red-500"
-                          : score === 3
+                          : strength.score === 3
                             ? "text-yellow-500"
                             : "text-emerald-600"
                       }`}
                     >
-                      {label}
+                      {dict.tools.passgen[`strength_${strength.label}`]}
                     </span>
                   </div>
                 );
@@ -339,6 +348,56 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
               </div>
             </div>
           </div>
+
+          {strength && (
+            <section className="rounded-3xl border border-zinc-200/70 bg-white/60 p-6 sm:p-8 space-y-6">
+              <div>
+                <h2 className="font-bold text-zinc-900">{dict.tools.passgen.strength_title}</h2>
+                <p className="mt-2 text-xs leading-5 text-zinc-500">{dict.tools.passgen.strength_disclaimer}</p>
+              </div>
+              <ul className="space-y-2 text-sm text-zinc-700">
+                {strength.findings.map((finding) => (
+                  <li key={finding} className="flex gap-2">
+                    <span aria-hidden="true" className="text-emerald-600">•</span>
+                    {dict.tools.passgen[`finding_${finding}`]}
+                  </li>
+                ))}
+              </ul>
+              <div className="rounded-2xl border border-black/5 bg-zinc-50 p-5 space-y-3">
+                <h3 className="font-semibold text-zinc-900">{dict.tools.passgen.breach_title}</h3>
+                <p className="text-xs leading-5 text-zinc-600">{dict.tools.passgen.breach_intro}</p>
+                <button
+                  type="button"
+                  disabled={breachState.status === "checking"}
+                  onClick={checkBreach}
+                  className="min-h-12 w-full rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {breachState.status === "checking"
+                    ? dict.tools.passgen.breach_checking
+                    : dict.tools.passgen.breach_check}
+                </button>
+                {breachState.status === "found" && (
+                  <p role="alert" className="text-sm font-semibold text-red-700">
+                    {dict.tools.passgen.breach_found.replace("{count}", breachState.count.toLocaleString())}
+                  </p>
+                )}
+                {breachState.status === "not_found" && (
+                  <p role="status" className="text-sm text-emerald-700">{dict.tools.passgen.breach_not_found}</p>
+                )}
+                {breachState.status === "error" && (
+                  <p role="alert" className="text-sm text-amber-700">{dict.tools.passgen.breach_error}</p>
+                )}
+                <a
+                  href="https://haveibeenpwned.com/Passwords"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-xs text-zinc-500 underline underline-offset-4 hover:text-emerald-700"
+                >
+                  {dict.tools.passgen.breach_attribution}
+                </a>
+              </div>
+            </section>
+          )}
 
           {/* Controls */}
           <div className="bg-white/30 rounded-3xl border border-zinc-200/50 p-8 space-y-10">

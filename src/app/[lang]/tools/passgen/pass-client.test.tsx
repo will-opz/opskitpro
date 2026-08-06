@@ -63,4 +63,19 @@ describe("PassClient P0 modes", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("没有可用字符");
     expect(screen.getByTestId("generated-password")).toHaveTextContent("");
   });
+
+  it("does not check breach records until the user explicitly asks", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("", { status: 200 }));
+    render(<PassClient dict={zh} lang="zh" />);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "检查公开泄露记录" }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("status")).toHaveTextContent("不等于绝对安全");
+  });
 });
