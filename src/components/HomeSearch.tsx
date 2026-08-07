@@ -19,8 +19,6 @@ export default function HomeSearch({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    // For now, redirect to search or a default tool (IP) with the query
-    // In the future, this should lead to a dedicated /diagnostics page
     router.push(
       `/${lang}/tools/website-check?q=${encodeURIComponent(query.trim())}`,
     );

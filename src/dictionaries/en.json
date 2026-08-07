@@ -4,19 +4,19 @@
     "about": "About"
   },
   "home": {
-    "meta_title": "Website Diagnostic Tool | IP Lookup | DNS Checker - OpsKitPro",
-    "meta_desc": "OpsKitPro offers simple and efficient DevOps tools. Website not loading? Diagnose it instantly. DNS, CDN, SSL forensics for SREs.",
+    "meta_title": "Website Check and Online Tools - OpsKitPro",
+    "meta_desc": "Practical online tools with no signup, including website checks, password generation, QR codes, JSON, encoding and time conversion. Local-first input is not uploaded.",
     "system_status": "System Core v2.4 operational",
     "btn_chat": "Tools Node",
-    "title_part1": "SRE Diagnostic Suite",
-    "title_part2_pre": "DNS, IP & Site",
-    "title_part2_ai": "Online",
-    "title_part2_suf": "Diagnostics",
-    "subtitle": "Instant DNS · SSL · CDN · HTTP forensics from an OpsKitPro public probe. No login required.",
+    "title_part1": "Practical tools · No signup",
+    "title_part2_pre": "Website diagnostics and",
+    "title_part2_ai": "everyday",
+    "title_part2_suf": "online tools",
+    "subtitle": "Check websites, generate secure passwords, and handle QR codes, JSON, and common text tasks. Open and use—local-first tools do not upload your input.",
     "features": {
-      "dns": "DNS_AUDIT",
-      "cdn": "CDN_SENSING",
-      "ssl": "SSL_FORENSICS"
+      "dns": "Website checks",
+      "cdn": "No signup",
+      "ssl": "Local processing"
     },
     "trust_footer": "SIMPLE · FAST · NO LOGIN",
     "btn_init": "Diagnostic Your Site",
@@ -35,8 +35,8 @@
     "tool_ip": "IP Lookup",
     "tool_json": "JSON Audit",
     "tool_websocket": "WS Debug",
-    "diagnostics_placeholder": "Enter domain (e.g. example.com) for forensics...",
-    "diagnostics_btn": "Analyze",
+    "diagnostics_placeholder": "Enter a domain, for example example.com",
+    "diagnostics_btn": "Start website check",
     "diagnostics_suffix": "Validity"
   },
   "services": {
@@ -52,7 +52,7 @@
   },
   "footer": {
     "copyright": "© 2026 OpsKitPro.com",
-    "slogan": "OpsKitPro - Simple and efficient DevOps tools | No signup · Free to use · Continuous updates",
+    "slogan": "OpsKitPro — simple, practical and privacy-transparent online tools",
     "all_systems_operational": "All Systems Operational"
   },
   "tools": {

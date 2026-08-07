@@ -15,8 +15,8 @@ describe("HomePasswordGenerator", () => {
 
   it("renders localized controls and links to the full tool", async () => {
     render(<HomePasswordGenerator lang="zh" />);
-    expect(screen.getByText("立即生成高强度密码")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /打开完整密码工具/ })).toHaveAttribute(
+    expect(screen.getByText("立即生成安全密码")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /更多密码选项/ })).toHaveAttribute(
       "href",
       "/zh/tools/passgen",
     );

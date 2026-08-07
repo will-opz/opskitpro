@@ -4,19 +4,19 @@
     "about": "关于我们"
   },
   "home": {
-    "meta_title": "网站诊断工具 | IP查询 | DNS检测 - OpsKitPro",
-    "meta_desc": "运维的未来由高效率定义。网站打不开？一键检测原因。检测 DNS、CDN、SSL 状态，极简、硬核、专为 SRE 打造。",
+    "meta_title": "网站检测与在线工具集 - OpsKitPro",
+    "meta_desc": "无需登录的实用在线工具集，提供网站检测、密码生成、二维码、JSON、编码解码和时间转换。支持本地处理的内容不会上传。",
     "system_status": "系统内核 v2.4 运行中",
     "btn_chat": "工具节点",
-    "title_part1": "SRE 排障利器",
-    "title_part2_pre": "DNS·IP·网站",
-    "title_part2_ai": "在线",
-    "title_part2_suf": "诊断分析平台",
-    "subtitle": "通过 OpsKitPro 公网探针快速诊断 DNS · SSL · CDN · HTTP，无需登录。",
+    "title_part1": "实用工具 · 无需登录",
+    "title_part2_pre": "网站诊断与",
+    "title_part2_ai": "常用",
+    "title_part2_suf": "在线工具",
+    "subtitle": "快速检测网站问题，生成安全密码，处理二维码、JSON 和常用文本。打开即用，支持本地处理的内容不会上传。",
     "features": {
-      "dns": "DNS 解析审计",
-      "cdn": "CDN 边缘感知",
-      "ssl": "SSL 安全取证"
+      "dns": "网站诊断",
+      "cdn": "无需登录",
+      "ssl": "本地处理"
     },
     "trust_footer": "简单 · 快速 · 无需登录",
     "btn_init": "立即检测你的网站",
@@ -35,8 +35,8 @@
     "tool_ip": "IP 查询",
     "tool_json": "JSON 工具",
     "tool_websocket": "WS 调试",
-    "diagnostics_placeholder": "搜索域名 (e.g. example.com) 立即诊断...",
-    "diagnostics_btn": "立即检测",
+    "diagnostics_placeholder": "输入域名，例如 example.com",
+    "diagnostics_btn": "开始网站检测",
     "diagnostics_suffix": "正确性"
   },
   "services": {
@@ -52,7 +52,7 @@
   },
   "footer": {
     "copyright": "© 2026 OpsKitPro.com",
-    "slogan": "OpsKitPro - 简单高效的运维工具集合 | 无需登录 · 免费使用 · 持续更新",
+    "slogan": "OpsKitPro — 简单、实用、隐私透明的在线工具",
     "all_systems_operational": "所有节点响应健康"
   },
   "tools": {
