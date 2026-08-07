@@ -4,6 +4,7 @@ import { ToolGuide } from "@/components/ToolGuide";
 import { getDictionary } from "@/dictionaries";
 import { buildPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export async function generateMetadata({
   params,
@@ -42,6 +43,23 @@ export default async function ApiDocsPage({
             checks directly into your CI/CD pipelines, shell scripts, or AI
             Agent workflows.
           </p>
+
+          <div className="not-prose mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+            <p className="font-semibold text-emerald-900">
+              {lang === "zh" ? "让 AI 直接调用网站检测" : "Let AI agents call Website Check"}
+            </p>
+            <p className="mt-1 text-sm leading-6 text-emerald-800">
+              {lang === "zh"
+                ? "OpsKitPro 现在提供只读远程 MCP 服务，返回观察点、证据、限制和下一步建议。"
+                : "OpsKitPro now provides a read-only remote MCP server with explicit observation points, evidence, limitations and next actions."}
+            </p>
+            <Link
+              href={`/${lang}/mcp`}
+              className="mt-3 inline-flex text-sm font-semibold text-emerald-800 hover:text-emerald-950"
+            >
+              {lang === "zh" ? "查看 MCP 接入说明 →" : "View MCP setup →"}
+            </Link>
+          </div>
 
           <hr className="border-slate-100 my-8" />
 

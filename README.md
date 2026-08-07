@@ -53,6 +53,10 @@ repository boundary.
 - **IP Lookup** and **Cloudflare Trace** — network and edge context.
 - **Cloudflare Error Encyclopedia** (`/errors/*`) — evidence-led explanations
   for common Cloudflare failures.
+- **Remote MCP Website Check** (`/mcp`) — lets compatible AI clients call the
+  bounded Website Check and receive structured observation points, findings,
+  evidence, limitations, and next actions. Setup documentation is available at
+  `/en/mcp` and `/zh/mcp`.
 
 ### Password security
 
@@ -98,6 +102,7 @@ Nginx on AWS Lightsail
 Next.js 16 standalone Node.js product
    ├── /en and /zh static public pages
    ├── /api dynamic diagnostic endpoints
+   ├── /mcp read-only Streamable HTTP server
    └── /admin private convenience surface
 ```
 

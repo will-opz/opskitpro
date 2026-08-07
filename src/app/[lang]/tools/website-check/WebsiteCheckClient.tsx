@@ -36,7 +36,6 @@ import {
   History,
 } from "lucide-react";
 import { TrackedLink } from "@/components/TrackedLink";
-import { useAdminSession } from "@/components/AdminSessionProvider";
 
 import { useDiagnosticHistory } from "./_hooks/useDiagnosticHistory";
 import { useWebsiteCheck } from "./_hooks/useWebsiteCheck";
@@ -44,8 +43,6 @@ import {
   calculateScore,
   isBlockedHttpStatus,
   normalizeTargetInput,
-  BatchDiagnosticResult,
-  createSafeDiagnosticResult,
 } from "./_hooks/helpers";
 import {
   buildWebsiteCheckMarkdown,
@@ -62,7 +59,6 @@ export default function WebsiteCheckClient({
 }) {
   const isAsianLanguage = lang !== "en";
   const searchParams = useSearchParams();
-  const { authenticated } = useAdminSession();
   const { history, upsertHistory, deleteHistory, togglePin } =
     useDiagnosticHistory();
   const {
@@ -71,7 +67,6 @@ export default function WebsiteCheckClient({
     loading,
     currentStep,
     result,
-    setResult,
     error,
     localResolvers,
     runDiagnostic,
@@ -81,9 +76,6 @@ export default function WebsiteCheckClient({
   const [copiedAction, setCopiedAction] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [batchInput, setBatchInput] = useState("");
-  const [batchLoading, setBatchLoading] = useState(false);
-  const [batchResults, setBatchResults] = useState<BatchDiagnosticResult[]>([]);
 
   const localeText = useMemo(() => {
     switch (lang) {
@@ -280,21 +272,6 @@ export default function WebsiteCheckClient({
             headersBad: "存在缺失的安全响应头。",
             cdnOk: "检测到 CDN / Edge 分发。",
             cdnBad: "未检测到 CDN，如需降低延迟可考虑启用边缘分发。",
-          },
-          batch: {
-            title: "批量诊断",
-            placeholder: "example.com\napi.example.com\n1.1.1.1",
-            run: "批量检测",
-            running: "批量检测中",
-            copy: "复制表格",
-            export: "导出 CSV",
-            target: "目标",
-            http: "HTTP",
-            dns: "DNS",
-            ssl: "SSL",
-            latency: "响应",
-            issue: "检查点",
-            empty: "最多 10 个目标，支持换行、逗号或空格分隔。",
           },
           meta: {
             checkedAt: "检查时间",
@@ -505,22 +482,6 @@ export default function WebsiteCheckClient({
             cdnOk: "CDN / Edge delivery detected.",
             cdnBad:
               "No CDN detected. Consider edge delivery if latency matters.",
-          },
-          batch: {
-            title: "Batch Check",
-            placeholder: "example.com\napi.example.com\n1.1.1.1",
-            run: "Run Batch",
-            running: "Checking",
-            copy: "Copy Table",
-            export: "Export CSV",
-            target: "Target",
-            http: "HTTP",
-            dns: "DNS",
-            ssl: "SSL",
-            latency: "Latency",
-            issue: "Issue",
-            empty:
-              "Check up to 10 targets separated by new lines, commas, or spaces.",
           },
           meta: {
             checkedAt: "Checked At",
@@ -885,135 +846,6 @@ export default function WebsiteCheckClient({
     });
   };
 
-  const parseBatchTargets = (value: string) => {
-    return Array.from(
-      new Set(
-        value
-          .split(/[\s,，]+/)
-          .map(normalizeTargetInput)
-          .filter(Boolean),
-      ),
-    ).slice(0, 10);
-  };
-
-  const getPrimaryIssue = (
-    data?: ReturnType<typeof createSafeDiagnosticResult>,
-    fallback?: string,
-  ) => {
-    if (!data) return fallback || "Error";
-    if (!data.dns.success) return "DNS";
-    if (!data.http.success)
-      return data.http.status_code ? `HTTP ${data.http.status_code}` : "HTTP";
-    if (!data.ssl.valid) return "SSL";
-    if (data.ssl.grade === "C") return "SSL expiring";
-    if ((data.securityHeaders?.score ?? 100) < 55) return "Headers";
-    if (data.whois?.status?.toLowerCase().includes("hold"))
-      return "Domain hold";
-    if (!data.cdn.is_provider) return "No CDN";
-    return "OK";
-  };
-
-  const buildBatchMarkdown = (items: BatchDiagnosticResult[]) => {
-    return [
-      `| ${localeText.batch.target} | ${localeText.batch.http} | ${localeText.batch.dns} | ${localeText.batch.ssl} | ${localeText.batch.latency} | ${localeText.batch.issue} |`,
-      "| --- | --- | --- | --- | --- | --- |",
-      ...items
-        .map((item) => {
-          const row = item.result;
-          return [
-            item.target,
-            row ? String(row.http.status_code || "ERR") : "ERR",
-            row ? row.dns.resolved_ip : "---",
-            row ? row.ssl.grade || (row.ssl.valid ? "OK" : "ERR") : "---",
-            row ? row.http.latency : "---",
-            getPrimaryIssue(row, item.error),
-          ]
-            .map((value) => String(value).replace(/\|/g, "/"))
-            .join(" | ");
-        })
-        .map((line) => `| ${line} |`),
-    ].join("\n");
-  };
-
-  const buildBatchCsv = (items: BatchDiagnosticResult[]) => {
-    const rows = [
-      [
-        localeText.batch.target,
-        localeText.batch.http,
-        localeText.batch.dns,
-        localeText.batch.ssl,
-        localeText.batch.latency,
-        localeText.batch.issue,
-      ],
-      ...items.map((item) => {
-        const row = item.result;
-        return [
-          item.target,
-          row ? String(row.http.status_code || "ERR") : "ERR",
-          row ? row.dns.resolved_ip : "",
-          row ? row.ssl.grade || (row.ssl.valid ? "OK" : "ERR") : "",
-          row ? row.http.latency : "",
-          getPrimaryIssue(row, item.error),
-        ];
-      }),
-    ];
-
-    return rows
-      .map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
-      )
-      .join("\n");
-  };
-
-  const copyBatchTable = () => {
-    if (batchResults.length === 0) return;
-    copyText(buildBatchMarkdown(batchResults));
-  };
-
-  const exportBatchCsv = () => {
-    if (batchResults.length === 0) return;
-    downloadText(
-      "opskitpro-website-check-batch.csv",
-      buildBatchCsv(batchResults),
-      "text/csv",
-    );
-  };
-
-  const runBatchDiagnostics = async () => {
-    const targets = parseBatchTargets(batchInput || domain);
-    if (targets.length === 0) return;
-
-    setBatchLoading(true);
-    setBatchResults([]);
-    try {
-      const settled = await Promise.all(
-        targets.map(async (target) => {
-          try {
-            const cacheMode = authenticated ? "kv" : "0";
-            const noCacheParam = authenticated ? "" : `&_nocache=${Date.now()}`;
-            const res = await fetch(
-              `/api/diagnostic?domain=${encodeURIComponent(target)}&cache=${cacheMode}${noCacheParam}`,
-            );
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
-            const safeResult = createSafeDiagnosticResult(
-              data,
-              target,
-              data.error,
-            );
-            await upsertHistory(safeResult.domain, false).catch(() => null);
-            return { target, result: safeResult };
-          } catch (err: any) {
-            return { target, error: err?.message || "Unknown error" };
-          }
-        }),
-      );
-      setBatchResults(settled);
-    } finally {
-      setBatchLoading(false);
-    }
-  };
-
   const toggleFavorite = async (target: string) => {
     const current = history.find((entry) => entry.target === target);
     if (current) {
@@ -1347,125 +1179,6 @@ export default function WebsiteCheckClient({
                     </button>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-          <div className="mt-4 rounded-3xl border border-zinc-100 bg-white/80 p-3 sm:p-4 shadow-sm backdrop-blur-md">
-            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
-                <LayoutGrid className="h-3.5 w-3.5 text-emerald-500" />
-                {localeText.batch.title}
-              </div>
-              <span className="text-left text-[10px] font-medium text-zinc-400 sm:text-right">
-                {localeText.batch.empty}
-              </span>
-            </div>
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr,auto]">
-              <textarea
-                value={batchInput}
-                onChange={(event) => setBatchInput(event.target.value)}
-                placeholder={localeText.batch.placeholder}
-                rows={3}
-                className="min-h-[88px] w-full resize-y rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-300 focus:ring-2 focus:ring-emerald-500/10"
-              />
-              <button
-                type="button"
-                onClick={runBatchDiagnostics}
-                disabled={batchLoading}
-                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-zinc-900 px-5 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-zinc-800 disabled:opacity-50"
-              >
-                {batchLoading ? (
-                  <Activity className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Zap className="h-4 w-4" />
-                )}
-                {batchLoading ? localeText.batch.running : localeText.batch.run}
-              </button>
-            </div>
-            {batchResults.length > 0 && (
-              <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-100 bg-white">
-                <div className="flex flex-col gap-2 border-b border-zinc-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
-                    {localeText.batch.title}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:flex">
-                    <button
-                      type="button"
-                      onClick={copyBatchTable}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 px-3 py-2 text-[10px] font-semibold text-zinc-600 hover:text-zinc-900"
-                    >
-                      <Copy className="h-3 w-3" />
-                      {localeText.batch.copy}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={exportBatchCsv}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 px-3 py-2 text-[10px] font-semibold text-zinc-600 hover:text-zinc-900"
-                    >
-                      <Download className="h-3 w-3" />
-                      {localeText.batch.export}
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-[760px] w-full text-left text-xs">
-                    <thead className="bg-zinc-50 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
-                      <tr>
-                        <th className="px-4 py-3">{localeText.batch.target}</th>
-                        <th className="px-4 py-3">{localeText.batch.http}</th>
-                        <th className="px-4 py-3">{localeText.batch.dns}</th>
-                        <th className="px-4 py-3">{localeText.batch.ssl}</th>
-                        <th className="px-4 py-3">
-                          {localeText.batch.latency}
-                        </th>
-                        <th className="px-4 py-3">{localeText.batch.issue}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100">
-                      {batchResults.map((item) => {
-                        const row = item.result;
-                        const issue = getPrimaryIssue(row, item.error);
-                        return (
-                          <tr key={item.target} className="text-zinc-700">
-                            <td className="px-4 py-3 font-semibold">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setDomain(item.target);
-                                  if (row) setResult(row);
-                                }}
-                                className="max-w-[180px] truncate text-left hover:text-emerald-600"
-                              >
-                                {item.target}
-                              </button>
-                            </td>
-                            <td
-                              className={`px-4 py-3 font-semibold ${row?.http.success ? "text-emerald-600" : "text-red-500"}`}
-                            >
-                              {row ? row.http.status_code || "ERR" : "ERR"}
-                            </td>
-                            <td className="px-4 py-3 text-zinc-500">
-                              {row?.dns.resolved_ip || "---"}
-                            </td>
-                            <td
-                              className={`px-4 py-3 font-semibold ${row?.ssl.valid ? "text-emerald-600" : "text-red-500"}`}
-                            >
-                              {row?.ssl.grade || "---"}
-                            </td>
-                            <td className="px-4 py-3 text-zinc-500">
-                              {row?.http.latency || "---"}
-                            </td>
-                            <td
-                              className={`px-4 py-3 font-semibold ${issue === "OK" ? "text-emerald-600" : "text-orange-500"}`}
-                            >
-                              {issue}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
               </div>
             )}
           </div>

@@ -23,34 +23,64 @@ remain in the private Control Plane.
   `/api/tools`, and `/llms.txt` discovery surfaces.
 - ✅ Privacy-minimal tool funnel and AI-referral classification boundaries.
 
-## Password Security — Completed
+## Password Generator — Focused Roadmap
 
-### P0: Better generation
+The password product is an instant, browser-local generator. It does not manage,
+store, synchronize, or check passwords against breach datasets.
 
-- ✅ Homepage secure generator.
-- ✅ Account, Wi-Fi, API, and easy-to-type presets.
-- ✅ Ambiguous and custom character exclusions.
-- ✅ 4–8 word passphrases with separators and optional digits.
+### Completed foundation
 
-### P1: Evidence and exposure lookup
+- ✅ Compact secure generator on the homepage.
+- ✅ Focused desktop/mobile workbench on the full tool page.
+- ✅ Web Crypto generation with rejection sampling and enabled-set guarantees.
+- ✅ Account, Wi-Fi, database/API, and easy-to-type presets.
+- ✅ Random passwords, UUID, PIN, and 4–8 word passphrases.
+- ✅ Length shortcuts, ambiguous/custom character exclusions, copy feedback,
+  and local evidence-led strength findings.
+- ✅ Current-page history limited to five entries and cleared on refresh/close.
 
-- ✅ Local strength findings for length, diversity, repetitions, sequences,
-  keyboard patterns, and common-password indicators.
-- ✅ Explicit-click HIBP k-anonymity lookup using only a five-character SHA-1
-  prefix with padded responses.
-- ✅ Bounded found/not-found/unavailable copy without a "guaranteed safe" claim.
+### P0: Reliability and clarity
 
-### P2: Browser-local encrypted vault MVP
+- Keep presets aligned with common website and Wi-Fi password policies without
+  claiming universal compatibility.
+- Improve mobile result wrapping, copy feedback, keyboard handling, and
+  accessible strength/status announcements.
+- Add focused tests for enabled character sets, exclusions, Unicode input,
+  maximum length, and preset transitions.
+- Keep the first useful password visible without requiring a setup click.
 
-- ✅ Versioned PBKDF2 + AES-GCM encrypted IndexedDB envelope.
-- ✅ Local entry create/edit/search/copy/delete.
-- ✅ Manual, inactivity, and page-hidden locking.
-- ✅ Clipboard-clear delay, encrypted import/export, and typed reset.
-- ✅ Recovery and unaudited-MVP warnings.
+### P1: Better generation choices
 
-The next password milestone is observation and hardening, not cloud sync. Account
-recovery, sharing, TOTP, autofill, browser extensions, and cross-device sync
-require separate security models and are not implied by this roadmap.
+- Improve passphrase word quality and separator controls while keeping all
+  generation local and explaining that memorability is not a security promise.
+- Consider a pronounceable-password mode only if it can preserve clear entropy
+  guidance and avoid language/cultural bias.
+- Provide compact, site-policy-oriented presets only when a real compatibility
+  problem is observed; avoid accumulating niche switches.
+
+### P2: Distribution and reuse
+
+- Improve homepage-to-full-tool handoff and WeChat/mobile sharing guidance
+  without including generated secrets in URLs or analytics.
+- Consider installable/offline use only if repeat usage justifies the additional
+  maintenance and update responsibility.
+- Keep related-tool recommendations minimal and never auto-transfer generated
+  passwords to another server-assisted tool.
+
+### Explicitly out of scope
+
+- Password vaults, password management, long-term storage, accounts, recovery,
+  cloud or cross-device synchronization.
+- Breach/password exposure lookup, including HIBP integration.
+- Autofill, browser extensions, sharing, TOTP, passkey management, or enterprise
+  credential administration.
+- Claims that a generated password, strength indicator, or preset guarantees
+  safety or compatibility.
+
+Future password work must improve the generate → adjust → copy workflow. Any
+proposal that introduces storage, identity, external password transmission, or
+ongoing credential responsibility requires a new product and security review;
+it is not an extension of the current generator roadmap.
 
 ## Current Focus
 

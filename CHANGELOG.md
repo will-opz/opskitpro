@@ -12,10 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Simplified Chinese homepages.
 - Added password presets, ambiguous/custom character exclusions, and 4–8 word
   passphrase generation.
-- Added evidence-led local strength analysis and an explicit-click Have I Been
-  Pwned k-anonymity range check with padded responses.
-- Added a preview browser-local encrypted vault with entry management, search,
-  auto-lock, clipboard clearing, encrypted backups, and typed reset.
+- Added evidence-led local strength analysis.
 - Published answer-ready bilingual tool guidance, consistent tool structured
   data, a typed `/api/tools` manifest, and `/llms.txt`.
 
@@ -29,21 +26,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized the Product runtime on Next.js 16 standalone Node.js on AWS
   Lightsail behind Cloudflare; Cloudflare Workers/KV are no longer Product
   runtime dependencies.
+- Consolidated the password page into a focused generator workbench with
+  low-frequency settings and current-page history collapsed by default.
+
+### Removed
+- Removed the HIBP breach lookup and browser-local encrypted vault after
+  narrowing the password product to generation, adjustment, strength feedback,
+  and copy. OpsKitPro no longer accepts long-term credential responsibility.
 
 ### Security
 - Password generation and strength analysis stay in the browser.
-- Pwned Passwords checks send only a five-character SHA-1 prefix after explicit
-  user action and do not persist the password, full hash, prefix, or result.
-- Vault records and backups use a versioned PBKDF2-HMAC-SHA-256 and AES-256-GCM
-  encrypted envelope. The master password is not persisted.
-- The UI explicitly states that the browser-local vault is unaudited, cannot
-  recover a forgotten master password, and does not protect a compromised
-  browser or device.
+- Generated history is limited to the current page session and is not written
+  to localStorage, IndexedDB, a server, or a third-party breach service.
 
 ### Testing
-- Password security P0–P2 concluded with 38 test files and 309 passing tests,
-  application/test type checks, production builds, standalone packaging,
-  browser checks, and independently successful production releases.
+- The focused password workbench passed application/test type checks,
+  production builds, standalone packaging, browser checks, and independently
+  successful production releases.
 
 ## [0.2.0] - 2026-06-07 - Diagnostics Hub Release
 

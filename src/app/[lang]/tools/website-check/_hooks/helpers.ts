@@ -130,12 +130,6 @@ export const createSafeDiagnosticResult = (
   };
 };
 
-export type BatchDiagnosticResult = {
-  target: string;
-  result?: ReturnType<typeof createSafeDiagnosticResult>;
-  error?: string;
-};
-
 export function parseLatencyMs(latency: string | number): number {
   if (typeof latency === "number") return latency;
   return parseInt(String(latency).replace("ms", ""), 10) || 0;

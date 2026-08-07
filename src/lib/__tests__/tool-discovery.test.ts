@@ -38,4 +38,11 @@ describe("tool discovery", () => {
     expect(createStableEtag("same")).toBe(createStableEtag("same"));
     expect(createStableEtag("same")).not.toBe(createStableEtag("changed"));
   });
+
+  it("advertises the bounded remote MCP server", () => {
+    const text = buildLlmsTxt();
+    expect(text).toContain("Remote MCP server: https://opskitpro.com/mcp");
+    expect(text).toContain("website_check");
+    expect(text).toContain("write operations are not supported");
+  });
 });

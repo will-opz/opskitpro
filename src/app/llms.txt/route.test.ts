@@ -12,6 +12,8 @@ describe("GET /llms.txt", () => {
     expect(response.headers.get("cache-control")).toContain("max-age=3600");
     expect(body).toContain("# OpsKitPro");
     expect(body).toContain("https://opskitpro.com/api/tools");
+    expect(body).toContain("https://opskitpro.com/mcp");
+    expect(body).toContain("website_check");
     expect(body).toContain("[Website Check]");
     expect(body).toContain("[网站检测]");
     expect(body).toContain("experimental discovery aid");

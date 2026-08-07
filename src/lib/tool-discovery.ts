@@ -57,6 +57,8 @@ export function buildLlmsTxt() {
     "",
     `Canonical site: ${SITE_URL}`,
     `Tool manifest: ${SITE_URL}/api/tools`,
+    `Remote MCP server: ${SITE_URL}/mcp`,
+    `MCP documentation: English (${SITE_URL}/en/mcp) and Simplified Chinese (${SITE_URL}/zh/mcp)`,
     `Languages: English (${SITE_URL}/en/tools) and Simplified Chinese (${SITE_URL}/zh/tools)`,
     "",
     "## Use and privacy",
@@ -79,6 +81,12 @@ export function buildLlmsTxt() {
   }
 
   lines.push(
+    "",
+    "## MCP",
+    "",
+    `- OpsKitPro exposes a read-only Streamable HTTP MCP server at ${SITE_URL}/mcp.`,
+    "- The current website_check tool accepts one public domain and returns structured observation points, findings, evidence, limitations, and next actions.",
+    "- Private and reserved network targets, arbitrary headers, batch checks, persistent sessions, and write operations are not supported.",
     "",
     "## Important limitations",
     "",
