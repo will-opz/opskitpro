@@ -272,7 +272,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
                   className="flex-1 py-4 bg-white hover:bg-emerald-50 border border-black/5 hover:border-emerald-200 text-zinc-900 hover:text-emerald-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-95"
                 >
                   <RefreshCw className="w-5 h-5 group-active:rotate-180 transition-transform duration-500" />
-                  <span className="text-sm sm:text-base !text-zinc-900 group-hover:!text-white">
+                  <span className="text-sm sm:text-base text-zinc-900 group-hover:text-emerald-700">
                     {dict.tools.passgen.generate}
                   </span>
                 </button>
