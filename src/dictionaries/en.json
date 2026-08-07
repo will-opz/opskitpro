@@ -37,17 +37,7 @@
     "tool_websocket": "WS Debug",
     "diagnostics_placeholder": "Enter domain (e.g. example.com) for forensics...",
     "diagnostics_btn": "Analyze",
-    "diagnostics_suffix": "Validity",
-    "scenes": {
-      "title": "Common Use Cases",
-      "subtitle": "Solving DevOps pain points at tactical speed",
-      "s1_title": "🔍 Website not loading?",
-      "s1_desc": "Identify issues with server, DNS, or CDN.",
-      "s2_title": "⚡️ Cloudflare errors?",
-      "s2_desc": "Troubleshoot 403 / 502 / 520 issues quickly.",
-      "s3_title": "🌐 DNS problems?",
-      "s3_desc": "Check if your DNS is correctly configured."
-    }
+    "diagnostics_suffix": "Validity"
   },
   "services": {
     "title_part1": "Tools",

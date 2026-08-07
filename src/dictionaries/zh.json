@@ -37,17 +37,7 @@
     "tool_websocket": "WS 调试",
     "diagnostics_placeholder": "搜索域名 (e.g. example.com) 立即诊断...",
     "diagnostics_btn": "立即检测",
-    "diagnostics_suffix": "正确性",
-    "scenes": {
-      "title": "常见使用场景",
-      "subtitle": "解决运维过程中的高频痛点",
-      "s1_title": "🔍 网站打不开？",
-      "s1_desc": "快速检测服务器、DNS 或 CDN 是否异常。",
-      "s2_title": "⚡️ Cloudflare 报错？",
-      "s2_desc": "定位 403 / 502 / 520 等常见状态码冲突。",
-      "s3_title": "🌐 DNS 解析异常？",
-      "s3_desc": "检查解析是否生效，防止域名被污染。"
-    }
+    "diagnostics_suffix": "正确性"
   },
   "services": {
     "title_part1": "工具",
