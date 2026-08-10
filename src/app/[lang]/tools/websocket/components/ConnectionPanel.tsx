@@ -16,6 +16,7 @@ import { useConnectionHistory } from "../hooks";
 import type { ConnectionStatus, WebSocketConfig } from "../hooks";
 
 interface ConnectionPanelProps {
+  lang: "zh" | "en";
   status: ConnectionStatus;
   config: WebSocketConfig;
   onConnect: (url: string, options?: Partial<WebSocketConfig>) => void;
@@ -30,6 +31,7 @@ const SAMPLE_URLS = [
 ];
 
 export function ConnectionPanel({
+  lang,
   status,
   config,
   onConnect,
@@ -68,17 +70,56 @@ export function ConnectionPanel({
 
   const isConnected = status === "connected";
   const isConnecting = status === "connecting";
+  const copy =
+    lang === "zh"
+      ? {
+          step: "01",
+          title: "连接端点",
+          endpoint: "目标地址",
+          history: "历史记录",
+          noHistory: "暂无连接历史",
+          recent: "最近连接",
+          clearAll: "清空",
+          settings: "连接设置",
+          connect: "连接",
+          cancel: "取消",
+          disconnect: "断开连接",
+          autoReconnect: "自动重连",
+          interval: "间隔",
+          seconds: "秒",
+          samples: "示例地址",
+        }
+      : {
+          step: "01",
+          title: "Connect endpoint",
+          endpoint: "Target endpoint",
+          history: "History",
+          noHistory: "No connection history",
+          recent: "Recent connections",
+          clearAll: "Clear all",
+          settings: "Connection settings",
+          connect: "Connect",
+          cancel: "Cancel",
+          disconnect: "Disconnect",
+          autoReconnect: "Auto reconnect",
+          interval: "Interval",
+          seconds: "sec",
+          samples: "Sample endpoints",
+        };
 
   return (
-    <div className="glass-card p-6 rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl">
-      <div className="flex items-center justify-between mb-4">
+    <section className="glass-card rounded-2xl border border-black/5 bg-white/50 p-4 backdrop-blur-xl sm:p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest flex items-center gap-2">
+          <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-cyan-700">
+            {copy.step}
+          </span>
           {isConnected ? (
             <Wifi className="w-3 h-3 text-emerald-500" />
           ) : (
             <WifiOff className="w-3 h-3 text-zinc-400" />
           )}
-          Target Endpoint
+          <span>{copy.title}</span>
         </label>
 
         <div className="flex items-center gap-2">
@@ -89,7 +130,7 @@ export function ConnectionPanel({
               className="flex items-center gap-1 px-2 py-1 text-zinc-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all text-[10px] font-mono"
             >
               <History className="w-3 h-3" />
-              History
+              {copy.history}
               {history.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 bg-zinc-200 rounded-full text-[9px]">
                   {history.length}
@@ -98,22 +139,22 @@ export function ConnectionPanel({
             </button>
 
             {showHistory && (
-              <div className="absolute top-full right-0 mt-1 w-80 bg-white rounded-xl shadow-xl border border-zinc-200 z-50 max-h-64 overflow-auto">
+              <div className="absolute right-0 top-full z-50 mt-1 max-h-64 w-[min(20rem,calc(100vw-4rem))] overflow-auto rounded-xl border border-zinc-200 bg-white shadow-xl">
                 {history.length === 0 ? (
                   <div className="p-4 text-center text-zinc-400 text-xs">
-                    No connection history
+                    {copy.noHistory}
                   </div>
                 ) : (
                   <>
                     <div className="px-3 py-2 border-b border-zinc-100 flex items-center justify-between">
                       <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
-                        Recent Connections
+                        {copy.recent}
                       </span>
                       <button
                         onClick={clearHistory}
                         className="text-[9px] text-red-500 hover:text-red-600"
                       >
-                        Clear All
+                        {copy.clearAll}
                       </button>
                     </div>
                     {history.map((h) => (
@@ -132,7 +173,9 @@ export function ConnectionPanel({
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[9px] text-zinc-400 flex items-center gap-1">
                               <Clock className="w-2.5 h-2.5" />
-                              {new Date(h.lastConnectedAt).toLocaleDateString()}
+                              {new Date(h.lastConnectedAt).toLocaleDateString(
+                                lang === "zh" ? "zh-CN" : "en-US",
+                              )}
                             </span>
                             <span className="text-[9px] text-zinc-400">
                               ×{h.connectCount}
@@ -161,6 +204,8 @@ export function ConnectionPanel({
           {/* Settings */}
           <button
             onClick={() => setShowSettings(!showSettings)}
+            aria-label={copy.settings}
+            title={copy.settings}
             className={`p-1.5 rounded-lg transition-all ${
               showSettings
                 ? "bg-cyan-100 text-cyan-600"
@@ -173,7 +218,10 @@ export function ConnectionPanel({
       </div>
 
       {/* URL Input */}
-      <div className="flex gap-3">
+      <label className="mb-2 block text-xs font-medium text-zinc-600">
+        {copy.endpoint}
+      </label>
+      <div className="flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
           value={url}
@@ -182,7 +230,7 @@ export function ConnectionPanel({
             e.key === "Enter" && !isConnected && handleConnect()
           }
           placeholder="wss://your-websocket-server.com"
-          className="flex-grow bg-white border border-zinc-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 shadow-sm transition-all font-mono text-sm"
+          className="min-w-0 flex-grow rounded-xl border border-zinc-200 bg-white px-4 py-3 font-mono text-sm shadow-sm transition-all focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
           disabled={isConnected || isConnecting}
         />
 
@@ -190,18 +238,18 @@ export function ConnectionPanel({
           <button
             onClick={handleConnect}
             disabled={!url.trim()}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all active:scale-95 flex items-center gap-2 font-bold shadow-lg shadow-cyan-500/30 disabled:opacity-50"
+            className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-bold text-white shadow-lg shadow-cyan-500/30 transition-all hover:from-cyan-400 hover:to-blue-500 active:scale-95 disabled:opacity-50 sm:w-auto"
           >
             <Play className="w-4 h-4 fill-current" />
-            Connect
+            {copy.connect}
           </button>
         ) : (
           <button
             onClick={onDisconnect}
-            className="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition-all active:scale-95 flex items-center gap-2 font-bold shadow-lg shadow-red-200"
+            className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-red-500 px-6 py-3 font-bold text-white shadow-lg shadow-red-200 transition-all hover:bg-red-600 active:scale-95 sm:w-auto"
           >
             <Square className="w-4 h-4 fill-current" />
-            {isConnecting ? "Cancel" : "Disconnect"}
+            {isConnecting ? copy.cancel : copy.disconnect}
           </button>
         )}
       </div>
@@ -220,12 +268,14 @@ export function ConnectionPanel({
                 }}
                 className="w-4 h-4 rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500"
               />
-              <span className="text-xs text-zinc-600">Auto Reconnect</span>
+              <span className="text-xs text-zinc-600">
+                {copy.autoReconnect}
+              </span>
             </label>
 
             {autoReconnect && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">Interval:</span>
+                <span className="text-xs text-zinc-500">{copy.interval}:</span>
                 <input
                   type="number"
                   value={reconnectInterval}
@@ -238,7 +288,7 @@ export function ConnectionPanel({
                   min={1}
                   max={60}
                 />
-                <span className="text-xs text-zinc-500">sec</span>
+                <span className="text-xs text-zinc-500">{copy.seconds}</span>
               </div>
             )}
           </div>
@@ -246,9 +296,9 @@ export function ConnectionPanel({
       )}
 
       {/* Sample URLs */}
-      <div className="mt-4 flex items-center gap-3 overflow-x-auto pb-1">
+      <div className="mt-4 flex flex-wrap items-center gap-2 pb-1 sm:gap-3">
         <span className="text-[10px] text-zinc-400 whitespace-nowrap">
-          Samples:
+          {copy.samples}:
         </span>
         {SAMPLE_URLS.map((s) => (
           <button
@@ -261,6 +311,6 @@ export function ConnectionPanel({
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

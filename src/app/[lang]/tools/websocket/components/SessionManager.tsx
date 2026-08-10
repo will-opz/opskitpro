@@ -16,12 +16,14 @@ import { useMessageHistory } from "../hooks/useMessageHistory";
 import type { LogEntry } from "../hooks";
 
 interface SessionManagerProps {
+  lang: "zh" | "en";
   currentUrl: string;
   currentLogs: LogEntry[];
   onLoadSession: (logs: LogEntry[]) => void;
 }
 
 export function SessionManager({
+  lang,
   currentUrl,
   currentLogs,
   onLoadSession,
@@ -40,6 +42,36 @@ export function SessionManager({
   const [showSessions, setShowSessions] = useState(false);
   const [sessionName, setSessionName] = useState("");
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const copy =
+    lang === "zh"
+      ? {
+          save: "保存",
+          load: "载入",
+          export: "导出",
+          saveSession: "保存会话",
+          sessionName: "会话名称",
+          sessionPlaceholder: "我的 WebSocket 会话",
+          messages: "条消息",
+          cancel: "取消",
+          savedSessions: "已保存会话",
+          clearAll: "清空",
+          noSessions: "暂无已保存会话",
+          close: "关闭",
+        }
+      : {
+          save: "Save",
+          load: "Load",
+          export: "Export",
+          saveSession: "Save session",
+          sessionName: "Session name",
+          sessionPlaceholder: "My WebSocket session",
+          messages: "messages",
+          cancel: "Cancel",
+          savedSessions: "Saved sessions",
+          clearAll: "Clear all",
+          noSessions: "No saved sessions",
+          close: "Close",
+        };
 
   const handleSave = () => {
     if (currentLogs.length === 0) return;
@@ -54,7 +86,7 @@ export function SessionManager({
   };
 
   const formatDate = (ts: number) => {
-    return new Date(ts).toLocaleString();
+    return new Date(ts).toLocaleString(lang === "zh" ? "zh-CN" : "en-US");
   };
 
   return (
@@ -66,7 +98,7 @@ export function SessionManager({
         className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 rounded-lg text-[11px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <Save className="w-3.5 h-3.5" />
-        Save
+        {copy.save}
       </button>
 
       {/* Load Button */}
@@ -75,7 +107,7 @@ export function SessionManager({
         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg text-[11px] font-bold transition-all"
       >
         <FolderOpen className="w-3.5 h-3.5" />
-        Load
+        {copy.load}
         {sessions.length > 0 && (
           <span className="ml-1 px-1.5 py-0.5 bg-blue-500/20 rounded-full text-[9px]">
             {sessions.length}
@@ -91,7 +123,7 @@ export function SessionManager({
           className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 rounded-lg text-[11px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <Download className="w-3.5 h-3.5" />
-          Export
+          {copy.export}
         </button>
 
         {exportMenuOpen && (
@@ -141,10 +173,11 @@ export function SessionManager({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-zinc-900">Save Session</h3>
+              <h3 className="text-lg font-bold text-zinc-900">{copy.saveSession}</h3>
               <button
                 onClick={() => setShowSaveDialog(false)}
                 className="text-zinc-400 hover:text-zinc-600"
+                aria-label={copy.close}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -152,13 +185,13 @@ export function SessionManager({
 
             <div className="mb-4">
               <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
-                Session Name
+                {copy.sessionName}
               </label>
               <input
                 type="text"
                 value={sessionName}
                 onChange={(e) => setSessionName(e.target.value)}
-                placeholder="My WebSocket Session"
+                placeholder={copy.sessionPlaceholder}
                 className="w-full px-4 py-2 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
                 autoFocus
               />
@@ -173,7 +206,7 @@ export function SessionManager({
                       (l) => l.type === "sent" || l.type === "received",
                     ).length
                   }{" "}
-                  messages
+                  {copy.messages}
                 </span>
               </div>
               <div className="font-mono text-[10px] text-zinc-400 truncate">
@@ -186,13 +219,13 @@ export function SessionManager({
                 onClick={() => setShowSaveDialog(false)}
                 className="flex-1 px-4 py-2 bg-zinc-100 text-zinc-600 rounded-xl font-bold hover:bg-zinc-200 transition-all"
               >
-                Cancel
+                {copy.cancel}
               </button>
               <button
                 onClick={handleSave}
                 className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all"
               >
-                Save
+                {copy.save}
               </button>
             </div>
           </div>
@@ -211,7 +244,7 @@ export function SessionManager({
           >
             <div className="flex items-center justify-between p-4 border-b border-zinc-100">
               <h3 className="text-lg font-bold text-zinc-900">
-                Saved Sessions
+                {copy.savedSessions}
               </h3>
               <div className="flex items-center gap-2">
                 {sessions.length > 0 && (
@@ -219,12 +252,13 @@ export function SessionManager({
                     onClick={clearSessions}
                     className="text-xs text-red-500 hover:text-red-600"
                   >
-                    Clear All
+                    {copy.clearAll}
                   </button>
                 )}
                 <button
                   onClick={() => setShowSessions(false)}
                   className="text-zinc-400 hover:text-zinc-600"
+                  aria-label={copy.close}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -235,7 +269,7 @@ export function SessionManager({
               {sessions.length === 0 ? (
                 <div className="text-center py-12 text-zinc-400">
                   <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">No saved sessions</p>
+                  <p className="text-sm">{copy.noSessions}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -262,7 +296,7 @@ export function SessionManager({
                             </span>
                             <span className="flex items-center gap-1">
                               <MessageSquare className="w-3 h-3" />
-                              {session.messageCount} msgs
+                              {session.messageCount} {copy.messages}
                             </span>
                           </div>
                         </button>

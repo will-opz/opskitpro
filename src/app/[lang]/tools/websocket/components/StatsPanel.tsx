@@ -5,6 +5,7 @@ import { Activity, ArrowUp, ArrowDown, Clock, Zap, Cpu } from "lucide-react";
 import type { ConnectionStatus } from "../hooks";
 
 interface StatsPanelProps {
+  lang: "zh" | "en";
   status: ConnectionStatus;
   stats: {
     messagesSent: number;
@@ -32,13 +33,17 @@ function formatDuration(ms: number): string {
   return `${seconds}s`;
 }
 
-export function StatsPanel({ status, stats }: StatsPanelProps) {
+export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
   const uptime = useMemo(() => {
     if (!stats.connectedAt) return null;
     return Date.now() - stats.connectedAt;
   }, [stats.connectedAt]);
 
   const isConnected = status === "connected";
+  const copy =
+    lang === "zh"
+      ? { title: "连接统计", sent: "已发送", received: "已接收", uptime: "连接时长", latency: "延迟", total: "总流量" }
+      : { title: "Connection stats", sent: "Sent", received: "Received", uptime: "Uptime", latency: "Latency", total: "Total traffic" };
 
   return (
     <div className="glass-card p-6 rounded-2xl border border-black/5 bg-zinc-900 text-white relative overflow-hidden">
@@ -48,7 +53,7 @@ export function StatsPanel({ status, stats }: StatsPanelProps) {
           <div className="flex items-center gap-2 text-zinc-400">
             <Cpu className="w-4 h-4" />
             <span className="text-[10px] uppercase tracking-wider">
-              System Monitor
+              {copy.title}
             </span>
           </div>
           <div
@@ -66,7 +71,7 @@ export function StatsPanel({ status, stats }: StatsPanelProps) {
           <div className="bg-zinc-800/50 rounded-xl p-3">
             <div className="flex items-center gap-2 text-cyan-400 mb-1">
               <ArrowUp className="w-3 h-3" />
-              <span className="text-[9px] uppercase tracking-wider">Sent</span>
+              <span className="text-[9px] uppercase tracking-wider">{copy.sent}</span>
             </div>
             <div className="text-xl font-black text-cyan-400">
               {stats.messagesSent}
@@ -81,7 +86,7 @@ export function StatsPanel({ status, stats }: StatsPanelProps) {
             <div className="flex items-center gap-2 text-emerald-400 mb-1">
               <ArrowDown className="w-3 h-3" />
               <span className="text-[9px] uppercase tracking-wider">
-                Received
+                {copy.received}
               </span>
             </div>
             <div className="text-xl font-black text-emerald-400">
@@ -97,7 +102,7 @@ export function StatsPanel({ status, stats }: StatsPanelProps) {
             <div className="flex items-center gap-2 text-amber-400 mb-1">
               <Clock className="w-3 h-3" />
               <span className="text-[9px] uppercase tracking-wider">
-                Uptime
+                {copy.uptime}
               </span>
             </div>
             <div className="text-lg font-bold text-amber-400">
@@ -110,7 +115,7 @@ export function StatsPanel({ status, stats }: StatsPanelProps) {
             <div className="flex items-center gap-2 text-purple-400 mb-1">
               <Zap className="w-3 h-3" />
               <span className="text-[9px] uppercase tracking-wider">
-                Latency
+                {copy.latency}
               </span>
             </div>
             <div className="text-lg font-bold text-purple-400">
@@ -123,7 +128,7 @@ export function StatsPanel({ status, stats }: StatsPanelProps) {
         <div className="mt-4 pt-4 border-t border-zinc-800">
           <div className="flex items-center justify-between text-[10px]">
             <span className="text-zinc-500 uppercase tracking-wider">
-              Total Traffic
+              {copy.total}
             </span>
             <span className="text-zinc-300 font-mono">
               {formatBytes(stats.bytesSent + stats.bytesReceived)}

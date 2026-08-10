@@ -15,13 +15,14 @@ import {
 import type { LogEntry, MessageType } from "../hooks";
 
 interface LogViewerProps {
+  lang: "zh" | "en";
   logs: LogEntry[];
   onClear: () => void;
 }
 
 type FilterType = "all" | "sent" | "received" | "info" | "error";
 
-export function LogViewer({ logs, onClear }: LogViewerProps) {
+export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
   const logsEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -96,6 +97,36 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
     }),
     [logs],
   );
+  const copy =
+    lang === "zh"
+      ? {
+          step: "03",
+          title: "查看流量日志",
+          autoOn: "自动滚动已开启",
+          autoOff: "自动滚动已关闭",
+          export: "导出日志",
+          clear: "清空日志",
+          search: "搜索日志",
+          empty: "连接后，收发消息会显示在这里",
+          noMatch: "没有匹配的日志",
+          expand: "展开 JSON",
+          copy: "复制消息",
+          filters: { all: "全部", sent: "已发送", received: "已接收", info: "信息", error: "错误" },
+        }
+      : {
+          step: "03",
+          title: "Inspect traffic logs",
+          autoOn: "Auto-scroll on",
+          autoOff: "Auto-scroll off",
+          export: "Export logs",
+          clear: "Clear logs",
+          search: "Search logs",
+          empty: "Sent and received messages will appear here after connecting",
+          noMatch: "No matching logs",
+          expand: "Expand JSON",
+          copy: "Copy message",
+          filters: { all: "All", sent: "Sent", received: "Received", info: "Info", error: "Error" },
+        };
 
   const getTypeStyles = (type: LogEntry["type"]) => {
     switch (type) {
@@ -142,14 +173,16 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
   };
 
   return (
-    <div className="glass-card rounded-2xl border border-black/5 bg-zinc-950 shadow-2xl overflow-hidden flex flex-col min-h-[500px]">
+    <section className="glass-card flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-zinc-950 shadow-2xl sm:min-h-[380px]">
       {/* Header */}
       <div className="bg-zinc-900 p-4 border-b border-white/5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-widest">
-              Traffic Monitor
+            <span className="rounded-md bg-cyan-500/15 px-2 py-1 font-mono text-[10px] font-bold text-cyan-300">
+              {copy.step}
+            </span>
+            <h3 className="text-xs font-bold text-white">
+              {copy.title}
             </h3>
             <span className="text-[10px] text-zinc-500">
               {filteredLogs.length} / {logs.length}
@@ -174,7 +207,8 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                   ? "bg-cyan-500/20 text-cyan-400"
                   : "text-zinc-500 hover:text-white"
               }`}
-              title={autoScroll ? "Auto-scroll ON" : "Auto-scroll OFF"}
+              aria-label={autoScroll ? copy.autoOn : copy.autoOff}
+              title={autoScroll ? copy.autoOn : copy.autoOff}
             >
               <ArrowDown className="w-4 h-4" />
             </button>
@@ -184,7 +218,8 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
               onClick={exportLogs}
               disabled={logs.length === 0}
               className="p-1.5 text-zinc-500 hover:text-white transition-colors disabled:opacity-30"
-              title="Export logs"
+              aria-label={copy.export}
+              title={copy.export}
             >
               <Download className="w-4 h-4" />
             </button>
@@ -194,7 +229,8 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
               onClick={onClear}
               disabled={logs.length === 0}
               className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-30"
-              title="Clear logs"
+              aria-label={copy.clear}
+              title={copy.clear}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -202,8 +238,8 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
         </div>
 
         {/* Filter bar */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-zinc-800 rounded-lg p-0.5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-zinc-800 p-0.5">
             {(["all", "sent", "received", "info", "error"] as FilterType[]).map(
               (f) => (
                 <button
@@ -215,7 +251,7 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                       : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
-                  {f}
+                  {copy.filters[f]}
                 </button>
               ),
             )}
@@ -225,8 +261,9 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="flex-1 max-w-[200px] px-3 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            placeholder={copy.search}
+            aria-label={copy.search}
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:max-w-[240px]"
           />
         </div>
       </div>
@@ -234,12 +271,12 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
       {/* Log List */}
       <div className="flex-grow overflow-y-auto p-4 space-y-1 font-mono scrollbar-thin scrollbar-thumb-zinc-800">
         {filteredLogs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-zinc-600 space-y-4 py-20">
-            <History className="w-12 h-12 opacity-10" />
-            <p className="text-[10px] uppercase tracking-[0.3em] font-light">
+          <div className="flex h-full flex-col items-center justify-center space-y-4 py-14 text-zinc-600 sm:py-16">
+            <History className="h-10 w-10 opacity-10" />
+            <p className="max-w-sm px-4 text-center text-xs leading-5 text-zinc-500">
               {logs.length === 0
-                ? "No data streams detected"
-                : "No matching logs"}
+                ? copy.empty
+                : copy.noMatch}
             </p>
           </div>
         ) : (
@@ -279,7 +316,8 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                           <button
                             onClick={() => toggleExpand(log.id)}
                             className="text-zinc-500 hover:text-amber-400 transition-colors"
-                            title="Expand JSON"
+                            aria-label={copy.expand}
+                            title={copy.expand}
                           >
                             {isExpanded ? (
                               <ArrowUp className="w-3 h-3" />
@@ -291,7 +329,8 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                         <button
                           onClick={() => copyMessage(log.message, log.id)}
                           className="text-zinc-500 hover:text-white transition-colors"
-                          title="Copy"
+                          aria-label={copy.copy}
+                          title={copy.copy}
                         >
                           {copiedId === log.id ? (
                             <Check className="w-3 h-3 text-emerald-500" />
@@ -326,6 +365,6 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
         )}
         <div ref={logsEndRef} />
       </div>
-    </div>
+    </section>
   );
 }

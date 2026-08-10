@@ -36,7 +36,7 @@ export default async function WebsocketPage({
       <SiteHeader dict={dict} lang={lang} />
       <WebsocketClient dict={dict} lang={lang} />
       <ToolGuide id="websocket" lang={lang} />
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

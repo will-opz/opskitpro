@@ -13,6 +13,7 @@ import {
 import type { ConnectionTab } from "../hooks/useMultiConnection";
 
 interface ConnectionTabsProps {
+  lang: "zh" | "en";
   tabs: ConnectionTab[];
   activeTabId: string;
   onSelectTab: (id: string) => void;
@@ -23,6 +24,7 @@ interface ConnectionTabsProps {
 }
 
 export function ConnectionTabs({
+  lang,
   tabs,
   activeTabId,
   onSelectTab,
@@ -33,6 +35,11 @@ export function ConnectionTabs({
 }: ConnectionTabsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const displayName = (name: string) =>
+    lang === "zh" ? name.replace(/^Connection (\d+)$/, "连接 $1") : name;
+  const addLabel = lang === "zh" ? "添加连接" : "Add connection";
+  const renameLabel = lang === "zh" ? "重命名连接" : "Rename connection";
+  const closeLabel = lang === "zh" ? "关闭连接" : "Close connection";
 
   const startEdit = (tab: ConnectionTab, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -111,7 +118,7 @@ export function ConnectionTabs({
                 activeTabId === tab.id ? "text-zinc-800" : "text-zinc-500"
               }`}
             >
-              {tab.name}
+              {displayName(tab.name)}
             </span>
           )}
 
@@ -133,6 +140,8 @@ export function ConnectionTabs({
               <button
                 onClick={(e) => startEdit(tab, e)}
                 className="p-0.5 text-zinc-300 hover:text-zinc-600 opacity-0 group-hover:opacity-100 transition-all"
+                aria-label={renameLabel}
+                title={renameLabel}
               >
                 <Edit3 className="w-3 h-3" />
               </button>
@@ -145,6 +154,8 @@ export function ConnectionTabs({
                   onRemoveTab(tab.id);
                 }}
                 className="p-0.5 text-zinc-300 hover:text-red-500 transition-colors"
+                aria-label={closeLabel}
+                title={closeLabel}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -158,7 +169,8 @@ export function ConnectionTabs({
         <button
           onClick={onAddTab}
           className="p-2 text-zinc-400 hover:text-cyan-600 hover:bg-white rounded-lg transition-all"
-          title="Add connection"
+          aria-label={addLabel}
+          title={addLabel}
         >
           <Plus className="w-4 h-4" />
         </button>

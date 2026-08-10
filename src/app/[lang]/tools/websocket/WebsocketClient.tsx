@@ -109,7 +109,7 @@ export default function WebsocketClient({
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-zinc-700 font-sans selection:bg-cyan-500/20 selection:text-zinc-900 pb-24 relative overflow-hidden">
+    <div className="relative overflow-hidden bg-[#fafafa] pb-12 font-sans text-zinc-700 selection:bg-cyan-500/20 selection:text-zinc-900 sm:pb-16">
       {/* Background */}
       <div className="absolute inset-0 bg-grid-zinc-900/[0.03] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
@@ -208,6 +208,7 @@ export default function WebsocketClient({
           <section className="mb-6 rounded-2xl border border-zinc-100 bg-white/80 p-4 shadow-sm backdrop-blur-xl">
             <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <ConnectionTabs
+                lang={lang}
                 tabs={tabs}
                 activeTabId={activeTabId}
                 onSelectTab={setActiveTabId}
@@ -217,6 +218,7 @@ export default function WebsocketClient({
                 canAddTab={canAddTab}
               />
               <SessionManager
+                lang={lang}
                 currentUrl={activeTab.url}
                 currentLogs={activeTab.logs}
                 onLoadSession={handleLoadSession}
@@ -271,6 +273,7 @@ export default function WebsocketClient({
           {/* Connection Panel */}
           <div className="lg:col-span-12">
             <ConnectionPanel
+              lang={lang}
               status={activeTab.status}
               config={activeTab.config}
               onConnect={handleConnect}
@@ -282,14 +285,22 @@ export default function WebsocketClient({
           {/* Stats Panel */}
           {showAdvanced && (
             <div className="lg:col-span-12">
-              <StatsPanel status={activeTab.status} stats={activeTab.stats} />
+              <StatsPanel
+                lang={lang}
+                status={activeTab.status}
+                stats={activeTab.stats}
+              />
             </div>
           )}
 
           {/* Message Composer based on view mode */}
           <div className="lg:col-span-12">
             {(!showAdvanced || viewMode === "text") && (
-              <MessageComposer status={activeTab.status} onSend={handleSend} />
+              <MessageComposer
+                lang={lang}
+                status={activeTab.status}
+                onSend={handleSend}
+              />
             )}
             {showAdvanced && viewMode === "binary" && (
               <BinaryComposer status={activeTab.status} onSend={handleSend} />
@@ -305,6 +316,7 @@ export default function WebsocketClient({
           {/* Log Viewer */}
           <div className="lg:col-span-12">
             <LogViewer
+              lang={lang}
               logs={activeTab.logs}
               onClear={() => clearLogs(activeTabId)}
             />

@@ -15,11 +15,12 @@ import { useMessageTemplates } from "../hooks";
 import type { ConnectionStatus } from "../hooks";
 
 interface MessageComposerProps {
+  lang: "zh" | "en";
   status: ConnectionStatus;
   onSend: (message: string) => void;
 }
 
-export function MessageComposer({ status, onSend }: MessageComposerProps) {
+export function MessageComposer({ lang, status, onSend }: MessageComposerProps) {
   const {
     templates,
     customTemplates,
@@ -133,21 +134,60 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
 
   const isJson =
     message.trim().startsWith("{") || message.trim().startsWith("[");
+  const copy =
+    lang === "zh"
+      ? {
+          step: "02",
+          title: "编写并发送消息",
+          templates: "模板",
+          presets: "预设模板",
+          custom: "自定义模板",
+          format: "格式化",
+          minify: "压缩",
+          saveAsTemplate: "保存为模板",
+          templateName: "模板名称",
+          save: "保存",
+          cancel: "取消",
+          variables: "变量",
+          placeholder: "输入要发送的消息（Cmd/Ctrl+Enter 发送）",
+          invalid: "格式无效",
+          send: "发送",
+        }
+      : {
+          step: "02",
+          title: "Compose and send",
+          templates: "Templates",
+          presets: "Presets",
+          custom: "Custom templates",
+          format: "Format",
+          minify: "Minify",
+          saveAsTemplate: "Save as template",
+          templateName: "Template name",
+          save: "Save",
+          cancel: "Cancel",
+          variables: "Variables",
+          placeholder: "Type a message (Cmd/Ctrl+Enter to send)",
+          invalid: "Invalid",
+          send: "Send",
+        };
 
   return (
     <div className="glass-card rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-white/60">
+      <div className="flex flex-col gap-3 border-b border-zinc-100 bg-white/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-cyan-500/10 flex items-center justify-center rounded-lg">
             <Send className="w-4 h-4 text-cyan-600" />
           </div>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-700">
-            Message Composer
+          <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-bold text-cyan-700">
+            {copy.step}
+          </span>
+          <h3 className="text-xs font-bold text-zinc-700">
+            {copy.title}
           </h3>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Template dropdown */}
           <div className="relative">
             <button
@@ -155,7 +195,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
               className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 rounded-lg text-[10px] font-mono font-bold text-zinc-600 transition-all"
             >
               <Sparkles className="w-3 h-3" />
-              Templates
+              {copy.templates}
               <ChevronDown
                 className={`w-3 h-3 transition-transform ${showTemplates ? "rotate-180" : ""}`}
               />
@@ -165,7 +205,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
               <div className="absolute top-full right-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-zinc-200 z-50 max-h-80 overflow-auto">
                 <div className="p-2 border-b border-zinc-100">
                   <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
-                    Presets
+                    {copy.presets}
                   </span>
                 </div>
                 {templates
@@ -189,7 +229,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
                   <>
                     <div className="p-2 border-t border-b border-zinc-100 mt-1">
                       <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
-                        Custom
+                        {copy.custom}
                       </span>
                     </div>
                     {customTemplates.map((t) => (
@@ -229,13 +269,13 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
                 onClick={formatJson}
                 className="px-2 py-1 text-[10px] font-mono text-zinc-500 hover:text-cyan-600 hover:bg-cyan-50 rounded transition-all"
               >
-                Format
+                {copy.format}
               </button>
               <button
                 onClick={minifyJson}
                 className="px-2 py-1 text-[10px] font-mono text-zinc-500 hover:text-cyan-600 hover:bg-cyan-50 rounded transition-all"
               >
-                Minify
+                {copy.minify}
               </button>
             </>
           )}
@@ -244,7 +284,8 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
           <button
             onClick={() => setShowSaveDialog(!showSaveDialog)}
             className="p-1.5 text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-            title="Save as template"
+            aria-label={copy.saveAsTemplate}
+            title={copy.saveAsTemplate}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -253,13 +294,13 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
 
       {/* Save template dialog */}
       {showSaveDialog && (
-        <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-emerald-100 bg-emerald-50 px-4 py-3">
           <input
             type="text"
             value={newTemplateName}
             onChange={(e) => setNewTemplateName(e.target.value)}
-            placeholder="Template name..."
-            className="flex-1 px-3 py-1.5 text-sm bg-white border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            placeholder={copy.templateName}
+            className="min-w-40 flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             onKeyDown={(e) => e.key === "Enter" && handleSaveTemplate()}
           />
           <button
@@ -267,13 +308,13 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
             disabled={!newTemplateName.trim()}
             className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50"
           >
-            Save
+            {copy.save}
           </button>
           <button
             onClick={() => setShowSaveDialog(false)}
             className="px-3 py-1.5 bg-zinc-200 text-zinc-600 text-xs font-bold rounded-lg hover:bg-zinc-300"
           >
-            Cancel
+            {copy.cancel}
           </button>
         </div>
       )}
@@ -282,7 +323,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
       {currentVars.length > 0 && (
         <div className="px-4 py-3 bg-blue-50 border-b border-blue-100 flex flex-wrap items-center gap-3">
           <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-            Variables:
+            {copy.variables}:
           </span>
           {currentVars.map((v) => (
             <div key={v} className="flex items-center gap-1">
@@ -310,7 +351,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
               handleSend();
             }
           }}
-          placeholder="Type message to send... (Cmd+Enter to send)"
+          placeholder={copy.placeholder}
           rows={5}
           className={`w-full p-4 font-mono text-sm leading-relaxed resize-none focus:outline-none ${
             jsonError ? "bg-red-50" : "bg-white"
@@ -332,7 +373,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
             ) : (
               <Braces className="w-3 h-3" />
             )}
-            {jsonError ? "Invalid" : "JSON"}
+            {jsonError ? copy.invalid : "JSON"}
           </div>
         )}
 
@@ -343,7 +384,7 @@ export function MessageComposer({ status, onSend }: MessageComposerProps) {
           className="absolute bottom-4 right-4 bg-cyan-600 text-white pl-4 pr-5 py-2 rounded-xl hover:bg-cyan-700 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none flex items-center gap-2 font-bold shadow-lg shadow-cyan-500/20"
         >
           <Send className="w-4 h-4" />
-          Send
+          {copy.send}
         </button>
       </div>
 
