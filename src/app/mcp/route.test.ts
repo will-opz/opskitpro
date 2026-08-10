@@ -126,6 +126,13 @@ describe("OpsKitPro MCP", () => {
       "opskitpro-mcp.website-check.v1",
     );
     expect(body.result.structuredContent.target).toBe("example.com");
+    expect(body.result.structuredContent.status).toBe("healthy");
+    expect(body.result.structuredContent.verdict).toBe("Healthy");
+    expect(body.result.structuredContent.evidenceRecords[0]).toMatchObject({
+      id: "dns.result",
+      source: "opskitpro_probe",
+    });
+    expect(body.result.structuredContent.inferences).toEqual([]);
     expect(body.result.structuredContent.observationPoints).toHaveLength(2);
     expect(executeDiagnosticRequest).toHaveBeenCalledWith(
       expect.any(Request),

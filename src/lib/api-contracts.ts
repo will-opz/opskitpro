@@ -1,3 +1,5 @@
+import type { DiagnosticModel } from "@/lib/diagnostic-types";
+
 export type DnsRecordType =
   "A" | "AAAA" | "CNAME" | "MX" | "NS" | "TXT" | "SOA" | "PTR" | "SRV" | "CAA";
 
@@ -232,6 +234,7 @@ export interface DiagnosticSuccessResponse {
   geo: DiagnosticGeoSummary;
   whois: DiagnosticWhoisSummary;
   meta?: DiagnosticMetaSummary;
+  diagnosis?: DiagnosticModel;
 }
 
 export interface DiagnosticPartialErrorResponse {

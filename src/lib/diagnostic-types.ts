@@ -5,6 +5,74 @@ export type DiagnosticResolver = {
   latency?: number | string;
 };
 
+export type DiagnosticVerdict =
+  | "Healthy"
+  | "Degraded"
+  | "Unreachable"
+  | "Unknown";
+
+export type DiagnosticAssessmentStatus =
+  | "healthy"
+  | "degraded"
+  | "unreachable"
+  | "needs_review"
+  | "unknown"
+  | "not_applicable";
+
+export type DiagnosticConfidence = "High" | "Medium" | "Low";
+
+/** An immutable projection of a value returned by a probe. */
+export type DiagnosticEvidence = {
+  id: string;
+  area: string;
+  source: "opskitpro_probe" | "cloudflare_edge" | "your_browser";
+  observationPoint: string;
+  observedAt?: string;
+  value: unknown;
+};
+
+/** A deterministic rule evaluation over one or more evidence records. */
+export type DiagnosticAssessment = {
+  id: string;
+  area: string;
+  status: DiagnosticAssessmentStatus;
+  evidenceIds: string[];
+  summary: string;
+};
+
+/** A possible explanation, only emitted when evidence supports an abnormal result. */
+export type DiagnosticInference = {
+  id: string;
+  area: string;
+  confidence: DiagnosticConfidence;
+  evidenceIds: string[];
+  summary: string;
+};
+
+/** Contextual advice. Owner-only changes must be explicitly conditional. */
+export type DiagnosticGuidance = {
+  id: string;
+  area: string;
+  audience: "anyone" | "site_operator";
+  summary: string;
+};
+
+export type DiagnosticModel = {
+  schemaVersion: "opskitpro.diagnostic.v1";
+  verdict: DiagnosticVerdict;
+  evidence: DiagnosticEvidence[];
+  assessments: DiagnosticAssessment[];
+  inferences: DiagnosticInference[];
+  guidance: DiagnosticGuidance[];
+  policy: {
+    evidence: "observed";
+    assessment: "rule-derived";
+    inference: "confidence-bound";
+    guidance: "contextual";
+    aiMayAlterEvidence: false;
+  };
+};
+
 export type DiagnosticResponse = {
   domain: string;
   status?: string;
@@ -144,6 +212,7 @@ export type DiagnosticResponse = {
     edgeColo?: string;
     cacheStatus?: "HIT" | "MISS" | "BYPASS";
   };
+  diagnosis?: DiagnosticModel;
 };
 
 export function isDiagnosticResponse(value: unknown): value is DiagnosticResponse {

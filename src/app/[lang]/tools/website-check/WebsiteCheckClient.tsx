@@ -40,10 +40,10 @@ import { TrackedLink } from "@/components/TrackedLink";
 import { useDiagnosticHistory } from "./_hooks/useDiagnosticHistory";
 import { useWebsiteCheck } from "./_hooks/useWebsiteCheck";
 import {
-  calculateScore,
   isBlockedHttpStatus,
   normalizeTargetInput,
 } from "./_hooks/helpers";
+import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
 import {
   buildWebsiteCheckMarkdown,
   buildWebsiteCheckPlainSummary,
@@ -92,9 +92,9 @@ export default function WebsiteCheckClient({
           analyzing: "诊断中",
           errorTitle: "诊断错误",
           fault: {
-            likelyCause: "可能原因",
+            likelyCause: "可能原因 · 置信度低",
             evidence: "证据",
-            nextAction: "下一步动作",
+            nextAction: "参考建议",
             retry: "重新检测",
             copy: "复制故障摘要",
             dnsTitle: "DNS 解析异常",
@@ -133,7 +133,6 @@ export default function WebsiteCheckClient({
               },
             ],
           },
-          summaryScore: "总体评分",
           summaryVerdict: "判定",
           detailsHint: "仅在需要时展开详情",
           detailsOpen: "显示详情",
@@ -224,7 +223,7 @@ export default function WebsiteCheckClient({
             edge: "边缘转发",
             header: "服务器头",
             proxied: "经由",
-            direct: "直连",
+            direct: "未知 · 未识别已知 CDN 特征",
           },
           advice: {
             title: "确认重点",
@@ -271,7 +270,7 @@ export default function WebsiteCheckClient({
             headersOk: "关键安全响应头已启用。",
             headersBad: "存在缺失的安全响应头。",
             cdnOk: "检测到 CDN / Edge 分发。",
-            cdnBad: "未检测到 CDN，如需降低延迟可考虑启用边缘分发。",
+            cdnBad: "未识别已知 CDN 特征；这不代表站点一定未使用边缘分发。",
           },
           meta: {
             checkedAt: "检查时间",
@@ -296,9 +295,9 @@ export default function WebsiteCheckClient({
           analyzing: "ANALYZING",
           errorTitle: "SYSTEM_FAULT_DETECTED",
           fault: {
-            likelyCause: "Likely Cause",
+            likelyCause: "Possible Cause · Low Confidence",
             evidence: "Evidence",
-            nextAction: "Next Action",
+            nextAction: "Guidance",
             retry: "Retry Check",
             copy: "Copy Fault Summary",
             dnsTitle: "DNS Resolution Fault",
@@ -340,7 +339,6 @@ export default function WebsiteCheckClient({
               },
             ],
           },
-          summaryScore: "Overall Score",
           summaryVerdict: "Verdict",
           detailsHint: "Expand details when needed",
           detailsOpen: "Show Details",
@@ -432,7 +430,7 @@ export default function WebsiteCheckClient({
             edge: "Edge Routing",
             header: "Server Header",
             proxied: "PROXIED",
-            direct: "DIRECT",
+            direct: "UNKNOWN · NO KNOWN SIGNATURE",
           },
           advice: {
             title: "Recommendations",
@@ -481,7 +479,7 @@ export default function WebsiteCheckClient({
             headersBad: "Some security headers are missing.",
             cdnOk: "CDN / Edge delivery detected.",
             cdnBad:
-              "No CDN detected. Consider edge delivery if latency matters.",
+              "No known CDN signature identified; this does not prove direct-origin delivery.",
           },
           meta: {
             checkedAt: "Checked At",
@@ -552,15 +550,9 @@ export default function WebsiteCheckClient({
         data?.observations?.edge?.precision === "full";
       const corroboratedReachable = browserReachable || edgeReachable;
       const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp);
-      const headersScore = data?.securityHeaders?.score ?? 100;
-      const whoisHold = data?.whois?.status?.toLowerCase().includes("hold");
-      const healthy =
-        (data?.http?.success || (corroboratedReachable && blocked)) &&
-        headersScore >= 55 &&
-        !whoisHold;
-      const warning =
-        (blocked && !corroboratedReachable) ||
-        (isIpOrVisitor && Number(data?.http?.status_code || 0) >= 400);
+      const verdict = buildWebsiteDiagnosticModel(data).verdict;
+      const healthy = verdict === "Healthy";
+      const warning = verdict === "Degraded" || verdict === "Unknown";
 
       return {
         blocked,
@@ -570,37 +562,19 @@ export default function WebsiteCheckClient({
         isIpOrVisitor,
         healthy,
         warning,
-        verdict: healthy
-          ? corroboratedReachable && blocked
-            ? browserReachable
-              ? statusCopy.browserReachableProbeBlocked
-              : statusCopy.edgeReachableProbeBlocked
-            : dict.tools.website_check.summary_good
-          : warning
-            ? statusCopy.blocked
-            : dict.tools.website_check.summary_bad,
+        verdict,
         tone: healthy ? "emerald" : warning ? "orange" : "red",
       };
     },
-    [
-      dict.tools.website_check.summary_bad,
-      dict.tools.website_check.summary_good,
-      statusCopy,
-    ],
+    [],
   );
 
   const summaryFacts = useMemo(() => {
     if (!result) return [];
 
-    const score = calculateScore(result);
     const state = getResultState(result);
 
     return [
-      {
-        label: localeText.summaryScore,
-        value: score,
-        tone: score >= 80 ? "emerald" : score >= 50 ? "orange" : "red",
-      },
       {
         label: localeText.summaryVerdict,
         value: state.verdict,
@@ -647,8 +621,8 @@ export default function WebsiteCheckClient({
       },
       {
         label: localeText.cdn.title,
-        value: result.cdn.provider,
-        tone: result.cdn.is_provider ? "emerald" : "orange",
+        value: result.cdn.is_provider ? result.cdn.provider : "Unknown",
+        tone: result.cdn.is_provider ? "emerald" : "zinc",
       },
     ];
   }, [getResultState, localeText, result]);
@@ -796,13 +770,13 @@ export default function WebsiteCheckClient({
       [
         `OpsKitPro Website Check Fault: ${result?.domain || domain || "opskitpro.com"}`,
         "",
-        "Likely Cause:",
+        "Possible Cause (Confidence: Low):",
         guide.cause,
         "",
         "Evidence:",
         ...guide.evidence.map((item: string) => `- ${item}`),
         "",
-        "Next Action:",
+        "Guidance:",
         ...guide.nextAction.map((item: string) => `- ${item}`),
       ].join("\n"),
       "fault",
@@ -871,11 +845,10 @@ export default function WebsiteCheckClient({
         connectivity: "可能存在连接故障。请检查防火墙与 80/443 端口。",
         sslExpired: "SSL 证书存在问题，当前会触发浏览器警告。",
         sslSoon: "证书可能即将到期，请在 15 天内安排更新。",
-        hsts: "HSTS 处于关闭状态。启用 Strict-Transport-Security 可减少 SSL Strip 风险。",
-        csp: "Content-Security-Policy 未设置。建议添加 CSP，降低 XSS 与第三方脚本注入风险。",
+        hsts: "如果你运营该站点，请结合兼容性要求评估是否启用 Strict-Transport-Security。",
+        csp: "如果你运营该站点，请结合应用脚本策略与兼容性要求评估 Content-Security-Policy。",
         securityHeaders:
-          "关键安全响应头不足。建议优先补齐 HSTS、CSP、nosniff 与 frame 控制。",
-        cdn: "当前可能是直连而非边缘 CDN。建议启用 CDN 以降低延迟。",
+          "如果你运营该站点，请根据安全与兼容性要求审查本次未观察到的响应头。",
         subdomains: "子域名数量偏多，建议排查是否存在遗留的测试或临时环境。",
         ok: "目前没有明显问题，可用性、性能与安全性表现良好。",
       },
@@ -893,11 +866,10 @@ export default function WebsiteCheckClient({
         sslExpired:
           "SSL certificate problem: browser warnings are likely right now.",
         sslSoon: "Certificate expiring soon. Plan a renewal within 15 days.",
-        hsts: "HSTS is disabled. Enable Strict-Transport-Security to reduce SSL stripping risk.",
-        csp: "Content-Security-Policy is missing. Add CSP to reduce XSS and third-party script injection risk.",
+        hsts: "If you operate this site, evaluate Strict-Transport-Security against your HTTPS and compatibility requirements.",
+        csp: "If you operate this site, evaluate Content-Security-Policy against the application's script and compatibility requirements.",
         securityHeaders:
-          "Important security headers are missing. Prioritize HSTS, CSP, nosniff, and frame controls.",
-        cdn: "This looks like direct delivery, not edge CDN. Consider enabling CDN to reduce latency.",
+          "If you operate this site, review the unobserved headers against its security and compatibility requirements.",
         subdomains:
           "A high subdomain count can hide forgotten staging or test environments.",
         ok: "No major issues detected. Availability, performance, and security look healthy.",
@@ -948,10 +920,6 @@ export default function WebsiteCheckClient({
       advice.push(copy.csp);
     } else if ((data.securityHeaders?.score ?? 100) < 75) {
       advice.push(copy.securityHeaders);
-    }
-
-    if (!state.isIpOrVisitor && !data.cdn.is_provider) {
-      advice.push(copy.cdn);
     }
 
     if (data.subdomains && data.subdomains.length > 20) {
@@ -1485,7 +1453,10 @@ export default function WebsiteCheckClient({
                   {resultState?.verdict}
                 </h1>
                 <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-600 sm:text-sm">
-                  {diagnosticReport?.impact} {diagnosticReport?.suspectedCause}
+                  {diagnosticReport?.impact}
+                  {diagnosticReport?.inferences[0]
+                    ? ` ${lang === "zh" ? "可能原因" : "Possible cause"} (${diagnosticReport.inferences[0].confidence}): ${diagnosticReport.inferences[0].summary}`
+                    : ""}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-zinc-500">
@@ -1685,7 +1656,7 @@ export default function WebsiteCheckClient({
           </section>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
-            {summaryFacts.slice(2).map((fact) => (
+            {summaryFacts.slice(1).map((fact) => (
               <div
                 key={fact.label}
                 className="rounded-2xl border border-zinc-100 bg-white/85 backdrop-blur-md px-4 py-3 shadow-sm"
@@ -1822,9 +1793,11 @@ export default function WebsiteCheckClient({
                 <p className="mt-2 text-sm font-semibold text-zinc-900">
                   {diagnosticReport?.impact}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-zinc-600">
-                  {diagnosticReport?.suspectedCause}
-                </p>
+                {diagnosticReport?.inferences[0] && (
+                  <p className="mt-1 text-xs leading-5 text-zinc-600">
+                    {lang === "zh" ? "可能原因" : "Possible cause"} · {diagnosticReport.inferences[0].confidence}: {diagnosticReport.inferences[0].summary}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {prioritizedFindings.map((item) => (

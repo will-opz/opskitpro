@@ -4,6 +4,14 @@ import {
   isBlockedHttpStatus,
   parseLatencyMs,
 } from "../_hooks/helpers";
+import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
+import type {
+  DiagnosticAssessment,
+  DiagnosticEvidence,
+  DiagnosticGuidance,
+  DiagnosticInference,
+  DiagnosticVerdict,
+} from "@/lib/diagnostic-types";
 
 export const WEBSITE_CHECK_REPORT_FORMAT_VERSION = "website-check-report.v1";
 
@@ -34,13 +42,20 @@ export type WebsiteCheckReport = {
   formatVersion: typeof WEBSITE_CHECK_REPORT_FORMAT_VERSION;
   generatedAt: string;
   target: string;
+  /** @deprecated Compatibility only. Do not use as the overall verdict. */
   score: number;
   status: WebsiteCheckReportStatus;
-  verdict: string;
+  verdict: DiagnosticVerdict;
   summary: string;
   impact: string;
-  suspectedCause: string;
+  /** @deprecated Use inferences. Absent when no supported abnormal inference exists. */
+  suspectedCause?: string;
   evidence: string[];
+  evidenceRecords: DiagnosticEvidence[];
+  assessments: DiagnosticAssessment[];
+  inferences: DiagnosticInference[];
+  guidance: DiagnosticGuidance[];
+  /** @deprecated Use guidance. */
   nextActions: string[];
   findings: WebsiteCheckFinding[];
   observations?: WebsiteCheckResult["observations"];
@@ -235,6 +250,7 @@ export function buildWebsiteCheckReport(
   const lang = options.lang || "en";
   const copy = REPORT_COPY[lang] || REPORT_COPY.en;
   const score = calculateScore(data);
+  const diagnosis = buildWebsiteDiagnosticModel(data);
   const isIpOrVisitor = Boolean(data.isVisitor || data.isActuallyIp);
   const blocked =
     !data.http.success &&
@@ -533,10 +549,10 @@ export function buildWebsiteCheckReport(
           : "Missing: none detected",
       ],
       likelyCause: missingHeaders.length
-        ? "Application or edge response policy does not emit one or more recommended security headers."
+        ? ""
         : copy.noIssueCause,
       recommendedFix: missingHeaders.length
-        ? "Add the missing headers at the application, reverse proxy, or CDN edge layer."
+        ? "If you operate this site, review the missing headers against the application's security and compatibility requirements."
         : copy.noIssueFix,
       verificationSteps: missingHeaders.length
         ? [
@@ -561,7 +577,7 @@ export function buildWebsiteCheckReport(
         ? `Detected ${data.cdn.provider}.`
         : isIpOrVisitor
           ? "CDN detection is not applicable to a raw IP probe."
-          : "No edge CDN provider was detected from this response.",
+          : "Unknown · No known CDN signature identified.",
       evidence: [
         `Provider: ${data.cdn.provider || "Unknown"}`,
         `Server: ${data.cdn.server || "Unknown"}`,
@@ -570,11 +586,11 @@ export function buildWebsiteCheckReport(
       likelyCause:
         data.cdn.is_provider || isIpOrVisitor
           ? copy.noIssueCause
-          : "Traffic may be served directly from the origin or through an unrecognized proxy.",
+          : "",
       recommendedFix:
         data.cdn.is_provider || isIpOrVisitor
           ? copy.noIssueFix
-          : "Consider enabling a CDN or confirming that the intended edge provider is in the request path.",
+          : "If you operate this site and expect a CDN, verify DNS and edge configuration; an unmatched signature does not prove direct-origin delivery.",
       verificationSteps:
         data.cdn.is_provider || isIpOrVisitor
           ? [copy.noIssueVerify]
@@ -611,23 +627,18 @@ export function buildWebsiteCheckReport(
     );
   }
 
-  const status: WebsiteCheckReportStatus = findings.some(
-    (finding) => finding.severity === "critical",
-  )
-    ? "critical"
-    : findings.some((finding) => finding.severity === "warning")
-      ? "degraded"
-      : "healthy";
-  const firstActionable = findings.find(
-    (finding) =>
-      finding.severity === "critical" || finding.severity === "warning",
-  );
+  const status: WebsiteCheckReportStatus =
+    diagnosis.verdict === "Healthy"
+      ? "healthy"
+      : diagnosis.verdict === "Degraded"
+        ? "degraded"
+        : "critical";
   const evidence = [
     `DNS: ${data.dns.success ? "OK" : "FAIL"} · ${data.dns.latency} · ${data.dns.resolved_ip}`,
     `HTTP: ${data.http.success ? "OK" : blocked ? "BLOCKED" : "FAIL"} · ${data.http.status_code || "ERR"} · ${data.http.latency}`,
     `SSL: ${data.ssl.valid ? "OK" : "FAIL"} · ${data.ssl.protocol || "Unknown"} · expires ${data.ssl.expiry}`,
     `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || "Unknown"}`,
-    `CDN: ${data.cdn.is_provider ? data.cdn.provider : "Not detected"} · server ${data.cdn.server || "Unknown"}`,
+    `CDN: ${data.cdn.is_provider ? data.cdn.provider : "Unknown · No known CDN signature identified"} · server ${data.cdn.server || "Unknown"}`,
     `Observation Point: TLS probe executed from OpsKitPro Probe`,
     browserReachable
       ? `Browser Observation: reachable · HTTP ${data.observations?.browser?.httpStatus || "OK"}`
@@ -644,17 +655,25 @@ export function buildWebsiteCheckReport(
     target: data.domain,
     score,
     status,
-    verdict: copy.verdict[status],
+    verdict: diagnosis.verdict,
     summary:
       corroboratedReachable && blocked
         ? lang === "zh"
           ? `网站可从${browserReachable ? "用户浏览器" : " Cloudflare Edge"}正常访问，但 OpsKitPro 服务端探针受到安全策略限制。`
           : `The site is reachable from ${browserReachable ? "your browser" : "Cloudflare Edge"}, but security policy limits the OpsKitPro server probe.`
-        : copy.summary[status],
+        : diagnosis.verdict === "Healthy"
+          ? lang === "zh"
+            ? "网站可访问；DNS、HTTP 与公开 TLS 检查已从当前观察点完成。其他发现不会单独改变可用性结论。"
+            : "The website is reachable; DNS, HTTP, and public TLS checks completed from the current observation point. Other findings do not independently change the availability verdict."
+          : copy.summary[status],
     impact: copy.impact[status],
-    suspectedCause: firstActionable?.likelyCause || copy.noIssueCause,
+    suspectedCause: diagnosis.inferences[0]?.summary,
     evidence,
-    nextActions: firstActionable?.verificationSteps || [copy.noIssueVerify],
+    evidenceRecords: diagnosis.evidence,
+    assessments: diagnosis.assessments,
+    inferences: diagnosis.inferences,
+    guidance: diagnosis.guidance,
+    nextActions: diagnosis.guidance.map((item) => item.summary),
     findings,
     observations: data.observations,
   };
@@ -671,25 +690,33 @@ export function buildWebsiteCheckPlainSummary(report: WebsiteCheckReport) {
   return [
     `OpsKitPro Website Check: ${report.target}`,
     `Verdict: ${report.verdict}`,
-    `Score: ${report.score}/100`,
     `Checked at: ${report.generatedAt}`,
     "",
     "Impact:",
     report.impact,
     "",
-    "Suspected Cause:",
-    report.suspectedCause,
-    "",
     "Evidence:",
     ...report.evidence.map((item) => `- ${item}`),
     "",
-    "Key Findings:",
+    "Assessment:",
     ...(notableFindings.length
       ? notableFindings
       : ["- No immediate issues detected."]),
     "",
-    "Next Action:",
-    ...report.nextActions.map((item) => `- ${item}`),
+    ...(report.inferences.length
+      ? [
+          "",
+          "Possible Cause:",
+          ...report.inferences.map(
+            (item) => `- [${item.confidence}] ${item.summary}`,
+          ),
+        ]
+      : []),
+    "",
+    "Guidance:",
+    ...(report.guidance.length
+      ? report.guidance.map((item) => `- ${item.summary}`)
+      : ["- No contextual guidance is required for this result."]),
   ].join("\n");
 }
 
@@ -703,7 +730,6 @@ export function buildWebsiteCheckMarkdown(
     `- Report format: ${report.formatVersion}`,
     `- Verdict: ${report.verdict}`,
     `- Status: ${report.status}`,
-    `- Score: ${report.score}/100`,
     `- Checked at: ${report.generatedAt}`,
     `- Core probe: ${data.meta?.coreMs ? `${data.meta.coreMs}ms` : "Unknown"}`,
     `- Full check: ${data.meta?.totalMs ? `${data.meta.totalMs}ms` : "Unknown"}`,
@@ -726,6 +752,28 @@ export function buildWebsiteCheckMarkdown(
     "## Impact",
     report.impact,
     "",
+    "## Evidence",
+    ...report.evidence.map((item) => `- ${item}`),
+    "",
+    "## Assessment",
+    ...report.assessments.map(
+      (item) => `- ${item.area}: ${item.status} — ${item.summary}`,
+    ),
+    ...(report.inferences.length
+      ? [
+          "",
+          "## Possible Cause",
+          ...report.inferences.map(
+            (item) => `- ${item.summary} (Confidence: ${item.confidence})`,
+          ),
+        ]
+      : []),
+    "",
+    "## Guidance",
+    ...(report.guidance.length
+      ? report.guidance.map((item) => `- ${item.summary}`)
+      : ["- No contextual guidance is required for this result."]),
+    "",
     "## Prioritized Findings",
     ...report.findings.map((finding, index) =>
       [
@@ -733,7 +781,9 @@ export function buildWebsiteCheckMarkdown(
         finding.summary,
         "",
         `- Evidence: ${finding.evidence.join("; ")}`,
-        `- Likely cause: ${finding.likelyCause}`,
+        ...(finding.likelyCause
+          ? [`- Possible cause: ${finding.likelyCause}`]
+          : []),
         `- Recommended fix: ${finding.recommendedFix}`,
         `- Verification: ${finding.verificationSteps.join("; ")}`,
       ].join("\n"),
@@ -778,7 +828,8 @@ export function buildWebsiteCheckMarkdown(
     `- Legacy TLS Accepted: ${data.ssl.legacy_tls_accepted && data.ssl.legacy_tls_accepted !== "unknown" ? `Yes (${data.ssl.legacy_tls_accepted}) (Warning)` : data.ssl.legacy_tls_accepted === false ? "No (Secure)" : "Unknown"}`,
     "",
     "## CDN",
-    `- Provider: ${data.cdn.provider}`,
+    `- Identification: ${data.cdn.is_provider ? "Known signature matched" : "Unknown · No known CDN signature identified"}`,
+    `- Provider: ${data.cdn.is_provider ? data.cdn.provider : "Unknown"}`,
     `- Server: ${data.cdn.server}`,
   ].join("\n");
 }

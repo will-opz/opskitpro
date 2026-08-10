@@ -9,6 +9,7 @@ import { getClientIp } from "@/lib/runtime-context";
 import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib/rate-limit";
 import { normalizeDiagnosticTarget } from "@/lib/diagnostic-target";
 import { requestEdgeProbe } from "@/lib/edge-probe";
+import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = "force-dynamic";
@@ -1030,6 +1031,8 @@ export async function executeDiagnosticRequest(
         enrichmentMs: Math.max(0, Date.now() - requestStartedAt - coreMs),
       }),
     };
+
+    responseData.diagnosis = buildWebsiteDiagnosticModel(responseData);
 
     return NextResponse.json(responseData, {
       headers: {

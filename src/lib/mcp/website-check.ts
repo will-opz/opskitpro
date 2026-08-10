@@ -3,6 +3,7 @@ import * as z from "zod/v4";
 
 import type { DiagnosticSuccessResponse } from "@/lib/api-contracts";
 import { executeDiagnosticRequest } from "@/lib/diagnostic-route";
+import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
 
 const DEFAULT_CHECKS = ["dns", "tls", "http", "cdn", "headers"] as const;
 
@@ -12,6 +13,7 @@ const outputSchema = {
   schemaVersion: z.literal("opskitpro-mcp.website-check.v1"),
   target: z.string(),
   status: z.enum(["healthy", "degraded", "critical"]),
+  verdict: z.enum(["Healthy", "Degraded", "Unreachable", "Unknown"]),
   observationPoints: z.array(
     z.object({
       source: z.enum(["cloudflare_edge", "opskitpro_probe"]),
@@ -28,6 +30,10 @@ const outputSchema = {
     }),
   ),
   evidence: z.array(z.string()),
+  evidenceRecords: z.array(z.record(z.string(), z.unknown())),
+  assessments: z.array(z.record(z.string(), z.unknown())),
+  inferences: z.array(z.record(z.string(), z.unknown())),
+  guidance: z.array(z.record(z.string(), z.unknown())),
   limitations: z.array(z.string()),
   nextActions: z.array(z.string()),
   diagnostic: z.object({
@@ -49,6 +55,7 @@ function buildMcpResult(
   result: DiagnosticSuccessResponse,
   requestedChecks: readonly string[],
 ) {
+  const diagnosis = buildWebsiteDiagnosticModel(result);
   const findings: Finding[] = [];
 
   if (!result.dns.success) {
@@ -107,15 +114,9 @@ function buildMcpResult(
     findings.push({
       area: "cdn",
       severity: "info",
-      message: "No supported CDN signature was detected from this observation point.",
+      message: "Unknown · No known CDN signature identified.",
     });
   }
-
-  const status = findings.some((finding) => finding.severity === "critical")
-    ? "critical"
-    : findings.some((finding) => finding.severity === "warning")
-      ? "degraded"
-      : "healthy";
 
   const observationPoints = [
     ...(result.observations?.edge
@@ -134,45 +135,40 @@ function buildMcpResult(
     },
   ];
 
-  const evidence = [
-    `DNS addresses: ${result.dns.all_ips?.join(", ") || result.dns.resolved_ip || "none"}`,
-    `HTTP: ${result.http.status_code || "ERR"} · ${result.http.classification || "unknown"} · ${result.http.latency}`,
-    `Final URL: ${result.http.final_url || "unknown"}`,
-    `TLS: ${result.ssl.valid ? "valid" : "invalid or unavailable"} · ${result.ssl.protocol || "unknown protocol"} · expires ${result.ssl.expiry}`,
-    `CDN: ${result.cdn.is_provider ? result.cdn.provider : "not detected"}`,
-    `Security headers: ${result.securityHeaders?.passed ?? 0}/${result.securityHeaders?.total ?? 0} detected`,
-  ];
-
-  const nextActions = findings
-    .filter((finding) => finding.severity !== "info")
-    .map((finding) => {
-      switch (finding.area) {
-        case "dns":
-          return "Verify authoritative nameservers and public A/AAAA records.";
-        case "http":
-          return "Review the redirect chain, origin health, WAF and access-control rules.";
-        case "tls":
-          return "Renew or repair the certificate, hostname coverage and trust chain.";
-        case "headers":
-          return "Add the missing browser security response headers after compatibility testing.";
-        default:
-          return "Review the supporting evidence before changing production configuration.";
-      }
-    });
+  const nextActions = diagnosis.guidance.map((item) => item.summary);
 
   const structuredContent = {
     schemaVersion: "opskitpro-mcp.website-check.v1" as const,
     target: result.domain,
-    status,
+    status:
+      diagnosis.verdict === "Healthy"
+        ? ("healthy" as const)
+        : diagnosis.verdict === "Degraded"
+          ? ("degraded" as const)
+          : ("critical" as const),
+    verdict: diagnosis.verdict,
     observationPoints,
     summary:
-      status === "healthy"
+      diagnosis.verdict === "Healthy"
         ? "The target is reachable and no critical issue was detected by the available probes."
-        : status === "degraded"
+        : diagnosis.verdict === "Degraded"
           ? "The target is reachable or partially observable, but configuration warnings require review."
-          : "One or more findings may affect availability, routing or browser trust.",
+          : diagnosis.verdict === "Unreachable"
+            ? "The available evidence indicates that the target is unreachable from the observed probe path."
+            : "The available evidence is insufficient for a reliable availability verdict.",
     findings,
-    evidence,
+    evidence: [
+      `DNS addresses: ${result.dns.all_ips?.join(", ") || result.dns.resolved_ip || "none"}`,
+      `HTTP: ${result.http.status_code || "ERR"} · ${result.http.classification || "unknown"} · ${result.http.latency}`,
+      `Final URL: ${result.http.final_url || "unknown"}`,
+      `TLS: ${result.ssl.valid ? "valid" : "invalid or unavailable"} · ${result.ssl.protocol || "unknown protocol"} · expires ${result.ssl.expiry}`,
+      `CDN: ${result.cdn.is_provider ? result.cdn.provider : "Unknown · No known CDN signature identified"}`,
+      `Security headers: ${result.securityHeaders?.passed ?? 0}/${result.securityHeaders?.total ?? 0} observed`,
+    ],
+    evidenceRecords: diagnosis.evidence,
+    assessments: diagnosis.assessments,
+    inferences: diagnosis.inferences,
+    guidance: diagnosis.guidance,
     limitations: [
       "Results describe the named observation points and do not prove global availability.",
       "No measurement from the MCP user's browser or private network is included.",
@@ -320,7 +316,7 @@ export function createOpsKitMcpServer(sourceRequest: Request) {
         content: [
           {
             type: "text",
-            text: `${structuredContent.summary}\n\n${structuredContent.evidence.join("\n")}`,
+            text: `${structuredContent.summary}\n\n${structuredContent.assessments.map((item) => `${item.area}: ${item.status}`).join("\n")}`,
           },
         ],
         structuredContent,

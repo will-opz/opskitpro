@@ -198,12 +198,12 @@ test('website diagnostics renders mocked result without external network depende
   )
 
   await page.goto('/tools/website-check')
-  await page.getByPlaceholder(/Enter domain/i).fill('opskitpro.com')
-  await page.getByRole('button', { name: /Analyze/i }).click()
+  await page.getByPlaceholder(/Enter a domain/i).fill('opskitpro.com')
+  await page.getByRole('button', { name: /Start website check/i }).click()
 
-  await expect(page.getByPlaceholder(/Enter domain/i)).toHaveValue('opskitpro.com')
-  await expect(page.getByText(/All Systems Green/i)).toBeVisible()
-  await expect(page.getByText('AVAILABILITY VERDICT')).toBeVisible()
+  await expect(page.getByPlaceholder(/Enter a domain/i)).toHaveValue('opskitpro.com')
+  await expect(page.getByText('Healthy', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'AVAILABILITY VERDICT' })).toBeVisible()
   await expect(page.getByText('MULTI-VANTAGE VERIFICATION')).toBeVisible()
   await expect(page.getByText('Your Browser', { exact: true })).toBeVisible()
   await expect(page.getByText('Cloudflare Edge', { exact: true })).toBeVisible()
@@ -215,9 +215,10 @@ test('website diagnostics renders mocked result without external network depende
   await expect(page.getByRole('button', { name: /Copy Summary/i })).toBeVisible()
   await page.getByRole('button', { name: /Copy Summary/i }).click()
   await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Impact:')
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Suspected Cause:')
   await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Evidence:')
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Next Action:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Assessment:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Guidance:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).not.toContain('Score:')
   await page.getByRole('button', { name: /Show Details/i }).click()
   await expect(page.getByRole('heading', { name: 'DNS Records' })).toBeVisible()
   await page.getByRole('heading', { name: 'DNS Records' }).click()
@@ -272,10 +273,10 @@ test('website diagnostics separates a reachable browser from a blocked server pr
   )
 
   await page.goto('/tools/website-check')
-  await page.getByPlaceholder(/Enter domain/i).fill('127.0.0.1')
-  await page.getByRole('button', { name: /Analyze/i }).click()
+  await page.getByPlaceholder(/Enter a domain/i).fill('127.0.0.1')
+  await page.getByRole('button', { name: /Start website check/i }).click()
 
-  await expect(page.getByText('Site reachable, server probe restricted')).toBeVisible()
+  await expect(page.getByText('Healthy', { exact: true })).toBeVisible()
   await expect(page.getByText(/should not be treated as downtime/)).toBeVisible()
   await expect(page.getByText('Probe restricted, not downtime')).toBeVisible()
   await page.getByRole('button', { name: /Show Details/i }).click()
@@ -329,12 +330,10 @@ test('website diagnostics labels edge-only corroboration without claiming browse
   )
 
   await page.goto('/tools/website-check')
-  await page.getByPlaceholder(/Enter domain/i).fill('example.com')
-  await page.getByRole('button', { name: /Analyze/i }).click()
+  await page.getByPlaceholder(/Enter a domain/i).fill('example.com')
+  await page.getByRole('button', { name: /Start website check/i }).click()
 
-  await expect(
-    page.getByText('Cloudflare edge reachable, Lightsail probe restricted'),
-  ).toBeVisible()
+  await expect(page.getByText('Healthy', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: /Show Details/i }).click()
   await expect(page.getByText('Edge OK / Lightsail restricted')).toBeVisible()
   await expect(page.getByText('Cloudflare Edge Probe · NRT · full')).toBeVisible()
@@ -386,14 +385,14 @@ test('website diagnostics explains partial failures with next actions', async ({
   )
 
   await page.goto('/tools/website-check')
-  await page.getByPlaceholder(/Enter domain/i).fill('down.example.com')
-  await page.getByRole('button', { name: /Analyze/i }).click()
+  await page.getByPlaceholder(/Enter a domain/i).fill('down.example.com')
+  await page.getByRole('button', { name: /Start website check/i }).click()
 
   await expect(page.getByText('Connection Timeout')).toBeVisible()
-  await expect(page.getByText('Likely Cause')).toBeVisible()
-  await expect(page.getByText('Next Action')).toBeVisible()
+  await expect(page.getByText('Possible Cause · Low Confidence')).toBeVisible()
+  await expect(page.getByText('Guidance')).toBeVisible()
   await page.getByRole('button', { name: /Copy Fault Summary/i }).click()
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Likely Cause:')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Possible Cause (Confidence: Low):')
   await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Evidence:')
 })
 
@@ -490,8 +489,8 @@ test('website diagnostics detects Cloudflare errors and links to encyclopedia', 
   )
 
   await page.goto('/tools/website-check')
-  await page.getByPlaceholder(/Enter domain/i).fill('cloudflare-error.example.com')
-  await page.getByRole('button', { name: /Analyze/i }).click()
+  await page.getByPlaceholder(/Enter a domain/i).fill('cloudflare-error.example.com')
+  await page.getByRole('button', { name: /Start website check/i }).click()
 
   // Verify the CF Error banner is displayed
   await expect(page.getByText('Cloudflare Error 522 Detected')).toBeVisible()

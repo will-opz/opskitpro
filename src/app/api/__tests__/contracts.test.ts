@@ -271,6 +271,21 @@ describe("API contract integration", () => {
     expect(body.meta).toMatchObject({
       cacheStatus: "BYPASS",
     });
+    expect(body.diagnosis).toMatchObject({
+      schemaVersion: "opskitpro.diagnostic.v1",
+      verdict: "Healthy",
+      policy: {
+        evidence: "observed",
+        assessment: "rule-derived",
+        inference: "confidence-bound",
+        guidance: "contextual",
+        aiMayAlterEvidence: false,
+      },
+    });
+    expect(body.diagnosis.evidence[0]).toMatchObject({
+      id: "dns.result",
+      source: "opskitpro_probe",
+    });
     expect(body.meta.coreMs).toBeTypeOf("number");
     expect(body.meta.enrichmentMs).toBeTypeOf("number");
     expect(body.geo.country).toBe("United States");

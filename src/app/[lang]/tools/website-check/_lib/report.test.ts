@@ -69,7 +69,10 @@ describe("website check report builder", () => {
 
     expect(report.formatVersion).toBe(WEBSITE_CHECK_REPORT_FORMAT_VERSION);
     expect(report.status).toBe("healthy");
+    expect(report.verdict).toBe("Healthy");
     expect(report.score).toBe(100);
+    expect(report.suspectedCause).toBeUndefined();
+    expect(report.inferences).toEqual([]);
     expect(
       report.findings.every((finding) => finding.severity !== "critical"),
     ).toBe(true);
@@ -104,7 +107,11 @@ describe("website check report builder", () => {
     );
 
     expect(report.status).toBe("critical");
-    expect(report.suspectedCause).toContain("Cloudflare 522");
+    expect(report.verdict).toBe("Unreachable");
+    expect(report.inferences[0]).toMatchObject({
+      area: "http",
+      confidence: "Medium",
+    });
     expect(httpFinding?.severity).toBe("critical");
     expect(httpFinding?.evidence.join(" ")).toContain("Cloudflare 522");
     expect(httpFinding?.recommendedFix).toContain("origin");
@@ -143,10 +150,16 @@ describe("website check report builder", () => {
       (finding) => finding.key === "headers",
     );
 
-    expect(report.status).toBe("degraded");
+    expect(report.status).toBe("healthy");
+    expect(report.verdict).toBe("Healthy");
     expect(headersFinding?.severity).toBe("warning");
-    expect(headersFinding?.likelyCause).toContain("response policy");
+    expect(headersFinding?.likelyCause).toBe("");
     expect(headersFinding?.summary).toContain("Content-Security-Policy");
+    expect(
+      report.assessments.find((item) => item.area === "headers")?.status,
+    ).toBe("needs_review");
+    expect(report.suspectedCause).toBeUndefined();
+    expect(report.guidance[0].summary).toContain("If you operate this site");
   });
 
   it("reports a blocked probe coherently in Chinese without broken tool links", () => {
@@ -183,8 +196,10 @@ describe("website check report builder", () => {
     expect(httpFinding?.relatedToolHref).toBeUndefined();
     expect(httpFinding?.summary).toContain("探测被 HTTP 403 拒绝");
     expect(httpFinding?.likelyCause).toContain("机器人防护");
-    expect(report.suspectedCause).toContain("机器人防护");
-    expect(report.nextActions.join(" ")).toContain("公开域名");
+    expect(report.inferences[0]).toMatchObject({ confidence: "Medium" });
+    expect(report.guidance.map((item) => item.summary).join(" ")).toContain(
+      "another region",
+    );
     expect(dnsFinding?.relatedToolHref).toBe("/zh/tools/dns-lookup");
     expect(
       report.findings.some((finding) =>
@@ -193,6 +208,30 @@ describe("website check report builder", () => {
         ),
       ),
     ).toBe(false);
+  });
+
+  it("reports an unmatched CDN signature as unknown, not direct delivery", () => {
+    const result = createSafeDiagnosticResult(
+      {
+        ...healthyResult(),
+        cdn: {
+          is_provider: false,
+          provider: "Unknown",
+          server: "custom-edge",
+        },
+      },
+      "edge.example.com",
+    );
+
+    const report = buildWebsiteCheckReport(result);
+    const cdnAssessment = report.assessments.find(
+      (assessment) => assessment.area === "cdn",
+    );
+
+    expect(report.verdict).toBe("Healthy");
+    expect(cdnAssessment).toMatchObject({ status: "unknown" });
+    expect(cdnAssessment?.summary).toBe("No known CDN signature identified.");
+    expect(report.evidence.join(" ")).not.toContain("Not detected");
   });
 
   it("keeps the site healthy when the browser is reachable but the server probe is blocked", () => {
