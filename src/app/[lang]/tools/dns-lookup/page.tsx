@@ -59,6 +59,7 @@ export default async function DnsPage({
 
         <div className="max-w-4xl mx-auto px-6 w-full">
           <ApiUsageSnippet
+            lang={lang}
             endpoint="GET https://opskitpro.com/api/tools/dns-lookup"
             exampleCurl={
               'curl "https://opskitpro.com/api/tools/dns-lookup?domain=example.com&type=all"'

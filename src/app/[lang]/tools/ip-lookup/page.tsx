@@ -62,6 +62,7 @@ export default async function IPPage({
 
         <div className="max-w-4xl mx-auto px-6 w-full">
           <ApiUsageSnippet
+            lang={lang}
             endpoint="GET https://opskitpro.com/api/tools/ip-lookup"
             exampleCurl={
               'curl "https://opskitpro.com/api/tools/ip-lookup?ip=8.8.8.8"'

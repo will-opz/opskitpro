@@ -164,6 +164,32 @@ test('localized pages link directly to the current locale', async ({ page }) => 
   await expect(page.locator('a[href^="/tools"]')).toHaveCount(0)
 })
 
+test('tool API snippets and website-check metadata follow the active locale', async ({ page }) => {
+  await page.goto('/zh/tools/website-check')
+
+  await expect(page).toHaveTitle('网站诊断 | DNS · HTTP · TLS · CDN 检测与 JSON API | OpsKitPro')
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    'content',
+    '网站诊断 | DNS · HTTP · TLS · CDN 检测与 JSON API | OpsKitPro',
+  )
+  await expect(page.getByRole('heading', { name: '开发者 API' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '接口' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '请求示例' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '响应示例' })).toBeVisible()
+  await expect(page.getByText('GET https://opskitpro.com/api/diagnostic')).toBeVisible()
+  await expect(page.getByText(/domain 参数支持域名、完整 URL 或 IP 地址/)).toBeVisible()
+  await expect(page.getByRole('link', { name: /查看限流与错误契约/ })).toHaveAttribute(
+    'href',
+    '/zh/tools/api',
+  )
+
+  await page.goto('/zh/tools/dns-lookup')
+  await expect(page.getByRole('heading', { name: '开发者 API' })).toBeVisible()
+
+  await page.goto('/zh/tools/ip-lookup')
+  await expect(page.getByRole('heading', { name: '开发者 API' })).toBeVisible()
+})
+
 test('home page exposes core navigation and tool entry points', async ({ page }) => {
   await page.goto('/')
 
@@ -494,7 +520,33 @@ test('qr generator renders a preview for input text', async ({ page }) => {
   await page.getByPlaceholder(/Enter text or URL/i).fill('https://opskitpro.com/tools/qrgen')
 
   await expect(page.locator('#qr-code-svg')).toBeVisible()
+  await expect(page.locator('#qr-code-svg')).toHaveAttribute('width', '320')
+  await expect(page.locator('#qr-code-svg')).toHaveAttribute('height', '320')
   await expect(page.getByRole('button', { name: /Download QR/i })).toBeEnabled()
+})
+
+test('qr generator enforces a UTF-8 byte limit without crashing the page', async ({ page }) => {
+  await page.goto('/zh/tools/qrgen')
+
+  const input = page.locator('textarea')
+  const download = page.getByRole('button', { name: '下载二维码' })
+
+  await input.fill('a'.repeat(500))
+  await expect(page.getByText('500 / 500 bytes')).toBeVisible()
+  await expect(page.locator('#qr-code-svg')).toBeVisible()
+  await expect(download).toBeEnabled()
+
+  await input.fill('中'.repeat(166))
+  await expect(page.getByText('498 / 500 bytes')).toBeVisible()
+  await expect(page.locator('#qr-code-svg')).toBeVisible()
+
+  await input.fill('中'.repeat(167))
+  await expect(page.getByText('501 / 500 bytes')).toBeVisible()
+  await expect(page.locator('#qr-payload-error')).toHaveText('内容过长，请缩短后再生成二维码。')
+  await expect(input).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.locator('#qr-code-svg')).toHaveCount(0)
+  await expect(page.getByText('内容超过 500 字节，无法生成二维码。')).toBeVisible()
+  await expect(download).toBeDisabled()
 })
 
 test('retired blog index sends visitors to the tool catalog', async ({ page }) => {

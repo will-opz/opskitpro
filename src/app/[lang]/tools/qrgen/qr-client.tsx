@@ -7,10 +7,21 @@ import { QRCodeSVG } from "qrcode.react";
 
 type Lang = "zh" | "en";
 
+const QR_MAX_BYTES = 500;
+
+function getUtf8ByteLength(value: string) {
+  return new TextEncoder().encode(value).byteLength;
+}
+
 export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
   const [text, setText] = useState("");
+  const payloadBytes = getUtf8ByteLength(text);
+  const isOverLimit = payloadBytes > QR_MAX_BYTES;
+  const counterId = "qr-payload-counter";
+  const errorId = "qr-payload-error";
 
   const downloadQR = () => {
+    if (!text || isOverLimit) return;
     const svg = document.getElementById("qr-code-svg");
     if (!svg) return;
     const svgData = new XMLSerializer().serializeToString(svg);
@@ -83,11 +94,36 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={dict.tools.qrgen.placeholder}
-                className="w-full h-48 sm:h-64 bg-[#fafafa]/50 border border-black/10 rounded-xl p-4 text-zinc-900 font-mono placeholder:text-zinc-700 focus:outline-none focus:border-emerald-500/50 transition-colors resize-none mb-4"
+                aria-invalid={isOverLimit}
+                aria-describedby={`${counterId}${isOverLimit ? ` ${errorId}` : ""}`}
+                className={`w-full h-48 sm:h-64 bg-[#fafafa]/50 border rounded-xl p-4 text-zinc-900 font-mono placeholder:text-zinc-700 focus:outline-none transition-colors resize-none ${
+                  isOverLimit
+                    ? "border-red-400 focus:border-red-500"
+                    : "border-black/10 focus:border-emerald-500/50"
+                }`}
               />
+              <div className="mb-4 mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <p
+                  id={counterId}
+                  className={`text-xs tabular-nums ${isOverLimit ? "font-semibold text-red-600" : "text-zinc-500"}`}
+                >
+                  {payloadBytes} / {QR_MAX_BYTES} bytes
+                </p>
+                {isOverLimit && (
+                  <p
+                    id={errorId}
+                    role="alert"
+                    className="text-xs font-medium text-red-600"
+                  >
+                    {lang === "zh"
+                      ? "内容过长，请缩短后再生成二维码。"
+                      : "Content is too long. Shorten it to generate a QR code."}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={downloadQR}
-                disabled={!text}
+                disabled={!text || isOverLimit}
                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-900 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
               >
                 <Download className="w-5 h-5" />
@@ -98,20 +134,24 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
 
           {/* Preview Side */}
           <div className="flex flex-col items-center justify-start py-8">
-            <div className="relative group p-8 bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] transition-transform hover:scale-[1.02]">
+            <div className="relative group w-full max-w-[384px] p-4 sm:p-8 bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] transition-transform hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/5 to-transparent pointer-events-none" />
-              {text ? (
+              {text && !isOverLimit ? (
                 <QRCodeSVG
                   id="qr-code-svg"
                   value={text}
-                  size={256}
+                  size={320}
                   level="H"
                   includeMargin={false}
-                  className="relative z-10"
+                  className="relative z-10 h-auto w-full max-w-[320px]"
                 />
               ) : (
-                <div className="w-[256px] h-[256px] border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center text-zinc-600 italic text-center px-8">
-                  {lang === "zh"
+                <div className="aspect-square w-full max-w-[320px] border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center text-zinc-600 italic text-center px-8">
+                  {isOverLimit
+                    ? lang === "zh"
+                      ? "内容超过 500 字节，无法生成二维码。"
+                      : "Content exceeds 500 bytes and cannot be encoded."
+                    : lang === "zh"
                       ? "输入内容后即可预览二维码。"
                       : "Enter content to preview QR."}
                 </div>

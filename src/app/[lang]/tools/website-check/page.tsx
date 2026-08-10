@@ -19,10 +19,25 @@ export async function generateMetadata({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const title = `${dict.home.card1_title} with JSON API | OpsKitPro`;
+  const title =
+    lang === "zh"
+      ? "网站诊断 | DNS · HTTP · TLS · CDN 检测与 JSON API"
+      : "Website Check | DNS, HTTP, TLS, CDN & JSON API";
   const description = dict.home.card1_desc;
+  const metadata = buildPageMetadata(
+    title,
+    description,
+    lang,
+    "/tools/website-check",
+  );
 
-  return buildPageMetadata(title, description, lang, "/tools/website-check");
+  return {
+    ...metadata,
+    openGraph: {
+      ...metadata.openGraph,
+      title: `${title} | OpsKitPro`,
+    },
+  };
 }
 
 export default async function DiagnosticPage({
@@ -62,31 +77,55 @@ export default async function DiagnosticPage({
 
         <div className="max-w-4xl mx-auto px-6 w-full">
           <ApiUsageSnippet
-            endpoint="GET https://opskitpro.com/api/tools/http-check"
+            lang={lang}
+            endpoint="GET https://opskitpro.com/api/diagnostic"
+            parameterHint={
+              lang === "zh"
+                ? "domain 参数支持域名、完整 URL 或 IP 地址；服务会在检查前归一化输入。"
+                : "The domain parameter accepts a domain, full URL, or IP address and normalizes it before checking."
+            }
+            abbreviatedResponse
             exampleCurl={
-              'curl "https://opskitpro.com/api/tools/http-check?url=https://example.com"'
+              'curl "https://opskitpro.com/api/diagnostic?domain=example.com"'
             }
             exampleResponse={`{
-  "ok": true,
-  "tool": "http-check",
-  "input": {
-    "url": "https://example.com"
+  "domain": "example.com",
+  "status": "success",
+  "diagnosis": {
+    "schemaVersion": "opskitpro.diagnostic.v1",
+    "verdict": "Healthy",
+    "evidence": [{
+      "id": "http.server.status",
+      "area": "http",
+      "source": "opskitpro_probe",
+      "observationPoint": "AWS Lightsail",
+      "value": { "statusCode": 200 }
+    }],
+    "assessments": [{
+      "id": "availability.http",
+      "status": "healthy",
+      "evidenceIds": ["http.server.status"]
+    }]
   },
-  "result": {
-    "status": 200,
-    "statusText": "OK",
-    "finalUrl": "https://example.com",
-    "durationMs": 243,
-    "server": "ECS (dcb/7ECA)",
-    "contentType": "text/html; charset=UTF-8",
-    "headers": {
-      "cache-control": "max-age=604800",
-      "content-type": "text/html; charset=UTF-8"
+  "observations": {
+    "edge": {
+      "source": "cloudflare_edge",
+      "status": "reachable",
+      "colo": "NRT"
+    },
+    "server": {
+      "source": "opskitpro_probe",
+      "status": "reachable",
+      "location": "AWS Lightsail"
     }
   },
-  "meta": {
-    "durationMs": 245,
-    "timestamp": "2026-06-23T00:00:00.000Z"
+  "dns": { "success": true, "ipv4": ["93.184.216.34"] },
+  "http": { "success": true, "status_code": 200 },
+  "ssl": { "valid": true, "issuer": "...", "expiry": "..." },
+  "securityHeaders": {
+    "passed": 4,
+    "total": 5,
+    "checks": [{ "key": "x-content-type-options", "present": true }]
   }
 }`}
           />
