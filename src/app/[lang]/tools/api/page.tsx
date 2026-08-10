@@ -13,7 +13,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const lang = ((await params).lang || "en") as "zh" | "en";
 
-  const title = "Public JSON API for DNS, IP and HTTP Checks | OpsKitPro";
+  const title = "Public JSON API for DNS, IP and HTTP Checks";
   const description =
     "Use OpsKitPro Public JSON API to run DNS lookup, IP lookup, and HTTP checks from curl, scripts, and automation workflows.";
 

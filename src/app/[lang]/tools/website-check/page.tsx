@@ -24,20 +24,12 @@ export async function generateMetadata({
       ? "网站诊断 | DNS · HTTP · TLS · CDN 检测与 JSON API"
       : "Website Check | DNS, HTTP, TLS, CDN & JSON API";
   const description = dict.home.card1_desc;
-  const metadata = buildPageMetadata(
+  return buildPageMetadata(
     title,
     description,
     lang,
     "/tools/website-check",
   );
-
-  return {
-    ...metadata,
-    openGraph: {
-      ...metadata.openGraph,
-      title: `${title} | OpsKitPro`,
-    },
-  };
 }
 
 export default async function DiagnosticPage({

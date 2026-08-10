@@ -19,7 +19,7 @@ export async function generateMetadata({
   const dict = await getDictionary(lang);
 
   return buildPageMetadata(
-    `${dict.tools.ip_title} with JSON API | OpsKitPro`,
+    `${dict.tools.ip_title} with JSON API`,
     dict.tools.ip_desc,
     lang,
     "/tools/ip-lookup",

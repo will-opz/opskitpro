@@ -12,7 +12,7 @@
     "title_part2_pre": "网站诊断与",
     "title_part2_ai": "常用",
     "title_part2_suf": "在线工具",
-    "subtitle": "快速检测网站问题，生成安全密码，处理二维码、JSON 和常用文本。打开即用，支持本地处理的内容不会上传。",
+    "subtitle": "快速检测网站问题，并分别呈现浏览器、Cloudflare 边缘与 OpsKitPro 服务端探针的证据；密码、二维码等常用工具优先在浏览器本地处理。",
     "features": {
       "dns": "网站诊断",
       "cdn": "无需登录",

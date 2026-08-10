@@ -46,17 +46,28 @@ export function buildPageMetadata(
   path: string,
   extraMetadata?: Partial<Metadata>,
 ): Metadata {
+  const socialTitle = title.includes("OpsKitPro")
+    ? title
+    : `${title} | OpsKitPro`;
+
   return {
     title,
     description,
     openGraph: {
-      title,
+      title: socialTitle,
       description,
       url: buildCanonicalUrl(path, lang),
       siteName: "OpsKitPro",
       locale: (LOCALE_MAP as Record<string, string>)[lang] || "en-US",
       type: "website",
       ...(extraMetadata?.openGraph || {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: socialTitle,
+      description,
+      creator: "@opskitpro",
+      images: ["/og-image.png"],
     },
     alternates: {
       canonical: buildCanonicalUrl(path, lang),

@@ -54,6 +54,9 @@ const homeDashboardCopy = {
     runFullCheck: "Open full check",
     openDnsLookup: "Open DNS Security",
     openAllTools: "Open all tools",
+    probePrivacy:
+      "Website targets are sent to OpsKitPro probes for public-network checks. No account is required, and results are not published as public reports.",
+    privacyLink: "Privacy details",
     popularToolsTitle: "Popular tools",
     popularToolsDesc:
       "Six focused tools for common tasks. No account required.",
@@ -77,6 +80,9 @@ const homeDashboardCopy = {
     runFullCheck: "打开完整检测",
     openDnsLookup: "打开 DNS 安全检查",
     openAllTools: "打开全部工具",
+    probePrivacy:
+      "网站目标会发送给 OpsKitPro 探针执行公开网络检测；无需登录，结果不会作为公开报告发布。",
+    privacyLink: "查看隐私说明",
     popularToolsTitle: "热门工具",
     popularToolsDesc: "六个高频入口，一个工具解决一个问题，无需注册。",
   },
@@ -208,6 +214,15 @@ export default async function Home({
                 {dashboardCopy.openDnsLookup}
               </Link>
             </div>
+            <p className="mt-4 text-xs leading-5 text-[var(--text-muted)]">
+              {dashboardCopy.probePrivacy}{" "}
+              <Link
+                href={`/${lang}/privacy`}
+                className="font-semibold text-[var(--accent-color)] hover:underline"
+              >
+                {dashboardCopy.privacyLink}
+              </Link>
+            </p>
           </aside>
         </section>
 

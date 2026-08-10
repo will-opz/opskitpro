@@ -21,7 +21,7 @@ export async function generateMetadata({
   const description = dict.tools.network_check_desc;
 
   return buildPageMetadata(
-    `${title} | OpsKitPro`,
+    title,
     description,
     lang,
     "/tools/network-check",

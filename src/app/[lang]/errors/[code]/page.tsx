@@ -22,6 +22,7 @@ import {
   getCloudflareError,
   localize,
 } from "@/content/cloudflare-errors";
+import { buildPageMetadata } from "@/lib/seo";
 
 export function generateStaticParams() {
   return getCloudflareErrors().map((e) => ({
@@ -39,18 +40,12 @@ export async function generateMetadata({
   if (!error) return {};
   const lang = (resolvedParams.lang || "en") as "zh" | "en";
 
-  const title = `Cloudflare Error ${error.code}: ${localize(error.title, lang)} | OpsKitPro`;
+  const title = `Cloudflare Error ${error.code}: ${localize(error.title, lang)}`;
   const description = localize(error.summary, lang);
 
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "article",
-    },
-  };
+  return buildPageMetadata(title, description, lang, `/errors/${error.code}`, {
+    openGraph: { type: "article" },
+  });
 }
 
 export default async function ErrorDetailPage({

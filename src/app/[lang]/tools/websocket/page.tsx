@@ -16,7 +16,7 @@ export async function generateMetadata({
   const dict = await getDictionary(lang);
 
   return buildPageMetadata(
-    `${dict.tools.websocket_title} - OpsKitPro`,
+    dict.tools.websocket_title,
     dict.tools.websocket_desc,
     lang,
     "/tools/websocket",

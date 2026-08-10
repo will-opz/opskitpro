@@ -13,7 +13,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const lang = ((await params).lang || "en") as "zh" | "en";
   return buildPageMetadata(
-    lang === "zh" ? "我的导航 | OpsKitPro" : "My Navigation | OpsKitPro",
+    lang === "zh" ? "我的导航" : "My Navigation",
     lang === "zh"
       ? "个人常用入口和浏览器本地自定义导航。"
       : "Personal shortcuts and browser-local custom navigation.",

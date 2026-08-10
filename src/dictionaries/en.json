@@ -12,7 +12,7 @@
     "title_part2_pre": "Website diagnostics and",
     "title_part2_ai": "everyday",
     "title_part2_suf": "online tools",
-    "subtitle": "Check websites, generate secure passwords, and handle QR codes, JSON, and common text tasks. Open and use—local-first tools do not upload your input.",
+    "subtitle": "Check websites with browser, Cloudflare edge, and OpsKitPro server-probe evidence kept distinct; passwords, QR codes, and other everyday tools stay browser-local when practical.",
     "features": {
       "dns": "Website checks",
       "cdn": "No signup",

@@ -19,7 +19,7 @@ export async function generateMetadata({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  const title = `${dict.home.card3_title} with JSON API | OpsKitPro`;
+  const title = `${dict.home.card3_title} with JSON API`;
   const description = dict.home.card3_desc;
 
   return buildPageMetadata(title, description, lang, "/tools/dns-lookup");

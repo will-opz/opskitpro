@@ -53,8 +53,8 @@ export async function generateMetadata({
   const lang = ((await params).lang || "en") as ProductLocale;
   return buildPageMetadata(
     lang === "zh"
-      ? "SRE 诊断工具 | OpsKitPro"
-      : "SRE Diagnostic Tools | OpsKitPro",
+      ? "SRE 诊断工具"
+      : "SRE Diagnostic Tools",
     lang === "zh"
       ? "从网站、网络和 DNS 三个核心工作流开始，再按需使用专项诊断与开发工具。"
       : "Start with website, network and DNS workflows, then use focused diagnostic and developer utilities.",

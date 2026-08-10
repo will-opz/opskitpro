@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ToolGuide } from "@/components/ToolGuide";
 import EncodeClient from "./encode-client";
+import { buildPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -13,14 +14,12 @@ export async function generateMetadata({
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
 
-  return {
-    title: `${dict.tools.encode_title} - OpsKitPro`,
-    description: dict.tools.encode_desc,
-    openGraph: {
-      title: `${dict.tools.encode_title} - OpsKitPro`,
-      description: dict.tools.encode_desc,
-    },
-  };
+  return buildPageMetadata(
+    dict.tools.encode_title,
+    dict.tools.encode_desc,
+    lang,
+    "/tools/encode",
+  );
 }
 
 export default async function EncodePage({

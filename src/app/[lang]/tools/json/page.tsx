@@ -17,7 +17,7 @@ export async function generateMetadata({
   const dict = await getDictionary(lang);
 
   return buildPageMetadata(
-    `${dict.tools.json_title} - OpsKitPro`,
+    dict.tools.json_title,
     dict.tools.json_desc,
     lang,
     "/tools/json",
