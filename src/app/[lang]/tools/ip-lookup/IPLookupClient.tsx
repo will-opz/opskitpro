@@ -56,6 +56,7 @@ const PAGE_COPY: Record<
     insights: string;
     source: string;
     sourceCloudflareContext: string;
+    sourceIpinfoLite: string;
     sourceExternalLookup: string;
     sourceLocalFallback: string;
     sourceCloudflareEdge: string;
@@ -87,6 +88,7 @@ const PAGE_COPY: Record<
     insights: "观察要点",
     source: "数据来源",
     sourceCloudflareContext: "Cloudflare 上下文",
+    sourceIpinfoLite: "IPinfo Lite 本地库",
     sourceExternalLookup: "外部查询",
     sourceLocalFallback: "本地回退",
     sourceCloudflareEdge: "Cloudflare 边缘",
@@ -122,6 +124,7 @@ const PAGE_COPY: Record<
     insights: "Key Signals",
     source: "Data Source",
     sourceCloudflareContext: "Cloudflare Context",
+    sourceIpinfoLite: "Local IPinfo Lite",
     sourceExternalLookup: "External Lookup",
     sourceLocalFallback: "Local Fallback",
     sourceCloudflareEdge: "Cloudflare Edge",
@@ -168,6 +171,8 @@ function toSourceLabel(source: IpLookupSource, copy: (typeof PAGE_COPY)[Lang]) {
   switch (source) {
     case "cloudflare-context":
       return copy.sourceCloudflareContext;
+    case "ipinfo-lite":
+      return copy.sourceIpinfoLite;
     case "external-lookup":
       return copy.sourceExternalLookup;
     case "local-fallback":
@@ -313,19 +318,19 @@ export default function IPLookupClient({
   };
 
   const statusLabel = data
-    ? data.proxy
-      ? copy.proxy
-      : data.country_name === "Unknown"
-        ? copy.unknown
+    ? data.proxy_known
+      ? data.proxy
+        ? copy.proxy
         : copy.direct
+      : copy.unknown
     : copy.unknown;
 
   const statusTone = data
-    ? data.proxy
-      ? "border-amber-200 bg-amber-50 text-amber-700"
-      : data.country_name === "Unknown"
-        ? "border-zinc-200 bg-zinc-50 text-zinc-500"
+    ? data.proxy_known
+      ? data.proxy
+        ? "border-amber-200 bg-amber-50 text-amber-700"
         : "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-zinc-200 bg-zinc-50 text-zinc-500"
     : "border-zinc-200 bg-zinc-50 text-zinc-500";
 
   return (
@@ -484,7 +489,12 @@ export default function IPLookupClient({
                 <button
                   type="button"
                   onClick={() =>
-                    void copyText(`${data.city}, ${data.country_name}`, "geo")
+                    void copyText(
+                      data.city !== "Unknown"
+                        ? `${data.city}, ${data.country_name}`
+                        : data.country_name,
+                      "geo",
+                    )
                   }
                   className="inline-flex h-11 items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-200 hover:text-emerald-700"
                 >
@@ -601,17 +611,21 @@ export default function IPLookupClient({
                         {labels.proxy || "Proxy"}
                       </p>
                       <p className="mt-2 text-sm font-semibold text-zinc-900">
-                        {data.proxy ? copy.proxy : copy.direct}
+                        {data.proxy_known
+                          ? data.proxy
+                            ? copy.proxy
+                            : copy.direct
+                          : copy.unknown}
                       </p>
                     </div>
                     <span
-                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.16em] ${data.proxy ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}
+                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.16em] ${data.proxy_known ? (data.proxy ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700") : "border-zinc-200 bg-zinc-50 text-zinc-500"}`}
                     >
-                      {data.proxy
-                        ? copy.proxy
-                        : data.country_name === "Unknown"
-                          ? copy.unknown
-                          : copy.direct}
+                      {data.proxy_known
+                        ? data.proxy
+                          ? copy.proxy
+                          : copy.direct
+                        : copy.unknown}
                     </span>
                   </div>
                 </div>
@@ -635,6 +649,23 @@ export default function IPLookupClient({
                   <p className="mt-1 text-xs text-zinc-500">
                     {toSourceLabel(data._source, copy)}
                   </p>
+                  {data._source === "ipinfo-lite" ? (
+                    <a
+                      href="https://ipinfo.io"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex text-xs font-medium text-emerald-700 underline decoration-emerald-200 underline-offset-4"
+                    >
+                      IP address data powered by IPinfo
+                    </a>
+                  ) : null}
+                  {data.data_notice ? (
+                    <p className="mt-2 text-xs leading-5 text-zinc-500">
+                      {lang === "zh"
+                        ? "免费数据仅覆盖国家级位置和 ASN；不包含城市、坐标、时区、网络类型或代理状态。"
+                        : data.data_notice}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </section>

@@ -1,5 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/ipinfo-lite", () => ({
+  lookupIpinfoLite: vi.fn(async (ip: string) => ({
+    ok: true,
+    data: {
+      ip,
+      country: "United States",
+      countryCode: "US",
+      continent: "North America",
+      continentCode: "NA",
+      asn: "AS64500",
+      asName: "Example ISP",
+      asDomain: "example.net",
+    },
+  })),
+}));
+
 vi.mock("@/lib/rate-limit", () => ({
   checkRateLimit: vi.fn(() => ({
     success: true,

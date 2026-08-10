@@ -26,6 +26,7 @@
 # misc
 .DS_Store
 *.pem
+*.mmdb
 
 # debug
 npm-debug.log*

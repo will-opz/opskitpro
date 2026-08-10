@@ -4,6 +4,7 @@ import {
   getClientIp,
   getRequestCloudflareMetadata,
 } from "@/lib/runtime-context";
+import { lookupIpinfoLite } from "@/lib/ipinfo-lite";
 
 // export const runtime = 'edge' // Removed to avoid 500 errors on OpenNext Node.js runtime
 export const dynamic = "force-dynamic";
@@ -26,8 +27,8 @@ export async function GET(request: NextRequest) {
       city: "Unknown",
       latitude: "",
       longitude: "",
-      lat: "0",
-      lon: "0",
+      lat: "",
+      lon: "",
       org: "Unknown",
       isp: "Unknown",
       asn: "",
@@ -38,62 +39,50 @@ export async function GET(request: NextRequest) {
       _source: source,
     }) satisfies IpLookupResponse;
 
-  const fetchFallbackData = async (queryIp: string) => {
-    try {
-      // Request `hosting` and `proxy` fields explicitly; free tier supports `hosting`
-      const res = await fetch(
-        `https://ip-api.com/json/${queryIp}?fields=status,country,countryCode,regionName,city,lat,lon,timezone,isp,as,hosting,proxy`,
-        { signal: AbortSignal.timeout(4000) },
-      );
-      const data = await res.json();
-      if (data.status === "fail") throw new Error("API Fail");
-      return {
-        ip: queryIp,
-        country_name: data.country || "N/A",
-        country_code: data.countryCode || "",
-        region: data.regionName || "N/A",
-        city: data.city || "N/A",
-        latitude: data.lat || "",
-        longitude: data.lon || "",
-        org: data.isp || "N/A",
-        asn: data.as ? data.as.split(" ")[0] : "",
-        timezone: data.timezone || "UTC",
-        // ip-api returns `hosting: true` for data-center/hosting IPs (more reliable than ISP name heuristic)
-        network_type: data.hosting ? "Data Center" : "Residential",
-        proxy: data.proxy || false,
-      };
-    } catch {
-      return null;
-    }
+  const fetchLocalData = async (queryIp: string) => {
+    const result = await lookupIpinfoLite(queryIp);
+    return result.ok ? result.data : null;
   };
 
   // 1. Feature: Support querying a specified IP
   if (targetIp) {
-    const fallbackData = await fetchFallbackData(targetIp);
-    if (fallbackData) {
+    const localData = await lookupIpinfoLite(targetIp);
+    if (localData.ok) {
+      const data = localData.data;
       return NextResponse.json({
-        ip: fallbackData.ip,
-        country: fallbackData.country_name,
-        country_name: fallbackData.country_name,
-        country_code: fallbackData.country_code,
-        region: fallbackData.region,
-        city: fallbackData.city,
-        latitude: fallbackData.latitude,
-        longitude: fallbackData.longitude,
-        lat: fallbackData.latitude || "0",
-        lon: fallbackData.longitude || "0",
-        org: fallbackData.org,
-        isp: fallbackData.org,
-        asn: fallbackData.asn,
-        timezone: fallbackData.timezone,
-        network_type: fallbackData.network_type,
-        proxy: fallbackData.proxy,
-        provider: "External Lookup",
-        _source: "external-lookup",
+        ip: data.ip,
+        country: data.country,
+        country_name: data.country,
+        country_code: data.countryCode,
+        region: "Unknown",
+        city: "Unknown",
+        latitude: "",
+        longitude: "",
+        lat: "",
+        lon: "",
+        org: data.asName,
+        isp: data.asName,
+        asn: data.asn,
+        as_domain: data.asDomain,
+        continent: data.continent,
+        continent_code: data.continentCode,
+        timezone: "Unknown",
+        network_type: "Unknown",
+        proxy: false,
+        proxy_known: false,
+        provider: "IPinfo Lite",
+        _source: "ipinfo-lite",
+        data_notice:
+          "Country-level geolocation and ASN data only. City, coordinates, timezone, network type, and proxy status are not provided by IPinfo Lite.",
       } satisfies IpLookupResponse);
     }
     return NextResponse.json(
-      buildFallbackResponse(targetIp, "External Lookup", "external-lookup"),
+      {
+        ...buildFallbackResponse(targetIp, "IPinfo Lite", "ipinfo-lite"),
+        proxy_known: false,
+        data_notice: localData.error,
+      },
+      { status: localData.errorCode === "invalid_ip" ? 400 : 200 },
     );
   }
 
@@ -110,8 +99,8 @@ export async function GET(request: NextRequest) {
       city: cf.city || "N/A",
       latitude: cf.latitude || "",
       longitude: cf.longitude || "",
-      lat: cf.latitude || "0",
-      lon: cf.longitude || "0",
+      lat: cf.latitude || "",
+      lon: cf.longitude || "",
       org: cf.asOrganization || "N/A",
       isp: cf.asOrganization || "N/A",
       asn: cf.asn || "",
@@ -119,6 +108,7 @@ export async function GET(request: NextRequest) {
       // Cloudflare does not expose a direct hosting/residential flag; leave as unknown
       network_type: "Unknown",
       proxy: false,
+      proxy_known: false,
       provider: "Cloudflare Edge",
       _source: "cloudflare-context",
     } satisfies IpLookupResponse);
@@ -129,27 +119,33 @@ export async function GET(request: NextRequest) {
   }
 
   // Fallback for local development and standard Node.js server deployments.
-  const fallbackData = await fetchFallbackData(ip);
+  const fallbackData = await fetchLocalData(ip);
   if (fallbackData) {
     return NextResponse.json({
       ip: fallbackData.ip,
-      country: fallbackData.country_name,
-      country_name: fallbackData.country_name,
-      country_code: fallbackData.country_code,
-      region: fallbackData.region,
-      city: fallbackData.city,
-      latitude: fallbackData.latitude,
-      longitude: fallbackData.longitude,
-      lat: fallbackData.latitude || "0",
-      lon: fallbackData.longitude || "0",
-      org: fallbackData.org,
-      isp: fallbackData.org,
+      country: fallbackData.country,
+      country_name: fallbackData.country,
+      country_code: fallbackData.countryCode,
+      region: "Unknown",
+      city: "Unknown",
+      latitude: "",
+      longitude: "",
+      lat: "",
+      lon: "",
+      org: fallbackData.asName,
+      isp: fallbackData.asName,
       asn: fallbackData.asn,
-      timezone: fallbackData.timezone,
-      network_type: fallbackData.network_type,
-      proxy: fallbackData.proxy,
-      provider: "Local Fallback",
-      _source: "local-fallback",
+      as_domain: fallbackData.asDomain,
+      continent: fallbackData.continent,
+      continent_code: fallbackData.continentCode,
+      timezone: "Unknown",
+      network_type: "Unknown",
+      proxy: false,
+      proxy_known: false,
+      provider: "IPinfo Lite",
+      _source: "ipinfo-lite",
+      data_notice:
+        "Country-level geolocation and ASN data only. City, coordinates, timezone, network type, and proxy status are not provided by IPinfo Lite.",
     } satisfies IpLookupResponse);
   }
 

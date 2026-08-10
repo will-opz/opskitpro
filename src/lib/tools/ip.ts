@@ -1,28 +1,48 @@
-export async function performIpLookup(ip: string) {
-  try {
-    const res = await fetch(
-      `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,lat,lon,timezone,isp,as,hosting,proxy`,
-      { signal: AbortSignal.timeout(4000) },
-    );
-    const data = await res.json();
-    if (data.status === "fail")
-      throw new Error("IP API Failed to resolve: " + data.message);
+import { lookupIpinfoLite } from "@/lib/ipinfo-lite";
 
+export async function performIpLookup(ip: string) {
+  const result = await lookupIpinfoLite(ip);
+  if (!result.ok) {
+    if (result.errorCode === "invalid_ip") throw new Error(result.error);
     return {
       ip,
-      country: data.country || "N/A",
-      countryCode: data.countryCode || "",
-      region: data.regionName || "N/A",
-      city: data.city || "N/A",
-      latitude: data.lat || 0,
-      longitude: data.lon || 0,
-      isp: data.isp || "N/A",
-      asn: data.as ? data.as.split(" ")[0] : "",
-      timezone: data.timezone || "UTC",
-      isDataCenter: !!data.hosting,
-      isProxy: !!data.proxy,
+      country: "Unknown",
+      countryCode: "",
+      region: "Unknown",
+      city: "Unknown",
+      latitude: null,
+      longitude: null,
+      isp: "Unknown",
+      asn: "",
+      timezone: "Unknown",
+      isDataCenter: null,
+      isProxy: null,
+      provider: "IPinfo Lite",
+      source: "ipinfo-lite",
+      dataNotice: result.error,
     };
-  } catch (err: any) {
-    throw new Error(`Failed to lookup IP: ${err.message}`);
   }
+
+  const data = result.data;
+  return {
+    ip,
+    country: data.country,
+    countryCode: data.countryCode,
+    region: "Unknown",
+    city: "Unknown",
+    latitude: null,
+    longitude: null,
+    isp: data.asName,
+    asn: data.asn,
+    asDomain: data.asDomain,
+    continent: data.continent,
+    continentCode: data.continentCode,
+    timezone: "Unknown",
+    isDataCenter: null,
+    isProxy: null,
+    provider: "IPinfo Lite",
+    source: "ipinfo-lite",
+    dataNotice:
+      "IPinfo Lite provides country-level geolocation and ASN data; city, coordinates, timezone, and proxy status are not included.",
+  };
 }

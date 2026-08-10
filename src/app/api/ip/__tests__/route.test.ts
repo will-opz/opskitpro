@@ -2,6 +2,14 @@ import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "../route";
 
+const { lookupIpinfoLiteMock } = vi.hoisted(() => ({
+  lookupIpinfoLiteMock: vi.fn(),
+}));
+
+vi.mock("@/lib/ipinfo-lite", () => ({
+  lookupIpinfoLite: lookupIpinfoLiteMock,
+}));
+
 function makeRequest(
   headers: Record<string, string> = {},
   cf?: Record<string, any>,
@@ -13,6 +21,22 @@ function makeRequest(
 }
 
 describe("GET /api/ip — IP detection", () => {
+  beforeEach(() => {
+    lookupIpinfoLiteMock.mockImplementation(async (ip: string) => ({
+      ok: true,
+      data: {
+        ip,
+        country: "United States",
+        countryCode: "US",
+        continent: "North America",
+        continentCode: "NA",
+        asn: "AS13335",
+        asName: "Cloudflare, Inc.",
+        asDomain: "cloudflare.com",
+      },
+    }));
+  });
+
   it("uses cf-connecting-ip header as primary IP source", async () => {
     const req = makeRequest({ "cf-connecting-ip": "1.2.3.4" });
     const res = await GET(req);
@@ -45,13 +69,12 @@ describe("GET /api/ip — IP detection", () => {
     expect(body.ip).toBe("11.22.33.44");
   });
 
-  it("returns a graceful fallback contract for target IP lookups when the upstream service fails", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => {
-        throw new Error("upstream unavailable");
-      }),
-    );
+  it("returns a graceful fallback contract when the local database is unavailable", async () => {
+    lookupIpinfoLiteMock.mockResolvedValueOnce({
+      ok: false,
+      errorCode: "database_unavailable",
+      error: "The local IPinfo Lite database is unavailable.",
+    });
 
     const res = await GET(
       new NextRequest("http://localhost/api/ip?q=172.67.176.41"),
@@ -64,13 +87,53 @@ describe("GET /api/ip — IP detection", () => {
       country_name: "Unknown",
       region: "Unknown",
       city: "Unknown",
-      provider: "External Lookup",
-      _source: "external-lookup",
+      provider: "IPinfo Lite",
+      _source: "ipinfo-lite",
+      proxy_known: false,
     });
+  });
+
+  it("returns country and ASN from IPinfo Lite without inventing unsupported fields", async () => {
+    const res = await GET(
+      new NextRequest("http://localhost/api/ip?q=172.67.139.20"),
+    );
+    const body = await res.json();
+
+    expect(body).toMatchObject({
+      country_name: "United States",
+      country_code: "US",
+      asn: "AS13335",
+      isp: "Cloudflare, Inc.",
+      as_domain: "cloudflare.com",
+      city: "Unknown",
+      timezone: "Unknown",
+      network_type: "Unknown",
+      proxy: false,
+      proxy_known: false,
+      provider: "IPinfo Lite",
+      _source: "ipinfo-lite",
+    });
+    expect(body.latitude).toBe("");
+    expect(body.longitude).toBe("");
   });
 });
 
 describe("GET /api/ip — Cloudflare geo data", () => {
+  beforeEach(() => {
+    lookupIpinfoLiteMock.mockImplementation(async (ip: string) => ({
+      ok: true,
+      data: {
+        ip,
+        country: "United States",
+        countryCode: "US",
+        continent: "North America",
+        continentCode: "NA",
+        asn: "AS13335",
+        asName: "Cloudflare, Inc.",
+        asDomain: "cloudflare.com",
+      },
+    }));
+  });
   it("returns geo data from the cf object", async () => {
     const req = makeRequest(
       { "cf-connecting-ip": "1.2.3.4" },
@@ -95,21 +158,21 @@ describe("GET /api/ip — Cloudflare geo data", () => {
     expect(body.isp).toBe("KDDI");
   });
 
-  it("returns Unknown defaults when cf object is empty", async () => {
+  it("uses local country and ASN data when cf metadata is empty", async () => {
     const req = makeRequest({ "cf-connecting-ip": "1.2.3.4" }, {});
     const res = await GET(req);
     const body = await res.json();
-    expect(body.country).toBe("Unknown");
+    expect(body.country).toBe("United States");
     expect(body.city).toBe("Unknown");
     expect(body.region).toBe("Unknown");
-    expect(body.isp).toBe("Unknown");
+    expect(body.isp).toBe("Cloudflare, Inc.");
   });
 
-  it("reports Node fallback provider when Cloudflare metadata is unavailable", async () => {
+  it("reports IPinfo Lite when Cloudflare metadata is unavailable", async () => {
     const req = makeRequest();
     const res = await GET(req);
     const body = await res.json();
-    expect(body.provider).toBe("Node Proxy Fallback");
+    expect(body.provider).toBe("IPinfo Lite");
   });
 
   it("reports Cloudflare Edge provider when cf metadata is available", async () => {
@@ -122,12 +185,12 @@ describe("GET /api/ip — Cloudflare geo data", () => {
     expect(body.provider).toBe("Cloudflare Edge");
   });
 
-  it("returns 0 for lat/lon when missing from cf object", async () => {
+  it("does not invent coordinates when cf metadata is missing", async () => {
     const req = makeRequest({ "cf-connecting-ip": "1.2.3.4" }, {});
     const res = await GET(req);
     const body = await res.json();
-    expect(body.lat).toBe("0");
-    expect(body.lon).toBe("0");
+    expect(body.lat).toBe("");
+    expect(body.lon).toBe("");
   });
 });
 

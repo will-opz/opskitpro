@@ -11,6 +11,7 @@ import { normalizeDiagnosticTarget } from "@/lib/diagnostic-target";
 import { requestEdgeProbe } from "@/lib/edge-probe";
 import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
 import { lookupRdap } from "@/lib/rdap";
+import { lookupIpinfoLite } from "@/lib/ipinfo-lite";
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = "force-dynamic";
@@ -839,15 +840,14 @@ export async function executeDiagnosticRequest(
       };
     } else {
       try {
-        const geoRes = await fetch(`https://ipapi.co/${ip}/json/`, {
-          cache: "no-store",
-          signal: AbortSignal.timeout(1800),
-        }).then((r) => r.json());
+        const geoResult = await lookupIpinfoLite(ip);
+        if (!geoResult.ok) throw new Error(geoResult.error);
+        const geoData = geoResult.data;
         geo = {
-          country: geoRes.country_name || "Unknown",
-          city: geoRes.city || "Unknown",
-          isp: geoRes.org || "Unknown",
-          asn: geoRes.asn || "Unknown",
+          country: geoData.country,
+          city: "Unknown",
+          isp: geoData.asName,
+          asn: geoData.asn || "Unknown",
         };
       } catch {}
     }

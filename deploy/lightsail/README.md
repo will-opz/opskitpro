@@ -24,6 +24,28 @@ sudo systemctl enable opskitpro
 
 Edit `/etc/opskitpro/opskitpro.env` and set real admin secrets.
 
+## IPinfo Lite Database
+
+Keep the MMDB outside versioned release directories so normal deploys and release
+pruning do not remove it. Upload the database to a temporary server path, then
+validate the planned install before applying it:
+
+```bash
+sudo /opt/opskitpro/current/deploy/lightsail/install-ipinfo-mmdb.sh \
+  --source /tmp/ipinfo_lite.mmdb \
+  --sha256 YOUR_VERIFIED_SHA256 \
+  --dry-run
+
+sudo /opt/opskitpro/current/deploy/lightsail/install-ipinfo-mmdb.sh \
+  --source /tmp/ipinfo_lite.mmdb \
+  --sha256 YOUR_VERIFIED_SHA256
+```
+
+The script installs the database at
+`/var/lib/opskitpro/ipinfo/ipinfo_lite.mmdb`, stores one rollback copy, updates
+`IPINFO_MMDB_PATH`, and restarts the service. Never commit the MMDB or an IPinfo
+download token to this repository.
+
 ## Manual Release
 
 Build locally or in CI:

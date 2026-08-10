@@ -287,6 +287,7 @@ export type DiagnosticPostResponse =
 
 export type IpLookupSource =
   | "cloudflare-context"
+  | "ipinfo-lite"
   | "external-lookup"
   | "local-fallback"
   | "cloudflare-edge-default";
@@ -308,6 +309,11 @@ export interface IpLookupResponse {
   timezone: string;
   network_type: string;
   proxy: boolean;
+  proxy_known?: boolean;
+  as_domain?: string;
+  continent?: string;
+  continent_code?: string;
+  data_notice?: string;
   provider: string;
   _source: IpLookupSource;
 }
