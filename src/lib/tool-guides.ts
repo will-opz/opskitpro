@@ -53,13 +53,13 @@ export const toolGuides = {
   "ip-lookup": {
     purpose: local("Identify public IP ownership, ASN, provider, and approximate location hints.", "查询公网 IP 的归属、ASN、网络提供商和大致位置线索。"),
     input: local("A public IPv4 or IPv6 address, or your current public address.", "公网 IPv4、IPv6 地址，或当前公网地址。"),
-    output: local("IP, ASN, provider, timezone, and approximate geographic/network classification.", "IP、ASN、网络提供商、时区及大致地理和网络分类。"),
-    processing: local("The lookup is performed at the Cloudflare edge and by bounded public-data services.", "查询在 Cloudflare 边缘及受限的公开数据服务中完成。"),
-    privacy: local("The queried address is sent for lookup. IP location is approximate and should not be used to identify a person.", "所查询地址会被发送用于检索；IP 定位是近似结果，不应用于识别个人。"),
-    limitation: local("VPNs, mobile carriers, corporate gateways, and stale databases can make location or proxy labels inaccurate.", "VPN、移动运营商、企业网关和数据库延迟都可能导致位置或代理标签不准确。"),
+    output: local("Country-level location, continent, ASN, network organization, and organization domain.", "国家级位置、洲、ASN、网络组织及组织域名。"),
+    processing: local("Specified IPs are queried against a read-only IPinfo Lite database stored locally on the OpsKitPro server; current-visitor context may also use Cloudflare request metadata.", "指定 IP 通过 OpsKitPro 服务器本地只读的 IPinfo Lite 数据库查询；当前访客信息也可能使用 Cloudflare 请求元数据。"),
+    privacy: local("The queried address reaches OpsKitPro but is not forwarded to an external lookup API. IP country data is approximate and should not be used to identify a person.", "所查询地址会到达 OpsKitPro，但不会再转发给外部 IP 查询 API；IP 国家数据是近似结果，不应用于识别个人。"),
+    limitation: local("IPinfo Lite does not provide city, coordinates, timezone, hosting type, or VPN/proxy detection. Those fields remain explicitly unknown.", "IPinfo Lite 不提供城市、坐标、时区、托管类型或 VPN/代理检测；这些字段会明确保持未知。"),
     example: local("Check 8.8.8.8 to see its ASN and provider rather than assuming the user's physical location.", "查询 8.8.8.8 的 ASN 和提供商，不要把结果当作用户的精确物理位置。"),
     related: ["network-doctor", "cloudflare-trace"],
-    lastReviewed: "2026-08-06",
+    lastReviewed: "2026-08-10",
   },
   "cloudflare-trace": {
     purpose: local("Explain how a request reaches Cloudflare, including colo, protocol, TLS, WARP, and Gateway context.", "解释请求如何到达 Cloudflare，包括机房、协议、TLS、WARP 和 Gateway 信息。"),

@@ -77,19 +77,24 @@ export default async function IPPage({
     "ip": "8.8.8.8",
     "country": "United States",
     "countryCode": "US",
-    "region": "Ohio",
-    "city": "Glenmont",
-    "latitude": 40.5369,
-    "longitude": -82.1228,
+    "region": "Unknown",
+    "city": "Unknown",
+    "latitude": null,
+    "longitude": null,
     "isp": "Google LLC",
-    "asn": "15169",
-    "timezone": "America/New_York",
-    "isDataCenter": true,
-    "isProxy": false
+    "asn": "AS15169",
+    "asDomain": "google.com",
+    "continent": "North America",
+    "continentCode": "NA",
+    "timezone": "Unknown",
+    "isDataCenter": null,
+    "isProxy": null,
+    "provider": "IPinfo Lite",
+    "source": "ipinfo-lite"
   },
   "meta": {
-    "durationMs": 47,
-    "timestamp": "2026-06-23T00:00:00.000Z"
+    "durationMs": 3,
+    "timestamp": "2026-08-10T00:00:00.000Z"
   }
 }`}
           />
