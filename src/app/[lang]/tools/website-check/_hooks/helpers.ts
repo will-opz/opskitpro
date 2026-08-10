@@ -114,6 +114,10 @@ export const createSafeDiagnosticResult = (
       success: Boolean(data?.whois?.success),
       expires: data?.whois?.expires || "Unknown",
       error: data?.whois?.error,
+      errorCode: data?.whois?.errorCode,
+      lookupTarget: data?.whois?.lookupTarget,
+      source: data?.whois?.source,
+      httpStatus: data?.whois?.httpStatus,
       nameservers: data?.whois?.nameservers || [],
     },
     meta: {

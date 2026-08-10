@@ -10,6 +10,7 @@ import { checkRateLimit, createRateLimitHeaders, rateLimitResponse } from "@/lib
 import { normalizeDiagnosticTarget } from "@/lib/diagnostic-target";
 import { requestEdgeProbe } from "@/lib/edge-probe";
 import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
+import { lookupRdap } from "@/lib/rdap";
 
 // Removed runtime='edge' to avoid Cloudflare/Next.js edge runtime conflicts that caused 500 errors previously
 export const dynamic = "force-dynamic";
@@ -706,28 +707,18 @@ export async function executeDiagnosticRequest(
         ? Promise.resolve("unknown" as const)
         : probeLegacyTls(domain, targetPort, ipHost);
 
-    const whoisPromise = (() => {
-      const rdapUrl = isActuallyIp
-        ? `https://rdap.org/ip/${domain}`
-        : `https://rdap.org/domain/${domain}`;
-      return fetch(rdapUrl, {
-        headers: {
-          Accept: "application/rdap+json",
-          "User-Agent": "OpsKitPro-Diagnostic/1.0",
-        },
-        cache: "no-store",
-        signal: AbortSignal.timeout(3000),
-      })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-    })();
+    const whoisPromise = lookupRdap(domain, isActuallyIp);
 
     const [
       [httpResRaw, httpLatency, redirectTrace, pageTitle, challenge],
       edgeObservation,
     ] = await Promise.all([httpPromise, edgeProbePromise]);
     const coreMs = Date.now() - requestStartedAt;
-    const [tlsData, legacyTlsData, rdapData] = await Promise.all([sslPromise, legacyTlsPromise, whoisPromise]);
+    const [tlsData, legacyTlsData, rdapResult] = await Promise.all([
+      sslPromise,
+      legacyTlsPromise,
+      whoisPromise,
+    ]);
 
     const httpRes = httpResRaw as Response | { error: true; message: string };
     const whoisInfo: any = {
@@ -736,10 +727,14 @@ export async function executeDiagnosticRequest(
       status: "Unknown",
       success: false,
       expires: "Unknown",
+      lookupTarget: rdapResult.lookupTarget,
+      source: rdapResult.source,
     };
 
-    if (rdapData) {
+    if (rdapResult.ok) {
+      const rdapData = rdapResult.data;
       whoisInfo.success = true;
+      whoisInfo.httpStatus = rdapResult.httpStatus;
 
       // Parse Organization/Registrar
       const entity =
@@ -766,6 +761,10 @@ export async function executeDiagnosticRequest(
       whoisInfo.status = isActuallyIp
         ? `Network: ${rdapData.name || "OK"}`
         : rdapData.status?.join(", ") || "OK";
+    } else {
+      whoisInfo.errorCode = rdapResult.errorCode;
+      whoisInfo.error = rdapResult.error;
+      whoisInfo.httpStatus = rdapResult.httpStatus;
     }
 
     // We no longer bail out on HTTP error, so we can display TLS and DNS findings even if HTTP fails (e.g. due to bad SSL or timeout).

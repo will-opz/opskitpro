@@ -199,6 +199,16 @@ export type DiagnosticResponse = {
     success?: boolean;
     expires?: string;
     error?: string;
+    errorCode?:
+      | "invalid_target"
+      | "not_found"
+      | "timeout"
+      | "upstream_error"
+      | "network_error"
+      | "parse_error";
+    lookupTarget?: string;
+    source?: "rdap";
+    httpStatus?: number;
     nameservers?: string[];
   };
   meta?: {

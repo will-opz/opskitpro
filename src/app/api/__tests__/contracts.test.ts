@@ -253,6 +253,8 @@ describe("API contract integration", () => {
       whois: {
         success: true,
         registrar: "Example Registrar",
+        lookupTarget: "example.com",
+        source: "rdap",
       },
     });
     expect(body.dns.resolved_ip).toBe("93.184.216.34");
