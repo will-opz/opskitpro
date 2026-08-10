@@ -5,6 +5,10 @@ test("Chinese WebSocket workbench has a clear three-step flow", async ({
 }) => {
   await page.goto("/zh/tools/websocket");
 
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeLessThan(20);
+
   await expect(page.getByText("01", { exact: true })).toBeVisible();
   await expect(page.getByText("02", { exact: true })).toBeVisible();
   await expect(page.getByText("03", { exact: true })).toBeVisible();

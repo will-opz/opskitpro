@@ -23,7 +23,7 @@ interface LogViewerProps {
 type FilterType = "all" | "sent" | "received" | "info" | "error";
 
 export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
-  const logsEndRef = useRef<HTMLDivElement>(null);
+  const logsContainerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>("all");
@@ -32,8 +32,9 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
 
   // Auto-scroll
   useEffect(() => {
-    if (autoScroll) {
-      logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = logsContainerRef.current;
+    if (autoScroll && logs.length > 0 && container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
     }
   }, [logs, autoScroll]);
 
@@ -269,7 +270,10 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
       </div>
 
       {/* Log List */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-1 font-mono scrollbar-thin scrollbar-thumb-zinc-800">
+      <div
+        ref={logsContainerRef}
+        className="flex-grow overflow-y-auto p-4 space-y-1 font-mono scrollbar-thin scrollbar-thumb-zinc-800"
+      >
         {filteredLogs.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center space-y-4 py-14 text-zinc-600 sm:py-16">
             <History className="h-10 w-10 opacity-10" />
@@ -363,7 +367,6 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
             );
           })
         )}
-        <div ref={logsEndRef} />
       </div>
     </section>
   );
