@@ -20,7 +20,6 @@ import {
   MapPin,
   Search,
   Server,
-  ShieldCheck,
   SignalHigh,
   Terminal,
 } from "lucide-react";
@@ -47,6 +46,18 @@ const PAGE_COPY: Record<
     direct: string;
     proxy: string;
     unknown: string;
+    lookupComplete: string;
+    countryLevel: string;
+    networkAttribution: string;
+    dataCoverage: string;
+    organization: string;
+    organizationDomain: string;
+    continent: string;
+    includedData: string;
+    excludedData: string;
+    includedDataDesc: string;
+    excludedDataDesc: string;
+    rawJsonDesc: string;
     rawJson: string;
     showRaw: string;
     hideRaw: string;
@@ -79,6 +90,18 @@ const PAGE_COPY: Record<
     direct: "直连",
     proxy: "代理 / VPN",
     unknown: "未知",
+    lookupComplete: "查询成功",
+    countryLevel: "国家级定位",
+    networkAttribution: "网络归属",
+    dataCoverage: "数据覆盖范围",
+    organization: "网络组织",
+    organizationDomain: "组织域名",
+    continent: "所在洲",
+    includedData: "本次已确认",
+    excludedData: "本数据源不提供",
+    includedDataDesc: "国家、洲、ASN、网络组织与组织域名。",
+    excludedDataDesc: "城市、坐标、时区、网络类型及代理 / VPN 判断。",
+    rawJsonDesc: "供接口调试和自动化使用，默认收起以保持页面重点清晰。",
     rawJson: "原始 JSON",
     showRaw: "展开原始数据",
     hideRaw: "收起原始数据",
@@ -115,6 +138,21 @@ const PAGE_COPY: Record<
     direct: "Direct",
     proxy: "Proxy / VPN",
     unknown: "Unknown",
+    lookupComplete: "Lookup complete",
+    countryLevel: "Country-level data",
+    networkAttribution: "Network attribution",
+    dataCoverage: "Data coverage",
+    organization: "Network organization",
+    organizationDomain: "Organization domain",
+    continent: "Continent",
+    includedData: "Confirmed in this result",
+    excludedData: "Not provided by this source",
+    includedDataDesc:
+      "Country, continent, ASN, network organization, and organization domain.",
+    excludedDataDesc:
+      "City, coordinates, timezone, network type, and proxy or VPN classification.",
+    rawJsonDesc:
+      "For API debugging and automation. Collapsed by default to keep the result focused.",
     rawJson: "Raw JSON",
     showRaw: "Show raw data",
     hideRaw: "Hide raw data",
@@ -154,17 +192,6 @@ function normalizeLookupTarget(value: string) {
   } catch {
     return candidate;
   }
-}
-
-function formatCoords(lat: string | number, lon: string | number) {
-  const latNum = Number.parseFloat(String(lat));
-  const lonNum = Number.parseFloat(String(lon));
-  if (Number.isNaN(latNum) || Number.isNaN(lonNum)) return "—";
-
-  const latDir = latNum >= 0 ? "N" : "S";
-  const lonDir = lonNum >= 0 ? "E" : "W";
-
-  return `${Math.abs(latNum).toFixed(4)}°${latDir} / ${Math.abs(lonNum).toFixed(4)}°${lonDir}`;
 }
 
 function toSourceLabel(source: IpLookupSource, copy: (typeof PAGE_COPY)[Lang]) {
@@ -317,22 +344,6 @@ export default function IPLookupClient({
     }
   };
 
-  const statusLabel = data
-    ? data.proxy_known
-      ? data.proxy
-        ? copy.proxy
-        : copy.direct
-      : copy.unknown
-    : copy.unknown;
-
-  const statusTone = data
-    ? data.proxy_known
-      ? data.proxy
-        ? "border-amber-200 bg-amber-50 text-amber-700"
-        : "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-zinc-200 bg-zinc-50 text-zinc-500"
-    : "border-zinc-200 bg-zinc-50 text-zinc-500";
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 pb-24 font-sans">
       <div className="fixed inset-0 -z-10 bg-[#fafafa]" />
@@ -451,9 +462,12 @@ export default function IPLookupClient({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.16em] ${statusTone}`}
+                    className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-emerald-700"
                   >
-                    {statusLabel}
+                    {copy.lookupComplete}
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-sky-700">
+                    {copy.countryLevel}
                   </span>
                   <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-zinc-500">
                     {toSourceLabel(data._source, copy)}
@@ -530,28 +544,28 @@ export default function IPLookupClient({
                 icon={<Globe className="h-4 w-4" />}
               />
               <StatCard
-                label={labels.city || "City"}
-                value={data.city}
-                note={data.region}
+                label={copy.continent}
+                value={data.continent || copy.unknown}
+                note={data.continent_code || "—"}
                 icon={<MapPin className="h-4 w-4" />}
-              />
-              <StatCard
-                label={labels.isp || "ISP"}
-                value={data.isp}
-                note={data.org}
-                icon={<Server className="h-4 w-4" />}
               />
               <StatCard
                 label={labels.asn || "ASN"}
                 value={String(data.asn || "—")}
-                note={data.network_type || "—"}
+                note={data.org || "—"}
                 icon={<SignalHigh className="h-4 w-4" />}
+              />
+              <StatCard
+                label={copy.organization}
+                value={data.org || data.isp || copy.unknown}
+                note={data.as_domain || "—"}
+                icon={<Server className="h-4 w-4" />}
               />
             </div>
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_1.05fr_0.9fr]">
-            <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+            <section className="min-w-0 rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
@@ -559,83 +573,66 @@ export default function IPLookupClient({
                   </p>
                   <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
                     <Fingerprint className="h-5 w-5 text-emerald-500" />
-                    {labels.geo_title || "Geo"}
+                    {copy.networkAttribution}
                   </h3>
                 </div>
               </div>
 
-              <dl className="mt-6 space-y-4">
-                <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
+              <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="min-w-0 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-                    {labels.coords || "Coordinates"}
+                    {labels.asn || "ASN"}
                   </dt>
-                  <dd className="mt-2 text-sm font-semibold text-zinc-900">
-                    {formatCoords(data.latitude, data.longitude)}
+                  <dd className="mt-2 break-words text-sm font-semibold text-zinc-900">
+                    {String(data.asn || "—")}
                   </dd>
                 </div>
-                <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
+                <div className="min-w-0 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-                    {labels.timezone || "Timezone"}
+                    {copy.organization}
                   </dt>
-                  <dd className="mt-2 text-sm font-semibold text-zinc-900">
-                    {data.timezone || "UTC"}
+                  <dd className="mt-2 break-words text-sm font-semibold text-zinc-900">
+                    {data.org || data.isp || copy.unknown}
                   </dd>
                 </div>
-                <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
+                <div className="min-w-0 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 sm:col-span-2">
                   <dt className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-                    {labels.country || "Country"}
+                    {copy.organizationDomain}
                   </dt>
-                  <dd className="mt-2 text-sm font-semibold text-zinc-900">
-                    {data.country_name}
+                  <dd className="mt-2 break-all text-sm font-semibold text-zinc-900">
+                    {data.as_domain || "—"}
                   </dd>
                 </div>
               </dl>
             </section>
 
-            <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
+            <section className="min-w-0 rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
               <div>
                 <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
                   {copy.insights}
                 </p>
                 <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
-                  <ShieldCheck className="h-5 w-5 text-emerald-500" />
-                  {labels.sec_title || "Security"}
+                  <Globe className="h-5 w-5 text-emerald-500" />
+                  {copy.dataCoverage}
                 </h3>
               </div>
 
               <div className="mt-6 space-y-4">
                 <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-                        {labels.proxy || "Proxy"}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-zinc-900">
-                        {data.proxy_known
-                          ? data.proxy
-                            ? copy.proxy
-                            : copy.direct
-                          : copy.unknown}
-                      </p>
-                    </div>
-                    <span
-                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.16em] ${data.proxy_known ? (data.proxy ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700") : "border-zinc-200 bg-zinc-50 text-zinc-500"}`}
-                    >
-                      {data.proxy_known
-                        ? data.proxy
-                          ? copy.proxy
-                          : copy.direct
-                        : copy.unknown}
-                    </span>
-                  </div>
+                  <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                    {copy.includedData}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-700">
+                    {copy.includedDataDesc}
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
                   <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-                    {labels.network_type || "Network Type"}
+                    {copy.excludedData}
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-zinc-900">
-                    {data.network_type || copy.unknown}
+                  <p className="mt-2 text-sm leading-6 text-zinc-700">
+                    {copy.excludedDataDesc}
                   </p>
                 </div>
 
@@ -670,30 +667,43 @@ export default function IPLookupClient({
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
-                    {copy.rawJson}
-                  </p>
-                  <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
-                    <Copy className="h-5 w-5 text-emerald-500" />
-                    {labels.ip_json_toggle || "JSON"}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowJson((value) => !value)}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-200 hover:text-emerald-700"
-                >
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform ${showJson ? "rotate-180" : ""}`}
-                  />
-                  {showJson ? copy.hideRaw : copy.showRaw}
-                </button>
-              </div>
+          </div>
 
-              <div className="mt-6 rounded-[1.5rem] border border-zinc-100 bg-zinc-950 p-4 text-[11px] leading-6 text-zinc-300">
+          <section className="min-w-0 overflow-hidden rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                  {copy.rawJson}
+                </p>
+                <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
+                  <Copy className="h-5 w-5 text-emerald-500" />
+                  {labels.ip_json_toggle || "JSON"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowJson((value) => !value)}
+                aria-expanded={showJson}
+                aria-controls="ip-lookup-raw-json"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-200 hover:text-emerald-700"
+              >
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${showJson ? "rotate-180" : ""}`}
+                />
+                {showJson ? copy.hideRaw : copy.showRaw}
+              </button>
+            </div>
+
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
+              {copy.rawJsonDesc}
+            </p>
+
+            {showJson ? (
+              <div
+                id="ip-lookup-raw-json"
+                data-testid="ip-lookup-raw-json"
+                className="mt-6 min-w-0 max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-100 bg-zinc-950 p-4 text-[11px] leading-6 text-zinc-300"
+              >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <span className="text-[10px] font-semibold tracking-[0.16em] text-zinc-500">
                     {labels.copy_json || "Copy JSON"}
@@ -713,18 +723,12 @@ export default function IPLookupClient({
                     {copy.copyAll}
                   </button>
                 </div>
-                <pre className="overflow-x-auto font-mono">
+                <pre className="max-h-[30rem] max-w-full overflow-auto font-mono">
                   {JSON.stringify(data, null, 2)}
                 </pre>
               </div>
-
-              <div className="mt-5 rounded-[1.5rem] border border-dashed border-zinc-200 bg-zinc-50/70 p-4 text-sm text-zinc-500">
-                {data.country_name === "Unknown"
-                  ? copy.fallbackDesc
-                  : copy.helper}
-              </div>
-            </section>
-          </div>
+            ) : null}
+          </section>
         </div>
       ) : (
         <div className="mt-8 rounded-[2rem] border border-dashed border-zinc-200 bg-white/70 p-10 text-center shadow-sm">
