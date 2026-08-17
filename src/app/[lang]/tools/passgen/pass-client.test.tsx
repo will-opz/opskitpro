@@ -17,7 +17,7 @@ describe("PassClient P0 modes", () => {
 
   it("generates a six-word phrase plus four digits", async () => {
     render(<PassClient dict={zh} lang="zh" />);
-    fireEvent.click(screen.getByRole("button", { name: "易记短语" }));
+    fireEvent.click(screen.getByRole("tab", { name: "易记短语" }));
     fireEvent.click(screen.getByRole("button", { name: "重新生成" }));
 
     await waitFor(() => {
@@ -30,7 +30,7 @@ describe("PassClient P0 modes", () => {
   it("shows a bounded error if exclusions remove an enabled set", async () => {
     render(<PassClient dict={zh} lang="zh" />);
     for (const name of ["大写字母 (A-Z)", "小写字母 (a-z)", "符号 (!@#$)"]) {
-      fireEvent.click(screen.getByRole("button", { name }));
+      fireEvent.click(screen.getByRole("switch", { name }));
     }
     fireEvent.change(screen.getByPlaceholderText("例如：0O1lI"), {
       target: { value: "0123456789" },
@@ -47,5 +47,18 @@ describe("PassClient P0 modes", () => {
     fireEvent.click(screen.getByText("生成历史"));
 
     expect(screen.getByText("仅保留在当前页面会话中，刷新或关闭页面后清空。")).toBeInTheDocument();
+  });
+
+  it("generates a PIN and synchronizes its exact length controls", async () => {
+    render(<PassClient dict={zh} lang="zh" />);
+    fireEvent.click(screen.getByRole("tab", { name: "PIN 码" }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "PIN 位数 input" }), {
+      target: { value: "10" },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("generated-password").textContent).toMatch(/^\d{10}$/),
+    );
+    expect(screen.getByRole("slider", { name: "PIN 位数" })).toHaveValue("10");
   });
 });

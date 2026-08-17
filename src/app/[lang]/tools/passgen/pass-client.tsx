@@ -1,132 +1,82 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import {
-  KeyRound,
-  RefreshCw,
-  Copy,
-  QrCode,
-  Check,
-  ShieldCheck,
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Check, Copy, KeyRound, QrCode, RefreshCw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import {
   generateSecurePassphrase,
   generateSecurePassword,
+  generateSecurePin,
   getPasswordPreset,
   type PasswordPreset,
 } from "@/lib/password-generator";
-import {
-  analyzePasswordStrength,
-} from "@/lib/password-security";
+import { analyzePasswordStrength } from "@/lib/password-security";
 
 type Lang = "zh" | "en";
+type Mode = "password" | "passphrase" | "pin";
+
+const characterKeys = ["uppercase", "lowercase", "numbers", "symbols"] as const;
 
 export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
+  const copy = dict.tools.passgen;
+  const [mode, setMode] = useState<Mode>("password");
   const [password, setPassword] = useState("");
   const [length, setLength] = useState(16);
-  const [mode, setMode] = useState<"password" | "passphrase">("password");
+  const [wordCount, setWordCount] = useState(6);
+  const [pinLength, setPinLength] = useState(6);
+  const [separator, setSeparator] = useState<"-" | "." | "_" | " ">("-");
+  const [includePhraseNumber, setIncludePhraseNumber] = useState(true);
   const [activePreset, setActivePreset] = useState<PasswordPreset | null>(null);
   const [excludeAmbiguous, setExcludeAmbiguous] = useState(false);
   const [excludedCharacters, setExcludedCharacters] = useState("");
-  const [wordCount, setWordCount] = useState(6);
-  const [separator, setSeparator] = useState<"-" | "." | "_" | " ">("-");
-  const [includePhraseNumber, setIncludePhraseNumber] = useState(true);
+  const [uuidMode, setUuidMode] = useState(false);
   const [options, setOptions] = useState({
     uppercase: true,
     lowercase: true,
     numbers: true,
     symbols: true,
-    uuid: false,
-    pin6: false,
-    pin8: false,
   });
-
-  // Helper to toggle options correctly
-  const toggleOption = (key: string) => {
-    setOptions((prev) => {
-      const next = { ...prev };
-      if (key === "uuid" || key === "pin6" || key === "pin8") {
-        setMode("password");
-        setActivePreset(null);
-        const val = !prev[key as keyof typeof prev];
-        // Reset all special modes first
-        next.uuid = false;
-        next.pin6 = false;
-        next.pin8 = false;
-        next[key as keyof typeof next] = val;
-      } else {
-        setActivePreset(null);
-        next[key as keyof typeof next] = !prev[key as keyof typeof next];
-        // If we are enabling a character set, disable special modes
-        next.uuid = false;
-        next.pin6 = false;
-        next.pin8 = false;
-      }
-      return next;
-    });
-  };
   const [copied, setCopied] = useState(false);
   const [generationError, setGenerationError] = useState("");
+  const [copyError, setCopyError] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
 
-  const generatePassword = useCallback(
-    (saveToHistory = true) => {
-      let generated = "";
-
-      if (mode === "passphrase") {
-        generated = generateSecurePassphrase({
-          wordCount,
-          separator,
-          includeNumber: includePhraseNumber,
-        });
-      } else if (options.uuid) {
-        // UUID v4 generation using cryptographically secure API
-        generated = crypto.randomUUID();
-      } else if (options.pin6 || options.pin8) {
-        const pinLength = options.pin6 ? 6 : 8;
-        const array = new Uint32Array(pinLength);
-        window.crypto.getRandomValues(array);
-        for (let i = 0; i < pinLength; i++) {
-          generated += (array[i] % 10).toString();
-        }
-      } else {
-        if (
-          !options.uppercase &&
-          !options.lowercase &&
-          !options.numbers &&
-          !options.symbols
-        ) {
-          return "";
-        }
-        try {
+  const generate = useCallback(
+    (saveToHistory = false) => {
+      try {
+        let generated: string;
+        if (mode === "passphrase") {
+          generated = generateSecurePassphrase({
+            wordCount,
+            separator,
+            includeNumber: includePhraseNumber,
+          });
+        } else if (mode === "pin") {
+          generated = generateSecurePin({ length: pinLength });
+        } else if (uuidMode) {
+          generated = crypto.randomUUID();
+        } else {
           generated = generateSecurePassword({
             length,
-            uppercase: options.uppercase,
-            lowercase: options.lowercase,
-            numbers: options.numbers,
-            symbols: options.symbols,
+            ...options,
             excludeAmbiguous,
             excludedCharacters,
           });
-        } catch {
-          setPassword("");
-          setGenerationError(
-            lang === "zh"
-              ? "当前排除规则没有可用字符，请调整选项。"
-              : "No characters remain under the current exclusions.",
-          );
-          return "";
         }
-      }
-
-      setPassword(generated);
-      setGenerationError("");
-
-      if (saveToHistory) {
-        setHistory((prev) => [generated, ...prev].slice(0, 5));
+        setPassword(generated);
+        setGenerationError("");
+        if (saveToHistory) {
+          setHistory((current) => [generated, ...current].slice(0, 5));
+        }
+      } catch {
+        setPassword("");
+        setGenerationError(
+          lang === "zh"
+            ? "当前设置没有可用字符，请调整选项。"
+            : "No characters remain under the current settings.",
+        );
       }
     },
     [
@@ -137,14 +87,27 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
       length,
       mode,
       options,
+      pinLength,
       separator,
+      uuidMode,
       wordCount,
     ],
   );
 
+  useEffect(() => {
+    generate();
+  }, [generate]);
+
+  const changeMode = (nextMode: Mode) => {
+    setMode(nextMode);
+    setActivePreset(null);
+    setUuidMode(false);
+  };
+
   const applyPreset = (preset: PasswordPreset) => {
     const next = getPasswordPreset(preset);
     setMode("password");
+    setUuidMode(false);
     setActivePreset(preset);
     setLength(next.length);
     setExcludeAmbiguous(Boolean(next.excludeAmbiguous));
@@ -154,553 +117,205 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
       lowercase: next.lowercase,
       numbers: next.numbers,
       symbols: next.symbols,
-      uuid: false,
-      pin6: false,
-      pin8: false,
     });
   };
 
-  // Initial generation on mount
-  useEffect(() => {
-    generatePassword(false);
-  }, []);
-
-  const regenerate = () => generatePassword(true);
-
-  const strength = password ? analyzePasswordStrength(password) : null;
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyError("");
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+      setCopyError(copy.copy_error);
+    }
   };
 
-  const clearHistory = () => {
-    setHistory([]);
+  const strength = password && mode !== "pin" && !uuidMode
+    ? analyzePasswordStrength(password)
+    : null;
+  const primaryLabel = mode === "password"
+    ? copy.length
+    : mode === "passphrase"
+      ? copy.word_count
+      : copy.pin_length;
+  const primaryValue = mode === "password" ? length : mode === "passphrase" ? wordCount : pinLength;
+  const primaryMin = mode === "password" ? 8 : 4;
+  const primaryMax = mode === "password" ? 64 : mode === "passphrase" ? 8 : 12;
+
+  const setPrimaryValue = (value: number) => {
+    const bounded = Math.max(primaryMin, Math.min(primaryMax, value));
+    if (mode === "password") {
+      setLength(bounded);
+      setActivePreset(null);
+    } else if (mode === "passphrase") {
+      setWordCount(bounded);
+    } else {
+      setPinLength(bounded);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-
-      <div className="mx-auto max-w-6xl">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 pb-16 pt-8 font-sans text-zinc-700 sm:px-6 md:pt-12 lg:px-8">
+      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-full max-w-[800px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-700">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           {dict.tools.passgen_title}
         </div>
-
-        <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link href={`/`} className="hover:text-emerald-600 transition-colors">
-            {"Home"}
-          </Link>
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
+          <Link href="/" className="transition-colors hover:text-emerald-700">Home</Link>
           <span className="text-zinc-300">/</span>
-          <Link
-            href={`/tools`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {"Tools"}
-          </Link>
+          <Link href="/tools" className="transition-colors hover:text-emerald-700">Tools</Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
-            {dict.tools.passgen_title}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 mb-2">
-          <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
-            <KeyRound className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
+          <span className="font-semibold text-zinc-900">{dict.tools.passgen_title}</span>
+        </nav>
+        <header className="mb-8 flex items-center gap-4">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3.5 shadow-lg shadow-emerald-500/10">
+            <KeyRound className="h-7 w-7 text-emerald-700" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
-              {dict.tools.passgen_title}
-            </h1>
-            <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed">
-              {dict.tools.passgen_desc}
-            </p>
+            <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">{dict.tools.passgen_title}</h1>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-600">{dict.tools.passgen_desc}</p>
           </div>
-        </div>
+        </header>
 
-        <div className="mt-8 grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div className="space-y-4 lg:sticky lg:top-24">
-          {/* Result Box */}
-          <div className="bg-zinc-100 rounded-3xl border border-black/10 p-2 backdrop-blur-md relative group overflow-hidden">
-            <div className="p-8 text-center bg-[#fafafa]/40 rounded-2xl border border-black/5">
-              <span className="text-2xl sm:text-4xl font-mono text-zinc-900 tracking-widest break-all select-all selection:bg-emerald-500/30">
-                <span data-testid="generated-password">
-                  {password}
-                </span>
-              </span>
+        <div className="space-y-5">
+          <section className="rounded-3xl border border-zinc-200 bg-white/80 p-4 shadow-sm sm:p-6">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{copy.mode}</p>
+            <div role="tablist" aria-label={copy.mode} className="grid grid-cols-3 gap-2 rounded-2xl bg-zinc-100 p-1.5">
+              {(["password", "passphrase", "pin"] as const).map((item) => (
+                <button
+                  key={item}
+                  role="tab"
+                  aria-selected={mode === item}
+                  type="button"
+                  onClick={() => changeMode(item)}
+                  className={`min-h-11 rounded-xl px-2 text-xs font-semibold transition sm:text-sm ${mode === item ? "bg-white text-emerald-700 shadow-sm" : "text-zinc-500 hover:text-zinc-800"}`}
+                >
+                  {item === "password" ? copy.password_mode : item === "passphrase" ? copy.passphrase_mode : copy.pin_mode}
+                </button>
+              ))}
             </div>
-            {generationError && (
-              <p role="alert" className="px-4 pt-2 text-xs text-red-600">
-                {generationError}
-              </p>
-            )}
-            {/* Strength indicator */}
-            {strength &&
-              (() => {
-                const colors = ["bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-emerald-400", "bg-emerald-600"];
-                return (
-                  <div className="px-4 pt-2 pb-1 flex items-center gap-3">
-                    <div className="flex gap-1 flex-1">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div
-                          key={i}
-                          className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= strength.score ? colors[strength.score - 1] : "bg-zinc-200"}`}
-                        />
-                      ))}
+          </section>
+
+          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
+            <div className="space-y-4 lg:sticky lg:top-24">
+              <section aria-label={dict.tools.passgen_title} className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm">
+                <div className="min-h-40 p-6 sm:p-8">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{lang === "zh" ? "生成结果" : "Generated result"}</p>
+                  <output data-testid="generated-password" aria-live="polite" className="block select-all break-all font-mono text-2xl font-semibold tracking-wide text-zinc-900 selection:bg-emerald-200 sm:text-3xl">
+                    {password}
+                  </output>
+                  {generationError && <p role="alert" className="mt-3 text-xs text-red-600">{generationError}</p>}
+                  {copyError && <p role="alert" className="mt-3 text-xs text-red-600">{copyError}</p>}
+                  {strength && (
+                    <div className="mt-5 flex items-center gap-3">
+                      <div className="flex flex-1 gap-1" aria-hidden="true">
+                        {[1, 2, 3, 4, 5].map((score) => (
+                          <span key={score} className={`h-1.5 flex-1 rounded-full ${score <= strength.score ? "bg-emerald-600" : "bg-zinc-200"}`} />
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-emerald-700">{copy[`strength_${strength.label}`]}</span>
                     </div>
-                    <span
-                      className={`text-[10px] font-black uppercase tracking-widest transition-colors ${
-                        strength.score <= 2
-                          ? "text-red-500"
-                          : strength.score === 3
-                            ? "text-yellow-500"
-                            : "text-emerald-600"
-                      }`}
-                    >
-                      {dict.tools.passgen[`strength_${strength.label}`]}
-                    </span>
-                  </div>
-                );
-              })()}
-
-            <div className="flex flex-col sm:flex-row p-2 gap-2">
-              <div className="flex flex-1 gap-2">
-                <button
-                  onClick={regenerate}
-                  className="flex-1 py-4 bg-white hover:bg-emerald-50 border border-black/5 hover:border-emerald-200 text-zinc-900 hover:text-emerald-700 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm active:scale-95"
-                >
-                  <RefreshCw className="w-5 h-5 group-active:rotate-180 transition-transform duration-500" />
-                  <span className="text-sm sm:text-base text-zinc-900 group-hover:text-emerald-700">
-                    {dict.tools.passgen.generate}
-                  </span>
-                </button>
-              </div>
-              <div className="flex flex-1 gap-2">
-                <button
-                  onClick={() => copyToClipboard(password)}
-                  className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 active:scale-95"
-                >
-                  {copied ? (
-                    <Check className="w-5 h-5 animate-bounce" />
-                  ) : (
-                    <Copy className="w-5 h-5" />
                   )}
-                  <span className="text-sm sm:text-base text-white">
-                    {copied
-                      ? dict.tools.passgen.copied
-                      : dict.tools.passgen.copy}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setShowQR(!showQR)}
-                  className={`p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border shadow-sm active:scale-95 ${
-                    showQR
-                      ? "bg-emerald-600 text-white border-emerald-600 shadow-emerald-500/20"
-                      : "bg-white text-zinc-900 hover:bg-emerald-50 hover:text-emerald-700 border-black/5"
-                  }`}
-                  aria-label="Show QR Code"
-                >
-                  <QrCode className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {strength && (
-            <section className="rounded-2xl border border-zinc-200/70 bg-white/60 p-5 space-y-4">
-              <div>
-                <h2 className="font-bold text-zinc-900">{dict.tools.passgen.strength_title}</h2>
-                <p className="mt-2 text-xs leading-5 text-zinc-500">{dict.tools.passgen.strength_disclaimer}</p>
-              </div>
-              <ul className="space-y-2 text-sm text-zinc-700">
-                {strength.findings.map((finding) => (
-                  <li key={finding} className="flex gap-2">
-                    <span aria-hidden="true" className="text-emerald-600">•</span>
-                    {dict.tools.passgen[`finding_${finding}`]}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          <p className="flex items-center gap-2 px-1 text-xs text-zinc-500">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            {lang === "zh" ? "使用设备加密随机源在本地生成，密码不会上传。" : "Generated locally with your device's secure random source. Passwords are not uploaded."}
-          </p>
-          </div>
-
-          {/* Controls */}
-          <div className="rounded-3xl border border-zinc-200/70 bg-white/60 p-5 sm:p-6 space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                {dict.tools.passgen.mode}
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {(["password", "passphrase"] as const).map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => {
-                      setMode(item);
-                      setActivePreset(null);
-                      setOptions((current) => ({
-                        ...current,
-                        uuid: false,
-                        pin6: false,
-                        pin8: false,
-                      }));
-                    }}
-                    className={`min-h-12 rounded-xl border px-4 text-xs font-semibold transition ${
-                      mode === item
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
-                        : "border-black/5 bg-zinc-100/50 text-zinc-500"
-                    }`}
-                  >
-                    {item === "password"
-                      ? dict.tools.passgen.password_mode
-                      : dict.tools.passgen.passphrase_mode}
+                </div>
+                <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-t border-zinc-100 bg-zinc-50 p-2">
+                  <button type="button" onClick={() => generate(true)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-bold text-zinc-800 transition hover:border-emerald-200 hover:text-emerald-700">
+                    <RefreshCw className="h-4 w-4" /> {copy.generate}
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {mode === "password" && (
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                  {dict.tools.passgen.presets}
-                </h3>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {(["account", "wifi", "api", "easy"] as const).map(
-                    (preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => applyPreset(preset)}
-                        className={`min-h-11 rounded-xl border px-3 text-[11px] font-semibold transition ${
-                          activePreset === preset
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
-                            : "border-black/5 bg-white text-zinc-600"
-                        }`}
-                      >
-                        {dict.tools.passgen[`preset_${preset}`]}
-                      </button>
-                    ),
-                  )}
+                  <button type="button" onClick={() => copyToClipboard(password)} disabled={!password} className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 text-sm font-bold text-white transition hover:bg-emerald-500 disabled:opacity-50">
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? copy.copied : copy.copy}
+                  </button>
+                  <button type="button" onClick={() => setShowQR(true)} disabled={!password} aria-label={copy.qr_label} className="flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 transition hover:text-emerald-700 disabled:opacity-50">
+                    <QrCode className="h-5 w-5" />
+                  </button>
                 </div>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <label className="text-zinc-600 font-medium">
-                  {mode === "password"
-                    ? dict.tools.passgen.length
-                    : dict.tools.passgen.word_count}
-                </label>
-                <span className="text-3xl font-mono text-emerald-700">
-                  {mode === "password" ? length : wordCount}
-                </span>
-              </div>
-              <input
-                aria-label={
-                  mode === "password"
-                    ? dict.tools.passgen.length
-                    : dict.tools.passgen.word_count
-                }
-                type="range"
-                min={mode === "password" ? 8 : 4}
-                max={mode === "password" ? 64 : 8}
-                value={mode === "password" ? length : wordCount}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (mode === "password") {
-                    setLength(value);
-                    setActivePreset(null);
-                  } else {
-                    setWordCount(value);
-                  }
-                }}
-                className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all"
-              />
-              {mode === "password" && (
-                <div className="grid grid-cols-5 gap-2" aria-label={lang === "zh" ? "常用长度" : "Common lengths"}>
-                  {[12, 16, 20, 24, 32].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => {
-                        setLength(value);
-                        setActivePreset(null);
-                      }}
-                      className={`min-h-9 rounded-lg border text-xs font-semibold transition ${
-                        length === value
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
-                          : "border-black/5 bg-zinc-50 text-zinc-500 hover:text-zinc-900"
-                      }`}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
+              </section>
+              <p className="flex items-start gap-2 px-1 text-xs leading-5 text-zinc-500"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />{copy.local_privacy}</p>
+              {strength && (
+                <details className="group rounded-2xl border border-zinc-200 bg-white/70 p-4">
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-zinc-700"><span className="flex items-center justify-between">{copy.strength_details}<span className="text-zinc-400 transition group-open:rotate-45">＋</span></span></summary>
+                  <p className="mt-4 text-xs leading-5 text-zinc-500">{copy.strength_disclaimer}</p>
+                  <ul className="mt-3 space-y-2 text-sm text-zinc-700">{strength.findings.map((finding) => <li key={finding} className="flex gap-2"><span className="text-emerald-600">•</span>{copy[`finding_${finding}`]}</li>)}</ul>
+                </details>
               )}
             </div>
 
-            {mode === "password" ? (
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                    {dict.tools.passgen.options}
-                  </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {["uppercase", "lowercase", "numbers", "symbols"].map(
-                    (key) => (
-                      <button
-                        key={key}
-                        onClick={() => toggleOption(key)}
-                        className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                          options[key as keyof typeof options]
-                            ? "bg-emerald-500/5 border-emerald-500/20 text-zinc-900 shadow-sm"
-                            : "bg-zinc-100/50 border-black/5 text-zinc-400"
-                        }`}
-                      >
-                        <span className="font-medium text-xs uppercase tracking-[0.18em]">
-                          {dict.tools.passgen[key]}
-                        </span>
-                        <div
-                          className={`w-10 h-6 rounded-full relative transition-colors ${
-                            options[key as keyof typeof options]
-                              ? "bg-emerald-500"
-                              : "bg-zinc-200"
-                          }`}
-                        >
-                          <div
-                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${
-                              options[key as keyof typeof options]
-                                ? "left-5"
-                                : "left-1"
-                            }`}
-                          />
-                        </div>
-                      </button>
-                    ),
-                  )}
+            <section className="space-y-6 rounded-3xl border border-zinc-200 bg-white/80 p-5 shadow-sm sm:p-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <label htmlFor="primary-number" className="font-medium text-zinc-700">{primaryLabel}</label>
+                  <input id="primary-number" aria-label={`${primaryLabel} input`} type="number" min={primaryMin} max={primaryMax} value={primaryValue} onChange={(event) => setPrimaryValue(Number(event.target.value))} className="h-11 w-20 rounded-xl border border-zinc-200 bg-white px-3 text-center font-mono text-xl text-emerald-700 outline-none focus:border-emerald-500" />
                 </div>
-              </div>
-
-              <details className="group rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
-                <summary className="cursor-pointer list-none text-sm font-semibold text-zinc-700">
-                  <span className="flex items-center justify-between">
-                    {lang === "zh" ? "高级设置" : "Advanced settings"}
-                    <span className="text-zinc-400 transition group-open:rotate-45">＋</span>
-                  </span>
-                </summary>
-              <div className="mt-5 space-y-4">
-                <button
-                  type="button"
-                  aria-pressed={excludeAmbiguous}
-                  onClick={() => {
-                    setExcludeAmbiguous((value) => !value);
-                    setActivePreset(null);
-                  }}
-                  className={`flex min-h-12 w-full items-center justify-between rounded-xl border p-4 text-xs font-medium transition ${
-                    excludeAmbiguous
-                      ? "border-emerald-500/20 bg-emerald-500/5 text-zinc-900"
-                      : "border-black/5 bg-zinc-100/50 text-zinc-500"
-                  }`}
-                >
-                  {dict.tools.passgen.exclude_ambiguous}
-                  <span>{excludeAmbiguous ? "ON" : "OFF"}</span>
-                </button>
-                <label className="block space-y-2 text-xs font-medium text-zinc-600">
-                  <span>{dict.tools.passgen.exclude_custom}</span>
-                  <input
-                    value={excludedCharacters}
-                    maxLength={64}
-                    onChange={(event) => {
-                      setExcludedCharacters(event.target.value);
-                      setActivePreset(null);
-                    }}
-                    placeholder={dict.tools.passgen.exclude_placeholder}
-                    className="min-h-12 w-full rounded-xl border border-black/10 bg-white px-4 font-mono text-zinc-900 outline-none focus:border-emerald-500/40"
-                  />
-                </label>
-              </div>
-
-              <div className="mt-6 space-y-4 border-t border-zinc-200 pt-5">
-                <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                  {lang === "zh"
-                      ? "特殊格式"
-                      : "Special Formats"}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {["uuid", "pin6", "pin8"].map((key) => (
-                    <button
-                      key={key}
-                      onClick={() => toggleOption(key)}
-                      className={`flex items-center justify-between sm:justify-center flex-row sm:flex-col gap-3 p-4 rounded-xl border transition-all ${
-                        options[key as keyof typeof options]
-                          ? "bg-cyan-500/5 border-cyan-500/20 text-zinc-900 shadow-sm"
-                          : "bg-zinc-100/50 border-black/5 text-zinc-400"
-                      }`}
-                    >
-                      <span className="font-bold text-[10px] uppercase tracking-[0.18em]">
-                        {dict.tools.passgen[key]}
-                      </span>
-                      <div
-                        className={`w-8 h-4 rounded-full relative transition-colors ${
-                          options[key as keyof typeof options]
-                            ? "bg-cyan-500"
-                            : "bg-zinc-200"
-                        }`}
-                      >
-                        <div
-                          className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
-                            options[key as keyof typeof options]
-                              ? "left-4.5"
-                              : "left-0.5"
-                          }`}
-                        />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                </div>
-              </details>
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.24em] px-1">
-                    {dict.tools.passgen.separator}
-                  </h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    {(["-", ".", "_", " "] as const).map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => setSeparator(item)}
-                        className={`min-h-11 rounded-xl border font-mono text-sm transition ${
-                          separator === item
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700"
-                            : "border-black/5 bg-zinc-100/50 text-zinc-500"
-                        }`}
-                      >
-                        {item === " " ? "Space" : item}
-                      </button>
+                <input aria-label={primaryLabel} type="range" min={primaryMin} max={primaryMax} value={primaryValue} onChange={(event) => setPrimaryValue(Number(event.target.value))} className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-100 accent-emerald-600" />
+                {mode !== "passphrase" && (
+                  <div aria-label={copy.common_lengths} className={`grid gap-2 ${mode === "pin" ? "grid-cols-2" : "grid-cols-5"}`}>
+                    {(mode === "pin" ? [6, 8] : [12, 16, 20, 24, 32]).map((value) => (
+                      <button key={value} type="button" onClick={() => setPrimaryValue(value)} className={`min-h-9 rounded-lg border text-xs font-semibold ${primaryValue === value ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-zinc-200 bg-zinc-50 text-zinc-500"}`}>{value}</button>
                     ))}
                   </div>
-                </div>
-                <button
-                  type="button"
-                  aria-pressed={includePhraseNumber}
-                  onClick={() => setIncludePhraseNumber((value) => !value)}
-                  className={`flex min-h-12 w-full items-center justify-between rounded-xl border p-4 text-xs font-medium transition ${
-                    includePhraseNumber
-                      ? "border-emerald-500/20 bg-emerald-500/5 text-zinc-900"
-                      : "border-black/5 bg-zinc-100/50 text-zinc-500"
-                  }`}
-                >
-                  {dict.tools.passgen.include_number}
-                  <span>{includePhraseNumber ? "ON" : "OFF"}</span>
-                </button>
-                <p className="text-xs leading-5 text-zinc-500">
-                  {dict.tools.passgen.passphrase_note}
-                </p>
+                )}
               </div>
-            )}
+
+              {mode === "password" && (
+                <>
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{copy.presets}</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+                      {(["account", "wifi", "api", "easy"] as const).map((preset) => <button key={preset} type="button" onClick={() => applyPreset(preset)} className={`min-h-10 rounded-xl border px-2 text-xs font-semibold ${activePreset === preset ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-zinc-200 bg-white text-zinc-600"}`}>{copy[`preset_${preset}`]}</button>)}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{copy.options}</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      {characterKeys.map((key) => (
+                        <button key={key} type="button" role="switch" aria-checked={options[key]} onClick={() => { setOptions((current) => ({ ...current, [key]: !current[key] })); setActivePreset(null); setUuidMode(false); }} className={`flex min-h-12 items-center justify-between rounded-xl border p-3 text-xs font-medium ${options[key] ? "border-emerald-500/20 bg-emerald-500/5 text-zinc-900" : "border-zinc-200 bg-zinc-50 text-zinc-400"}`}>
+                          {copy[key]}<span aria-hidden="true" className={`relative h-6 w-10 rounded-full ${options[key] ? "bg-emerald-500" : "bg-zinc-200"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${options[key] ? "left-5" : "left-1"}`} /></span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <details className="group rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4">
+                    <summary className="cursor-pointer list-none text-sm font-semibold text-zinc-700"><span className="flex items-center justify-between">{copy.advanced_settings}<span className="text-zinc-400 transition group-open:rotate-45">＋</span></span></summary>
+                    <div className="mt-4 space-y-4">
+                      <button type="button" role="switch" aria-checked={excludeAmbiguous} onClick={() => { setExcludeAmbiguous((value) => !value); setActivePreset(null); }} className="flex min-h-12 w-full items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs font-medium text-zinc-700">{copy.exclude_ambiguous}<span>{excludeAmbiguous ? "ON" : "OFF"}</span></button>
+                      <label className="block space-y-2 text-xs font-medium text-zinc-600"><span>{copy.exclude_custom}</span><input value={excludedCharacters} maxLength={64} onChange={(event) => { setExcludedCharacters(event.target.value); setActivePreset(null); }} placeholder={copy.exclude_placeholder} className="min-h-12 w-full rounded-xl border border-zinc-200 bg-white px-4 font-mono text-zinc-900 outline-none focus:border-emerald-500" /></label>
+                      <div className="border-t border-zinc-200 pt-4"><p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{copy.special_formats}</p><button type="button" aria-pressed={uuidMode} onClick={() => setUuidMode((value) => !value)} className={`min-h-11 w-full rounded-xl border px-3 text-xs font-semibold ${uuidMode ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-700" : "border-zinc-200 bg-white text-zinc-600"}`}>{copy.uuid_generate}</button></div>
+                    </div>
+                  </details>
+                </>
+              )}
+
+              {mode === "passphrase" && (
+                <div className="space-y-5">
+                  <div><p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{copy.separator}</p><div className="grid grid-cols-4 gap-2">{(["-", ".", "_", " "] as const).map((item) => <button key={item} type="button" aria-pressed={separator === item} onClick={() => setSeparator(item)} className={`min-h-11 rounded-xl border font-mono text-sm ${separator === item ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-zinc-200 bg-zinc-50 text-zinc-500"}`}>{item === " " ? copy.space : item}</button>)}</div></div>
+                  <button type="button" role="switch" aria-checked={includePhraseNumber} onClick={() => setIncludePhraseNumber((value) => !value)} className="flex min-h-12 w-full items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs font-medium text-zinc-700">{copy.include_number}<span>{includePhraseNumber ? "ON" : "OFF"}</span></button>
+                  <p className="text-xs leading-5 text-zinc-500">{copy.passphrase_note}</p>
+                </div>
+              )}
+              {mode === "pin" && <p className="text-xs leading-5 text-zinc-500">{lang === "zh" ? "PIN 适合设备解锁等限定场景；重要账号仍建议使用更长的随机密码。" : "PINs suit constrained device-unlock flows. Prefer a longer random password for important accounts."}</p>}
+            </section>
           </div>
 
-          {/* History Section */}
-          <details className="group lg:col-span-2 rounded-2xl border border-zinc-200/70 bg-white/50 p-4">
-            <summary className="cursor-pointer list-none">
-              <span className="flex items-center justify-between text-zinc-700 font-medium">
-                <span className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4" />
-                {dict.tools.passgen.history}
-                {history.length > 0 && <span className="text-xs text-zinc-400">({history.length})</span>}
-                </span>
-                <span className="text-zinc-400 transition group-open:rotate-45">＋</span>
-              </span>
-            </summary>
+          <details className="group rounded-2xl border border-zinc-200 bg-white/70 p-4">
+            <summary className="cursor-pointer list-none"><span className="flex items-center justify-between font-medium text-zinc-700"><span className="flex items-center gap-2"><RefreshCw className="h-4 w-4" />{copy.history}{history.length > 0 && <span className="text-xs text-zinc-400">({history.length})</span>}</span><span className="text-zinc-400 transition group-open:rotate-45">＋</span></span></summary>
             <div className="mt-4 border-t border-zinc-200 pt-4">
-              <div className="mb-3 flex justify-end">
-              {history.length > 0 && (
-                <button
-                  onClick={clearHistory}
-                  className="text-xs text-zinc-600 hover:text-red-400 transition-colors"
-                >
-                  {dict.tools.passgen.clear_history}
-                </button>
-              )}
-              </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              {history.length > 0 ? (
-                history.map((h, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 bg-[#fafafa]/30 rounded-xl border border-black/5 group hover:border-emerald-500/30 transition-colors"
-                  >
-                    <span className="font-mono text-zinc-600 group-hover:text-zinc-900 transition-colors truncate mr-4">
-                      {h}
-                    </span>
-                    <button
-                      onClick={() => copyToClipboard(h)}
-                      className="p-2 text-zinc-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-lg transition-all"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="py-3 text-zinc-500 italic text-sm">
-                  {dict.tools.passgen.history_empty}
-                </div>
-              )}
-            </div>
-
-            <p className="mt-4 text-[11px] text-zinc-500 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {lang === "zh" ? "仅保留在当前页面会话中，刷新或关闭页面后清空。" : "Kept only for this page session and cleared when you refresh or close the page."}
-            </p>
+              {history.length > 0 && <button type="button" onClick={() => setHistory([])} className="mb-3 text-xs text-zinc-600 hover:text-red-500">{copy.clear_history}</button>}
+              <div className="grid gap-2 sm:grid-cols-2">{history.length ? history.map((item, index) => <div key={`${item}-${index}`} className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 p-3"><span className="mr-3 truncate font-mono text-sm text-zinc-700">{item}</span><button type="button" aria-label={`${copy.copy} ${index + 1}`} onClick={() => copyToClipboard(item)} className="rounded-lg p-2 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700"><Copy className="h-4 w-4" /></button></div>) : <p className="py-2 text-sm italic text-zinc-500">{copy.history_empty}</p>}</div>
+              <p className="mt-4 flex items-center gap-2 text-[11px] text-zinc-500"><ShieldCheck className="h-3.5 w-3.5" />{copy.history_privacy}</p>
             </div>
           </details>
         </div>
       </div>
 
-      {/* Global Fixed Modal */}
       {showQR && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#fafafa]/90 backdrop-blur-xl animate-in fade-in duration-300"
-          onClick={() => setShowQR(false)}
-        >
-          <div
-            className="bg-white border border-black/10 p-10 rounded-3xl flex flex-col items-center gap-6 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4 bg-white rounded-2xl shadow-xl">
-              <QRCodeSVG value={password} size={220} level="M" />
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-zinc-900 font-medium flex items-center justify-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                {lang === "zh"
-                    ? "安全传输"
-                    : "Secure Transfer"}
-              </p>
-              <p className="text-sm text-zinc-600 leading-relaxed px-2">
-                {lang === "zh"
-                    ? "使用移动设备扫描即可安全传输密码，无需使用剪贴板。"
-                    : "Scan with your mobile device to securely transfer this password without using the clipboard."}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowQR(false)}
-              className="mt-4 w-full py-3 bg-zinc-100 hover:bg-zinc-800 text-zinc-700 hover:text-white rounded-xl transition-colors font-medium"
-            >
-              {lang === "zh" ? "关闭" : "Close"}
-            </button>
+        <div role="dialog" aria-modal="true" aria-labelledby="qr-title" className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fafafa]/90 p-4 backdrop-blur-xl" onClick={() => setShowQR(false)}>
+          <div className="flex w-full max-w-sm flex-col items-center gap-6 rounded-3xl border border-zinc-200 bg-white p-8 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="rounded-2xl bg-white p-4 shadow-xl"><QRCodeSVG value={password} size={220} level="M" /></div>
+            <div className="text-center"><h2 id="qr-title" className="font-bold text-zinc-900">{copy.qr_title}</h2><p className="mt-2 text-sm leading-relaxed text-zinc-600">{copy.qr_note}</p></div>
+            <button type="button" autoFocus onClick={() => setShowQR(false)} className="w-full rounded-xl bg-zinc-100 py-3 font-medium text-zinc-700 hover:bg-zinc-800 hover:text-white">{copy.close}</button>
           </div>
         </div>
       )}

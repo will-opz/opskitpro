@@ -16,6 +16,10 @@ export type PassphraseOptions = {
   includeNumber: boolean;
 };
 
+export type PinOptions = {
+  length: number;
+};
+
 const CHARACTER_SETS = {
   uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   lowercase: "abcdefghijklmnopqrstuvwxyz",
@@ -141,4 +145,17 @@ export function generateSecurePassphrase(
     words.push(String(randomIndex(10_000, cryptoSource)).padStart(4, "0"));
   }
   return words.join(options.separator);
+}
+
+export function generateSecurePin(
+  options: PinOptions,
+  cryptoSource: RandomValues = globalThis.crypto,
+): string {
+  if (!Number.isInteger(options.length) || options.length < 4 || options.length > 12) {
+    throw new RangeError("PIN length must be between 4 and 12");
+  }
+
+  return Array.from({ length: options.length }, () =>
+    String(randomIndex(10, cryptoSource)),
+  ).join("");
 }

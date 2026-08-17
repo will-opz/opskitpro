@@ -507,10 +507,10 @@ test('password generator supports PIN mode regeneration', async ({ page }) => {
   await page.goto('/tools/passgen')
 
   await expect(page.getByRole('heading', { name: /Password Generator/i })).toBeVisible()
-  await page.getByRole('button', { name: /6-digit PIN/i }).click()
+  await page.getByRole('tab', { name: /^PIN$/i }).click()
   await page.getByRole('button', { name: /Regenerate/i }).click()
 
-  await expect(page.locator('.select-all')).toHaveText(/^\d{6}$/)
+  await expect(page.getByTestId('generated-password')).toHaveText(/^\d{6}$/)
 })
 
 test('qr generator renders a preview for input text', async ({ page }) => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   generateSecurePassphrase,
   generateSecurePassword,
+  generateSecurePin,
   getPasswordPreset,
   type PasswordOptions,
 } from "../password-generator";
@@ -81,6 +82,16 @@ describe("generateSecurePassword", () => {
       expect(generateSecurePassword(options)).toHaveLength(options.length);
     },
   );
+});
+
+describe("generateSecurePin", () => {
+  it("creates a PIN with the requested bounded length", () => {
+    expect(generateSecurePin({ length: 8 })).toMatch(/^\d{8}$/);
+  });
+
+  it.each([3, 13, 6.5])("rejects invalid PIN length %s", (length) => {
+    expect(() => generateSecurePin({ length })).toThrow(RangeError);
+  });
 });
 
 describe("generateSecurePassphrase", () => {
