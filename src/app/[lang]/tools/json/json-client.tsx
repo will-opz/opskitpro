@@ -1,699 +1,216 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-  Braces,
-  Copy,
-  Check,
-  Trash2,
   AlertTriangle,
-  CheckCircle2,
-  Minimize2,
-  Download,
-  Upload,
-  BookOpen,
-  Wrench,
-  Eye,
-  Code,
-  Terminal,
   ArrowRightLeft,
-  GitCompare,
-  Shield,
-  Table,
-  FolderOpen,
+  Braces,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Copy,
+  Minimize2,
+  Sparkles,
+  Trash2,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
+import { JsonEditor } from "./components";
+import { getJsonStats, jsonToToml, jsonToYaml, repairJson } from "./hooks";
 
-// Components
-import {
-  JsonEditor,
-  JsonTreeNode,
-  DiffView,
-  computeDiff,
-  JqQueryPanel,
-  FormatConverter,
-  JsonDiffPanel,
-  SchemaValidator,
-  FieldExtractor,
-  DraftsPanel,
-} from "./components";
-import type { DiffLine } from "./components";
-
-// Hooks
-import { repairJson, getJsonStats } from "./hooks";
+type Lang = "zh" | "en";
+type ResultKind = "formatted" | "minified" | "repaired" | "yaml" | "toml" | null;
 
 const SAMPLE_JSON = `{
   "project": "OpsKitPro",
-  "version": "2.4.0",
-  "infrastructure": {
-    "provider": "cloudflare",
-    "type": "edge-workers",
-    "regions": ["ap-east-1", "us-west-2", "eu-central-1"]
-  },
-  "services": [
-    {
-      "name": "monitoring",
-      "status": "operational",
-      "uptime": 99.97
-    },
-    {
-      "name": "ci-pipeline",
-      "status": "operational",
-      "uptime": 99.85
-    }
-  ],
-  "ai_config": {
-    "model": "gpt-4-turbo",
-    "auto_remediation": true,
-    "alert_threshold": 0.85
-  }
+  "status": "operational",
+  "tools": ["website-check", "json", "password-generator"]
 }`;
 
-const SAMPLE_K8S = `{
-  "apiVersion": "v1",
-  "kind": "PodList",
-  "items": [
-    {
-      "metadata": { "name": "nginx-abc123", "namespace": "default" },
-      "spec": { "nodeName": "node-1" },
-      "status": { "phase": "Running", "restartCount": 0 }
-    },
-    {
-      "metadata": { "name": "redis-xyz789", "namespace": "cache" },
-      "spec": { "nodeName": "node-2" },
-      "status": { "phase": "Running", "restartCount": 2 }
-    },
-    {
-      "metadata": { "name": "api-pending", "namespace": "default" },
-      "spec": { "nodeName": null },
-      "status": { "phase": "Pending", "restartCount": 0 }
-    }
-  ]
-}`;
-
-type ViewMode =
-  | "editor"
-  | "tree"
-  | "diff"
-  | "query"
-  | "convert"
-  | "compare"
-  | "schema"
-  | "extract"
-  | "drafts";
-
-type Lang = "zh" | "en";
+const ACTION_CLASS = "flex min-h-10 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-35";
 
 export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
-  const ui = {
-    zh: {
-      badge: dict.tools.json_title,
-      home: "首页",
-      tools: "工具",
-      title: dict.tools.json_title,
-      desc: dict.tools.json_desc,
-      sample: dict.tools.json.sample,
-      demo: "K8s 示例",
-      upload: dict.tools.json.upload,
-      download: dict.tools.json.download,
-      repair: dict.tools.json.repair,
-      copy: dict.tools.json.copy,
-      clear: dict.tools.json.clear,
-      format: dict.tools.json.format,
-      minify: dict.tools.json.minify,
-      editor: "编辑器",
-      query: "JQ",
-      convert: "转换",
-      diff: "对比",
-      schema: "校验",
-      extract: "提取",
-      tree: "树状",
-      drafts: "草稿",
-      input: "输入",
-      output: "输出",
-      idle: "空闲",
-    },
-
-    en: {
-      badge: dict.tools.json_title,
-      home: "Home",
-      tools: "Tools",
-      title: dict.tools.json_title,
-      desc: dict.tools.json_desc,
-      sample: dict.tools.json.sample,
-      demo: "K8s Demo",
-      upload: dict.tools.json.upload,
-      download: dict.tools.json.download,
-      repair: dict.tools.json.repair,
-      copy: dict.tools.json.copy,
-      clear: dict.tools.json.clear,
-      format: dict.tools.json.format,
-      minify: dict.tools.json.minify,
-      editor: "Editor",
-      query: "JQ",
-      convert: "Convert",
-      diff: "Diff",
-      schema: "Schema",
-      extract: "Extract",
-      tree: "Tree",
-      drafts: "Drafts",
-      input: "Input",
-      output: "Output",
-      idle: "Idle",
-    },
-  }[lang];
-
-  const [json, setJson] = useState("");
-  const [status, setStatus] = useState<"idle" | "valid" | "invalid">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const copy = dict.tools.json;
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [resultKind, setResultKind] = useState<ResultKind>(null);
+  const [fixes, setFixes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("editor");
-  const [diffData, setDiffData] = useState<DiffLine[] | null>(null);
-  const [repairFixes, setRepairFixes] = useState<string[]>([]);
-  const [jqOutput, setJqOutput] = useState("");
+  const [copyError, setCopyError] = useState("");
+  const [showConvert, setShowConvert] = useState(false);
 
-  const validate = useCallback((value: string) => {
-    if (!value.trim()) {
-      setStatus("idle");
-      setErrorMsg("");
+  const validation = useMemo(() => {
+    if (!input.trim()) return { state: "idle" as const, error: "" };
+    try {
+      JSON.parse(input);
+      return { state: "valid" as const, error: "" };
+    } catch (error) {
+      return {
+        state: "invalid" as const,
+        error: error instanceof Error ? error.message : copy.invalid,
+      };
+    }
+  }, [copy.invalid, input]);
+
+  const stats = useMemo(
+    () => validation.state === "valid" ? getJsonStats(input) : null,
+    [input, validation.state],
+  );
+
+  const setJsonResult = (kind: Exclude<ResultKind, "repaired" | "yaml" | "toml" | null>) => {
+    try {
+      const parsed = JSON.parse(input);
+      setOutput(kind === "formatted" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed));
+      setResultKind(kind);
+      setFixes([]);
+    } catch {
+      setOutput("");
+      setResultKind(null);
+    }
+  };
+
+  const handleRepair = () => {
+    if (!input.trim()) return;
+    const repaired = repairJson(input);
+    try {
+      setOutput(JSON.stringify(JSON.parse(repaired.repaired), null, 2));
+      setResultKind("repaired");
+      setFixes(repaired.fixes);
+    } catch {
+      setOutput("");
+      setResultKind(null);
+      setFixes(repaired.fixes);
+    }
+  };
+
+  const handleConvert = (target: "yaml" | "toml") => {
+    const converted = target === "yaml" ? jsonToYaml(input) : jsonToToml(input);
+    setShowConvert(false);
+    setFixes([]);
+    if (converted.error) {
+      setOutput("");
+      setResultKind(null);
       return;
     }
-    try {
-      JSON.parse(value);
-      setStatus("valid");
-      setErrorMsg("");
-    } catch (e: any) {
-      setStatus("invalid");
-      setErrorMsg(e.message);
-    }
-  }, []);
-
-  const handleJsonChange = (value: string) => {
-    setJson(value);
-    if (viewMode === "diff") setViewMode("editor");
+    setOutput(converted.output);
+    setResultKind(target);
   };
 
-  const handleLoadJson = (content: string) => {
-    setJson(content);
-    validate(content);
-    setViewMode("editor");
-  };
-
-  const stats = useMemo(() => getJsonStats(json), [json]);
-  const parsedJson = useMemo(() => {
+  const copyResult = async () => {
+    if (!output) return;
     try {
-      return JSON.parse(json);
+      await navigator.clipboard.writeText(output);
+      setCopied(true);
+      setCopyError("");
+      window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      return null;
-    }
-  }, [json]);
-
-  const formatJSON = () => {
-    try {
-      const parsed = JSON.parse(json);
-      const formatted = JSON.stringify(parsed, null, 2);
-      setJson(formatted);
-      setStatus("valid");
-      setErrorMsg("");
-    } catch (e: any) {
-      setStatus("invalid");
-      setErrorMsg(e.message);
-    }
-  };
-
-  const minifyJSON = () => {
-    try {
-      const parsed = JSON.parse(json);
-      const minified = JSON.stringify(parsed);
-      setJson(minified);
-      setStatus("valid");
-      setErrorMsg("");
-    } catch (e: any) {
-      setStatus("invalid");
-      setErrorMsg(e.message);
-    }
-  };
-
-  const smartRepair = () => {
-    if (!json.trim()) return;
-    const originalFormatted = json;
-    const { repaired, fixes } = repairJson(json);
-
-    try {
-      const parsed = JSON.parse(repaired);
-      const formatted = JSON.stringify(parsed, null, 2);
-      const diff = computeDiff(originalFormatted, formatted);
-
-      setRepairFixes(fixes);
-      setDiffData(diff);
-      setJson(formatted);
-      setStatus("valid");
-      setErrorMsg("");
-      setViewMode("diff");
-    } catch (e: any) {
-      setRepairFixes(fixes);
-      setStatus("invalid");
-      setErrorMsg(
-        `Repair attempted (${fixes.length} fix${fixes.length !== 1 ? "es" : ""}) but JSON is still invalid: ${e.message}`,
-      );
+      setCopied(false);
+      setCopyError(copy.copy_error);
     }
   };
 
   const clearAll = () => {
-    setJson("");
-    setStatus("idle");
-    setErrorMsg("");
-    setDiffData(null);
-    setRepairFixes([]);
-    setJqOutput("");
-    setViewMode("editor");
+    setInput("");
+    setOutput("");
+    setResultKind(null);
+    setFixes([]);
+    setCopyError("");
+    setShowConvert(false);
   };
 
-  const loadSample = (type: "basic" | "k8s" = "basic") => {
-    const sample = type === "k8s" ? SAMPLE_K8S : SAMPLE_JSON;
-    setJson(sample);
-    setStatus("valid");
-    setErrorMsg("");
-    setDiffData(null);
+  const applyOutput = () => {
+    if (!output || resultKind === "yaml" || resultKind === "toml") return;
+    setInput(output);
+    setOutput("");
+    setResultKind(null);
+    setFixes([]);
   };
 
-  const copyToClipboard = () => {
-    const textToCopy = viewMode === "query" && jqOutput ? jqOutput : json;
-    if (!textToCopy) return;
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const downloadJSON = () => {
-    if (!json) return;
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `opskitpro-json-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleFileUpload = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json,.yaml,.yml,.toml,.txt";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const content = ev.target?.result as string;
-        setJson(content);
-        validate(content);
-        setViewMode("editor");
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  };
-
-  const tabs: {
-    mode: ViewMode;
-    icon: any;
-    label: string;
-    disabled?: boolean;
-    color?: string;
-  }[] = [
-    { mode: "editor", icon: Code, label: ui.editor },
-    {
-      mode: "query",
-      icon: Terminal,
-      label: ui.query,
-      disabled: status !== "valid",
-      color: "emerald",
-    },
-    {
-      mode: "convert",
-      icon: ArrowRightLeft,
-      label: ui.convert,
-      disabled: !json.trim(),
-      color: "blue",
-    },
-    {
-      mode: "compare",
-      icon: GitCompare,
-      label: ui.diff,
-      disabled: !json.trim(),
-      color: "purple",
-    },
-    {
-      mode: "schema",
-      icon: Shield,
-      label: ui.schema,
-      disabled: status !== "valid",
-      color: "violet",
-    },
-    {
-      mode: "extract",
-      icon: Table,
-      label: ui.extract,
-      disabled: status !== "valid",
-      color: "cyan",
-    },
-    { mode: "tree", icon: Eye, label: ui.tree, disabled: status !== "valid" },
-    { mode: "drafts", icon: FolderOpen, label: ui.drafts, color: "amber" },
-  ];
+  const resultLabel = resultKind ? copy[`result_${resultKind}`] : copy.output;
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link
-            href={`/${lang}`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {ui.home}
-          </Link>
+    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 pb-24 pt-8 font-sans text-zinc-700 sm:px-6 md:pt-12 lg:px-8">
+      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-full max-w-[800px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
+      <div className="mx-auto max-w-7xl">
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
+          <Link href={`/${lang}`} className="transition-colors hover:text-emerald-700">{lang === "zh" ? "首页" : "Home"}</Link>
           <span className="text-zinc-300">/</span>
-          <Link
-            href={`/${lang}/tools`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {ui.tools}
-          </Link>
+          <Link href={`/${lang}/tools`} className="transition-colors hover:text-emerald-700">{lang === "zh" ? "工具" : "Tools"}</Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
-            {ui.title}
-          </span>
+          <span className="font-semibold text-zinc-900">{dict.tools.json_title}</span>
         </nav>
 
-        {/* Header */}
-        <header className="mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            {ui.badge}
+        <header className="mb-8 flex items-center gap-4">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3.5 shadow-lg shadow-emerald-500/10">
+            <Braces className="h-7 w-7 text-emerald-700" />
           </div>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
-                <Braces className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight">
-                  {ui.title}
-                </h1>
-                <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed max-w-xl">
-                  {ui.desc}
-                </p>
-              </div>
-            </div>
-
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">{dict.tools.json_title}</h1>
+            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-zinc-600">{dict.tools.json_desc}</p>
           </div>
         </header>
 
-        {/* Action Bar */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <button
-            onClick={() => loadSample("basic")}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-all active:scale-95"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            {ui.sample}
-          </button>
-          <button
-            onClick={() => loadSample("k8s")}
-            className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-all active:scale-95"
-          >
-            {ui.demo}
-          </button>
-          <button
-            onClick={handleFileUpload}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all active:scale-95"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            {ui.upload}
-          </button>
-          <button
-            onClick={downloadJSON}
-            disabled={!json || status === "invalid"}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {ui.download}
-          </button>
-
-          <div className="hidden sm:block h-5 w-px bg-zinc-200 mx-1"></div>
-
-          <button
-            onClick={smartRepair}
-            disabled={!json || status !== "invalid"}
-            className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <Wrench className="w-3.5 h-3.5" />
-            {ui.repair}
-          </button>
-
-          <div className="hidden sm:block h-5 w-px bg-zinc-200 mx-1"></div>
-
-          <button
-            onClick={copyToClipboard}
-            disabled={!json && !jqOutput}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:border-emerald-300 hover:text-emerald-700 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
-          >
-            {copied ? (
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-            ) : (
-              <Copy className="w-3.5 h-3.5" />
-            )}
-            {copied ? dict.tools.json.copied : ui.copy}
-          </button>
-          <button
-            onClick={clearAll}
-            disabled={!json}
-            className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 border border-zinc-200 rounded-lg text-xs text-zinc-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            {ui.clear}
-          </button>
-        </div>
-
-        {/* Main Editor Card */}
-        <main className="glass-card rounded-2xl border border-zinc-200/50 shadow-2xl overflow-hidden relative">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-zinc-100 bg-white/60">
-            <div className="flex items-center gap-4">
-              <div className="flex gap-1.5 items-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-400/40"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-400/40"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/40"></div>
-              </div>
-
-              {/* View mode tabs - scrollable on mobile */}
-              <div className="flex gap-1 bg-zinc-100 rounded-lg p-0.5 overflow-x-auto max-w-[calc(100vw-200px)] scrollbar-hide">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.mode}
-                    onClick={() => setViewMode(tab.mode)}
-                    disabled={tab.disabled}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-[0.18em] transition-all whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed ${
-                      viewMode === tab.mode
-                        ? `bg-white shadow-sm ${tab.color ? `text-${tab.color}-700` : "text-zinc-900"}`
-                        : "text-zinc-400 hover:text-zinc-600"
-                    }`}
-                  >
-                    <tab.icon className="w-3 h-3" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
-                ))}
-                {diffData && (
-                  <button
-                    onClick={() => setViewMode("diff")}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-[0.18em] transition-all ${
-                      viewMode === "diff"
-                        ? "bg-white text-amber-700 shadow-sm"
-                        : "text-amber-400 hover:text-amber-600"
-                    }`}
-                  >
-                    <Wrench className="w-3 h-3" />
-                    <span className="hidden sm:inline">{ui.repair}</span>
-                  </button>
+        <main className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50/70 px-3 py-3 sm:px-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => setJsonResult("formatted")} disabled={validation.state !== "valid"} className={`${ACTION_CLASS} border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-500 hover:text-white`}>
+                <Sparkles className="h-4 w-4" />{copy.format}
+              </button>
+              <button type="button" onClick={() => setJsonResult("minified")} disabled={validation.state !== "valid"} className={ACTION_CLASS}>
+                <Minimize2 className="h-4 w-4" />{copy.minify}
+              </button>
+              <button type="button" onClick={handleRepair} disabled={!input.trim() || validation.state === "valid"} className={ACTION_CLASS}>
+                <Wrench className="h-4 w-4" />{copy.repair}
+              </button>
+              <div className="relative">
+                <button type="button" aria-expanded={showConvert} onClick={() => setShowConvert((value) => !value)} disabled={validation.state !== "valid"} className={ACTION_CLASS}>
+                  <ArrowRightLeft className="h-4 w-4" />{copy.convert}<ChevronDown className="h-3.5 w-3.5" />
+                </button>
+                {showConvert && (
+                  <div className="absolute left-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl">
+                    <button type="button" onClick={() => handleConvert("yaml")} className="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:bg-emerald-50 hover:text-emerald-700">JSON → YAML</button>
+                    <button type="button" onClick={() => handleConvert("toml")} className="w-full rounded-lg px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:bg-emerald-50 hover:text-emerald-700">JSON → TOML</button>
+                  </div>
                 )}
               </div>
             </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={formatJSON}
-                disabled={!json}
-                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-500 transition-all active:scale-95 disabled:opacity-30 shadow-lg shadow-emerald-500/10"
-              >
-                {ui.format}
-              </button>
-              <button
-                onClick={minifyJSON}
-                disabled={!json}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-semibold hover:from-emerald-400 hover:to-teal-500 transition-all shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-30 flex items-center gap-2"
-              >
-                <Minimize2 className="w-4 h-4" />
-                <span className="hidden sm:inline">{ui.minify}</span>
-              </button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setInput(SAMPLE_JSON)} className={ACTION_CLASS}>{copy.sample}</button>
+              <button type="button" onClick={clearAll} disabled={!input && !output} className={`${ACTION_CLASS} hover:!border-red-200 hover:!bg-red-50 hover:!text-red-600`}><Trash2 className="h-4 w-4" />{copy.clear}</button>
             </div>
           </div>
 
-          {/* JQ Query Panel */}
-          {viewMode === "query" && (
-            <JqQueryPanel
-              inputJson={json}
-              onOutputChange={setJqOutput}
-            />
-          )}
+          <div className="grid min-h-[480px] grid-cols-1 divide-y divide-zinc-200 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+            <section aria-labelledby="json-input-title" className="min-w-0 bg-white">
+              <div className="flex min-h-11 items-center justify-between border-b border-zinc-100 px-4">
+                <h2 id="json-input-title" className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-400">{copy.input}</h2>
+                <span className={`flex items-center gap-1.5 text-[10px] font-semibold ${validation.state === "valid" ? "text-emerald-700" : validation.state === "invalid" ? "text-red-600" : "text-zinc-400"}`}>
+                  {validation.state === "valid" ? <CheckCircle2 className="h-3.5 w-3.5" /> : validation.state === "invalid" ? <AlertTriangle className="h-3.5 w-3.5" /> : <Braces className="h-3.5 w-3.5" />}
+                  {validation.state === "valid" ? copy.valid : validation.state === "invalid" ? copy.invalid : copy.idle}
+                </span>
+              </div>
+              <JsonEditor value={input} onChange={setInput} onValidate={() => {}} placeholder={copy.placeholder} />
+              <div className={`min-h-12 border-t px-4 py-3 text-xs ${validation.state === "invalid" ? "border-red-100 bg-red-50 text-red-700" : "border-zinc-100 bg-zinc-50/60 text-zinc-500"}`}>
+                {validation.state === "invalid" ? validation.error : stats ? `${stats.type} · ${stats.keys} ${copy.keys} · ${copy.depth} ${stats.depth} · ${stats.size}` : copy.input_hint}
+              </div>
+            </section>
 
-          {/* Content Area */}
-          <div className="min-h-[400px]">
-            {/* Editor View */}
-            {viewMode === "editor" && (
-              <JsonEditor
-                value={json}
-                onChange={handleJsonChange}
-                onValidate={validate}
-                placeholder={dict.tools.json.placeholder}
-              />
-            )}
-
-            {/* JQ Query Output */}
-            {viewMode === "query" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-zinc-100">
-                <div className="relative">
-                  <div className="absolute top-2 left-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-300">
-                    {ui.input}
-                  </div>
-                  <pre className="p-6 pt-8 min-h-[300px] max-h-[400px] overflow-auto font-mono text-[12px] leading-relaxed text-zinc-600 bg-zinc-50/30">
-                    {json || (
-                      <span className="text-zinc-300 italic">
-                        {lang === "zh"
-                            ? "暂无输入"
-                            : "No input"}
-                      </span>
-                    )}
-                  </pre>
-                </div>
-                <div className="relative">
-                  <div className="absolute top-2 left-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-400">
-                    {ui.output}
-                  </div>
-                  <pre className="p-6 pt-8 min-h-[300px] max-h-[400px] overflow-auto font-mono text-[12px] leading-relaxed text-emerald-700 bg-emerald-50/30">
-                    {jqOutput || (
-                      <span className="text-zinc-300 italic">
-                        {lang === "zh"
-                            ? "请先执行查询"
-                            : "Run a query"}
-                      </span>
-                    )}
-                  </pre>
+            <section aria-labelledby="json-output-title" className="min-w-0 bg-zinc-50/30">
+              <div className="flex min-h-11 items-center justify-between gap-3 border-b border-zinc-100 px-4">
+                <h2 id="json-output-title" className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-600">{resultLabel}</h2>
+                <div className="flex items-center gap-2">
+                  {output && resultKind !== "yaml" && resultKind !== "toml" && <button type="button" onClick={applyOutput} className="text-xs font-medium text-zinc-500 hover:text-emerald-700">{copy.apply_input}</button>}
+                  <button type="button" onClick={copyResult} disabled={!output} className={`${ACTION_CLASS} !min-h-8 !px-2.5 !py-1.5`}>
+                    {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}{copied ? copy.copied : copy.copy}
+                  </button>
                 </div>
               </div>
-            )}
-
-            {/* Convert View */}
-            {viewMode === "convert" && (
-              <div className="p-6">
-                <FormatConverter inputValue={json} />
+              <pre data-testid="json-output" className="min-h-[400px] max-h-[640px] overflow-auto whitespace-pre-wrap break-words p-5 font-mono text-[13px] leading-relaxed text-zinc-800 sm:p-6">{output || <span className="italic text-zinc-300">{copy.output_hint}</span>}</pre>
+              <div className="min-h-12 border-t border-zinc-100 bg-white/70 px-4 py-3 text-xs text-zinc-500">
+                {copyError || (fixes.length ? `${copy.repair_summary}: ${fixes.join("; ")}` : copy.local_note)}
               </div>
-            )}
-
-            {/* Compare/Diff View */}
-            {viewMode === "compare" && (
-              <JsonDiffPanel leftJson={json} />
-            )}
-
-            {/* Schema Validator */}
-            {viewMode === "schema" && (
-              <SchemaValidator inputJson={json} />
-            )}
-
-            {/* Field Extractor */}
-            {viewMode === "extract" && (
-              <FieldExtractor inputJson={json} />
-            )}
-
-            {/* Tree View */}
-            {viewMode === "tree" && parsedJson !== null && (
-              <div className="min-h-[300px] max-h-[600px] overflow-auto p-6 font-mono text-[13px] leading-relaxed">
-                <JsonTreeNode value={parsedJson} defaultOpen={true} />
-              </div>
-            )}
-
-            {/* Drafts Panel */}
-            {viewMode === "drafts" && (
-              <DraftsPanel
-                currentContent={json}
-                onLoad={handleLoadJson}
-              />
-            )}
-
-            {/* Repair Diff View */}
-            {viewMode === "diff" && diffData && (
-              <DiffView
-                diffData={diffData}
-                repairFixes={repairFixes}
-                dict={dict}
-              />
-            )}
+            </section>
           </div>
-
-          {/* Footer */}
-          <footer
-            className={`px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t transition-colors ${
-              status === "valid"
-                ? "bg-emerald-50/50 border-emerald-100 text-emerald-700"
-                : status === "invalid"
-                  ? "bg-red-50/50 border-red-100 text-red-600"
-                  : "bg-zinc-50/50 border-zinc-100 text-zinc-400"
-            }`}
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              {status === "valid" ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-              ) : status === "invalid" ? (
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-              ) : (
-                <Braces className="w-4 h-4 shrink-0" />
-              )}
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] shrink-0">
-                {status === "valid"
-                  ? lang === "zh"
-                      ? "JSON 有效"
-                      : "VALID JSON"
-                  : status === "invalid"
-                    ? lang === "zh"
-                        ? "JSON 无效"
-                        : "INVALID"
-                    : ui.idle}
-              </span>
-              {status === "invalid" && errorMsg && (
-                <span className="text-[10px] opacity-70 break-all line-clamp-1 min-w-0">
-                  — {errorMsg}
-                </span>
-              )}
-            </div>
-            {stats && status === "valid" && (
-              <div className="flex items-center gap-3 text-[10px] text-emerald-600/70 uppercase tracking-[0.18em] shrink-0">
-                <span>{stats.type}</span>
-                <span className="text-emerald-300">•</span>
-                <span>
-                  {stats.keys} {"keys"}
-                </span>
-                <span className="text-emerald-300">•</span>
-                <span>
-                  {"depth"} {stats.depth}
-                </span>
-                <span className="text-emerald-300">•</span>
-                <span>{stats.size}</span>
-              </div>
-            )}
-          </footer>
         </main>
       </div>
     </div>

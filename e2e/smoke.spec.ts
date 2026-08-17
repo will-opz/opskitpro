@@ -212,15 +212,22 @@ test('services dashboard can search first-party tools', async ({ page }) => {
   await expect(page.getByRole('link', { name: /Encode Tool/i })).toBeVisible()
 })
 
-test('json formatter beautifies valid JSON', async ({ page }) => {
+test('json formatter keeps the core input and result workflow focused', async ({ page }) => {
   await page.goto('/tools/json')
 
   const editor = page.locator('textarea').first()
   await editor.fill('{"name":"OpsKitPro","ok":true}')
   await page.getByRole('button', { name: /Beautify/i }).click()
 
-  await expect(editor).toHaveValue(/"name": "OpsKitPro"/)
-  await expect(page.getByText(/VALID JSON/i)).toBeVisible()
+  await expect(editor).toHaveValue('{"name":"OpsKitPro","ok":true}')
+  await expect(page.getByTestId('json-output')).toContainText('"name": "OpsKitPro"')
+  await expect(page.getByText(/Structure Valid/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: /JQ|Schema|Drafts/i })).toHaveCount(0)
+
+  await page.getByRole('button', { name: /Convert/i }).click()
+  await page.getByRole('button', { name: 'JSON → YAML' }).click()
+  await expect(page.getByTestId('json-output')).toContainText('name: OpsKitPro')
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
 test('encoding toolkit transforms and copies output', async ({ context, page, browserName }) => {
