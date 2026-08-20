@@ -193,23 +193,23 @@ test('tool API snippets and website-check metadata follow the active locale', as
 test('home page exposes core navigation and tool entry points', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: /DNS, IP & Site|DNS·IP·网站|DNS・IP・サイトを|DNS·IP·網站/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Website diagnostics and everyday online tools|网站诊断与常用在线工具/i })).toBeVisible()
   await expect(page.getByRole('link', { name: /Tools|工具|ツール/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Password Generator|密码生成器/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Knowledge Base|知识库/i })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /About|关于我们/i })).toHaveCount(0)
-  await expect(page.getByRole('link', { name: /Website Diagnostic|网站综合诊断|網站綜合診斷|Webサイト診断/i }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: /IP Lookup|IP 归属查询|IP 歸屬查詢|IP アドレス検索/i }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Open DNS lookup' }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Browse secure tools|浏览安全工具/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Open full check|打开完整检测/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Website Check|网站检测/i }).first()).toBeVisible()
 })
 
-test('services dashboard can search first-party tools', async ({ page }) => {
+test('retired services dashboard redirects to the searchable tool catalog', async ({ page }) => {
   await page.goto('/services')
 
-  await expect(page.getByRole('heading', { name: /Tool Navigator/i })).toBeVisible()
-  await page.getByRole('button', { name: 'All' }).click()
+  await expect(page).toHaveURL(/\/en\/tools$/)
+  await expect(page.getByRole('heading', { name: /Know where your data is processed/i })).toBeVisible()
   await page.getByRole('searchbox').fill('encode')
-  await expect(page.getByRole('link', { name: /Encode Tool/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Encode \/ Decode/i })).toBeVisible()
 })
 
 test('json formatter keeps the core input and result workflow focused', async ({ page }) => {
@@ -560,14 +560,14 @@ test('retired blog index sends visitors to the tool catalog', async ({ page }) =
   await page.goto('/blog')
 
   await expect(page).toHaveURL(/\/en\/tools$/)
-  await expect(page.getByRole('heading', { name: /First-party tools/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Know where your data is processed/i })).toBeVisible()
 })
 
 test('retired localized articles redirect to the matching tool and locale', async ({ page }) => {
   await page.goto('/zh/blog/tls-health-vs-https')
 
   await expect(page).toHaveURL(/\/zh\/tools\/website-check$/)
-  await expect(page.getByRole('heading', { name: /网站检测|Website Check/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /网站诊断|Website diagnostics/i })).toBeVisible()
 })
 
 test('mobile menu opens and exposes primary navigation', async ({ page }) => {

@@ -1,5 +1,20 @@
 import { expect, test } from '@playwright/test'
 
+function collectStructuredDataTypes(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(collectStructuredDataTypes)
+  }
+
+  if (!value || typeof value !== 'object') return []
+
+  const record = value as Record<string, unknown>
+  const currentType = record['@type']
+  return [
+    ...(typeof currentType === 'string' ? [currentType] : []),
+    ...Object.values(record).flatMap(collectStructuredDataTypes),
+  ]
+}
+
 test.describe('Diagnostics Hub Closed-Loop', () => {
 
   test('1. SEO / JSON-LD Tests - tools have correct schema', async ({ page }) => {
@@ -12,19 +27,24 @@ test.describe('Diagnostics Hub Closed-Loop', () => {
     for (const url of pagesToCheck) {
       await page.goto(url)
       const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents()
-      const jsonString = jsonLd.join('\n')
-      expect(jsonString).toContain('WebApplication')
-      expect(jsonString).toContain('FAQPage')
-      expect(jsonString).toContain('BreadcrumbList')
+      const types = jsonLd.flatMap((content) =>
+        collectStructuredDataTypes(JSON.parse(content)),
+      )
+      expect(types).toEqual(
+        expect.arrayContaining(['WebApplication', 'WebPage', 'BreadcrumbList']),
+      )
+      expect(types).not.toContain('FAQPage')
     }
 
     // Verify Error page specifically
     await page.goto('/errors/522')
     const errorJsonLd = await page.locator('script[type="application/ld+json"]').allTextContents()
-    const errorJsonString = errorJsonLd.join('\n')
-    expect(errorJsonString).toContain('TechArticle')
-    expect(errorJsonString).toContain('FAQPage')
-    expect(errorJsonString).toContain('BreadcrumbList')
+    const errorTypes = errorJsonLd.flatMap((content) =>
+      collectStructuredDataTypes(JSON.parse(content)),
+    )
+    expect(errorTypes).toEqual(
+      expect.arrayContaining(['TechArticle', 'FAQPage', 'BreadcrumbList']),
+    )
   })
 
   test('2. Internal Link Closed-Loop Tests - error page CTAs', async ({ page }) => {
@@ -46,6 +66,7 @@ test.describe('Diagnostics Hub Closed-Loop', () => {
       await route.fulfill({
         json: {
           domain: 'example.com',
+          target: 'example.com',
           status: 'success',
           isActuallyIp: false,
           isPrivate: false,
@@ -67,11 +88,29 @@ test.describe('Diagnostics Hub Closed-Loop', () => {
           dns: {
             success: true,
             resolved_ip: '104.21.1.1',
+            latency: '42ms',
             records: {
               A: [{ value: '104.21.1.1' }],
               MX: [{ value: 'mail.example.com' }],
               TXT: [{ value: 'v=spf1 include:_spf.example.com ~all' }],
             },
+          },
+          ssl: {
+            valid: true,
+            grade: 'A',
+            factors: ['HSTS_ENABLED'],
+          },
+          securityHeaders: {
+            score: 100,
+            grade: 'A',
+            checks: [],
+          },
+          subdomains: [],
+          meta: {
+            checkedAt: '2026-08-20T00:00:00.000Z',
+            totalMs: 5000,
+            coreMs: 5000,
+            cfRay: 'abc123-NRT',
           },
         },
       })
@@ -81,13 +120,13 @@ test.describe('Diagnostics Hub Closed-Loop', () => {
 
     // Fill domain and submit
     await page.getByPlaceholder(/example\.com/i).first().fill('example.com')
-    await page.getByRole('button', { name: /Analyze|检测|診断|檢測/i }).first().click()
+    await page.getByRole('button', { name: /Start website check|开始网站检测/i }).click()
 
     // The component will eventually render the banners.
     // 1. Cloudflare Error Encyclopedia link
     await expect(page.getByText(/Cloudflare Error 522/i)).toBeVisible({ timeout: 10000 })
     // 2. DNS Security Audit banner
-    await expect(page.getByText(/DNS Security Audit/i)).toBeVisible()
+    await expect(page.getByText(/Email & DNS Security Validation Available/i)).toBeVisible()
     // 3. Cloudflare Edge CDN banner
     await expect(page.getByRole('heading', { name: /Cloudflare Edge/i })).toBeVisible()
   })
