@@ -34,6 +34,28 @@ export function useDnsLookup() {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<LookupHistory[]>([]);
 
+  const addToHistory = useCallback(
+    (
+      domain: string,
+      type: DnsRecordType,
+      provider: DnsProvider,
+      result?: DnsLookupResponse,
+      error?: string,
+    ) => {
+      const entry: LookupHistory = {
+        id: Date.now().toString(36),
+        domain,
+        type,
+        provider,
+        timestamp: Date.now(),
+        result,
+        error,
+      };
+      setHistory((prev) => [entry, ...prev.slice(0, 49)]); // Keep last 50
+    },
+    [],
+  );
+
   const lookup = useCallback(
     async (
       domain: string,
@@ -77,7 +99,7 @@ export function useDnsLookup() {
         setLoading(false);
       }
     },
-    [],
+    [addToHistory],
   );
 
   const batchLookup = useCallback(
@@ -120,28 +142,6 @@ export function useDnsLookup() {
       } finally {
         setLoading(false);
       }
-    },
-    [],
-  );
-
-  const addToHistory = useCallback(
-    (
-      domain: string,
-      type: DnsRecordType,
-      provider: DnsProvider,
-      result?: DnsLookupResponse,
-      error?: string,
-    ) => {
-      const entry: LookupHistory = {
-        id: Date.now().toString(36),
-        domain,
-        type,
-        provider,
-        timestamp: Date.now(),
-        result,
-        error,
-      };
-      setHistory((prev) => [entry, ...prev.slice(0, 49)]); // Keep last 50
     },
     [],
   );

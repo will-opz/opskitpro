@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, KeyRound, Menu, TerminalSquare, X } from "lucide-react";
@@ -53,7 +54,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
           className="group relative z-50 flex items-center gap-3 no-underline outline-none"
         >
           <div className="relative transition-transform duration-500 group-hover:-rotate-6">
-            <img
+            <Image
               src="/logo.svg"
               alt="OpsKitPro logo"
               width={44}

@@ -686,7 +686,7 @@ export default function WebsiteCheckClient({
       setDomain(normalizedQuery);
       runDiagnostic(normalizedQuery);
     }
-  }, [searchParams, runDiagnostic]);
+  }, [searchParams, runDiagnostic, setDomain]);
 
   const buildMarkdownReport = useCallback(() => {
     if (!result) return;
@@ -696,58 +696,55 @@ export default function WebsiteCheckClient({
     );
   }, [lang, result]);
 
-  const buildFaultGuide = useCallback(
-    (message: string, data?: any) => {
-      const normalized =
-        `${message || ""} ${data?.http?.status_code || ""}`.toLowerCase();
-      const faultCopy = localeText.fault;
-      let title = faultCopy.genericTitle;
-      let cause = faultCopy.genericCause;
+  const buildFaultGuide = (message: string, data?: any) => {
+    const normalized =
+      `${message || ""} ${data?.http?.status_code || ""}`.toLowerCase();
+    const faultCopy = localeText.fault;
+    let title = faultCopy.genericTitle;
+    let cause = faultCopy.genericCause;
 
-      if (
-        /nxdomain|enotfound|dns|name_not_resolved/.test(normalized) ||
-        data?.dns?.success === false
-      ) {
-        title = faultCopy.dnsTitle;
-        cause = faultCopy.dnsCause;
-      } else if (
-        /530|origin dns|cloudflare/.test(normalized) ||
-        data?.http?.status_code === 530
-      ) {
-        title = faultCopy.cloudflareTitle;
-        cause = faultCopy.cloudflareCause;
-      } else if (/ssl|tls|cert|certificate|handshake/.test(normalized)) {
-        title = faultCopy.sslTitle;
-        cause = faultCopy.sslCause;
-      } else if (
-        /timeout|abort|aborted|timed out|fetch failed|network/.test(normalized)
-      ) {
-        title = faultCopy.timeoutTitle;
-        cause = faultCopy.timeoutCause;
-      }
+    if (
+      /nxdomain|enotfound|dns|name_not_resolved/.test(normalized) ||
+      data?.dns?.success === false
+    ) {
+      title = faultCopy.dnsTitle;
+      cause = faultCopy.dnsCause;
+    } else if (
+      /530|origin dns|cloudflare/.test(normalized) ||
+      data?.http?.status_code === 530
+    ) {
+      title = faultCopy.cloudflareTitle;
+      cause = faultCopy.cloudflareCause;
+    } else if (/ssl|tls|cert|certificate|handshake/.test(normalized)) {
+      title = faultCopy.sslTitle;
+      cause = faultCopy.sslCause;
+    } else if (
+      /timeout|abort|aborted|timed out|fetch failed|network/.test(normalized)
+    ) {
+      title = faultCopy.timeoutTitle;
+      cause = faultCopy.timeoutCause;
+    }
 
-      const evidence = [
-        `Target: ${data?.domain || result?.domain || domain || "opskitpro.com"}`,
-        `Error: ${message || data?.error || "Unknown error"}`,
-        data?.dns?.latency ? `DNS latency: ${data.dns.latency}` : "",
-        data?.dns?.resolved_ip ? `Resolved IP: ${data.dns.resolved_ip}` : "",
-        data?.http?.status_code ? `HTTP status: ${data.http.status_code}` : "",
-        data?.meta?.checkedAt ? `Checked at: ${data.meta.checkedAt}` : "",
-      ].filter(Boolean);
+    const evidence = [
+      `Target: ${data?.domain || result?.domain || domain || "opskitpro.com"}`,
+      `Error: ${message || data?.error || "Unknown error"}`,
+      data?.dns?.latency ? `DNS latency: ${data.dns.latency}` : "",
+      data?.dns?.resolved_ip ? `Resolved IP: ${data.dns.resolved_ip}` : "",
+      data?.http?.status_code ? `HTTP status: ${data.http.status_code}` : "",
+      data?.meta?.checkedAt ? `Checked at: ${data.meta.checkedAt}` : "",
+    ].filter(Boolean);
 
-      const nextAction = getAdvice(
-        data || {
-          http: { success: false, status_code: 0 },
-          ssl: { valid: true, factors: [] },
-          securityHeaders: { score: 100, checks: [] },
-          cdn: { is_provider: true },
-        },
-      ).slice(0, 3);
+    const nextAction = getAdvice(
+      data || {
+        http: { success: false, status_code: 0 },
+        ssl: { valid: true, factors: [] },
+        securityHeaders: { score: 100, checks: [] },
+        cdn: { is_provider: true },
+      },
+    ).slice(0, 3);
 
-      return { title, cause, evidence, nextAction };
-    },
-    [domain, localeText.fault, result],
-  );
+    return { title, cause, evidence, nextAction };
+  };
 
   const buildPlainSummary = useCallback(() => {
     if (!result) return "";
@@ -1016,8 +1013,7 @@ export default function WebsiteCheckClient({
     return code;
   };
 
-  // Memoize advice to avoid computing it twice in render
-  const adviceList = useMemo(() => (result ? getAdvice(result) : []), [result]);
+  const adviceList = result ? getAdvice(result) : [];
   const diagnosticReport = useMemo(
     () => (result ? buildWebsiteCheckReport(result, { lang }) : null),
     [lang, result],
@@ -1052,10 +1048,7 @@ export default function WebsiteCheckClient({
       prioritizedFindings.filter((finding) => finding.severity === "success"),
     [prioritizedFindings],
   );
-  const faultGuide = useMemo(
-    () => (error ? buildFaultGuide(error, result) : null),
-    [buildFaultGuide, error, result],
-  );
+  const faultGuide = error ? buildFaultGuide(error, result) : null;
   const displayedTarget = result?.domain || domain || "opskitpro.com";
   const resultState = result ? getResultState(result) : null;
 

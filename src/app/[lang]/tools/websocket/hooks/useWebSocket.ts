@@ -49,7 +49,6 @@ export function useWebSocket() {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const pingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastPingRef = useRef<number | null>(null);
 
   const addLog = useCallback(
@@ -236,7 +235,6 @@ export function useWebSocket() {
   useEffect(() => {
     return () => {
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      if (pingTimerRef.current) clearInterval(pingTimerRef.current);
       socketRef.current?.close();
     };
   }, []);
