@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { getDictionary } from "@/dictionaries";
 import { AdminSessionProvider } from "@/components/AdminSessionProvider";
 import {
@@ -133,12 +132,6 @@ export default async function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <Script
-          id="adsense-loader"
-          strategy="afterInteractive"
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3793455361566383"
-          crossOrigin="anonymous"
-        />
       </head>
       <body className="ui-shell selection:bg-emerald-500/20 selection:text-[var(--text-primary)]">
         <script
