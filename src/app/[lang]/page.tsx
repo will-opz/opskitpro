@@ -7,11 +7,14 @@ import {
   Braces,
   Code2,
   Clock3,
+  Network,
+  ShieldCheck,
+  ShieldAlert,
+  Hash,
 } from "lucide-react";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import HomeSearch from "@/components/HomeSearch";
 import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
 import { HomePasswordGenerator } from "@/components/HomePasswordGenerator";
@@ -54,12 +57,18 @@ const homeDashboardCopy = {
     runFullCheck: "Open full check",
     openDnsLookup: "Open DNS Security",
     openAllTools: "Open all tools",
+    browseLocalTools: "Browse secure tools",
     probePrivacy:
       "Website targets are sent to OpsKitPro probes for public-network checks. No account is required, and results are not published as public reports.",
     privacyLink: "Privacy details",
-    popularToolsTitle: "Popular tools",
-    popularToolsDesc:
-      "Six focused tools for common tasks. No account required.",
+    localToolsTitle: "Local security tools",
+    localToolsDesc: "Sensitive input stays in this browser and is not uploaded to OpsKitPro.",
+    networkToolsTitle: "Website & network diagnostics",
+    networkToolsDesc: "Internet-assisted checks state what is sent and where the evidence is observed.",
+    localBadge: "Local processing · Not uploaded",
+    networkBadge: "Internet required · Data flow explained",
+    starterTools:
+      "Starter path: Password Generator, Hash, Sensitive Data Detector, JWT Decoder",
   },
   zh: {
     previewEyebrow: "网站检测包含",
@@ -80,11 +89,17 @@ const homeDashboardCopy = {
     runFullCheck: "打开完整检测",
     openDnsLookup: "打开 DNS 安全检查",
     openAllTools: "打开全部工具",
+    browseLocalTools: "浏览安全工具",
     probePrivacy:
       "网站目标会发送给 OpsKitPro 探针执行公开网络检测；无需登录，结果不会作为公开报告发布。",
     privacyLink: "查看隐私说明",
-    popularToolsTitle: "热门工具",
-    popularToolsDesc: "六个高频入口，一个工具解决一个问题，无需注册。",
+    localToolsTitle: "本地安全工具",
+    localToolsDesc: "敏感输入只在当前浏览器处理，不会上传到 OpsKitPro。",
+    networkToolsTitle: "网站与网络诊断",
+    networkToolsDesc: "联网检测会明确说明发送内容、接收位置和证据观测点。",
+    localBadge: "本地处理 · 不上传",
+    networkBadge: "需要联网 · 数据流透明",
+    starterTools: "推荐起步：密码生成器、Hash、敏感信息检测、JWT 解码",
   },
 } as const;
 
@@ -98,29 +113,43 @@ export default async function Home({
   const heroBadge = dict.home.title_part1;
   const heroSubtitle = dict.home.subtitle;
   const dashboardCopy = homeDashboardCopy[lang];
-  const popularToolIcons = {
+  const homeToolIcons = {
     passgen: KeyRound,
     "website-check": Activity,
     qrgen: QrCode,
     json: Braces,
     encode: Code2,
     time: Clock3,
+    hash: Hash,
+    jwt: ShieldCheck,
+    "sensitive-data": ShieldAlert,
+    uuid: KeyRound,
+    "network-doctor": Network,
+    "dns-security": ShieldCheck,
   } as const;
-  const popularTools = [
+  const localTools = [
     "passgen",
+    "hash",
+    "jwt",
+    "sensitive-data",
+    "uuid",
     "qrgen",
-    "website-check",
     "json",
     "encode",
     "time",
   ].flatMap((id) => {
-      const tool = productTools.find((entry) => entry.id === id);
-      if (!tool) return [];
-      return [{
-        ...localizeTool(tool, lang),
-        icon: popularToolIcons[id as keyof typeof popularToolIcons],
+    const tool = productTools.find((entry) => entry.id === id);
+    if (!tool) return [];
+    return [{
+      ...localizeTool(tool, lang),
+        icon: homeToolIcons[id as keyof typeof homeToolIcons],
       }];
     });
+  const networkTools = ["website-check", "network-doctor", "dns-security"].flatMap((id) => {
+    const tool = productTools.find((entry) => entry.id === id);
+    if (!tool) return [];
+    return [{ ...localizeTool(tool, lang), icon: homeToolIcons[id as keyof typeof homeToolIcons] }];
+  });
 
   return (
     <>
@@ -153,8 +182,14 @@ export default async function Home({
             <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-[var(--text-secondary)] md:text-base">
               {heroSubtitle}
             </p>
-            <div className="mt-6 max-w-3xl">
-              <HomeSearch dict={dict} lang={lang} compact />
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link href={`/${lang}/tools`} className="ui-button-primary min-h-11 px-5 py-3 text-sm">
+                {dashboardCopy.browseLocalTools}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href={`/${lang}/tools/website-check`} className="ui-button-ghost min-h-11 border border-[var(--border-subtle)] px-5 py-3 text-sm">
+                {dashboardCopy.runFullCheck}
+              </Link>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               {dashboardCopy.heroTags.map((item) => (
@@ -166,6 +201,9 @@ export default async function Home({
                 </span>
               ))}
             </div>
+            <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">
+              {dashboardCopy.starterTools}
+            </p>
           </div>
 
           <aside className="ui-surface rounded-2xl p-4 text-left">
@@ -226,16 +264,14 @@ export default async function Home({
           </aside>
         </section>
 
-        <HomePasswordGenerator lang={lang} />
-
         <section className="mx-auto mb-8 mt-10 w-full max-w-7xl text-left">
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
-                {dashboardCopy.popularToolsTitle}
+                {dashboardCopy.localToolsTitle}
               </h2>
               <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">
-                {dashboardCopy.popularToolsDesc}
+                {dashboardCopy.localToolsDesc}
               </p>
             </div>
             <Link
@@ -247,7 +283,7 @@ export default async function Home({
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {popularTools.map((tool) => (
+            {localTools.map((tool) => (
               <Link
                 key={tool.id}
                 href={`/${lang}${tool.href}`}
@@ -263,6 +299,9 @@ export default async function Home({
                   <span className="mt-0.5 block line-clamp-1 text-xs text-[var(--text-muted)]">
                     {tool.description}
                   </span>
+                  <span className="mt-1 block text-[10px] font-semibold text-emerald-600">
+                    {dashboardCopy.localBadge}
+                  </span>
                 </span>
                 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--accent-color)]" />
               </Link>
@@ -275,6 +314,27 @@ export default async function Home({
             {dashboardCopy.openAllTools}
             <ArrowRight className="h-3 w-3" />
           </Link>
+        </section>
+
+        <HomePasswordGenerator lang={lang} />
+
+        <section className="mx-auto mb-8 mt-10 w-full max-w-7xl text-left">
+          <div className="mb-4">
+            <h2 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">{dashboardCopy.networkToolsTitle}</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">{dashboardCopy.networkToolsDesc}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {networkTools.map((tool) => (
+              <Link key={tool.id} href={`/${lang}${tool.href}`} className="group flex min-h-40 flex-col rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-5 transition hover:-translate-y-0.5 hover:border-sky-500/30">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600"><tool.icon className="h-5 w-5" /></span>
+                  <span className="rounded-full border border-sky-500/20 px-2.5 py-1 text-[10px] font-semibold text-sky-600">{dashboardCopy.networkBadge}</span>
+                </div>
+                <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)] group-hover:text-sky-600">{tool.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{tool.description}</p>
+              </Link>
+            ))}
+          </div>
         </section>
       </main>
 

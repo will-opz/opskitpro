@@ -22,6 +22,8 @@ const labels = {
     example: "Example",
     related: "Related tools",
     reviewed: "Last reviewed",
+    localBadge: "Local processing · Not uploaded",
+    networkBadge: "Internet required · Data flow explained",
   },
   zh: {
     eyebrow: "工具说明",
@@ -35,6 +37,8 @@ const labels = {
     example: "示例",
     related: "相关工具",
     reviewed: "最近复核",
+    localBadge: "本地处理 · 不上传",
+    networkBadge: "需要联网 · 数据流透明",
   },
 } as const;
 
@@ -42,6 +46,8 @@ export function ToolGuide({ id, lang }: { id: ProductToolId; lang: ProductLocale
   const guide = localizeToolGuide(id, lang);
   const jsonLd = buildToolPageJsonLd(id, lang);
   const copy = labels[lang];
+  const tool = productTools.find((entry) => entry.id === id);
+  const isLocal = tool?.processingMode === "local";
   const facts = [
     [copy.purpose, guide.purpose],
     [copy.input, guide.input],
@@ -72,6 +78,15 @@ export function ToolGuide({ id, lang }: { id: ProductToolId; lang: ProductLocale
           </h2>
           <p className="text-xs text-zinc-500">
             {copy.reviewed}: <time dateTime={guide.lastReviewed}>{guide.lastReviewed}</time>
+          </p>
+        </div>
+
+        <div className={`mt-6 rounded-2xl border p-4 ${isLocal ? "border-emerald-200 bg-emerald-50/70" : "border-sky-200 bg-sky-50/70"}`}>
+          <p className={`text-sm font-semibold ${isLocal ? "text-emerald-800" : "text-sky-800"}`}>
+            {isLocal ? copy.localBadge : copy.networkBadge}
+          </p>
+          <p className={`mt-1 text-sm leading-6 ${isLocal ? "text-emerald-950/75" : "text-sky-950/75"}`}>
+            {guide.processing} {guide.privacy}
           </p>
         </div>
 

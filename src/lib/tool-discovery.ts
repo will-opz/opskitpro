@@ -3,7 +3,7 @@ import { toolGuides } from "./tool-guides";
 import { SITE_URL } from "./seo";
 
 export const TOOL_MANIFEST_SCHEMA_VERSION = "opskitpro.tools.v1";
-export const TOOL_MANIFEST_VERSION = "1.0.0";
+export const TOOL_MANIFEST_VERSION = "1.9.0";
 
 export function buildToolManifest() {
   return {
@@ -24,6 +24,10 @@ export function buildToolManifest() {
       return {
         id: tool.id,
         category: tool.category,
+        taskCategory: tool.taskCategory,
+        processingMode: tool.processingMode,
+        networkPath: tool.networkPath,
+        inputType: tool.inputType,
         version: "1.0.0",
         requiresLogin: false,
         observationPoints: tool.observationPoints,
