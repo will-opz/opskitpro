@@ -35,8 +35,8 @@ describe("product tool catalog", () => {
   });
 
   it("declares a task category and truthful processing path for every tool", () => {
-    expect(productTools).toHaveLength(22);
-    expect(productTools.filter((tool) => tool.processingMode === "local")).toHaveLength(15);
+    expect(productTools).toHaveLength(23);
+    expect(productTools.filter((tool) => tool.processingMode === "local")).toHaveLength(16);
     expect(productTools.filter((tool) => tool.processingMode === "network")).toHaveLength(7);
     expect(productTools.find((tool) => tool.id === "websocket")?.networkPath).toBe("direct-target");
     expect(productTools.filter((tool) => tool.processingMode === "local").every((tool) => tool.networkPath === "none")).toBe(true);

@@ -269,6 +269,17 @@ export const toolGuides = {
     related: ["passgen", "regex"],
     lastReviewed: "2026-08-19",
   },
+  diff: {
+    purpose: local("Compare two text versions line by line without uploading either version.", "逐行比较两个文本版本，不上传任一侧内容。"),
+    input: local("Original and new plain-text content, plus optional ignore-case and trailing-whitespace settings.", "原文本、新文本，以及可选的忽略大小写和行尾空白设置。"),
+    output: local("Unified and side-by-side line differences with line numbers, additions, deletions, unchanged lines, and change-block counts.", "带行号的统一/并排差异视图，以及新增、删除、未变化和变化块统计。"),
+    processing: local("Comparison runs in a terminable Web Worker in your browser with input, time, and rendering limits.", "对比在浏览器可终止的 Web Worker 中运行，并设置输入、超时和渲染限制。"),
+    privacy: local("Neither text nor the generated difference is sent to OpsKitPro, stored, or written into the page URL.", "两侧文本和生成的差异不会发送给 OpsKitPro，也不会持久化或写入页面 URL。"),
+    limitation: local("This MVP is line based. Moved lines appear as deletion plus addition, and it does not compare files, folders, syntax trees, or binary data.", "当前 MVP 基于行对比；移动的行会显示为删除后新增，且不比较文件、目录、语法树或二进制数据。"),
+    example: local("Compare two configuration snippets before sharing a change summary in a review or ticket.", "在代码评审或工单中分享变更摘要前，对比两段配置文本。"),
+    related: ["json", "regex"],
+    lastReviewed: "2026-08-21",
+  },
   "prompt-builder": {
     purpose: local("Turn a rough request into a reusable prompt with context, constraints, and output rules.", "把模糊需求整理成包含上下文、约束和输出规则的可复用提示词。"),
     input: local("Your task, background, constraints, examples, and desired output format.", "任务、背景、限制条件、示例和期望输出格式。"),

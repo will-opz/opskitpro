@@ -20,7 +20,8 @@ export type ProductToolId =
   | "cron"
   | "yaml"
   | "sql"
-  | "color";
+  | "color"
+  | "diff";
 export type ToolPlacement = "home" | "catalog" | "referral";
 export type ToolTaskCategory =
   | "password-checksum"
@@ -384,6 +385,21 @@ export const productTools: ProductTool[] = [
     description: {
       en: "Convert colors between hex, RGB, RGBA, HSL and pick from a local color palette.",
       zh: "在本地完成颜色值的 Hex/RGB/RGBA/HSL 转换，并支持本地取色。",
+    },
+    observationPoints: ["browser"],
+  },
+  {
+    id: "diff",
+    href: "/tools/diff",
+    category: "developer",
+    taskCategory: "text-development",
+    processingMode: "local",
+    networkPath: "none",
+    inputType: { en: "Two text versions", zh: "两个文本版本" },
+    title: { en: "Text Diff", zh: "文本对比" },
+    description: {
+      en: "Compare two text versions line by line locally with clear additions and deletions.",
+      zh: "在浏览器本地逐行对比两个文本版本，清晰查看新增与删除。",
     },
     observationPoints: ["browser"],
   },

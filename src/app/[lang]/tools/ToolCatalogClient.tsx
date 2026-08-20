@@ -10,6 +10,7 @@ import {
   Cloud,
   Code2,
   Globe,
+  GitCompareArrows,
   Hash as HashIcon,
   Palette,
   ImageIcon,
@@ -55,6 +56,7 @@ const icons = {
   yaml: Braces,
   sql: Code2,
   color: Palette,
+  diff: GitCompareArrows,
 } satisfies Record<ProductToolId, typeof Activity>;
 
 type DisplayCategory = "security-first" | "developer-tooling" | "content-utility" | "ops-network" | "developer-debug";
@@ -91,6 +93,7 @@ const toolCategory: Record<ProductToolId, DisplayCategory> = {
   yaml: "developer-tooling",
   sql: "developer-tooling",
   color: "content-utility",
+  diff: "developer-tooling",
 };
 
 const toolPriority: Record<ProductToolId, ToolPriority> = {
@@ -116,6 +119,7 @@ const toolPriority: Record<ProductToolId, ToolPriority> = {
   yaml: "recommended",
   sql: "recommended",
   color: "normal",
+  diff: "recommended",
 };
 
 const copy = {

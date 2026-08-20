@@ -3,7 +3,7 @@ import { toolGuides } from "./tool-guides";
 import { SITE_URL } from "./seo";
 
 export const TOOL_MANIFEST_SCHEMA_VERSION = "opskitpro.tools.v1";
-export const TOOL_MANIFEST_VERSION = "1.9.0";
+export const TOOL_MANIFEST_VERSION = "2.0.0";
 
 export function buildToolManifest() {
   return {

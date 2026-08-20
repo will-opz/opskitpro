@@ -13,8 +13,8 @@ describe("GET /api/tools", () => {
     expect(response.headers.get("access-control-allow-origin")).toBe("*");
     expect(response.headers.get("etag")).toMatch(/^"[a-f0-9]{8}"$/);
     expect(body.schemaVersion).toBe("opskitpro.tools.v1");
-    expect(body.version).toBe("1.9.0");
-    expect(body.tools).toHaveLength(22);
+    expect(body.version).toBe("2.0.0");
+    expect(body.tools).toHaveLength(23);
     expect(body.tools[0]).toMatchObject({
       id: "website-check",
       taskCategory: "website-network",

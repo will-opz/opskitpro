@@ -30,6 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/tools/color",
     "/tools/yaml",
     "/tools/sensitive-data",
+    "/tools/diff",
     "/tools/prompt-builder",
     "/tools/api",
     "/mcp",
@@ -55,6 +56,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/tools/yaml",
     "/tools/uuid",
     "/tools/sensitive-data",
+    "/tools/diff",
     "/tools/prompt-builder",
   ];
 
