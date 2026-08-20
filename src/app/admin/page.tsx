@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import {
   BarChart3,
   CircleUserRound,
@@ -18,7 +19,7 @@ const sections = [
   {
     title: "Navigation",
     description: "Edit your personal links and pinned tools.",
-    href: "/tools?admin=1",
+    href: "/nav?admin=1",
     icon: LayoutGrid,
   },
   {
@@ -29,7 +30,15 @@ const sections = [
   },
 ];
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const cookieStore = await cookies();
+  const lang = cookieStore.get("NEXT_LOCALE")?.value === "zh" ? "zh" : "en";
+  const localizedSections = sections.map((section) =>
+    section.href === "/nav?admin=1"
+      ? { ...section, href: `/${lang}/nav?admin=1` }
+      : section,
+  );
+
   return (
     <main className="mx-auto w-full max-w-6xl flex-grow px-4 pb-20 pt-8 sm:px-6">
       <section className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-[var(--shadow-soft)]">
@@ -47,7 +56,7 @@ export default function AdminPage() {
       </section>
 
       <section className="mt-6 grid gap-4 md:grid-cols-3">
-        {sections.map((section) => {
+        {localizedSections.map((section) => {
           const Icon = section.icon;
           return (
             <Link

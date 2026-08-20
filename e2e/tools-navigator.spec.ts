@@ -14,10 +14,9 @@ test.beforeEach(async ({ context, page }) => {
 })
 
 test('tools navigator searches default links', async ({ page }) => {
-  await page.goto('/tools')
+  await page.goto('/en/nav')
 
-  await expect(page.getByRole('heading', { name: 'Tool Navigator' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'My Navigation' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in to edit' })).not.toBeVisible()
   await expect(page.getByRole('heading', { name: 'Website Check' })).toBeVisible()
 
@@ -27,7 +26,7 @@ test('tools navigator searches default links', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Cloudflare Dashboard' })).toBeVisible()
 })
 
-test('global sign-in opens the shared admin dialog', async ({ page }) => {
+test('navigation edit mode opens the shared admin dialog', async ({ page }) => {
   await page.route('**/api/admin/session', async (route) => {
     await route.fulfill({
       status: 200,
@@ -41,8 +40,8 @@ test('global sign-in opens the shared admin dialog', async ({ page }) => {
     })
   })
 
-  await page.goto('/nav')
-  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.goto('/en/nav?admin=1')
+  await page.getByRole('button', { name: 'Sign in to edit' }).click()
 
   await expect(page.getByRole('heading', { name: 'Admin sign in' })).toBeVisible()
   await expect(page.getByLabel('Admin email')).toBeVisible()
@@ -52,8 +51,9 @@ test('global sign-in opens the shared admin dialog', async ({ page }) => {
 test('admin pages redirect unauthenticated visitors', async ({ page }) => {
   await page.goto('/admin')
 
-  await expect(page).toHaveURL(/\/tools\?admin=1$/)
-  await expect(page.getByRole('heading', { name: 'Tool Navigator' })).toBeVisible()
+  await expect(page).toHaveURL(/\/en\/nav\?admin=1$/)
+  await expect(page.getByRole('heading', { name: 'My Navigation' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in to edit' })).toBeVisible()
 })
 
 test('single-user editor can add a custom local link', async ({ page }) => {
@@ -79,11 +79,11 @@ test('single-user editor can add a custom local link', async ({ page }) => {
     })
   })
 
-  await page.goto('/tools?admin=1')
+  await page.goto('/en/nav?admin=1')
   await page.waitForLoadState('networkidle')
 
-  await page.getByRole('button', { name: 'Sign in' }).click()
-  await page.getByLabel('Admin email').fill('deopsai@gmail.com')
+  await page.getByRole('button', { name: 'Sign in to edit' }).click()
+  await page.getByLabel('Admin email').fill('admin@example.com')
   await page.getByLabel('Admin password').fill('test-password')
   await page.locator('form').getByRole('button', { name: 'Sign in' }).click()
 

@@ -388,7 +388,7 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
   const labels = categoryLabels[lang] || categoryLabels.zh;
   const searchParams = useSearchParams();
   const adminMode = searchParams.get("admin") === "1";
-  const { authenticated, logout } = useAdminSession();
+  const { authenticated, logout, openLogin } = useAdminSession();
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<
     NavCategory | "all" | "pinned"
@@ -532,10 +532,14 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
                   </button>
                 </>
               ) : adminMode ? (
-                <div className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-2.5 text-sm font-semibold text-[var(--text-muted)]">
+                <button
+                  type="button"
+                  onClick={() => openLogin(`/${lang}/nav?admin=1`)}
+                  className="ui-button-ghost rounded-xl border border-[var(--border-subtle)] px-4 py-2.5"
+                >
                   <Lock className="h-4 w-4" />
-                  {t.loginHint}
-                </div>
+                  {t.login}
+                </button>
               ) : null}
             </div>
           </div>

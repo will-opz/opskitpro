@@ -32,7 +32,7 @@ export function ProfileActions({ lang }: { lang: keyof typeof labels }) {
         {t.dashboard}
       </Link>
       <Link
-        href="/tools?admin=1"
+        href={`/${lang}/nav?admin=1`}
         className="ui-button-ghost justify-center border border-[var(--border-subtle)]"
       >
         <LayoutGrid className="h-4 w-4" />

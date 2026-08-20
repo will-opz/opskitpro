@@ -120,7 +120,7 @@ export function AdminSessionProvider({
     setEmail("");
     setProvider(null);
     setSessionChecked(true);
-    router.push(`/${lang}/tools`);
+    router.push(`/${lang}/nav`);
     router.refresh();
   };
 

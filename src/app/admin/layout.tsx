@@ -23,7 +23,7 @@ export default async function AdminLayout({
     getCloudflareAccessEmail(headerStore),
   );
 
-  if (!authenticated) redirect("/tools?admin=1");
+  if (!authenticated) redirect(`/${lang}/nav?admin=1`);
 
   const dict = await getDictionary(lang);
 
