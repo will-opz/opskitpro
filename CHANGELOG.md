@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added a browser-local Text Diff tool with unified and side-by-side line views,
+  explicit ignore options, bounded Worker execution, and bilingual discovery.
 - Embedded a compact, browser-local password generator on the English and
   Simplified Chinese homepages.
 - Added password presets, ambiguous/custom character exclusions, and 4–8 word
