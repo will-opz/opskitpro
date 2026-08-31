@@ -17,6 +17,7 @@ describe("sensitive data engine", () => {
     expect(result.counts.email).toBe(1);
     expect(result.counts.phone).toBe(1);
     expect(result.counts.api_key).toBe(1);
+    expect(result.counts.password).toBe(0);
     expect(result.counts.ip).toBe(1);
     expect(result.counts.uuid).toBe(1);
     expect(result.counts.private_key).toBe(1);
@@ -80,5 +81,66 @@ describe("sensitive data engine", () => {
     const input = "a@b.com ".repeat(20);
     const partial = detectSensitive(input, { enabled: { email: true, phone: false, api_key: false, uuid: false, private_key: false, credit_card: false, ip: false }, maxMatches: 3 });
     expect(partial.matches).toHaveLength(3);
+  });
+
+  it("detects and redacts the screenshot sample", () => {
+    const result = detectSensitive([
+      "will@gmail.com",
+      "root@192.168.31.1",
+      "mysql -u root -pmeimei -h localhost",
+    ].join("\n"));
+
+    expect(result.total).toBe(3);
+    expect(result.counts.email).toBe(1);
+    expect(result.counts.ip).toBe(1);
+    expect(result.counts.password).toBe(1);
+    expect(result.redactedText).toBe([
+      "[EMAIL_1]",
+      "root@[IP_1]",
+      "mysql -u root -p[PASSWORD_1] -h localhost",
+    ].join("\n"));
+  });
+
+  it.each([
+    ['mysql -u root -psecret', 'mysql -u root -p[PASSWORD_1]'],
+    ['mysql -u root -p"secret value"', 'mysql -u root -p"[PASSWORD_1]"'],
+    ["mariadb -u root -p'secret value'", "mariadb -u root -p'[PASSWORD_1]'"],
+    ['mysql --password=secret db', 'mysql --password=[PASSWORD_1] db'],
+    ['mysql --password="secret value" db', 'mysql --password="[PASSWORD_1]" db'],
+    ['password=secret', 'password=[PASSWORD_1]'],
+    ['passwd: "secret value"', 'passwd: "[PASSWORD_1]"'],
+    ["MYSQL_PWD='secret value'", "MYSQL_PWD='[PASSWORD_1]'"],
+  ])("detects an explicit credential in %s", (input, expected) => {
+    const result = detectSensitive(input);
+    expect(result.counts.password).toBe(1);
+    expect(result.redactedText).toBe(expected);
+  });
+
+  it.each([
+    "mysql -u root -p",
+    "mysql --password",
+    "mysql -port 3306",
+    "the password is memorable",
+    "root@localhost",
+  ])("does not infer a credential from %s", (input) => {
+    expect(detectSensitive(input).counts.password).toBe(0);
+  });
+
+  it("keeps a recognized API key classified as an API key", () => {
+    const result = detectSensitive("password=sk-abcdefghijklmnopqrstuvwxyz");
+    expect(result.counts.api_key).toBe(1);
+    expect(result.counts.password).toBe(0);
+    expect(result.redactedText).toBe("password=[API_KEY_1]");
+  });
+
+  it("supports independently disabling password and IP detection", () => {
+    const input = "password=secret host=192.168.31.1";
+    const noPassword = detectSensitive(input, { enabled: { password: false } });
+    const noIp = detectSensitive(input, { enabled: { ip: false } });
+
+    expect(noPassword.counts.password).toBe(0);
+    expect(noPassword.counts.ip).toBe(1);
+    expect(noIp.counts.password).toBe(1);
+    expect(noIp.counts.ip).toBe(0);
   });
 });

@@ -56,4 +56,24 @@ describe("SensitiveDataClient", () => {
     expect(screen.getByText((content) => content.includes("Email") && content.includes("#1"))).toBeInTheDocument();
     expect(screen.getByText((content) => content.includes("Phone") && content.includes("#1"))).toBeInTheDocument();
   });
+
+  it("shows all detection switches before a match and enables password and IP by default", () => {
+    render(<SensitiveDataClient lang="zh" />);
+
+    expect(screen.getByLabelText("密码 / 凭据")).toBeChecked();
+    expect(screen.getByLabelText("IP 地址")).toBeChecked();
+    expect(screen.queryByText("原文（已高亮）")).not.toBeInTheDocument();
+    expect(screen.getByText("已检测到 0 处敏感信息")).toBeInTheDocument();
+  });
+
+  it("detects credentials and uses localized result labels", () => {
+    render(<SensitiveDataClient lang="zh" />);
+    fireEvent.change(screen.getByLabelText("待扫描文本"), {
+      target: { value: "mysql -u root -pmeimei -h 192.168.31.1" },
+    });
+
+    expect(screen.getByText("原文（已高亮）")).toBeInTheDocument();
+    expect(screen.getByText("已检测到 2 处敏感信息")).toBeInTheDocument();
+    expect(screen.queryByText("Original (highlighted)")).not.toBeInTheDocument();
+  });
 });

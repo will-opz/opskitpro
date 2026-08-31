@@ -323,8 +323,8 @@ export const productTools: ProductTool[] = [
     inputType: { en: "Text or log samples", zh: "文本/日志样本" },
     title: { en: "Sensitive Data Detector", zh: "敏感信息检测与脱敏" },
     description: {
-      en: "Detect emails, tokens, and common secret-like patterns locally, then redact for safe sharing.",
-      zh: "在本地检测邮箱、密钥/Token 等敏感信息，并一键生成脱敏文本。",
+      en: "Detect emails, IPs, explicit credentials, tokens, and common secret-like patterns locally, then redact for safe sharing.",
+      zh: "在本地检测邮箱、IP、显式密码凭据和密钥/Token，并一键生成脱敏文本。",
     },
     observationPoints: ["browser"],
   },

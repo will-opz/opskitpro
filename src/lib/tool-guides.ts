@@ -184,7 +184,7 @@ export const toolGuides = {
   },
   "sensitive-data": {
     purpose: local("Detect common sensitive entities in pasted text and produce redacted output without uploads.", "检测粘贴文本中的常见敏感实体并一键生成脱敏文本，不上传数据。"),
-    input: local("Raw text that may contain emails, phone numbers, API keys/tokens, UUIDs, private keys, or card-like identifiers.", "可能包含邮箱、手机号、API Key / Token、UUID、私钥片段或卡号的原始文本。"),
+    input: local("Raw text that may contain emails, phone numbers, IP addresses, explicit credentials, API keys/tokens, UUIDs, private keys, or card-like identifiers.", "可能包含邮箱、手机号、IP 地址、显式密码凭据、API Key / Token、UUID、私钥片段或卡号的原始文本。"),
     output: local("Sensitivity summary, highlighted matches, and redacted text with stable placeholders.", "脱敏摘要、匹配高亮以及带稳定占位符的脱敏文本。"),
     processing: local("All scanning and replacement logic runs entirely in your browser.", "检测与替换逻辑全部在浏览器本地执行。"),
     privacy: local("No text is sent to OpsKitPro. Clipboard and browser extensions are not controlled by this tool.", "该工具不会向 OpsKitPro 发送文本；剪贴板与浏览器扩展不在本工具控制范围内。"),

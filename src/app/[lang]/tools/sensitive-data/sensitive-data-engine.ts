@@ -4,6 +4,7 @@ export const SENSITIVE_TEXT_LIMIT = MAX_INPUT_CHARS;
 const ENTITY_ORDER = [
   "private_key",
   "api_key",
+  "password",
   "credit_card",
   "email",
   "phone",
@@ -19,6 +20,7 @@ const SENSITIVE_BASE_LABELS: Record<SensitiveEntity, string> = {
   email: "Email",
   phone: "Phone",
   api_key: "API Key / Token",
+  password: "Password / Credential",
   uuid: "UUID",
   private_key: "Private Key",
   credit_card: "Credit Card",
@@ -31,6 +33,7 @@ export const SENSITIVE_LABELS = {
     email: "邮箱",
     phone: "手机号",
     api_key: "API Key / Token",
+    password: "密码 / 凭据",
     uuid: "UUID",
     private_key: "私钥",
     credit_card: "信用卡",
@@ -69,6 +72,18 @@ const UUID_RE = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0
 const CREDIT_CARD_RE = /\b(?:\d[ -]*?){13,19}\b/g;
 const IP_RE = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
 
+const PASSWORD_VALUE_PATTERNS = [
+  /\b(?:mysql|mariadb)\b[^\r\n]*?\s-p"([^"\r\n]+)"/gi,
+  /\b(?:mysql|mariadb)\b[^\r\n]*?\s-p'([^'\r\n]+)'/gi,
+  /\b(?:mysql|mariadb)\b[^\r\n]*?\s-p((?!ort\b)[^\s"'=][^\s]*)/gi,
+  /\b(?:mysql|mariadb)\b[^\r\n]*?\s--password="([^"\r\n]+)"/gi,
+  /\b(?:mysql|mariadb)\b[^\r\n]*?\s--password='([^'\r\n]+)'/gi,
+  /\b(?:mysql|mariadb)\b[^\r\n]*?\s--password=([^\s"'][^\s]*)/gi,
+  /\b(?:password|passwd|pwd|mysql_pwd)\s*[:=]\s*"([^"\r\n]+)"/gi,
+  /\b(?:password|passwd|pwd|mysql_pwd)\s*[:=]\s*'([^'\r\n]+)'/gi,
+  /\b(?:password|passwd|pwd|mysql_pwd)\s*[:=]\s*([^\s,;"']+)/gi,
+] as const;
+
 function collectMatches(
   regex: RegExp,
   type: SensitiveEntity,
@@ -86,6 +101,25 @@ function collectMatches(
     });
   }
   return matches;
+}
+
+function collectCapturedMatches(
+  regexes: readonly RegExp[],
+  type: SensitiveEntity,
+  input: string,
+): SensitiveMatch[] {
+  return regexes.flatMap((regex) => {
+    const matches: SensitiveMatch[] = [];
+    for (const match of input.matchAll(regex)) {
+      if (match.index === undefined || !match[1]) continue;
+      const value = match[1];
+      const valueOffset = match[0].lastIndexOf(value);
+      if (valueOffset < 0) continue;
+      const start = match.index + valueOffset;
+      matches.push({ type, value, start, end: start + value.length });
+    }
+    return matches;
+  });
 }
 
 function isMatchAllDigits(input: string) {
@@ -147,6 +181,7 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
     email: 0,
     phone: 0,
     api_key: 0,
+    password: 0,
     uuid: 0,
     private_key: 0,
     credit_card: 0,
@@ -162,6 +197,9 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
         )
       : [],
     api_key: isEnabled("api_key", enabled) ? collectMatches(API_KEY_RE, "api_key", safeInput) : [],
+    password: isEnabled("password", enabled)
+      ? collectCapturedMatches(PASSWORD_VALUE_PATTERNS, "password", safeInput)
+      : [],
     uuid: isEnabled("uuid", enabled) ? collectMatches(UUID_RE, "uuid", safeInput) : [],
     private_key: isEnabled("private_key", enabled) ? collectMatches(PRIVATE_KEY_RE, "private_key", safeInput) : [],
     ip: isEnabled("ip", enabled)
@@ -201,6 +239,7 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
     email: 0,
     phone: 0,
     api_key: 0,
+    password: 0,
     uuid: 0,
     private_key: 0,
     credit_card: 0,

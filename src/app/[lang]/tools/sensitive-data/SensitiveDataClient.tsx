@@ -17,11 +17,16 @@ const ENTITY_OPTIONS: Array<{ id: SensitiveEntity; defaultEnabled: boolean }> = 
   { id: "email", defaultEnabled: true },
   { id: "phone", defaultEnabled: true },
   { id: "api_key", defaultEnabled: true },
+  { id: "password", defaultEnabled: true },
   { id: "uuid", defaultEnabled: true },
   { id: "private_key", defaultEnabled: true },
   { id: "credit_card", defaultEnabled: true },
-  { id: "ip", defaultEnabled: false },
+  { id: "ip", defaultEnabled: true },
 ];
+
+const DEFAULT_ENABLED = Object.fromEntries(
+  ENTITY_OPTIONS.map(({ id, defaultEnabled }) => [id, defaultEnabled]),
+) as Record<SensitiveEntity, boolean>;
 
 const copy = {
   en: {
@@ -45,6 +50,8 @@ const copy = {
     limit: (limit: number) => `Only first ${limit} matches are shown for performance.`,
     empty: "No sensitive findings.",
     onlyLocal: "All matching happens in your browser.",
+    originalHighlighted: "Original (highlighted)",
+    detectedEntities: (count: number) => `Detected ${count} entities`,
     mappedText: (value: string, type: string) => `[${value}] -> ${type}`,
   },
   zh: {
@@ -68,6 +75,8 @@ const copy = {
     limit: (limit: number) => `为保证性能，仅展示前 ${limit} 条匹配。`,
     empty: "未发现敏感信息。",
     onlyLocal: "所有匹配均在你的浏览器内完成。",
+    originalHighlighted: "原文（已高亮）",
+    detectedEntities: (count: number) => `已检测到 ${count} 处敏感信息`,
     mappedText: (value: string, type: string) => `${value} -> ${type}`,
   },
 } as const;
@@ -99,6 +108,7 @@ function getClassForType(type: SensitiveEntity | null) {
     email: "bg-red-100 text-red-900",
     phone: "bg-orange-100 text-orange-900",
     api_key: "bg-amber-100 text-amber-900",
+    password: "bg-rose-100 text-rose-900",
     uuid: "bg-violet-100 text-violet-900",
     private_key: "bg-pink-100 text-pink-900",
     credit_card: "bg-sky-100 text-sky-900",
@@ -114,15 +124,9 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
   const [showCompare, setShowCompare] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
-  const [enabled, setEnabled] = useState<Record<SensitiveEntity, boolean>>({
-    email: true,
-    phone: true,
-    api_key: true,
-    uuid: true,
-    private_key: true,
-    credit_card: true,
-    ip: false,
-  });
+  const [enabled, setEnabled] = useState<Record<SensitiveEntity, boolean>>(
+    DEFAULT_ENABLED,
+  );
 
   const result = useMemo(() => detectSensitive(input, { enabled }), [input, enabled]);
   const summary = useMemo(() => buildSummaryText(result, lang), [result, lang]);
@@ -188,23 +192,21 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
             {input.length ? summary.header : c.noData}
           </p>
 
-          {result.matches.length > 0 && (
-            <div className="mt-3">
-              {summary.detail ? <p className="text-xs text-[var(--text-secondary)]">{summary.detail}</p> : null}
-              <div className="mt-2 flex flex-wrap gap-2">
-                {ENTITY_OPTIONS.map((item) => (
-                  <label key={item.id} className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={enabled[item.id]}
-                      onChange={() => toggleEntity(item.id)}
-                    />
-                    <span>{SENSITIVE_LABELS[lang][item.id]}</span>
-                  </label>
-                  ))}
-              </div>
+          <div className="mt-3">
+            {summary.detail ? <p className="text-xs text-[var(--text-secondary)]">{summary.detail}</p> : null}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ENTITY_OPTIONS.map((item) => (
+                <label key={item.id} className="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] px-3 py-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={enabled[item.id]}
+                    onChange={() => toggleEntity(item.id)}
+                  />
+                  <span>{SENSITIVE_LABELS[lang][item.id]}</span>
+                </label>
+              ))}
             </div>
-          )}
+          </div>
 
           {input.length === 0 ? (
             <p className="mt-4 text-sm text-[var(--text-muted)]">{c.noData}</p>
@@ -222,7 +224,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
 
           {result.matches.length > 0 && (
             <div className="mt-4 rounded-xl border border-[var(--border-subtle)] p-3">
-              <p className="mb-2 text-xs font-semibold text-[var(--text-muted)]">Original (highlighted)</p>
+              <p className="mb-2 text-xs font-semibold text-[var(--text-muted)]">{c.originalHighlighted}</p>
               <pre className="whitespace-pre-wrap break-all rounded-lg border border-[var(--border-subtle)] bg-white p-3 text-sm leading-6">
                 {highlighted.map((piece, index) => (
                   piece.type ? (
@@ -280,7 +282,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
               {c.compare}
             </button>
             <p className="mt-3 text-xs text-[var(--text-muted)]">
-              {result.matches.length ? `Detected ${result.total} entities` : `Detected 0 entities`}
+              {c.detectedEntities(result.total)}
             </p>
           </div>
 
