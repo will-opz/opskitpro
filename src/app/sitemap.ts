@@ -33,6 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/tools/diff",
     "/tools/prompt-builder",
     "/tools/api",
+    "/tools/docs",
     "/mcp",
   ];
 
