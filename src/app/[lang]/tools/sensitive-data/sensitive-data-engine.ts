@@ -190,7 +190,9 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
 
   const safeInput = input.slice(0, MAX_INPUT_CHARS);
   const matchesByType: Record<SensitiveEntity, SensitiveMatch[]> = {
-    email: isEnabled("email", enabled) ? collectMatches(EMAIL_RE, "email", safeInput) : [],
+    email: isEnabled("email", enabled) && safeInput.includes("@")
+      ? collectMatches(EMAIL_RE, "email", safeInput)
+      : [],
     phone: isEnabled("phone", enabled)
       ? collectMatches(PHONE_RE, "phone", safeInput).filter((item) =>
           isLikelyPhone(item.value),
