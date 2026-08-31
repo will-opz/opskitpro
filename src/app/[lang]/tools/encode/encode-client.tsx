@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { Braces, Check, Copy, FileCode2, RefreshCw } from "lucide-react";
+import { Braces, Check, Copy, RefreshCw } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 type Lang = "zh" | "en";
 type Mode =
@@ -114,7 +114,6 @@ async function writeClipboard(value: string) {
 }
 
 export default function EncodeClient({
-  dict,
   lang,
 }: {
   dict: any;
@@ -143,48 +142,13 @@ export default function EncodeClient({
   return (
     <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
       <div className="mx-auto max-w-6xl">
-        <nav className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
-          <Link
-            href={`/${lang}`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {t.home}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <Link
-            href={`/${lang}/tools`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {t.tools}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">
-            {dict.tools.encode_title}
-          </span>
-        </nav>
+        <ToolPageHeader
+          title={t.title}
+          description={t.desc}
+          processing={lang === "zh" ? "本地处理 · 不上传" : "Local processing · Not uploaded"}
+        />
 
-        <section className="op-card rounded-[2rem] p-5 sm:p-8">
-          <div className="op-chip mb-5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            {t.badge}
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="op-icon-box h-16 w-16">
-              <FileCode2 className="h-7 w-7 text-emerald-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">
-                {t.title}
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-600">
-                {t.desc}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="op-card rounded-[1.5rem] mt-6 p-4 sm:p-5">
+        <section className="op-card mt-6 rounded-[1.5rem] p-4 sm:p-5">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {modes.map((item) => {
               const active = item.id === mode;

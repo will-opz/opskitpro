@@ -2,6 +2,7 @@
 
 import { Check, Clipboard, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 import { formatYaml, validateYaml, YAML_LIMITS } from "./yaml-engine";
 
@@ -120,11 +121,7 @@ export default function YamlClient({ lang }: { lang: Lang }) {
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
-      <section className="max-w-3xl">
-        <div className="ui-chip mb-4"><span>{c.badge}</span></div>
-        <h1 className="text-3xl font-semibold text-[var(--text-primary)] sm:text-4xl">{c.title}</h1>
-        <p className="mt-3 text-sm text-[var(--text-muted)]">{c.description}</p>
-      </section>
+      <ToolPageHeader title={c.title} description={c.description} processing={c.badge} />
 
       <section className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="ui-surface rounded-2xl p-4 sm:p-6">

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { Check, Clock3, Copy, RefreshCw, TimerReset } from "lucide-react";
+import { Check, Copy, RefreshCw, TimerReset } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 type Lang = "zh" | "en";
 
@@ -89,7 +89,7 @@ function formatInZone(date: Date, timeZone: string, locale: string) {
   ).format(date);
 }
 
-export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
+export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
   const t = copy[lang] || copy.zh;
   const locale = lang === "en" ? "en-US" : "zh-CN";
   const [input, setInput] = useState("");
@@ -120,52 +120,15 @@ export default function TimeClient({ dict, lang }: { dict: any; lang: Lang }) {
   return (
     <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
       <div className="mx-auto max-w-5xl">
-        <nav className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
-          <Link
-            href={`/${lang}`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {t.home}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <Link
-            href={`/${lang}/tools`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {t.tools}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="border-b border-emerald-500/30 font-semibold text-zinc-900">
-            {dict.tools.time_title}
-          </span>
-        </nav>
-
-        <section className="op-card rounded-[2rem] p-5 sm:p-8">
-          <div className="op-chip mb-5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            {t.badge}
-          </div>
-
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="op-icon-box h-16 w-16">
-                <Clock3 className="h-7 w-7 text-emerald-600" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">
-                  {t.title}
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-zinc-600">
-                  {t.desc}
-                </p>
-              </div>
-            </div>
-            <button type="button" onClick={setNow} className="op-action">
-              <RefreshCw className="h-4 w-4" />
-              {t.now}
-            </button>
-          </div>
-        </section>
+        <ToolPageHeader
+          title={t.title}
+          description={t.desc}
+          processing={lang === "zh" ? "本地处理 · 不上传" : "Local processing · Not uploaded"}
+        />
+        <button type="button" onClick={setNow} className="op-action mt-4">
+          <RefreshCw className="h-4 w-4" />
+          {t.now}
+        </button>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="op-card rounded-[1.5rem] p-5">

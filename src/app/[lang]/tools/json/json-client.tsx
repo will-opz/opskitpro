@@ -14,9 +14,9 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-import Link from "next/link";
 import { JsonEditor } from "./components";
 import { getJsonStats, jsonToToml, jsonToYaml, repairJson } from "./hooks";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 type Lang = "zh" | "en";
 type ResultKind = "formatted" | "minified" | "repaired" | "yaml" | "toml" | null;
@@ -132,25 +132,13 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 pb-24 pt-8 font-sans text-zinc-700 sm:px-6 md:pt-12 lg:px-8">
       <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-full max-w-[800px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
       <div className="mx-auto max-w-7xl">
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
-          <Link href={`/${lang}`} className="transition-colors hover:text-emerald-700">{lang === "zh" ? "首页" : "Home"}</Link>
-          <span className="text-zinc-300">/</span>
-          <Link href={`/${lang}/tools`} className="transition-colors hover:text-emerald-700">{lang === "zh" ? "工具" : "Tools"}</Link>
-          <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-zinc-900">{dict.tools.json_title}</span>
-        </nav>
+        <ToolPageHeader
+          title={dict.tools.json_title}
+          description={dict.tools.json_desc}
+          processing={lang === "zh" ? "本地处理 · 不上传" : "Local processing · Not uploaded"}
+        />
 
-        <header className="mb-8 flex items-center gap-4">
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3.5 shadow-lg shadow-emerald-500/10">
-            <Braces className="h-7 w-7 text-emerald-700" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">{dict.tools.json_title}</h1>
-            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-zinc-600">{dict.tools.json_desc}</p>
-          </div>
-        </header>
-
-        <main className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl">
+        <main className="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50/70 px-3 py-3 sm:px-4">
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" onClick={() => setJsonResult("formatted")} disabled={validation.state !== "valid"} className={`${ACTION_CLASS} border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-500 hover:text-white`}>

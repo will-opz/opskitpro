@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, KeyRound, QrCode, RefreshCw, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+import { Check, Copy, QrCode, RefreshCw, ShieldCheck } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   generateSecurePassphrase,
@@ -12,6 +11,7 @@ import {
   type PasswordPreset,
 } from "@/lib/password-generator";
 import { analyzePasswordStrength } from "@/lib/password-security";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 type Lang = "zh" | "en";
 type Mode = "password" | "passphrase" | "pin";
@@ -160,28 +160,13 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
     <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 pb-16 pt-8 font-sans text-zinc-700 sm:px-6 md:pt-12 lg:px-8">
       <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-full max-w-[800px] -translate-x-1/2 rounded-full bg-emerald-500/5 blur-[120px]" />
       <div className="mx-auto max-w-5xl">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-[10px] font-semibold tracking-[0.28em] text-emerald-700">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          {dict.tools.passgen_title}
-        </div>
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-[11px] text-zinc-500">
-          <Link href="/" className="transition-colors hover:text-emerald-700">Home</Link>
-          <span className="text-zinc-300">/</span>
-          <Link href="/tools" className="transition-colors hover:text-emerald-700">Tools</Link>
-          <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-zinc-900">{dict.tools.passgen_title}</span>
-        </nav>
-        <header className="mb-8 flex items-center gap-4">
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3.5 shadow-lg shadow-emerald-500/10">
-            <KeyRound className="h-7 w-7 text-emerald-700" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">{dict.tools.passgen_title}</h1>
-            <p className="mt-1 text-xs leading-relaxed text-zinc-600">{dict.tools.passgen_desc}</p>
-          </div>
-        </header>
+        <ToolPageHeader
+          title={dict.tools.passgen_title}
+          description={dict.tools.passgen_desc}
+          processing={copy.local_privacy}
+        />
 
-        <div className="space-y-5">
+        <div className="mt-6 space-y-5">
           <section className="rounded-3xl border border-zinc-200 bg-white/80 p-4 shadow-sm sm:p-6">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">{copy.mode}</p>
             <div role="tablist" aria-label={copy.mode} className="grid grid-cols-3 gap-2 rounded-2xl bg-zinc-100 p-1.5">

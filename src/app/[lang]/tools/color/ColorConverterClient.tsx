@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clipboard, RefreshCw, RotateCcw, ShieldCheck } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
+import { Clipboard, RefreshCw, RotateCcw } from "lucide-react";
 import { formatColor, parseColor } from "./color-engine";
 
 type Lang = "en" | "zh";
@@ -121,18 +122,7 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
-      <section className="max-w-3xl">
-        <div className="ui-chip mb-4">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {t.eyebrow}
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">{t.title}</h1>
-        <p className="mt-4 text-sm leading-7 text-[var(--text-muted)] sm:text-base">{t.subtitle}</p>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-xs font-semibold text-emerald-700">
-          <ShieldCheck className="h-4 w-4" />
-          {t.privacy}
-        </div>
-      </section>
+      <ToolPageHeader title={t.title} description={t.subtitle} processing={t.privacy} />
 
       <section className="mt-8 grid gap-6 xl:grid-cols-2">
         <article className="ui-surface-elevated rounded-2xl p-4 sm:p-6">

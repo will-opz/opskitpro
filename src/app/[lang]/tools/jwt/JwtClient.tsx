@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clipboard, Eraser, FlaskConical, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clipboard, Eraser, XCircle } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 import {
   JWT_TEXT_LIMIT,
   analyzeJwt,
@@ -229,14 +230,7 @@ export default function JwtClient({ lang }: { lang: Lang }) {
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
-      <section className="max-w-3xl">
-        <div className="ui-chip mb-4"><FlaskConical className="h-3.5 w-3.5" />{text.eyebrow}</div>
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">{text.title}</h1>
-        <p className="mt-4 text-sm leading-7 text-[var(--text-muted)] sm:text-base">{text.subtitle}</p>
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-xs font-semibold text-emerald-700">
-          <ShieldCheck className="h-4 w-4" />{text.privacy}
-        </div>
-      </section>
+      <ToolPageHeader title={text.title} description={text.subtitle} processing={text.privacy} />
 
       <section className="mt-8 grid gap-5 lg:grid-cols-2">
         <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">

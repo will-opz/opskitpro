@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Check, Clipboard, FileUp, RotateCcw, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, Check, Clipboard, FileUp, RotateCcw, X } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 import { HASH_FILE_LIMIT_BYTES, compareChecksum, hashText, type HashAlgorithm, type HashWorkerMessage } from "./hash-engine";
 
 type Lang = "en" | "zh";
@@ -99,7 +100,7 @@ export default function HashChecksumClient({ lang }: { lang: Lang }) {
   const setNextAlgorithm = (next: HashAlgorithm) => { setAlgorithm(next); setDigest(""); setExpected(""); };
 
   return <main className="mx-auto w-full max-w-6xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
-    <section className="max-w-3xl"><div className="ui-chip mb-4"><ShieldCheck className="h-3.5 w-3.5" />{c.privacy}</div><h1 className="text-3xl font-semibold text-[var(--text-primary)] sm:text-4xl">{c.title}</h1><p className="mt-4 text-sm leading-7 text-[var(--text-muted)] sm:text-base">{c.subtitle}</p></section>
+    <ToolPageHeader title={c.title} description={c.subtitle} processing={c.privacy} />
     <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
         <div className="grid grid-cols-2 rounded-xl bg-[var(--surface-secondary)] p-1" role="tablist">

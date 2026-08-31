@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   Activity,
   Binary,
   ChevronDown,
   MessageSquare,
   Settings2,
-  Zap,
 } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 import { useMultiConnection } from "./hooks";
 import {
   ConnectionPanel,
@@ -115,50 +114,14 @@ export default function WebsocketClient({
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       <main className="w-full max-w-6xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-sans">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link
-            href={`/${lang}`}
-            className="hover:text-cyan-600 transition-colors"
-          >
-            {shellText.home}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <Link
-            href={`/${lang}/tools`}
-            className="hover:text-cyan-600 transition-colors"
-          >
-            {shellText.tools}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-cyan-500/30 font-semibold">
-            {dict.tools.websocket_title}
-          </span>
-        </nav>
+        <ToolPageHeader
+          title={shellText.title}
+          description={shellText.simpleHint}
+          processing={lang === "zh" ? "浏览器直连目标服务" : "Browser connects directly to your target"}
+          mode="network"
+        />
 
-        {/* Header */}
-        <header className="mb-6 rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-sm backdrop-blur-xl sm:p-7">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/8 border border-cyan-500/20 text-cyan-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-            {shellText.badge}
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3.5 bg-cyan-50 border border-cyan-100 rounded-2xl shadow-sm group transition-all">
-                <Zap className="w-7 h-7 text-cyan-600 group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight">
-                  {shellText.title}
-                </h1>
-                <p className="text-zinc-600 text-sm mt-2 leading-relaxed max-w-xl">
-                  {shellText.simpleHint}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-start gap-3 md:items-end">
+        <div className="mb-6 mt-4 flex flex-wrap items-center gap-3">
               <div
                 className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
                   activeTab.status === "connected"
@@ -200,9 +163,7 @@ export default function WebsocketClient({
                   className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
                 />
               </button>
-            </div>
-          </div>
-        </header>
+        </div>
 
         {showAdvanced && (
           <section className="mb-6 rounded-2xl border border-zinc-100 bg-white/80 p-4 shadow-sm backdrop-blur-xl">

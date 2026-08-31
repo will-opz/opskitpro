@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { QrCode, Download, Info } from "lucide-react";
-import Link from "next/link";
+import { Download, Info } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 type Lang = "zh" | "en";
 
@@ -46,41 +46,11 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-4xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.28em] mb-5">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          {dict.tools.qrgen_title}
-        </div>
-
-        <div className="flex items-center gap-2 mb-8 text-[11px] text-zinc-500">
-          <Link href={`/`} className="hover:text-emerald-600 transition-colors">
-            {"Home"}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <Link
-            href={`/tools`}
-            className="hover:text-emerald-600 transition-colors"
-          >
-            {"Tools"}
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
-            {dict.tools.qrgen_title}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 mb-2">
-          <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-lg shadow-emerald-500/10 group transition-all">
-            <QrCode className="w-7 h-7 text-emerald-600 group-hover:scale-110 transition-transform" />
-          </div>
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
-              {dict.tools.qrgen_title}
-            </h1>
-            <p className="text-zinc-600 text-[10px] sm:text-xs tracking-[0.18em] mt-1 leading-relaxed">
-              {dict.tools.qrgen_desc}
-            </p>
-          </div>
-        </div>
+        <ToolPageHeader
+          title={dict.tools.qrgen_title}
+          description={dict.tools.qrgen_desc}
+          processing={lang === "zh" ? "本地处理 · 不上传" : "Local processing · Not uploaded"}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
           {/* Input Side */}

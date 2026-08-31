@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clipboard, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Clipboard, Eye, EyeOff } from "lucide-react";
+import { ToolPageHeader } from "@/components/ToolPageHeader";
 import {
   SENSITIVE_LABELS,
   detectSensitive,
@@ -163,19 +164,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
-      <section className="max-w-3xl">
-        <div className="ui-chip mb-4">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {c.privacy}
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">
-          {c.title}
-        </h1>
-        <p className="mt-4 text-sm leading-7 text-[var(--text-muted)] sm:text-base">
-          {c.subtitle}
-        </p>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">{c.scanHint}</p>
-      </section>
+      <ToolPageHeader title={c.title} description={c.subtitle} processing={c.privacy} />
 
       <section className="mt-8 ui-surface-elevated rounded-2xl p-4 sm:p-6">
         <label className="text-sm font-semibold text-[var(--text-primary)]" htmlFor="sensitive-input">
