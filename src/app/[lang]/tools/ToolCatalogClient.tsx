@@ -21,7 +21,6 @@ import {
   Search,
   ScanSearch,
   ShieldCheck,
-  Star,
   WandSparkles,
   Wifi,
 } from "lucide-react";
@@ -60,8 +59,6 @@ const icons = {
 } satisfies Record<ProductToolId, typeof Activity>;
 
 type DisplayCategory = "security-first" | "developer-tooling" | "content-utility" | "ops-network" | "developer-debug";
-type ToolPriority = "high" | "recommended" | "normal";
-
 const categoryOrder: DisplayCategory[] = [
   "security-first",
   "developer-tooling",
@@ -96,39 +93,12 @@ const toolCategory: Record<ProductToolId, DisplayCategory> = {
   diff: "developer-tooling",
 };
 
-const toolPriority: Record<ProductToolId, ToolPriority> = {
-  "website-check": "recommended",
-  "network-doctor": "recommended",
-  "dns-security": "recommended",
-  "ip-lookup": "normal",
-  "cloudflare-trace": "normal",
-  api: "recommended",
-  json: "recommended",
-  websocket: "normal",
-  passgen: "high",
-  qrgen: "normal",
-  jwt: "high",
-  uuid: "high",
-  encode: "recommended",
-  time: "normal",
-  "prompt-builder": "normal",
-  regex: "high",
-  hash: "high",
-  "sensitive-data": "high",
-  cron: "recommended",
-  yaml: "recommended",
-  sql: "recommended",
-  color: "normal",
-  diff: "recommended",
-};
-
 const copy = {
   en: {
     search: "Find a tool or task",
     searchHint: "Search by name, task, or input type",
     filters: { all: "All", local: "Local processing", network: "Online diagnostics" },
     empty: "No tools match this search.",
-    open: "Open tool",
     local: "Local processing · Not uploaded",
     network: "Internet required",
     localTag: "Local-first",
@@ -140,7 +110,6 @@ const copy = {
       "opskitpro-probe": "Sent to the OpsKitPro probe",
       mixed: "Browser, edge, and probe observations",
     },
-    starterMessage: "Start with these priority tools for your first pass.",
     categories: {
       "security-first": [
         "Security & privacy tooling",
@@ -163,18 +132,12 @@ const copy = {
         "Public-network checks with clear data destinations and observation points.",
       ],
     },
-    priorities: {
-      high: "High priority",
-      recommended: "Recommended",
-      normal: "Balanced",
-    },
   },
   zh: {
     search: "查找工具或任务",
     searchHint: "按名称、用途或输入类型搜索",
     filters: { all: "全部", local: "本地处理", network: "联网诊断" },
     empty: "没有符合条件的工具。",
-    open: "打开工具",
     local: "本地处理 · 不上传",
     network: "需要联网",
     localTag: "本地优先",
@@ -186,7 +149,6 @@ const copy = {
       "opskitpro-probe": "发送给 OpsKitPro 探针",
       mixed: "浏览器、边缘和探针共同观察",
     },
-    starterMessage: "先从高优先工具开始：密码、Hash、JWT 和敏感信息。",
     categories: {
       "security-first": [
         "安全与脱敏工具",
@@ -208,11 +170,6 @@ const copy = {
         "运维与网络诊断",
         "公开网络场景诊断，明确显示数据流向和观测来源。",
       ],
-    },
-    priorities: {
-      high: "高优先",
-      recommended: "推荐",
-      normal: "常规",
     },
   },
 } as const;
@@ -248,53 +205,12 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
       category,
       tools: matches
         .filter((tool) => toolCategory[tool.id] === category)
-        .sort((left, right) => {
-          const leftPriority = toolPriority[left.id];
-          const rightPriority = toolPriority[right.id];
-          const priorityWeight: Record<ToolPriority, number> = {
-            high: 0,
-            recommended: 1,
-            normal: 2,
-          };
-          const priorityDiff = priorityWeight[leftPriority] - priorityWeight[rightPriority];
-          if (priorityDiff !== 0) return priorityDiff;
-          const titleDiff = left.title[lang].localeCompare(right.title[lang], lang === "zh" ? "zh-CN" : "en-US");
-          return titleDiff;
-        }),
+        .sort((left, right) => left.title[lang].localeCompare(
+          right.title[lang],
+          lang === "zh" ? "zh-CN" : "en-US",
+        )),
     })).filter((group) => group.tools.length > 0);
   }, [filter, categoryFilter, lang, query, text.categories]);
-
-  const categoryBadges: Record<DisplayCategory, { en: string; zh: string }> = {
-    "security-first": { en: "Security first", zh: "安全优先" },
-    "developer-tooling": { en: "Dev tooling", zh: "研发工具" },
-    "content-utility": { en: "Workflow tool", zh: "流程工具" },
-    "ops-network": { en: "Ops diagnostics", zh: "运维诊断" },
-    "developer-debug": { en: "Dev debug", zh: "调试网络" },
-  };
-
-  const starterHints = {
-    en: {
-      high: "Starter-first",
-      recommended: "Recommended first",
-      normal: "Optional",
-    },
-    zh: {
-      high: "新手起点",
-      recommended: "推荐优先",
-      normal: "按需尝试",
-    },
-  } as const;
-
-  const starterPath = [
-    "passgen",
-    "hash",
-    "sensitive-data",
-    "jwt",
-  ].map((toolId) => {
-    const tool = productTools.find((item) => item.id === toolId);
-    if (!tool) return "";
-    return localizeTool(tool, lang).title;
-  }).filter(Boolean);
 
   return (
     <div className="mt-9">
@@ -325,10 +241,6 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
               {text.filters[value]}
             </button>
           ))}
-        </div>
-        <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-950">
-          <span className="font-semibold">{text.starterMessage}</span>{" "}
-          {starterPath.join(" · ")}
         </div>
         <div className="mt-3 flex flex-wrap gap-2" aria-label={lang === "zh" ? "按分类筛选" : "Filter by category"}>
           <button
@@ -382,37 +294,23 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
                   {tools.map((rawTool) => {
                     const tool = localizeTool(rawTool, lang);
                     const Icon = icons[tool.id];
-              const isLocal = tool.processingMode === "local";
-              const modeTag = isLocal ? text.localTag : text.networkTag;
-              const catTag = categoryBadges[category];
-              const categoryTag = catTag ? catTag[lang] : "";
-                return (
-                  <Link key={tool.id} href={`/${lang}${tool.href}`} className="ui-surface group flex min-h-56 flex-col rounded-2xl p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/30">
+                    const isLocal = tool.processingMode === "local";
+                    const modeTag = isLocal ? text.localTag : text.networkTag;
+                    return (
+                      <Link key={tool.id} href={`/${lang}${tool.href}`} className="ui-surface group flex min-h-44 flex-col rounded-2xl p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/30">
                         <div className="flex items-start justify-between gap-3">
                           <span className={`rounded-xl p-2.5 ${isLocal ? "bg-emerald-500/10 text-emerald-600" : "bg-sky-500/10 text-sky-600"}`}><Icon className="h-5 w-5" /></span>
-                          <div className="flex flex-col items-end gap-1.5">
-                            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${isLocal ? "border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-600" : "border-sky-500/20 bg-sky-500/[0.07] text-sky-600"}`}>
-                              {modeTag}
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
-                              <Star className="h-3.5 w-3.5" />
-                              {starterHints[lang][toolPriority[rawTool.id] ?? "normal"]}
-                            </span>
-                            <span className="rounded-full border border-zinc-200 bg-zinc-100 px-2.5 py-1 text-[10px] font-semibold text-zinc-600">
-                              {text.priorities[toolPriority[rawTool.id] ?? "normal"]}
-                            </span>
-                            <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[10px] font-semibold text-zinc-600">
-                              {categoryTag}
-                            </span>
-                          </div>
+                          <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${isLocal ? "border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-600" : "border-sky-500/20 bg-sky-500/[0.07] text-sky-600"}`}>
+                            {modeTag}
+                          </span>
                         </div>
-                        <h3 className="mt-5 text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-color)]">{tool.title}</h3>
-                        <p className="mt-2 flex-1 text-sm leading-6 text-[var(--text-muted)]">{tool.description}</p>
-                        <div className="mt-4 border-t border-[var(--border-subtle)] pt-3 text-xs leading-5 text-[var(--text-muted)]">
-                          <p>{tool.inputType[lang]}</p>
-                          <p className="mt-1 font-medium text-[var(--text-secondary)]">{text.paths[tool.networkPath]}</p>
-                        </div>
-                        <span className="mt-4 text-xs font-semibold text-[var(--accent-color)]">{text.open} →</span>
+                        <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-color)]">{tool.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{tool.description}</p>
+                        {!isLocal ? (
+                          <p className="mt-auto border-t border-[var(--border-subtle)] pt-3 text-xs font-medium leading-5 text-[var(--text-secondary)]">
+                            {text.paths[tool.networkPath]}
+                          </p>
+                        ) : null}
                       </Link>
                     );
                   })}

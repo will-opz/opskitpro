@@ -17,7 +17,8 @@ test("homepage and public catalog expose the current privacy-first tool groups",
   await expect(diagnostics.getByRole("link", { name: /Website Check/ })).toBeVisible();
 
   await page.goto("/en/tools");
-  await expect(page.getByRole("heading", { name: "Know where your data is processed" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tools", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Data handling guide/ })).toHaveAttribute("href", "/en/tools/docs");
   await expect(page.getByRole("heading", { name: "Security & privacy tooling" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ops & network diagnostics" })).toBeVisible();
   await expect(page.locator('main a[href="/en/tools/passgen"]')).toBeVisible();
@@ -32,7 +33,7 @@ test("personal navigation is separate from the public catalog", async ({
   await expect(page.getByRole("heading", { name: "My Navigation" })).toBeVisible();
 
   await page.goto("/zh/tools");
-  await expect(page.getByRole("heading", { name: "知道数据在哪里处理，再开始使用" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "常用工具" })).toBeVisible();
   await expect(page.locator("html")).not.toHaveCSS("overflow-x", "scroll");
 });
 

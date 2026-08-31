@@ -207,7 +207,7 @@ test('retired services dashboard redirects to the searchable tool catalog', asyn
   await page.goto('/services')
 
   await expect(page).toHaveURL(/\/en\/tools$/)
-  await expect(page.getByRole('heading', { name: /Know where your data is processed/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Tools$/i })).toBeVisible()
   await page.getByRole('searchbox').fill('encode')
   await expect(page.getByRole('link', { name: /Encode \/ Decode/i })).toBeVisible()
 })
@@ -560,7 +560,7 @@ test('retired blog index sends visitors to the tool catalog', async ({ page }) =
   await page.goto('/blog')
 
   await expect(page).toHaveURL(/\/en\/tools$/)
-  await expect(page.getByRole('heading', { name: /Know where your data is processed/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Tools$/i })).toBeVisible()
 })
 
 test('retired localized articles redirect to the matching tool and locale', async ({ page }) => {
