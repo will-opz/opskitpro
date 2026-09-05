@@ -1,8 +1,11 @@
 import { cookies, headers } from "next/headers";
+import "../globals.css";
+import { AdminSessionProvider } from "@/components/AdminSessionProvider";
 import { redirect } from "next/navigation";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { themeInitScript } from "@/lib/theme-init";
 import {
   ADMIN_COOKIE_NAME,
   getCloudflareAccessEmail,
@@ -28,10 +31,10 @@ export default async function AdminLayout({
   const dict = await getDictionary(lang);
 
   return (
-    <>
+    <html lang={lang} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeInitScript }} /></head><body className="ui-shell"><AdminSessionProvider lang={lang}>
       <SiteHeader dict={dict} lang={lang} />
       {children}
-      <SiteFooter dict={dict} />
-    </>
+      <SiteFooter dict={dict} lang={lang} />
+    </AdminSessionProvider></body></html>
   );
 }

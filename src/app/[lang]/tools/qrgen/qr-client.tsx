@@ -42,7 +42,7 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-zinc-700 pt-8 md:pt-12 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
+    <div className="min-h-0 bg-[var(--bg-primary)] text-[var(--text-secondary)] pt-8 md:pt-8 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-4xl mx-auto">
@@ -52,21 +52,22 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
           processing={lang === "zh" ? "本地处理 · 不上传" : "Local processing · Not uploaded"}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4 mt-6">
           {/* Input Side */}
           <div className="space-y-6">
-            <div className="bg-zinc-100 rounded-2xl border border-black/10 p-6 backdrop-blur-sm">
-              <label className="block text-sm font-medium text-zinc-600 mb-4 flex items-center gap-2">
+            <div className="bg-[var(--bg-tertiary)] rounded-2xl border border-black/10 p-6 backdrop-blur-sm">
+              <label htmlFor="qr-input" className="block text-sm font-medium text-[var(--text-secondary)] mb-4 flex items-center gap-2">
                 <Info className="w-4 h-4" />
-                {dict.tools.qrgen.helper}
+                {lang === "zh" ? "文本或 URL" : "Text or URL"}
               </label>
               <textarea
+                id="qr-input"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={dict.tools.qrgen.placeholder}
                 aria-invalid={isOverLimit}
                 aria-describedby={`${counterId}${isOverLimit ? ` ${errorId}` : ""}`}
-                className={`w-full h-48 sm:h-64 bg-[#fafafa]/50 border rounded-xl p-4 text-zinc-900 font-mono placeholder:text-zinc-700 focus:outline-none transition-colors resize-none ${
+                className={`w-full h-48 sm:h-64 bg-[var(--surface-primary)] border rounded-xl p-4 text-[var(--text-primary)] font-mono placeholder:text-[var(--text-muted)] focus:outline-none transition-colors resize-none ${
                   isOverLimit
                     ? "border-red-400 focus:border-red-500"
                     : "border-black/10 focus:border-emerald-500/50"
@@ -75,15 +76,15 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
               <div className="mb-4 mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <p
                   id={counterId}
-                  className={`text-xs tabular-nums ${isOverLimit ? "font-semibold text-red-600" : "text-zinc-500"}`}
+                  className={`text-xs tabular-nums ${isOverLimit ? "font-semibold text-[var(--danger-text)]" : "text-[var(--text-muted)]"}`}
                 >
-                  {payloadBytes} / {QR_MAX_BYTES} bytes
+                  {payloadBytes} / {QR_MAX_BYTES} {lang === "zh" ? "字节" : "bytes"}
                 </p>
                 {isOverLimit && (
                   <p
                     id={errorId}
                     role="alert"
-                    className="text-xs font-medium text-red-600"
+                    className="text-xs font-medium text-[var(--danger-text)]"
                   >
                     {lang === "zh"
                       ? "内容过长，请缩短后再生成二维码。"
@@ -94,7 +95,7 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
               <button
                 onClick={downloadQR}
                 disabled={!text || isOverLimit}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-900 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                className="ui-button-primary w-full"
               >
                 <Download className="w-5 h-5" />
                 {dict.tools.qrgen.download}
@@ -103,8 +104,8 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
           </div>
 
           {/* Preview Side */}
-          <div className="flex flex-col items-center justify-start py-8">
-            <div className="relative group w-full max-w-[384px] p-4 sm:p-8 bg-white rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] transition-transform hover:scale-[1.02]">
+          <div className="flex flex-col items-center justify-start py-0">
+            <div className="relative group w-full max-w-[384px] p-4 sm:p-8 bg-[var(--surface-primary)] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] transition-transform hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/5 to-transparent pointer-events-none" />
               {text && !isOverLimit ? (
                 <QRCodeSVG
@@ -116,7 +117,7 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
                   className="relative z-10 h-auto w-full max-w-[320px]"
                 />
               ) : (
-                <div className="aspect-square w-full max-w-[320px] border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center text-zinc-600 italic text-center px-8">
+                <div className="aspect-square w-full max-w-[320px] border-2 border-dashed border-[var(--border-strong)] rounded-2xl flex items-center justify-center text-[var(--text-secondary)] italic text-center px-8">
                   {isOverLimit
                     ? lang === "zh"
                       ? "内容超过 500 字节，无法生成二维码。"

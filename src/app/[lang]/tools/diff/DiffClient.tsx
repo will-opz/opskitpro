@@ -248,10 +248,10 @@ export default function DiffClient({ lang }: { lang: Lang }) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={text.title} description={text.subtitle} processing={text.privacy} />
 
-      <section className="mt-8 ui-surface-elevated rounded-2xl p-4 sm:p-6">
+      <section className="mt-6 ui-surface-elevated rounded-2xl p-4 sm:p-6">
         <div className="grid gap-4 lg:grid-cols-2">
           {([
             ["diff-old", text.original, text.originalPlaceholder, oldText, setOldText],
@@ -268,7 +268,7 @@ export default function DiffClient({ lang }: { lang: Lang }) {
                 onChange={(event) => { setter(event.target.value); invalidate(); }}
                 placeholder={placeholder}
                 spellCheck={false}
-                className="mt-2 min-h-64 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
+                className="mt-2 min-h-44 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
               />
             </div>
           ))}
@@ -279,15 +279,15 @@ export default function DiffClient({ lang }: { lang: Lang }) {
           <legend className="text-sm font-semibold text-[var(--text-primary)]">{text.options}</legend>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-3">
             <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
-              <input type="checkbox" checked={options.ignoreCase} onChange={() => changeOption("ignoreCase")} className="h-4 w-4 rounded border-zinc-300 text-emerald-600" />
+              <input type="checkbox" checked={options.ignoreCase} onChange={() => changeOption("ignoreCase")} className="h-4 w-4 rounded border-zinc-300 text-[var(--accent-text)]" />
               {text.ignoreCase}
             </label>
             <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
-              <input type="checkbox" checked={options.ignoreTrailingWhitespace} onChange={() => changeOption("ignoreTrailingWhitespace")} className="h-4 w-4 rounded border-zinc-300 text-emerald-600" />
+              <input type="checkbox" checked={options.ignoreTrailingWhitespace} onChange={() => changeOption("ignoreTrailingWhitespace")} className="h-4 w-4 rounded border-zinc-300 text-[var(--accent-text)]" />
               {text.ignoreWhitespace}
             </label>
           </div>
-          {(options.ignoreCase || options.ignoreTrailingWhitespace) && <p className="mt-1 text-xs text-amber-700">{text.optionWarning}</p>}
+          {(options.ignoreCase || options.ignoreTrailingWhitespace) && <p className="mt-1 text-xs text-[var(--warning-text)]">{text.optionWarning}</p>}
         </fieldset>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -303,47 +303,47 @@ export default function DiffClient({ lang }: { lang: Lang }) {
           <h2 id="diff-results-title" className="text-lg font-semibold text-[var(--text-primary)]">{text.results}</h2>
           <div className="flex flex-wrap gap-2" role="tablist" aria-label={text.results}>
             {(["unified", "split"] as const).map((mode) => (
-              <button key={mode} type="button" role="tab" aria-selected={view === mode} onClick={() => setView(mode)} className={`min-h-10 rounded-xl border px-3 text-xs font-semibold ${view === mode ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-[var(--border-subtle)] text-[var(--text-muted)]"}`}>{text[mode]}</button>
+              <button key={mode} type="button" role="tab" aria-selected={view === mode} onClick={() => setView(mode)} className={`min-h-10 rounded-xl border px-3 text-xs font-semibold ${view === mode ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-muted)]"}`}>{text[mode]}</button>
             ))}
           </div>
         </div>
 
-        <div aria-live="polite" className={`mt-4 rounded-xl border p-3 text-sm ${state === "timeout" || state === "worker_error" || (result && !result.ok) ? "border-amber-500/25 bg-amber-500/[0.06] text-amber-800" : "border-[var(--border-subtle)] bg-[var(--surface-secondary)] text-[var(--text-secondary)]"}`}>{resultMessage}</div>
+        <div aria-live="polite" className={`mt-4 rounded-xl border p-3 text-sm ${state === "timeout" || state === "worker_error" || (result && !result.ok) ? "border-amber-500/25 bg-amber-500/[0.06] text-[var(--warning-text)]" : "border-[var(--border-subtle)] bg-[var(--surface-secondary)] text-[var(--text-secondary)]"}`}>{resultMessage}</div>
 
         {result?.ok && (
           <>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {([[text.added, result.stats.additions, "text-emerald-700"], [text.deleted, result.stats.deletions, "text-red-700"], [text.unchanged, result.stats.unchanged, "text-zinc-700"], [text.blocks, result.stats.changeBlocks, "text-amber-700"]] as const).map(([label, value, color]) => (
+              {([[text.added, result.stats.additions, "text-[var(--accent-text)]"], [text.deleted, result.stats.deletions, "text-[var(--danger-text)]"], [text.unchanged, result.stats.unchanged, "text-[var(--text-secondary)]"], [text.blocks, result.stats.changeBlocks, "text-[var(--warning-text)]"]] as const).map(([label, value, color]) => (
                 <div key={label} className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3"><p className="text-xs text-[var(--text-muted)]">{label}</p><p className={`mt-1 text-xl font-semibold tabular-nums ${color}`}>{value}</p></div>
               ))}
             </div>
             <div className="mt-4 flex justify-end">
-              <button type="button" onClick={copySummary} className="ui-button-ghost min-h-10 border border-[var(--border-subtle)] px-3 text-xs">{copyState === "copied" ? <Check className="h-4 w-4 text-emerald-600" /> : <Clipboard className="h-4 w-4" />}{copyState === "copied" ? text.copied : copyState === "failed" ? text.copyFailed : text.copySummary}</button>
+              <button type="button" onClick={copySummary} className="ui-button-ghost min-h-10 border border-[var(--border-subtle)] px-3 text-xs">{copyState === "copied" ? <Check className="h-4 w-4 text-[var(--accent-text)]" /> : <Clipboard className="h-4 w-4" />}{copyState === "copied" ? text.copied : copyState === "failed" ? text.copyFailed : text.copySummary}</button>
             </div>
 
             <div role="tabpanel" className="mt-4 max-h-[42rem] overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)]">
               {view === "unified" ? (
                 <div className="min-w-[34rem] font-mono text-xs leading-6 sm:text-sm">
                   {visibleHunks.map((hunk, hunkIndex) => hunk.type === "omitted" ? (
-                    <div key={`omitted-${hunkIndex}`} className="border-y border-[var(--border-subtle)] bg-sky-50 px-3 py-1 text-center font-sans text-xs text-sky-700">{text.omitted(hunk.count)}</div>
+                    <div key={`omitted-${hunkIndex}`} className="border-y border-[var(--border-subtle)] bg-[var(--info-soft)] px-3 py-1 text-center font-sans text-xs text-[var(--info-text)]">{text.omitted(hunk.count)}</div>
                   ) : hunk.type === "equal" ? hunk.newLines.map((line, index) => (
                     <div key={`equal-${hunkIndex}-${line.lineNumber}`} className="grid grid-cols-[3rem_3rem_1.5rem_minmax(0,1fr)] text-[var(--text-secondary)]"><span className="select-none border-r border-[var(--border-subtle)] px-2 text-right text-[var(--text-faint)]">{hunk.oldLines[index]?.lineNumber}</span><span className="select-none border-r border-[var(--border-subtle)] px-2 text-right text-[var(--text-faint)]">{line.lineNumber}</span><span className="select-none text-center"> </span><code className="whitespace-pre-wrap break-words px-2"><LineContent value={line.text} emptyLabel={text.emptyLine} /></code></div>
                   )) : <div key={`change-${hunkIndex}`}>
-                    {hunk.oldLines.map((line) => <div key={`remove-${line.lineNumber}`} className="grid grid-cols-[3rem_3rem_1.5rem_minmax(0,1fr)] bg-red-50 text-red-950"><span className="select-none border-r border-red-100 px-2 text-right text-red-500">{line.lineNumber}</span><span className="border-r border-red-100" /><span className="select-none text-center font-semibold">−</span><code className="whitespace-pre-wrap break-words px-2"><LineContent value={line.text} emptyLabel={text.emptyLine} /></code></div>)}
-                    {hunk.newLines.map((line) => <div key={`add-${line.lineNumber}`} className="grid grid-cols-[3rem_3rem_1.5rem_minmax(0,1fr)] bg-emerald-50 text-emerald-950"><span className="border-r border-emerald-100" /><span className="select-none border-r border-emerald-100 px-2 text-right text-emerald-600">{line.lineNumber}</span><span className="select-none text-center font-semibold">+</span><code className="whitespace-pre-wrap break-words px-2"><LineContent value={line.text} emptyLabel={text.emptyLine} /></code></div>)}
+                    {hunk.oldLines.map((line) => <div key={`remove-${line.lineNumber}`} className="grid grid-cols-[3rem_3rem_1.5rem_minmax(0,1fr)] bg-[var(--danger-soft)] text-red-950"><span className="select-none border-r border-red-100 px-2 text-right text-red-500">{line.lineNumber}</span><span className="border-r border-red-100" /><span className="select-none text-center font-semibold">−</span><code className="whitespace-pre-wrap break-words px-2"><LineContent value={line.text} emptyLabel={text.emptyLine} /></code></div>)}
+                    {hunk.newLines.map((line) => <div key={`add-${line.lineNumber}`} className="grid grid-cols-[3rem_3rem_1.5rem_minmax(0,1fr)] bg-[var(--accent-soft)] text-emerald-950"><span className="border-r border-emerald-100" /><span className="select-none border-r border-emerald-100 px-2 text-right text-[var(--accent-text)]">{line.lineNumber}</span><span className="select-none text-center font-semibold">+</span><code className="whitespace-pre-wrap break-words px-2"><LineContent value={line.text} emptyLabel={text.emptyLine} /></code></div>)}
                   </div>)}
                 </div>
               ) : (
                 <div className="min-w-[48rem] font-mono text-xs leading-6 sm:text-sm">
                   {visibleHunks.map((hunk, hunkIndex) => hunk.type === "omitted" ? (
-                    <div key={`omitted-${hunkIndex}`} className="border-y border-[var(--border-subtle)] bg-sky-50 px-3 py-1 text-center font-sans text-xs text-sky-700">{text.omitted(hunk.count)}</div>
+                    <div key={`omitted-${hunkIndex}`} className="border-y border-[var(--border-subtle)] bg-[var(--info-soft)] px-3 py-1 text-center font-sans text-xs text-[var(--info-text)]">{text.omitted(hunk.count)}</div>
                   ) : Array.from({ length: Math.max(hunk.oldLines.length, hunk.newLines.length) }, (_, index) => {
                     const oldLine = hunk.oldLines[index];
                     const newLine = hunk.newLines[index];
                     const changed = hunk.type === "change";
                     return <div key={`split-${hunkIndex}-${index}`} className="grid grid-cols-2 border-b border-[var(--border-subtle)] last:border-b-0">
-                      <div className={`grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] ${changed && oldLine ? "bg-red-50 text-red-950" : "text-[var(--text-secondary)]"}`}><span aria-label={text.oldLine} className="select-none border-r border-[var(--border-subtle)] px-2 text-right text-[var(--text-faint)]">{oldLine?.lineNumber ?? ""}</span><code className="whitespace-pre-wrap break-words px-2">{oldLine ? <LineContent value={oldLine.text} emptyLabel={text.emptyLine} /> : ""}</code></div>
-                      <div className={`grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] border-l border-[var(--border-subtle)] ${changed && newLine ? "bg-emerald-50 text-emerald-950" : "text-[var(--text-secondary)]"}`}><span aria-label={text.newLine} className="select-none border-r border-[var(--border-subtle)] px-2 text-right text-[var(--text-faint)]">{newLine?.lineNumber ?? ""}</span><code className="whitespace-pre-wrap break-words px-2">{newLine ? <LineContent value={newLine.text} emptyLabel={text.emptyLine} /> : ""}</code></div>
+                      <div className={`grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] ${changed && oldLine ? "bg-[var(--danger-soft)] text-red-950" : "text-[var(--text-secondary)]"}`}><span aria-label={text.oldLine} className="select-none border-r border-[var(--border-subtle)] px-2 text-right text-[var(--text-faint)]">{oldLine?.lineNumber ?? ""}</span><code className="whitespace-pre-wrap break-words px-2">{oldLine ? <LineContent value={oldLine.text} emptyLabel={text.emptyLine} /> : ""}</code></div>
+                      <div className={`grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] border-l border-[var(--border-subtle)] ${changed && newLine ? "bg-[var(--accent-soft)] text-emerald-950" : "text-[var(--text-secondary)]"}`}><span aria-label={text.newLine} className="select-none border-r border-[var(--border-subtle)] px-2 text-right text-[var(--text-faint)]">{newLine?.lineNumber ?? ""}</span><code className="whitespace-pre-wrap break-words px-2">{newLine ? <LineContent value={newLine.text} emptyLabel={text.emptyLine} /> : ""}</code></div>
                     </div>;
                   }))}
                 </div>

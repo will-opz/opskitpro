@@ -50,9 +50,9 @@ export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2 text-zinc-400">
+          <div className="flex items-center gap-2 text-[var(--text-muted)]">
             <Cpu className="w-4 h-4" />
-            <span className="text-[10px] uppercase tracking-wider">
+            <span className="text-xs uppercase tracking-wider">
               {copy.title}
             </span>
           </div>
@@ -71,12 +71,12 @@ export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
           <div className="bg-zinc-800/50 rounded-xl p-3">
             <div className="flex items-center gap-2 text-cyan-400 mb-1">
               <ArrowUp className="w-3 h-3" />
-              <span className="text-[9px] uppercase tracking-wider">{copy.sent}</span>
+              <span className="text-xs uppercase tracking-wider">{copy.sent}</span>
             </div>
             <div className="text-xl font-black text-cyan-400">
               {stats.messagesSent}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">
+            <div className="text-xs text-[var(--text-muted)] mt-0.5">
               {formatBytes(stats.bytesSent)}
             </div>
           </div>
@@ -85,14 +85,14 @@ export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
           <div className="bg-zinc-800/50 rounded-xl p-3">
             <div className="flex items-center gap-2 text-emerald-400 mb-1">
               <ArrowDown className="w-3 h-3" />
-              <span className="text-[9px] uppercase tracking-wider">
+              <span className="text-xs uppercase tracking-wider">
                 {copy.received}
               </span>
             </div>
             <div className="text-xl font-black text-emerald-400">
               {stats.messagesReceived}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">
+            <div className="text-xs text-[var(--text-muted)] mt-0.5">
               {formatBytes(stats.bytesReceived)}
             </div>
           </div>
@@ -101,7 +101,7 @@ export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
           <div className="bg-zinc-800/50 rounded-xl p-3">
             <div className="flex items-center gap-2 text-amber-400 mb-1">
               <Clock className="w-3 h-3" />
-              <span className="text-[9px] uppercase tracking-wider">
+              <span className="text-xs uppercase tracking-wider">
                 {copy.uptime}
               </span>
             </div>
@@ -114,7 +114,7 @@ export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
           <div className="bg-zinc-800/50 rounded-xl p-3">
             <div className="flex items-center gap-2 text-purple-400 mb-1">
               <Zap className="w-3 h-3" />
-              <span className="text-[9px] uppercase tracking-wider">
+              <span className="text-xs uppercase tracking-wider">
                 {copy.latency}
               </span>
             </div>
@@ -126,11 +126,11 @@ export function StatsPanel({ lang, status, stats }: StatsPanelProps) {
 
         {/* Total Traffic */}
         <div className="mt-4 pt-4 border-t border-zinc-800">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-zinc-500 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[var(--text-muted)] uppercase tracking-wider">
               {copy.total}
             </span>
-            <span className="text-zinc-300 font-mono">
+            <span className="text-[var(--text-faint)] font-mono">
               {formatBytes(stats.bytesSent + stats.bytesReceived)}
             </span>
           </div>

@@ -101,10 +101,10 @@ function ValidationTag({
 }: { valid: boolean; value: string; version: string; t: { valid: string; invalid: string; unknownVersion: string } }) {
   return (
     <li className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-2.5 text-xs sm:text-sm">
-      <p className={`break-all ${valid ? "text-emerald-700" : "text-red-600"}`}>
+      <p className={`break-all ${valid ? "text-[var(--accent-text)]" : "text-[var(--danger-text)]"}`}>
         <strong>{valid ? t.valid : t.invalid}</strong> · {value}
       </p>
-      <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+      <p className="mt-1 text-xs text-[var(--text-muted)]">
         {valid ? (version ? `v${version}` : t.unknownVersion) : t.invalid}
       </p>
     </li>
@@ -175,10 +175,10 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={t.title} description={t.subtitle} processing={t.privacy} />
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-2">
+      <section className="tool-grid">
         <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <div className="mb-4">
             <p className="text-sm font-semibold text-[var(--text-primary)]">{t.generate}</p>
@@ -201,7 +201,7 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
                   disabled={!item.available}
                   className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
                     version === item.id
-                      ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700"
+                      ? "border-emerald-500/35 bg-emerald-500/10 text-[var(--accent-text)]"
                       : "border-[var(--border-subtle)] text-[var(--text-muted)]"
                   }`}
                 >
@@ -259,7 +259,7 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
               type="button"
               onClick={handleGenerate}
               disabled={isGenerating || countIsInvalid || (version === "v5" && !canGenerateV5)}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 font-semibold text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 font-semibold text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw className="h-4 w-4" />
               {isGenerating ? t.generating : t.generateButton}
@@ -273,10 +273,10 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
               <RefreshCcw className="h-4 w-4" />{t.clear}
             </button>
           </div>
-          {version === "v5" && !canGenerateV5 ? <p className="mt-3 flex items-center gap-2 text-sm text-amber-700"><AlertCircle className="h-4 w-4" />{t.unavailable}</p> : null}
+          {version === "v5" && !canGenerateV5 ? <p className="mt-3 flex items-center gap-2 text-sm text-[var(--warning-text)]"><AlertCircle className="h-4 w-4" />{t.unavailable}</p> : null}
 
           <h2 className="mt-6 text-sm font-semibold text-[var(--text-primary)]">{t.generated}</h2>
-          <div className="mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 min-h-40">
+          <div className="mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 min-h-20">
             {generated.length === 0 ? (
               <p className="text-sm text-[var(--text-muted)]">{t.noGenerated}</p>
             ) : (
@@ -293,7 +293,7 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
             type="button"
             onClick={copyGenerated}
             disabled={generated.length === 0}
-            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl border border-emerald-500/30 px-3 py-2 text-xs font-semibold text-emerald-700 disabled:opacity-50"
+            className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl border border-emerald-500/30 px-3 py-2 text-xs font-semibold text-[var(--accent-text)] disabled:opacity-50"
           >
             <Clipboard className="h-4 w-4" />
             {generatedCopyState === "copied" ? t.copied : generatedCopyState === "failed" ? t.copyFailed : t.copyAll}
@@ -311,23 +311,23 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
             placeholder={t.inputPlaceholder}
             className="mt-4 min-h-40 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 text-sm font-mono outline-none focus:border-emerald-500/50"
           />
-          <p className={`mt-2 text-xs ${inputIsTooLong ? "text-red-700" : "text-[var(--text-muted)]"}`}>
+          <p className={`mt-2 text-xs ${inputIsTooLong ? "text-[var(--danger-text)]" : "text-[var(--text-muted)]"}`}>
             {validationInput.length.toLocaleString()} / {validationTextLimit.toLocaleString()}
           </p>
 
-          <div className="mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3">
+          {validationInput.trim() && <div className="mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3">
             <p className="text-sm font-semibold text-[var(--text-primary)]">
               {t.total(validationItems.length)}
             </p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               {validItems.length} {lang === "zh" ? "条有效" : "valid items"}
             </p>
-            {inputIsTooLong ? <p className="mt-2 text-xs text-red-700">{`Input exceeds ${validationTextLimit} characters.`}</p> : null}
-          </div>
+            {inputIsTooLong ? <p className="mt-2 text-xs text-[var(--danger-text)]">{`Input exceeds ${validationTextLimit} characters.`}</p> : null}
+          </div>}
 
           <div className="mt-4 max-h-64 overflow-auto">
             {validationItems.length === 0 ? (
-              <p className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs text-[var(--text-muted)]">-</p>
+              null
             ) : (
               <ul className="space-y-2">
                 {validationItems.map((item: UuidValidation & { value: string }) => (
@@ -348,7 +348,7 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
               type="button"
               onClick={copyValidation}
               disabled={!validationInput.trim()}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-semibold text-emerald-700 disabled:opacity-50"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-semibold text-[var(--accent-text)] disabled:opacity-50"
             >
               <Clipboard className="h-4 w-4" />
               {validationCopyState === "copied" ? t.copied : validationCopyState === "failed" ? t.copyFailed : t.copyAll}

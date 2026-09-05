@@ -172,6 +172,7 @@ test('tool API snippets and website-check metadata follow the active locale', as
     'content',
     '网站诊断 | DNS · HTTP · TLS · CDN 检测与 JSON API | OpsKitPro',
   )
+  await page.locator('#developer-api > summary').click()
   await expect(page.getByRole('heading', { name: '开发者 API' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '接口' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '请求示例' })).toBeVisible()
@@ -184,22 +185,25 @@ test('tool API snippets and website-check metadata follow the active locale', as
   )
 
   await page.goto('/zh/tools/dns-lookup')
+  await page.locator('#developer-api > summary').click()
   await expect(page.getByRole('heading', { name: '开发者 API' })).toBeVisible()
 
   await page.goto('/zh/tools/ip-lookup')
+  await page.locator('#developer-api > summary').click()
   await expect(page.getByRole('heading', { name: '开发者 API' })).toBeVisible()
 })
 
 test('home page exposes core navigation and tool entry points', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: /Website diagnostics and everyday online tools|网站诊断与常用在线工具/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Website diagnostics and developer tools|网站诊断与开发者工具/i })).toBeVisible()
   await expect(page.getByRole('link', { name: /Tools|工具|ツール/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Password Generator|密码生成器/i }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Knowledge Base|知识库/i })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /About|关于我们/i })).toHaveCount(0)
-  await expect(page.getByRole('link', { name: /Browse secure tools|浏览安全工具/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Open full check|打开完整检测/i }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: /Browse all tools|浏览全部工具/i }).first()).toBeVisible()
+  await expect(page.getByRole('textbox', { name: /Domain or URL|域名或 URL/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Start check|开始检测/i })).toBeVisible()
   await expect(page.getByRole('link', { name: /Website Check|网站检测/i }).first()).toBeVisible()
 })
 

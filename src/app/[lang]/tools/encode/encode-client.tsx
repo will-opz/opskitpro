@@ -17,7 +17,7 @@ const copy = {
     home: "首页",
     tools: "工具",
     badge: "编码工具",
-    title: "Encoding Toolkit",
+    title: "编码与解码",
     desc: "Base64、URL 编码和 JWT payload 解码，全部在本地处理。",
     input: "输入",
     output: "输出",
@@ -140,7 +140,7 @@ export default function EncodeClient({
   };
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
+    <main className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
       <div className="mx-auto max-w-6xl">
         <ToolPageHeader
           title={t.title}
@@ -149,7 +149,7 @@ export default function EncodeClient({
         />
 
         <section className="op-card mt-6 rounded-[1.5rem] p-4 sm:p-5">
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-2">
             {modes.map((item) => {
               const active = item.id === mode;
               return (
@@ -159,30 +159,30 @@ export default function EncodeClient({
                   onClick={() => setMode(item.id)}
                   className={`shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold transition ${
                     active
-                      ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
-                      : "border-zinc-200 bg-white text-zinc-600 hover:border-emerald-500/30 hover:bg-emerald-50 hover:text-emerald-700"
+                      ? "border-emerald-500 bg-[var(--accent-color)] text-[var(--accent-contrast)] shadow-sm"
+                      : "border-[var(--border-strong)] bg-[var(--surface-primary)] text-[var(--text-secondary)] hover:border-emerald-500/30 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-text)]"
                   }`}
                 >
-                  {item.label}
+                  {lang === "zh" ? ({ "base64-encode": "Base64 编码", "base64-decode": "Base64 解码", "url-encode": "URL 编码", "url-decode": "URL 解码", "jwt-decode": "JWT 解码" }[item.id]) : item.label}
                 </button>
               );
             })}
           </div>
         </section>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-2">
+        <section className="tool-grid">
           <div className="op-card rounded-[1.5rem] p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <label
                 htmlFor="encode-input"
-                className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500"
+                className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]"
               >
                 {t.input}
               </label>
               <button
                 type="button"
                 onClick={() => setInput("")}
-                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-900"
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-[var(--text-muted)] transition hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 {t.clear}
@@ -193,24 +193,24 @@ export default function EncodeClient({
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder={t.placeholder}
-              className="min-h-[360px] w-full resize-y rounded-2xl border border-zinc-200 bg-white p-4 font-mono text-sm leading-6 text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10"
+              className="h-48 min-h-48 sm:h-72 w-full resize-y rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-primary)] p-4 font-mono text-sm leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10"
             />
           </div>
 
           <div className="op-card rounded-[1.5rem] p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">
-                <Braces className="h-4 w-4 text-emerald-600" />
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                <Braces className="h-4 w-4 text-[var(--accent-text)]" />
                 {t.output}
               </div>
               <button
                 type="button"
                 onClick={copyOutput}
                 disabled={!result.value}
-                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-500 transition hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-[var(--text-muted)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent-text)] disabled:opacity-40"
               >
                 {copied ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  <Check className="h-3.5 w-3.5 text-[var(--accent-text)]" />
                 ) : (
                   <Copy className="h-3.5 w-3.5" />
                 )}
@@ -218,7 +218,7 @@ export default function EncodeClient({
               </button>
             </div>
 
-            <pre className="min-h-[360px] whitespace-pre-wrap break-words rounded-2xl border border-zinc-100 bg-zinc-50/80 p-4 font-mono text-sm leading-6 text-zinc-900">
+            <pre className="min-h-20 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4 font-mono text-sm leading-6 text-[var(--text-primary)]">
               {result.error || result.value}
             </pre>
           </div>

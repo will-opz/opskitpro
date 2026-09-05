@@ -38,15 +38,15 @@ export default async function PrivacyPage({
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <main className="mx-auto w-full max-w-3xl flex-grow px-6 pb-24 pt-12">
+      <main className="mx-auto w-full max-w-3xl flex-grow px-6 pb-10 pt-8">
         <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">
           {isZh ? "隐私政策" : "Privacy Policy"}
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          {isZh ? "最后更新：2026 年 7 月" : "Last updated: July 2026"}
+          {isZh ? "最后更新：2026 年 9 月" : "Last updated: September 2026"}
         </p>
 
-        <div className="mt-10 space-y-10 text-sm leading-7 text-[var(--text-secondary)]">
+        <div className="mt-10 space-y-7 text-sm leading-7 text-[var(--text-secondary)]">
           {/* Overview */}
           <section>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
@@ -66,8 +66,8 @@ export default async function PrivacyPage({
             </h2>
             <p className="mt-3">
               {isZh
-                ? "OpsKitPro 的诊断工具（Website Check、Network Doctor、DNS Security 等）在服务端执行网络探针，并将结果直接返回给你的浏览器。我们不会在服务端存储诊断目标的查询内容或查询历史记录。"
-                : "OpsKitPro diagnostic tools (Website Check, Network Doctor, DNS Security, etc.) execute network probes on the server side and return results directly to your browser. We do not store diagnostic query content or query history on the server."}
+                ? "OpsKitPro 联网工具根据功能从浏览器、公共 DNS、Cloudflare 边缘或服务端探针发起请求，并将结果返回给你的浏览器。我们不会在服务端存储诊断目标的查询内容或查询历史记录。"
+                : "OpsKitPro network tools make requests from the browser, public DNS, Cloudflare Edge or server-side probes depending on the tool, returning results to your browser. We do not store diagnostic query content or query history on the server."}
             </p>
             <p className="mt-3">
               {isZh
@@ -76,6 +76,11 @@ export default async function PrivacyPage({
             </p>
           </section>
 
+          <section className="space-y-3" id="local-data">
+            <h2 className="text-base font-semibold">{isZh ? "本地工具与浏览器存储" : "Local tools and browser storage"}</h2>
+            <p className="text-sm leading-7 text-[var(--text-secondary)]">{isZh ? "标注本地处理的工具在浏览器中处理输入，不上传工具内容。网站检测历史和偏好可能存储在当前浏览器；清除站点数据会移除这些本地记录。联网工具的请求目标及数据路径以各工具提交处和数据处理说明为准。" : "Tools labeled local process inputs in your browser without uploading tool content. Website Check history and preferences may be stored in this browser; clearing site data removes these local records. Network request destinations and data paths are described at each tool and in the data handling guide."}</p>
+            <a className="text-sm text-[var(--accent-text)] underline" href={`/${lang}/tools/docs`}>{isZh ? "逐工具数据处理说明" : "Data handling by tool"}</a>
+          </section>
           {/* Cookies */}
           <section>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
@@ -135,7 +140,7 @@ export default async function PrivacyPage({
                     href="https://adssettings.google.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-emerald-600 hover:text-emerald-500"
+                    className="font-medium text-[var(--accent-text)] hover:text-emerald-500"
                   >
                     Google 广告设置
                   </a>{" "}
@@ -144,7 +149,7 @@ export default async function PrivacyPage({
                     href="https://www.aboutads.info/choices/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-emerald-600 hover:text-emerald-500"
+                    className="font-medium text-[var(--accent-text)] hover:text-emerald-500"
                   >
                     aboutads.info
                   </a>{" "}
@@ -157,7 +162,7 @@ export default async function PrivacyPage({
                     href="https://adssettings.google.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-emerald-600 hover:text-emerald-500"
+                    className="font-medium text-[var(--accent-text)] hover:text-emerald-500"
                   >
                     Google Ad Settings
                   </a>
@@ -166,7 +171,7 @@ export default async function PrivacyPage({
                     href="https://www.aboutads.info/choices/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-emerald-600 hover:text-emerald-500"
+                    className="font-medium text-[var(--accent-text)] hover:text-emerald-500"
                   >
                     aboutads.info
                   </a>
@@ -183,7 +188,7 @@ export default async function PrivacyPage({
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-emerald-600 hover:text-emerald-500"
+                className="font-medium text-[var(--accent-text)] hover:text-emerald-500"
               >
                 {isZh ? "查看 Google 隐私政策 →" : "Google Privacy Policy →"}
               </a>
@@ -216,7 +221,7 @@ export default async function PrivacyPage({
                 href="https://github.com/will-opz/opskitpro/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-emerald-600 hover:text-emerald-500"
+                className="font-medium text-[var(--accent-text)] hover:text-emerald-500"
               >
                 github.com/will-opz/opskitpro/issues
               </a>

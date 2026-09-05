@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CodeBlock } from "@/components/CodeBlock";
 
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -81,38 +82,38 @@ export default async function McpPage({
   const text = copy[lang];
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-slate-900">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
       <SiteHeader dict={dict} lang={lang} />
-      <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-28 sm:px-6">
-        <section className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm sm:p-10">
-          <p className="text-xs font-semibold tracking-[0.18em] text-emerald-600">
+      <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-8 sm:px-6">
+        <section className="rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm sm:p-6">
+          <p className="text-xs font-semibold tracking-[0.18em] text-[var(--accent-text)]">
             {text.eyebrow}
           </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-3xl">
             {text.title}
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
+          <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--text-secondary)] sm:text-lg">
             {text.intro}
           </p>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <h2 className="text-sm font-semibold text-slate-500">{text.endpoint}</h2>
-              <code className="mt-3 block break-all text-base font-semibold text-emerald-700">
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-5">
+              <h2 className="text-sm font-semibold text-[var(--text-muted)]">{text.endpoint}</h2>
+              <code className="mt-3 block break-all text-base font-semibold text-[var(--accent-text)]">
                 https://opskitpro.com/mcp
               </code>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <h2 className="text-sm font-semibold text-slate-500">{text.tool}</h2>
-              <p className="mt-3 leading-7 text-slate-700">{text.toolText}</p>
+            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-5">
+              <h2 className="text-sm font-semibold text-[var(--text-muted)]">{text.tool}</h2>
+              <p className="mt-3 leading-7 text-[var(--text-secondary)]">{text.toolText}</p>
             </div>
           </div>
         </section>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+          <section className="rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 sm:p-5">
             <h2 className="text-2xl font-bold">{text.privacy}</h2>
-            <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
+            <ul className="mt-5 space-y-3 text-sm leading-6 text-[var(--text-secondary)]">
               {text.privacyItems.map((item) => (
                 <li key={item} className="flex gap-3">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
@@ -122,29 +123,25 @@ export default async function McpPage({
             </ul>
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+          <section className="rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 sm:p-5">
             <h2 className="text-2xl font-bold">{text.example}</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{text.exampleNote}</p>
-            <pre className="mt-5 overflow-x-auto rounded-2xl bg-slate-950 p-4 text-sm text-emerald-300">
-              <code>{`{
-  "url": "https://opskitpro.com/mcp"
-}`}</code>
-            </pre>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{text.exampleNote}</p>
+            <CodeBlock lang={lang}>{JSON.stringify({url: "https://opskitpro.com/mcp"}, null, 2)}</CodeBlock>
           </section>
         </div>
 
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+        <section className="mt-6 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 sm:p-5">
           <h2 className="text-2xl font-bold">{text.limits}</h2>
-          <p className="mt-3 leading-7 text-slate-600">{text.limitsText}</p>
+          <p className="mt-3 leading-7 text-[var(--text-secondary)]">{text.limitsText}</p>
           <Link
             href={`/${lang}/tools/api`}
-            className="mt-5 inline-flex font-semibold text-emerald-700 hover:text-emerald-800"
+            className="mt-5 inline-flex font-semibold text-[var(--accent-text)] hover:text-emerald-800"
           >
             {text.api} →
           </Link>
         </section>
       </main>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </div>
   );
 }

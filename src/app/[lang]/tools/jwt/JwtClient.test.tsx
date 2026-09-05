@@ -23,6 +23,21 @@ function buildJwtWithSecret(secret: string, payload: Record<string, unknown>) {
 }
 
 describe("JwtClient", () => {
+  it("starts without errors and invalidates results when the token changes", () => {
+    render(<JwtClient lang="en" />);
+    expect(screen.queryByText("Risk checks")).not.toBeInTheDocument();
+    expect(screen.queryByText("Malformed JWT")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Parse" })).toBeDisabled();
+    const { token } = buildJwtWithSecret("test", { sub: "synthetic-user" });
+    fireEvent.change(screen.getByLabelText("JWT token"), { target: { value: token } });
+    fireEvent.click(screen.getByRole("button", { name: "Parse" }));
+    expect(screen.getByText("synthetic-user")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("JWT token"), { target: { value: "changed" } });
+    expect(screen.queryByText("synthetic-user")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Verify signature" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.queryByText("Malformed JWT")).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,

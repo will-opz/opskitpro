@@ -12,21 +12,28 @@
   --surface-elevated: rgba(255, 255, 255, 0.96);
   --text-primary: #18181b;
   --text-secondary: #3f3f46;
-  --text-muted: #71717a;
-  --text-faint: #a1a1aa;
+  --text-muted: #5f5f69;
+  --text-faint: #686872;
+  --info-text: #0369a1;
+  --warning-text: #92400e;
+  --danger-text: #b91c1c;
+  --info-soft: rgba(14, 165, 233, 0.08);
+  --warning-soft: rgba(245, 158, 11, 0.08);
+  --danger-soft: rgba(239, 68, 68, 0.08);
   --border-subtle: rgba(24, 24, 27, 0.09);
   --border-strong: rgba(24, 24, 27, 0.16);
   --color-accent: #10b981;
   --color-accent-hover: #059669;
   --accent-color: #10b981;
   --accent-hover: #059669;
+  --accent-text: #047857;
   --accent-soft: rgba(16, 185, 129, 0.12);
-  --accent-contrast: #03251a;
+  --accent-contrast: #021c14;
   --warning: #f59e0b;
   --danger: #ef4444;
   --success: #10b981;
-  --shadow-soft: 0 18px 50px -36px rgba(24, 24, 27, 0.42);
-  --shadow-elevated: 0 24px 70px -46px rgba(24, 24, 27, 0.55);
+  --shadow-soft: 0 2px 6px -4px rgba(24, 24, 27, 0.16);
+  --shadow-elevated: 0 4px 12px -8px rgba(24, 24, 27, 0.2);
 }
 
 .dark {
@@ -39,14 +46,18 @@
   --surface-elevated: rgba(31, 31, 34, 0.96);
   --text-primary: #ededed;
   --text-secondary: #c7c7cc;
-  --text-muted: #8e8e93;
-  --text-faint: #636366;
+  --text-muted: #adadb6;
+  --text-faint: #a1a1ac;
+  --info-text: #7dd3fc;
+  --warning-text: #fcd34d;
+  --danger-text: #fca5a5;
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
   --color-accent: #34d399;
   --color-accent-hover: #6ee7b7;
   --accent-color: #34d399;
   --accent-hover: #6ee7b7;
+  --accent-text: #6ee7b7;
   --accent-soft: rgba(52, 211, 153, 0.14);
   --accent-contrast: #031711;
   --warning: #fbbf24;
@@ -70,6 +81,11 @@
       linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-primary) 18rem);
     color: var(--text-primary);
     text-rendering: optimizeLegibility;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--text-faint);
+    opacity: 1;
   }
 
   :where(a, button, input, textarea, select, summary, [role="button"]) {
@@ -129,6 +145,30 @@
 }
 
 @layer components {
+  .tool-page {
+    @apply mx-auto w-full max-w-7xl flex-grow px-4 py-6 sm:px-6 sm:py-8;
+  }
+
+  .tool-grid {
+    @apply mt-6 grid items-start gap-4 lg:grid-cols-2;
+  }
+
+  .ui-button-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50;
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
+    background: var(--surface-primary);
+  }
+
+  .ui-button-secondary:hover { background: var(--surface-secondary); }
+
+  .tool-empty {
+    @apply rounded-xl border p-4 text-sm leading-6;
+    color: var(--text-secondary);
+    background: var(--surface-secondary);
+    border-color: var(--border-subtle);
+  }
+
   .ui-shell {
     @apply min-h-screen flex flex-col font-sans antialiased overflow-x-hidden w-full;
     background: var(--bg-primary);
@@ -210,6 +250,22 @@
   }
 }
 
+/* Shared controls use the active theme, including older tool workbenches. */
+.op-action {
+  background: var(--surface-primary);
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+.op-action:hover { background: var(--accent-soft); color: var(--accent-text); }
+.op-icon-box, .op-chip, .ui-chip {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border-color: var(--border-subtle);
+}
+main pre { max-width: 100%; }
+main :where(section, article, .tool-grid > *) { min-width: 0; }
+section[id], h2[id] { scroll-margin-top: 6rem; }
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -228,4 +284,10 @@
   .glass-card:hover {
     transform: none !important;
   }
+}
+
+/* Shared keyboard feedback, including controls that reset their native outline. */
+:where(a, button, input, textarea, select, summary, [role="button"]):focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
 }

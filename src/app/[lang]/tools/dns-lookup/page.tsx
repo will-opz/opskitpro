@@ -42,7 +42,7 @@ export default async function DnsPage({
           fallback={
             <div className="min-h-[60vh] flex flex-col items-center justify-center font-sans">
               <div className="w-10 h-10 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-4" />
-              <p className="text-zinc-400 tracking-[0.24em] text-[10px]">
+              <p className="text-[var(--text-muted)] tracking-[0.24em] text-xs">
                 {false
                   ? "DNS を読み込み中..."
                   : lang === "zh"
@@ -90,7 +90,7 @@ export default async function DnsPage({
         <ToolGuide id="dns-security" lang={lang} />
         <RelatedTools currentTool="dns-lookup" lang={lang} />
       </div>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

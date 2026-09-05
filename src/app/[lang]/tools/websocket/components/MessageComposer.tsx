@@ -172,17 +172,17 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
         };
 
   return (
-    <div className="glass-card rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl overflow-hidden">
+    <div className="glass-card rounded-2xl border border-black/5 bg-[var(--surface-primary)] backdrop-blur-xl overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-zinc-100 bg-white/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-cyan-500/10 flex items-center justify-center rounded-lg">
             <Send className="w-4 h-4 text-cyan-600" />
           </div>
-          <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-bold text-cyan-700">
+          <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-xs font-bold text-cyan-700">
             {copy.step}
           </span>
-          <h3 className="text-xs font-bold text-zinc-700">
+          <h3 className="text-xs font-bold text-[var(--text-secondary)]">
             {copy.title}
           </h3>
         </div>
@@ -192,7 +192,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
           <div className="relative">
             <button
               onClick={() => setShowTemplates(!showTemplates)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 rounded-lg text-[10px] font-mono font-bold text-zinc-600 transition-all"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-zinc-200 rounded-lg text-xs font-mono font-bold text-[var(--text-secondary)] transition-all"
             >
               <Sparkles className="w-3 h-3" />
               {copy.templates}
@@ -202,9 +202,9 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
             </button>
 
             {showTemplates && (
-              <div className="absolute top-full right-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-zinc-200 z-50 max-h-80 overflow-auto">
-                <div className="p-2 border-b border-zinc-100">
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
+              <div className="absolute top-full right-0 mt-1 w-64 bg-[var(--surface-primary)] rounded-xl shadow-sm border border-[var(--border-strong)] z-50 max-h-80 overflow-auto">
+                <div className="p-2 border-b border-[var(--border-subtle)]">
+                  <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
                     {copy.presets}
                   </span>
                 </div>
@@ -214,9 +214,9 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
                     <button
                       key={t.id}
                       onClick={() => applyTemplate(t.id)}
-                      className="w-full px-3 py-2 text-left hover:bg-cyan-50 transition-colors flex items-center justify-between group"
+                      className="w-full px-3 py-2 text-left hover:bg-[var(--info-soft)] transition-colors flex items-center justify-between group"
                     >
-                      <span className="text-xs font-mono text-zinc-700">
+                      <span className="text-xs font-mono text-[var(--text-secondary)]">
                         {t.name}
                       </span>
                       {selectedTemplate === t.id && (
@@ -227,21 +227,21 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
 
                 {customTemplates.length > 0 && (
                   <>
-                    <div className="p-2 border-t border-b border-zinc-100 mt-1">
-                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="p-2 border-t border-b border-[var(--border-subtle)] mt-1">
+                      <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
                         {copy.custom}
                       </span>
                     </div>
                     {customTemplates.map((t) => (
                       <div
                         key={t.id}
-                        className="flex items-center hover:bg-cyan-50 transition-colors group"
+                        className="flex items-center hover:bg-[var(--info-soft)] transition-colors group"
                       >
                         <button
                           onClick={() => applyTemplate(t.id)}
                           className="flex-1 px-3 py-2 text-left flex items-center justify-between"
                         >
-                          <span className="text-xs font-mono text-zinc-700">
+                          <span className="text-xs font-mono text-[var(--text-secondary)]">
                             {t.name}
                           </span>
                           {selectedTemplate === t.id && (
@@ -250,7 +250,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
                         </button>
                         <button
                           onClick={() => deleteTemplate(t.id)}
-                          className="p-2 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                          className="p-2 text-[var(--text-faint)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -267,13 +267,13 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
             <>
               <button
                 onClick={formatJson}
-                className="px-2 py-1 text-[10px] font-mono text-zinc-500 hover:text-cyan-600 hover:bg-cyan-50 rounded transition-all"
+                className="px-2 py-1 text-xs font-mono text-[var(--text-muted)] hover:text-cyan-600 hover:bg-[var(--info-soft)] rounded transition-all"
               >
                 {copy.format}
               </button>
               <button
                 onClick={minifyJson}
-                className="px-2 py-1 text-[10px] font-mono text-zinc-500 hover:text-cyan-600 hover:bg-cyan-50 rounded transition-all"
+                className="px-2 py-1 text-xs font-mono text-[var(--text-muted)] hover:text-cyan-600 hover:bg-[var(--info-soft)] rounded transition-all"
               >
                 {copy.minify}
               </button>
@@ -283,7 +283,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
           {/* Save as template */}
           <button
             onClick={() => setShowSaveDialog(!showSaveDialog)}
-            className="p-1.5 text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+            className="p-1.5 text-[var(--text-muted)] hover:text-[var(--accent-text)] hover:bg-[var(--accent-soft)] rounded-lg transition-all"
             aria-label={copy.saveAsTemplate}
             title={copy.saveAsTemplate}
           >
@@ -294,13 +294,13 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
 
       {/* Save template dialog */}
       {showSaveDialog && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-emerald-100 bg-emerald-50 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-emerald-100 bg-[var(--accent-soft)] px-4 py-3">
           <input
             type="text"
             value={newTemplateName}
             onChange={(e) => setNewTemplateName(e.target.value)}
             placeholder={copy.templateName}
-            className="min-w-40 flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            className="min-w-40 flex-1 rounded-lg border border-emerald-200 bg-[var(--surface-primary)] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             onKeyDown={(e) => e.key === "Enter" && handleSaveTemplate()}
           />
           <button
@@ -312,7 +312,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
           </button>
           <button
             onClick={() => setShowSaveDialog(false)}
-            className="px-3 py-1.5 bg-zinc-200 text-zinc-600 text-xs font-bold rounded-lg hover:bg-zinc-300"
+            className="px-3 py-1.5 bg-zinc-200 text-[var(--text-secondary)] text-xs font-bold rounded-lg hover:bg-zinc-300"
           >
             {copy.cancel}
           </button>
@@ -322,18 +322,18 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
       {/* Template variables */}
       {currentVars.length > 0 && (
         <div className="px-4 py-3 bg-blue-50 border-b border-blue-100 flex flex-wrap items-center gap-3">
-          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+          <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
             {copy.variables}:
           </span>
           {currentVars.map((v) => (
             <div key={v} className="flex items-center gap-1">
-              <span className="text-[10px] font-mono text-blue-500">{`{{${v}}}`}</span>
+              <span className="text-xs font-mono text-blue-500">{`{{${v}}}`}</span>
               <input
                 type="text"
                 value={templateVars[v] || ""}
                 onChange={(e) => updateTemplateVar(v, e.target.value)}
                 placeholder={v}
-                className="w-24 px-2 py-1 text-[11px] font-mono bg-white border border-blue-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="w-24 px-2 py-1 text-xs font-mono bg-[var(--surface-primary)] border border-blue-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
               />
             </div>
           ))}
@@ -354,7 +354,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
           placeholder={copy.placeholder}
           rows={5}
           className={`w-full p-4 font-mono text-sm leading-relaxed resize-none focus:outline-none ${
-            jsonError ? "bg-red-50" : "bg-white"
+            jsonError ? "bg-[var(--danger-soft)]" : "bg-[var(--surface-primary)]"
           }`}
           spellCheck={false}
         />
@@ -362,10 +362,10 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
         {/* JSON indicator */}
         {isJson && (
           <div
-            className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold ${
+            className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
               jsonError
-                ? "bg-red-100 text-red-600"
-                : "bg-emerald-100 text-emerald-600"
+                ? "bg-[var(--danger-soft)] text-[var(--danger-text)]"
+                : "bg-[var(--accent-soft)] text-[var(--accent-text)]"
             }`}
           >
             {jsonError ? (
@@ -390,7 +390,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
 
       {/* JSON error message */}
       {jsonError && (
-        <div className="px-4 py-2 bg-red-50 border-t border-red-100 text-[11px] font-mono text-red-600">
+        <div className="px-4 py-2 bg-[var(--danger-soft)] border-t border-red-100 text-xs font-mono text-[var(--danger-text)]">
           {jsonError}
         </div>
       )}

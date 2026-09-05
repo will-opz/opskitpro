@@ -53,7 +53,7 @@ export default async function CloudflareTracePage({
         <ToolGuide id="cloudflare-trace" lang={lang} />
         <RelatedTools currentTool="cloudflare-trace" lang={lang} />
       </div>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

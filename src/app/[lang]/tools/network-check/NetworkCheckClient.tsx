@@ -395,12 +395,12 @@ function SectionCard({
   return (
     <div className="op-card rounded-2xl overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5 sm:py-4 border-b border-[var(--border-subtle)]">
-        <span className="text-[var(--accent-color)]">{icon}</span>
+        <span className="text-[var(--accent-text)]">{icon}</span>
         <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
           {title}
         </h2>
         {phase === "loading" && (
-          <Loader2 className="w-4 h-4 text-[var(--accent-color)] animate-spin" />
+          <Loader2 className="w-4 h-4 text-[var(--accent-text)] animate-spin" />
         )}
         {phase === "done" && (
           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -420,7 +420,7 @@ function SectionCard({
         ) : isPending ? (
           <div className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-soft)]/50 px-3 py-3">
             {phase === "loading" ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--accent-color)]" />
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[var(--accent-text)]" />
             ) : (
               <div className="h-2 w-2 shrink-0 rounded-full bg-[var(--text-faint)]" />
             )}
@@ -487,7 +487,7 @@ function StatBox({
   };
   return (
     <div className="op-card-soft rounded-xl p-3 text-center sm:p-4">
-      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:mb-2 sm:tracking-[0.18em]">
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:mb-2 sm:tracking-[0.18em]">
         {label}
       </p>
       {value !== null ? (
@@ -549,10 +549,10 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
         />
       </svg>
       <div className="text-center z-10">
-        <p className="text-3xl font-black" style={{ color: gradeColor }}>
+        <p className="text-3xl font-semibold" style={{ color: gradeColor }}>
           {grade}
         </p>
-        <p className="text-[10px] font-semibold text-[var(--text-muted)]">
+        <p className="text-xs font-semibold text-[var(--text-muted)]">
           {score}/100
         </p>
       </div>
@@ -926,17 +926,17 @@ export default function NetworkCheckClient({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <main className="ui-shell">
+    <main className="w-full flex-grow">
       <div className="glow" aria-hidden />
 
-      <section className="mx-auto w-full max-w-3xl px-4 pt-8 pb-5 sm:px-6 sm:pt-12 sm:pb-6 text-center">
+      <section className="mx-auto w-full max-w-3xl px-4 pt-8 pb-5 sm:px-6 sm:pt-8 sm:pb-6 text-center">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 ui-chip mb-4 sm:mb-5">
           <Radio className="w-3.5 h-3.5" />
           <span>{nc.badge}</span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mb-2 sm:mb-3">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--text-primary)] mb-2 sm:mb-3">
           {nc.title}
         </h1>
         <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl mx-auto mb-6 sm:mb-8 leading-7">
@@ -955,7 +955,7 @@ export default function NetworkCheckClient({
                 onClick={() => setSelectedSizeMb(s)}
                 className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
                   selectedSizeMb === s
-                    ? "border-[var(--accent-color)] bg-[var(--accent-soft)] text-[var(--accent-color)]"
+                    ? "border-[var(--accent-color)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
                     : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--accent-color)]/50"
                 }`}
               >
@@ -965,6 +965,7 @@ export default function NetworkCheckClient({
           </div>
         )}
 
+        {phase === "idle" && <p className="mb-4 text-sm leading-6 text-[var(--text-secondary)]">{lang === "zh" ? `测速将下载约 ${selectedSizeMb} MB，并请求 Cloudflare、公共 DNS 与可达性检测服务。浏览器、边缘与探针结果分别标明。` : `The speed test downloads about ${selectedSizeMb} MB and contacts Cloudflare, public DNS and reachability services. Browser, Edge and Probe results are labeled separately.`}</p>}
         {/* CTA */}
         {phase === "idle" && (
           <button
@@ -980,7 +981,7 @@ export default function NetworkCheckClient({
         {phase === "running" && (
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 text-[var(--accent-color)] animate-spin" />
+              <Loader2 className="w-5 h-5 text-[var(--accent-text)] animate-spin" />
               <span className="text-sm font-semibold text-[var(--text-secondary)]">
                 {nc.checking}
                 {currentStep ? ` — ${currentStep}` : ""}
@@ -1063,7 +1064,7 @@ export default function NetworkCheckClient({
                   className={`flex shrink-0 items-center justify-center w-12 h-12 rounded-2xl ${
                     netInfo.ipv6
                       ? "bg-emerald-500/10 text-emerald-500"
-                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                      : "bg-[var(--bg-tertiary)] dark:bg-zinc-800 text-[var(--text-muted)]"
                   }`}
                 >
                   {netInfo.ipv6 ? (
@@ -1122,7 +1123,7 @@ export default function NetworkCheckClient({
                   />
                 </div>
                 <div className="mt-4">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--text-faint)] mb-1">
+                  <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)] mb-1">
                     {nc.ping_samples} ({pingResult.samples.length})
                   </p>
                   <PingChart samples={pingResult.samples} />
@@ -1145,14 +1146,14 @@ export default function NetworkCheckClient({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-[var(--accent-color)]" />
+                    <Download className="w-4 h-4 text-[var(--accent-text)]" />
                     <span className="text-xs font-semibold text-[var(--text-secondary)]">
                       {nc.speed_download}
                     </span>
                   </div>
                   {speedResult?.downloadMbps != null ? (
                     <span
-                      className={`text-lg font-black ${speedQuality(speedResult.downloadMbps) === "good" ? "text-emerald-500" : speedQuality(speedResult.downloadMbps) === "ok" ? "text-amber-500" : "text-red-400"}`}
+                      className={`text-lg font-semibold ${speedQuality(speedResult.downloadMbps) === "good" ? "text-emerald-500" : speedQuality(speedResult.downloadMbps) === "ok" ? "text-amber-500" : "text-red-400"}`}
                     >
                       {speedResult.downloadMbps.toFixed(1)}
                       <span className="text-xs font-semibold text-[var(--text-muted)] ml-1">
@@ -1169,7 +1170,7 @@ export default function NetworkCheckClient({
                 {speedPhase === "loading" &&
                   dlProgress > 0 &&
                   dlProgress < 100 && (
-                    <p className="text-[10px] text-right mt-1 text-[var(--text-faint)]">
+                    <p className="text-xs text-right mt-1 text-[var(--text-faint)]">
                       {dlProgress}%
                     </p>
                   )}
@@ -1244,7 +1245,7 @@ export default function NetworkCheckClient({
                     }
                   />
                 </div>
-                <p className="mt-3 text-[10px] text-[var(--text-faint)]">
+                <p className="mt-3 text-xs text-[var(--text-faint)]">
                   {nc.dns_perf_note}
                 </p>
               </>
@@ -1280,7 +1281,7 @@ export default function NetworkCheckClient({
                         </span>
                       )}
                       <span
-                        className={`text-[10px] font-semibold uppercase tracking-wider ${
+                        className={`text-xs font-semibold uppercase tracking-wider ${
                           item.status === "ok"
                             ? "text-emerald-500"
                             : item.status === "slow"
@@ -1372,7 +1373,7 @@ export default function NetworkCheckClient({
                     mono
                   />
                 </div>
-                <p className="text-[10px] leading-5 text-[var(--text-faint)]">
+                <p className="text-xs leading-5 text-[var(--text-faint)]">
                   {lang === "zh" || false
                     ? "Cloudflare Trace 反映当前请求经过 Cloudflare 时看到的连接信息；在非 Cloudflare 环境下会使用页面侧回退数据。"
                     : false
@@ -1395,31 +1396,31 @@ export default function NetworkCheckClient({
                 {dnsLatency.map((item) => (
                   <div
                     key={item.resolver}
-                    className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] bg-white/60 px-4 py-3"
+                    className="flex items-center justify-between rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3"
                   >
                     <div>
                       <p className="text-sm font-semibold text-[var(--text-primary)]">
                         {item.provider}
                       </p>
-                      <p className="font-mono text-[10px] text-[var(--text-muted)]">
+                      <p className="font-mono text-xs text-[var(--text-muted)]">
                         {item.resolver}
                       </p>
                     </div>
                     <div className="text-right">
                       <p
-                        className={`text-sm font-black ${item.status === "ok" ? "text-emerald-500" : "text-red-400"}`}
+                        className={`text-sm font-semibold ${item.status === "ok" ? "text-emerald-500" : "text-red-400"}`}
                       >
                         {item.latencyMs !== null
                           ? `${item.latencyMs} ms`
                           : "ERR"}
                       </p>
-                      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                      <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
                         {item.status}
                       </p>
                     </div>
                   </div>
                 ))}
-                <p className="sm:col-span-2 text-[10px] leading-5 text-[var(--text-faint)]">
+                <p className="sm:col-span-2 text-xs leading-5 text-[var(--text-faint)]">
                   {lang === "zh" || false
                     ? "这里展示的是 OpsKitPro 服务器侧到公共 DoH 解析器的延迟，不等同于你本机或手机当前 DNS 的真实延迟。"
                     : false
@@ -1433,12 +1434,12 @@ export default function NetworkCheckClient({
           {/* 9. AI Analysis */}
           <div className="op-card rounded-2xl overflow-hidden border-[var(--accent-color)]/20 shadow-[0_0_40px_-10px_rgba(16,185,129,0.15)]">
             <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--accent-soft)]">
-              <Zap className="w-4 h-4 text-[var(--accent-color)]" />
+              <Zap className="w-4 h-4 text-[var(--accent-text)]" />
               <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
                 {nc.ai_title}
               </h2>
               {!analysis && phase === "running" && (
-                <Loader2 className="w-4 h-4 text-[var(--accent-color)] animate-spin" />
+                <Loader2 className="w-4 h-4 text-[var(--accent-text)] animate-spin" />
               )}
               {analysis && (
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -1455,7 +1456,7 @@ export default function NetworkCheckClient({
                         score={analysis.score}
                         grade={analysis.grade}
                       />
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                         {nc.ai_score}
                       </p>
                     </div>
@@ -1468,7 +1469,7 @@ export default function NetworkCheckClient({
                   <div className="grid sm:grid-cols-3 gap-4">
                     {/* Suitable for */}
                     <div className="op-card-soft rounded-xl p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-color)] mb-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-text)] mb-3">
                         {nc.ai_suitable}
                       </p>
                       <ul className="space-y-1.5">
@@ -1486,7 +1487,7 @@ export default function NetworkCheckClient({
 
                     {/* Potential issues */}
                     <div className="op-card-soft rounded-xl p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-500 mb-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-500 mb-3">
                         {nc.ai_issues}
                       </p>
                       {analysis.potentialIssues.length > 0 ? (
@@ -1510,7 +1511,7 @@ export default function NetworkCheckClient({
 
                     {/* Recommendations */}
                     <div className="op-card-soft rounded-xl p-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-500 mb-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-500 mb-3">
                         {nc.ai_recs}
                       </p>
                       <ul className="space-y-1.5">
@@ -1531,7 +1532,7 @@ export default function NetworkCheckClient({
                 <div className="py-8 text-center text-sm text-[var(--text-muted)]">
                   {phase === "running" ? (
                     <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-6 h-6 text-[var(--accent-color)] animate-spin" />
+                      <Loader2 className="w-6 h-6 text-[var(--accent-text)] animate-spin" />
                       <span>{nc.checking}...</span>
                     </div>
                   ) : (
@@ -1589,7 +1590,7 @@ export default function NetworkCheckClient({
               },
               {
                 icon: <Zap className="w-5 h-5" />,
-                label: lang === "zh" ? "AI 诊断报告" : "AI Diagnosis",
+                label: lang === "zh" ? "诊断建议" : "Diagnostic advice",
                 desc:
                   lang === "zh" ? "评分 + 优化建议" : "Score + recommendations",
               },

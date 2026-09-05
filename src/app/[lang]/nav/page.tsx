@@ -35,7 +35,7 @@ export default async function NavigationPage({
       <Suspense fallback={<div className="min-h-screen" />}>
         <ToolsNavigatorClient lang={lang} />
       </Suspense>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

@@ -43,49 +43,52 @@ export function ApiUsageSnippet({
   const text = copy[lang];
 
   return (
-    <div className="mt-12 bg-white/50 border border-zinc-100 rounded-2xl p-6 md:p-8">
-      <h2 className="text-xl font-semibold text-zinc-800 mb-2">{text.title}</h2>
-      <p className="text-zinc-500 text-sm mb-3">{text.description}</p>
+    <details id="developer-api" className="mt-6 border border-[var(--border-subtle)] rounded-2xl p-4">
+      <summary className="cursor-pointer text-sm font-semibold text-[var(--accent-text)]">{text.title}</summary>
+      <div className="mt-4">
+      <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">{text.title}</h2>
+      <p className="text-[var(--text-muted)] text-sm mb-3">{text.description}</p>
       {parameterHint && (
-        <p className="mb-6 text-sm leading-6 text-zinc-500">{parameterHint}</p>
+        <p className="mb-6 text-sm leading-6 text-[var(--text-muted)]">{parameterHint}</p>
       )}
 
       <div className="mb-4">
-        <h3 className="text-sm font-medium text-zinc-700 mb-2">
+        <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
           {text.endpoint}
         </h3>
-        <code className="px-2 py-1 bg-zinc-100 text-zinc-800 rounded text-sm break-all">
+        <code className="px-2 py-1 bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded text-sm break-all">
           {endpoint}
         </code>
       </div>
 
       <div className="mb-4">
-        <h3 className="text-sm font-medium text-zinc-700 mb-2">
+        <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
           {text.request}
         </h3>
-        <pre className="bg-[#1e1e1e] text-zinc-300 p-4 rounded-xl text-sm overflow-x-auto">
+        <pre className="bg-[#1e1e1e] text-zinc-200 p-4 rounded-xl text-sm overflow-x-auto">
           <code>{exampleCurl}</code>
         </pre>
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-zinc-700 mb-2">
+        <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-2">
           {text.response}
         </h3>
         {abbreviatedResponse && (
-          <p className="mb-2 text-xs text-zinc-500">{text.abbreviated}</p>
+          <p className="mb-2 text-xs text-[var(--text-muted)]">{text.abbreviated}</p>
         )}
-        <pre className="bg-[#1e1e1e] text-zinc-300 p-4 rounded-xl text-[13px] overflow-x-auto">
+        <pre className="bg-[#1e1e1e] text-zinc-200 p-4 rounded-xl text-[13px] overflow-x-auto">
           <code>{exampleResponse}</code>
         </pre>
       </div>
 
       <Link
         href={`/${lang}/tools/api`}
-        className="mt-5 inline-flex text-sm font-medium text-emerald-700 transition-colors hover:text-emerald-600"
+        className="mt-5 inline-flex text-sm font-medium text-[var(--accent-text)] transition-colors hover:text-[var(--accent-text)]"
       >
         {text.docs} →
       </Link>
-    </div>
+      </div>
+    </details>
   );
 }

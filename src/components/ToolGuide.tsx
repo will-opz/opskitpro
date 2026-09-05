@@ -36,23 +36,23 @@ export function ToolGuide({ id, lang }: { id: ProductToolId; lang: ProductLocale
       />
       <section
         aria-label={copy.details}
-        className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7"
+        className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6"
         data-tool-guide={id}
       >
         <div className="flex flex-col gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className={`text-sm font-semibold ${isLocal ? "text-emerald-700" : "text-sky-700"}`}>
+            <p className={`text-sm font-semibold ${isLocal ? "text-[var(--accent-text)]" : "text-[var(--info-text)]"}`}>
               {isLocal ? copy.localBadge : copy.networkBadge}
             </p>
             {!isLocal ? (
-              <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-[var(--text-muted)]">
+              <p className="mt-0.5 text-sm leading-5 text-[var(--text-muted)]">
                 {guide.processing}
               </p>
             ) : null}
           </div>
           <Link
             href={`/${lang}/tools/docs#${id}`}
-            className="shrink-0 text-sm font-semibold text-[var(--accent-color)] hover:underline"
+            className="text-sm font-semibold text-[var(--accent-text)] hover:underline"
           >
             {copy.details} →
           </Link>

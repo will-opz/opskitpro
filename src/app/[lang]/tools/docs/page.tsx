@@ -87,7 +87,7 @@ export default async function ToolDocsPage({
   return (
     <>
       <SiteHeader dict={dict} lang={lang} />
-      <main className="mx-auto w-full max-w-5xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto w-full max-w-5xl flex-grow px-4 py-6 sm:px-6 sm:py-8">
         <header className="max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">
             {text.title}
@@ -102,14 +102,15 @@ export default async function ToolDocsPage({
             <a
               key={group.id}
               href={`#${group.id}`}
-              className="rounded-full border border-[var(--border-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:border-emerald-500/30 hover:text-[var(--accent-color)]"
+              className="rounded-full border border-[var(--border-subtle)] px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] hover:border-emerald-500/30 hover:text-[var(--accent-text)]"
             >
               {group.title}
             </a>
           ))}
         </nav>
 
-        <div className="mt-10 space-y-14">
+        <nav aria-label={lang === "zh" ? "按工具直达" : "Jump to tool"} className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--accent-text)]">{productTools.map(tool => <a key={tool.id} href={`#${tool.id}`} className="hover:underline">{tool.title[lang]}</a>)}</nav>
+        <div className="mt-6 space-y-8">
           {groups.map((group) => (
             <section key={group.id} id={group.id} className="scroll-mt-24">
               <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
@@ -145,7 +146,7 @@ export default async function ToolDocsPage({
                         </div>
                         <Link
                           href={`/${lang}${tool.href}`}
-                          className="shrink-0 text-sm font-semibold text-[var(--accent-color)] hover:underline"
+                          className="shrink-0 text-sm font-semibold text-[var(--accent-text)] hover:underline"
                         >
                           {text.open} →
                         </Link>
@@ -174,7 +175,7 @@ export default async function ToolDocsPage({
                             <Link
                               key={relatedId}
                               href={`/${lang}${related.href}`}
-                              className="rounded-full border border-[var(--border-subtle)] px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:border-emerald-500/30 hover:text-[var(--accent-color)]"
+                              className="rounded-full border border-[var(--border-subtle)] px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:border-emerald-500/30 hover:text-[var(--accent-text)]"
                             >
                               {localizeTool(related, lang).title}
                             </Link>

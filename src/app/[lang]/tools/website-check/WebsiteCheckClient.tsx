@@ -42,6 +42,8 @@ import {
   isBlockedHttpStatus,
   normalizeTargetInput,
 } from "./_hooks/helpers";
+import { parseWebsiteTarget } from "@/lib/diagnostic-target";
+import { WebsiteCheckIntro } from "./WebsiteCheckIntro";
 import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
 import {
   buildWebsiteCheckMarkdown,
@@ -70,6 +72,7 @@ export default function WebsiteCheckClient({
     localResolvers,
     runDiagnostic,
   } = useWebsiteCheck();
+  const [inputError, setInputError] = useState(false);
   const [showJson, setShowJson] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedAction, setCopiedAction] = useState<string | null>(null);
@@ -736,6 +739,7 @@ export default function WebsiteCheckClient({
 
     const nextAction = getAdvice(
       data || {
+        dns: { success: false, all_ips: [] },
         http: { success: false, status_code: 0 },
         ssl: { valid: true, factors: [] },
         securityHeaders: { score: 100, checks: [] },
@@ -964,10 +968,12 @@ export default function WebsiteCheckClient({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalized = normalizeTargetInput(domain);
-    if (!normalized) return;
+    if (loading) return;
+    const normalized = parseWebsiteTarget(domain);
+    if (!normalized) { setInputError(true); return; }
+    setInputError(false);
     setDomain(normalized);
-    runDiagnostic(normalized);
+    runDiagnostic(normalized, true);
   };
 
   const detectCloudflareErrorMatch = (data: any) => {
@@ -1053,109 +1059,67 @@ export default function WebsiteCheckClient({
   const resultState = result ? getResultState(result) : null;
 
   return (
-    <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 mt-5 sm:mt-7 mb-24 sm:mb-28 z-20 relative font-sans">
+    <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 mt-6 mb-10 z-20 relative font-sans">
       {/* Background Glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-emerald-500/6 blur-[150px] rounded-full pointer-events-none -z-10"></div>
 
-      {/* Hero Header */}
-      <div className="text-center mb-9 sm:mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/70 border border-emerald-500/20 text-emerald-600 text-[10px] font-semibold tracking-[0.18em] mb-4 shadow-sm backdrop-blur-md">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          {localeText.heroBadge}
+      {/* Header and primary action */}
+      <div className="mb-6">
+        <div className="mx-auto mb-5 max-w-4xl">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">
+              {result?.isVisitor ? localeText.heroTitles.visitor : result?.isActuallyIp ? localeText.heroTitles.ip : localeText.heroTitles.site}
+            </h1>
+            <Link href={`/${lang}/tools/api`} className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-[var(--accent-text)] hover:underline">
+              <Terminal aria-hidden="true" className="h-4 w-4" />JSON API
+            </Link>
+          </div>
+          <p className="mt-2 text-base leading-6 text-[var(--text-secondary)]">{localeText.heroSubtitle}</p>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 mb-3 justify-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-zinc-900 tracking-tighter break-words">
-            {result?.isVisitor
-              ? localeText.heroTitles.visitor
-              : result?.isActuallyIp
-                ? localeText.heroTitles.ip
-                : localeText.heroTitles.site}
-          </h1>
-          <Link
-            href={`/${lang}/tools/api`}
-            className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full bg-white/65 text-zinc-500 hover:bg-emerald-500/10 hover:text-emerald-600 text-[10px] font-semibold tracking-wide transition-colors border border-zinc-200/80 hover:border-emerald-500/20 w-max mx-auto sm:mx-0"
-          >
-            <Terminal className="w-3.5 h-3.5" />
-            JSON API Available
-          </Link>
-        </div>
-        <p className="max-w-2xl mx-auto mb-3 leading-relaxed text-zinc-600 text-sm sm:text-base font-medium tracking-normal">
-          {localeText.heroSubtitle}
-        </p>
-        <div className="mb-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-          <span>
-            {localeText.heroModeLabel}
-          </span>
-          <span className="hidden h-1 w-1 rounded-full bg-zinc-300 sm:inline" />
-          <span className="hidden sm:inline">
-            {localeText.emptyHint}
-          </span>
-        </div>
-
-        {/* Input Bar */}
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmit} className="relative group">
-            <div className="absolute inset-0 bg-emerald-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="relative flex flex-col sm:flex-row sm:items-center bg-white/95 border border-zinc-100 p-3 sm:p-2 rounded-[1.35rem] shadow-xl shadow-zinc-200/70 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all gap-3 sm:gap-0">
-              <div className="w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-center text-zinc-400 self-start sm:self-auto">
-                <Globe className="w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+        <div className="mx-auto max-w-4xl">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="website-target" className="mb-2 block text-sm font-semibold text-[var(--text-primary)]">
+              {lang === "zh" ? "域名或 URL" : "Domain or URL"}
+            </label>
+            <div className="flex flex-col gap-3 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-primary)] p-3 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <Globe aria-hidden="true" className="ml-1 h-5 w-5 shrink-0 text-[var(--text-secondary)]" />
+                <input id="website-target" type="text" required value={domain}
+                  onChange={(e) => { setDomain(e.target.value); setInputError(false); }}
+                  placeholder={dict.home.diagnostics_placeholder}
+                  autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                  aria-invalid={inputError || undefined}
+                  aria-describedby={`website-data-note${inputError ? " website-input-error" : ""}`}
+                  className="min-h-12 min-w-0 w-full rounded-lg border-none bg-transparent px-2 text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)]" />
               </div>
-              <input
-                type="text"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const normalized = normalizeTargetInput(domain);
-                    if (!normalized) return;
-                    setDomain(normalized);
-                    runDiagnostic(normalized);
-                  }
-                }}
-                placeholder={dict.home.diagnostics_placeholder}
-                className="min-w-0 w-full flex-grow bg-transparent border-none outline-none text-zinc-900 text-base sm:text-lg px-1 sm:px-2 py-1.5 sm:py-0"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const normalized = normalizeTargetInput(domain);
-                  if (!normalized) return;
-                  setDomain(normalized);
-                  runDiagnostic(normalized, true);
-                }}
-                disabled={loading || !normalizeTargetInput(domain)}
-                className="shrink-0 w-full sm:w-auto justify-center bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-5 sm:px-8 py-3.5 rounded-xl transition-all flex items-center gap-2 font-bold shadow-lg shadow-emerald-500/25 disabled:opacity-50"
-              >
-                {loading ? (
-                  <Activity className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Zap className="w-4 h-4 fill-current" />
-                )}
-                <span className="whitespace-nowrap text-sm sm:text-base">
-                  {loading ? localeText.analyzing : dict.home.diagnostics_btn}
-                </span>
+              <button type="submit" disabled={loading} className="ui-button-primary min-h-12 shrink-0">
+                {loading ? <Activity aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Zap aria-hidden="true" className="h-4 w-4" />}
+                {loading ? localeText.analyzing : dict.home.diagnostics_btn}
               </button>
             </div>
+            {inputError && <p id="website-input-error" role="alert" className="mt-2 text-sm text-[var(--danger-text)] dark:text-red-300">
+              {lang === "zh" ? "请输入有效域名或 HTTP(S) URL，例如 example.com。" : "Enter a valid domain or HTTP(S) URL, such as example.com."}
+            </p>}
+            <p id="website-data-note" className="mt-3 text-[13px] leading-5 text-[var(--text-secondary)]">
+              {lang === "zh"
+                ? "域名将发送给 OpsKitPro 探针，以及 Google、Cloudflare 和阿里 DNS；URL 路径、参数和登录信息不会发送。各观察点的结果分别展示。"
+                : "The hostname is sent to OpsKitPro probes and Google, Cloudflare and AliDNS resolvers. URL paths, query parameters and credentials are omitted. Each observation point is shown separately."}{" "}
+              <Link href={`/${lang}/tools/docs#website-check`} className="font-semibold text-[var(--accent-text)] underline underline-offset-4">{lang === "zh" ? "数据处理说明" : "Data handling details"}</Link>
+            </p>
           </form>
-          <div className="mt-4 rounded-3xl border border-zinc-100 bg-white/75 p-3 shadow-sm backdrop-blur-md">
-            <div className="mb-2 flex items-center justify-between gap-3 px-1">
-              <div className="flex items-center gap-2 text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
-                <History className="h-3.5 w-3.5 text-emerald-500" />
-                {localeText.actions.history}
+          <div className="mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
+                <History aria-hidden="true" className="h-4 w-4 text-[var(--accent-text)]" />{localeText.actions.history}
               </div>
-              {history.length === 0 && (
-                <span className="text-[10px] font-medium text-zinc-400">
-                  {localeText.actions.noHistory}
-                </span>
-              )}
+              {history.length === 0 && <span className="text-[13px] text-[var(--text-secondary)]">{localeText.actions.noHistory}</span>}
             </div>
             {history.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {history.map((entry) => (
                   <div
                     key={entry.target}
-                    className="flex shrink-0 items-center overflow-hidden rounded-full border border-zinc-200 bg-white shadow-sm"
+                    className="flex shrink-0 items-center overflow-hidden rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)]"
                   >
                     <button
                       type="button"
@@ -1163,14 +1127,14 @@ export default function WebsiteCheckClient({
                         setDomain(entry.target);
                         runDiagnostic(entry.target);
                       }}
-                      className="max-w-[180px] truncate px-3 py-2 text-left text-xs font-semibold text-zinc-700 hover:text-emerald-600"
+                      className="max-w-[180px] truncate px-3 py-2 text-left text-xs font-semibold text-[var(--text-primary)] hover:text-[var(--accent-text)]"
                     >
                       {entry.target}
                     </button>
                     <button
                       type="button"
                       onClick={() => toggleFavorite(entry.target)}
-                      className={`border-l border-zinc-100 px-2 py-2 ${entry.pinned ? "text-amber-500" : "text-zinc-300 hover:text-amber-500"}`}
+                      className={`border-l border-[var(--border-subtle)] px-2 py-2 ${entry.pinned ? "text-amber-500" : "text-[var(--text-secondary)] hover:text-amber-500"}`}
                       aria-label={
                         entry.pinned
                           ? localeText.actions.unfavorite
@@ -1184,7 +1148,7 @@ export default function WebsiteCheckClient({
                     <button
                       type="button"
                       onClick={() => removeHistory(entry.target)}
-                      className="border-l border-zinc-100 px-2 py-2 text-zinc-300 hover:text-red-500"
+                      className="border-l border-[var(--border-subtle)] px-2 py-2 text-[var(--text-secondary)] hover:text-red-500"
                       aria-label={localeText.actions.remove}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -1199,52 +1163,52 @@ export default function WebsiteCheckClient({
 
       {/* Loading Progress State */}
       {loading && (
-        <div className="max-w-3xl mx-auto rounded-3xl border border-emerald-100 bg-white/90 shadow-sm p-5 sm:p-6 animate-in fade-in duration-300">
+        <div className="max-w-3xl mx-auto rounded-3xl border border-emerald-500/20 bg-[var(--surface-primary)] shadow-sm p-5 sm:p-6 animate-in fade-in duration-300">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <div className="text-[10px] font-semibold text-emerald-600 tracking-[0.18em]">
+              <div className="text-xs font-semibold text-[var(--accent-text)] tracking-[0.18em]">
                 {localeText.loading.title}
               </div>
-              <h3 className="mt-2 text-lg font-semibold text-zinc-900 tracking-[-0.01em]">
+              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)] tracking-[-0.01em]">
                 {localeText.loading.headline}
               </h3>
-              <p className="mt-1 text-sm text-zinc-600 tracking-normal">
+              <p className="mt-1 text-sm text-[var(--text-secondary)] tracking-normal">
                 {localeText.loading.desc}
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <div className="text-[10px] font-semibold text-zinc-400 tracking-[0.24em]">
+              <div className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.24em]">
                 {localeText.loading.progress}
               </div>
-              <div className="mt-2 text-lg font-semibold text-zinc-900 tabular-nums">
+              <div className="mt-2 text-lg font-semibold text-[var(--text-primary)] tabular-nums">
                 {currentStep}/3
               </div>
-              <div className="mt-1 text-[10px] font-semibold text-emerald-600 tracking-[0.18em]">
+              <div className="mt-1 text-xs font-semibold text-[var(--accent-text)] tracking-[0.18em]">
                 {activeLoadingStage.title}
               </div>
             </div>
           </div>
 
-          <div className="mt-4 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
+          <div className="mt-4 h-1.5 w-full rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
               style={{ width: `${Math.min((currentStep / 3) * 100, 100)}%` }}
             />
           </div>
 
-          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-4 py-3">
+          <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-[var(--accent-soft)] px-4 py-3">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm shadow-emerald-500/20">
                 <Activity className="w-4 h-4 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] font-semibold text-emerald-600 tracking-[0.18em]">
+                <div className="text-xs font-semibold text-[var(--accent-text)] tracking-[0.18em]">
                   {localeText.loading.current}
                 </div>
-                <div className="mt-1 text-sm font-semibold text-zinc-900">
+                <div className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
                   {activeLoadingStage.title}
                 </div>
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   {activeLoadingStage.desc}
                 </p>
               </div>
@@ -1255,18 +1219,18 @@ export default function WebsiteCheckClient({
 
       {/* Error State */}
       {error && !loading && faultGuide && (
-        <div className="mx-auto max-w-4xl rounded-[2.5rem] border border-red-100 bg-red-50/80 p-6 text-red-700 shadow-sm animate-in fade-in slide-in-from-top-4 sm:p-8">
+        <div className="mx-auto max-w-4xl rounded-[2.5rem] border border-red-500/20 bg-[var(--danger-soft)] p-6 text-[var(--danger-text)] shadow-sm animate-in fade-in slide-in-from-top-4 sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-red-100 bg-white text-red-500 shadow-sm">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-[var(--surface-primary)] text-red-500 shadow-sm">
               <AlertCircle className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold tracking-[0.18em] text-red-400">
+                  <p className="text-xs font-semibold tracking-[0.18em] text-red-400">
                     {localeText.errorTitle}
                   </p>
-                  <h3 className="mt-1 text-xl font-semibold tracking-tight text-red-700">
+                  <h3 className="mt-1 text-xl font-semibold tracking-tight text-[var(--danger-text)]">
                     {faultGuide.title}
                   </h3>
                 </div>
@@ -1275,17 +1239,17 @@ export default function WebsiteCheckClient({
                     onClick={() =>
                       runDiagnostic(result?.domain || domain, true)
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-4 py-2 text-[10px] font-semibold tracking-[0.14em] text-red-600 transition-colors hover:bg-red-50"
+                    className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-[var(--surface-primary)] px-4 py-2 text-xs font-semibold tracking-[0.14em] text-[var(--danger-text)] transition-colors hover:bg-[var(--danger-soft)]"
                   >
                     <Activity className="h-3.5 w-3.5" />
                     {localeText.fault.retry}
                   </button>
                   <button
                     onClick={copyFaultSummary}
-                    className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-4 py-2 text-[10px] font-semibold tracking-[0.14em] text-red-600 transition-colors hover:bg-red-50"
+                    className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-[var(--surface-primary)] px-4 py-2 text-xs font-semibold tracking-[0.14em] text-[var(--danger-text)] transition-colors hover:bg-[var(--danger-soft)]"
                   >
                     {copiedAction === "fault" ? (
-                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      <Check className="h-3.5 w-3.5 text-[var(--accent-text)]" />
                     ) : (
                       <Copy className="h-3.5 w-3.5" />
                     )}
@@ -1297,23 +1261,23 @@ export default function WebsiteCheckClient({
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr,1.1fr]">
-                <div className="rounded-2xl border border-red-100 bg-white/80 p-4">
-                  <p className="text-[10px] font-semibold tracking-[0.16em] text-red-400">
+                <div className="rounded-2xl border border-red-500/20 bg-[var(--surface-primary)] p-4">
+                  <p className="text-xs font-semibold tracking-[0.16em] text-red-400">
                     {localeText.fault.likelyCause}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-800">
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-primary)]">
                     {faultGuide.cause}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-red-100 bg-white/80 p-4">
-                  <p className="text-[10px] font-semibold tracking-[0.16em] text-red-400">
+                <div className="rounded-2xl border border-red-500/20 bg-[var(--surface-primary)] p-4">
+                  <p className="text-xs font-semibold tracking-[0.16em] text-red-400">
                     {localeText.fault.evidence}
                   </p>
                   <div className="mt-2 space-y-1.5">
                     {faultGuide.evidence.map((item: string, index: number) => (
                       <p
                         key={`${item}-${index}`}
-                        className="break-all text-xs leading-5 text-zinc-700"
+                        className="break-all text-xs leading-5 text-[var(--text-secondary)]"
                       >
                         - {item}
                       </p>
@@ -1322,8 +1286,8 @@ export default function WebsiteCheckClient({
                 </div>
               </div>
 
-              <div className="mt-3 rounded-2xl border border-red-100 bg-white/80 p-4">
-                <p className="text-[10px] font-semibold tracking-[0.16em] text-red-400">
+              <div className="mt-3 rounded-2xl border border-red-500/20 bg-[var(--surface-primary)] p-4">
+                <p className="text-xs font-semibold tracking-[0.16em] text-red-400">
                   {localeText.fault.nextAction}
                 </p>
                 <div className="mt-2 space-y-2">
@@ -1331,7 +1295,7 @@ export default function WebsiteCheckClient({
                     (item: string, index: number) => (
                     <p
                       key={`${item}-${index}`}
-                      className="text-xs leading-5 text-zinc-700"
+                      className="text-xs leading-5 text-[var(--text-secondary)]"
                     >
                       - {item}
                     </p>
@@ -1347,32 +1311,292 @@ export default function WebsiteCheckClient({
       {/* Results Presentation */}
       {result && !loading && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          {/* Overall Status Bar */}
+          <div
+            className={`mb-6 p-4 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5 relative overflow-hidden ${
+              resultState?.healthy
+                ? "bg-[var(--surface-primary)] border-emerald-500/20"
+                : resultState?.warning
+                  ? "bg-[var(--warning-soft)] border-orange-500/20"
+                  : "bg-[var(--danger-soft)] border-red-500/20"
+            }`}
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
+            <div className="flex items-center gap-5 z-10 w-full min-w-0">
+              <div
+                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border ${
+                  resultState?.healthy
+                    ? "border-emerald-500/20 bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                    : resultState?.warning
+                      ? "border-orange-500/20 bg-[var(--warning-soft)] text-[var(--warning-text)]"
+                      : "border-red-500/20 bg-[var(--danger-soft)] text-[var(--danger-text)]"
+                }`}
+              >
+                {resultState?.healthy ? (
+                  <CheckCircle2 className="h-8 w-8" />
+                ) : (
+                  <ShieldAlert className="h-8 w-8" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xs font-semibold text-[var(--text-muted)] mb-1 tracking-[0.18em]">
+                  {lang === "zh" ? "可用性结论" : "AVAILABILITY VERDICT"}
+                </h2>
+                <h2
+                  className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${
+                    resultState?.healthy
+                      ? "text-[var(--text-primary)]"
+                      : resultState?.warning
+                        ? "text-[var(--warning-text)]"
+                        : "text-[var(--danger-text)]"
+                  }`}
+                >
+                  {lang === "zh" ? ({ Healthy: "正常", Degraded: "部分异常", Unreachable: "无法访问", Unknown: "暂无法判断" } as Record<string, string>)[resultState?.verdict || "Unknown"] : resultState?.verdict}
+                </h2>
+                <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--text-secondary)] sm:text-sm">
+                  {diagnosticReport?.impact}
+                  {diagnosticReport?.inferences[0]
+                    ? ` ${lang === "zh" ? "可能原因" : "Possible cause"} (${diagnosticReport.inferences[0].confidence}): ${diagnosticReport.inferences[0].summary}`
+                    : ""}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {attentionFindings.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/20 bg-[var(--warning-soft)] px-3 py-1.5 text-xs font-semibold tracking-[0.08em] text-[var(--warning-text)]">
+                      <AlertCircle className="h-3 w-3" />
+                      {localeText.report.attentionCount(
+                        attentionFindings.length,
+                      )}
+                    </span>
+                  )}
+                  <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-secondary)] px-3 py-1.5 text-xs font-semibold tracking-[0.14em] text-[var(--text-muted)]">
+                    <Monitor className="h-3 w-3 shrink-0 text-[var(--text-muted)]" />
+                    <span className="truncate">{displayedTarget}</span>
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold tracking-[0.14em] ${
+                      result.http.success || resultState?.corroboratedReachable
+                        ? "border-emerald-500/20 bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                        : resultState?.blocked
+                          ? "border-orange-500/20 bg-[var(--warning-soft)] text-[var(--warning-text)]"
+                          : "border-red-500/20 bg-[var(--danger-soft)] text-[var(--danger-text)]"
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    {resultState?.corroboratedReachable
+                      ? `${resultState.browserReachable ? result.observations.browser.httpStatus || "OK" : `Edge ${result.observations.edge.httpStatus || "OK"}`} / Probe ${result.http.status_code}`
+                      : result.http.status_code || "ERR"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="relative z-10 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap lg:justify-end">
+              <button
+                onClick={copySummary}
+                className="flex items-center justify-center gap-2 rounded-full border border-emerald-500/20 bg-[var(--accent-soft)] px-4 py-3 text-xs font-semibold tracking-[0.16em] text-[var(--accent-text)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--accent-text)]"
+              >
+                {copiedAction === "summary" ? (
+                  <Check className="h-3 w-3 text-[var(--accent-text)]" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+                {copiedAction === "summary"
+                  ? localeText.copy.copied
+                  : localeText.actions.copySummary}
+              </button>
+              <button
+                onClick={copyShareLink}
+                className="flex items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-secondary)] px-4 py-3 text-xs font-semibold tracking-[0.16em] text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+              >
+                {shareCopied ? (
+                  <Check className="h-3 w-3 text-emerald-500" />
+                ) : (
+                  <Link2 className="h-3 w-3" />
+                )}
+                {shareCopied
+                  ? localeText.actions.shareCopied
+                  : localeText.actions.share}
+              </button>
+              <button
+                onClick={() => toggleFavorite(result.domain)}
+                className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-xs font-semibold tracking-[0.16em] transition-colors ${
+                  history.find((entry) => entry.target === result.domain)
+                    ?.pinned
+                    ? "border-amber-200 bg-[var(--warning-soft)] text-[var(--warning-text)]"
+                    : "border-[var(--border-strong)] bg-[var(--surface-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <Star
+                  className={`h-3 w-3 ${history.find((entry) => entry.target === result.domain)?.pinned ? "fill-current" : ""}`}
+                />
+                {history.find((entry) => entry.target === result.domain)?.pinned
+                  ? localeText.actions.unfavorite
+                  : localeText.actions.favorite}
+              </button>
+            </div>
+          </div>
+
+          <section
+            className="rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-sm sm:p-6"
+            data-testid="attention-findings"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
+                  {localeText.report.keyFindings}
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
+                  {attentionFindings.length > 0
+                    ? localeText.report.attentionCount(
+                        attentionFindings.length,
+                      )
+                    : localeText.report.noAttention}
+                </h3>
+              </div>
+              {attentionFindings.length > 0 && (
+                <span className="inline-flex w-fit rounded-full border border-orange-500/20 bg-[var(--warning-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--warning-text)]">
+                  {localeText.report.warning}
+                </span>
+              )}
+            </div>
+
+            {attentionFindings.length > 0 ? (
+              <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {attentionFindings.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`rounded-2xl border p-4 ${
+                      item.severity === "critical"
+                        ? "border-red-500/20 bg-[var(--danger-soft)]"
+                        : "border-orange-500/20 bg-[var(--warning-soft)]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <AlertCircle
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${
+                          item.severity === "critical"
+                            ? "text-red-500"
+                            : "text-orange-500"
+                        }`}
+                      />
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">
+                          {item.title}
+                        </h4>
+                        <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
+                          {lang === "zh" && item.id === "headers.missing"
+                            ? `缺少或配置较弱的响应头：${result.securityHeaders?.checks
+                                ?.filter((check: any) => !check.present)
+                                .map((check: any) => check.label)
+                                .join("、") || "未知"}。`
+                            : item.description}
+                        </p>
+                        {item.likelyCause && (
+                          <div className="mt-3 border-t border-black/5 pt-3">
+                            <p className="text-xs font-semibold tracking-[0.12em] text-[var(--text-muted)]">
+                              {lang === "zh" ? "可能原因" : "Possible cause"}
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
+                              {item.likelyCause}
+                            </p>
+                          </div>
+                        )}
+                        <div className="mt-3 border-t border-black/5 pt-3">
+                          <p className="text-xs font-semibold tracking-[0.12em] text-[var(--text-muted)]">
+                            {lang === "zh" ? "建议" : "Guidance"}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
+                            {lang === "zh" && item.id === "headers.missing"
+                              ? "如果你运营该站点，请结合应用的安全策略与兼容性要求评估这些响应头。"
+                              : item.recommendedFix}
+                          </p>
+                          {item.verificationSteps.length > 0 && (
+                            <ul className="mt-2 space-y-1">
+                              {item.verificationSteps
+                                .slice(0, 2)
+                                .map((step: string) => (
+                                  <li
+                                    key={step}
+                                    className="text-xs leading-5 text-[var(--text-secondary)]"
+                                  >
+                                    · {step}
+                                  </li>
+                                ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent-text)]">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                {diagnosticReport?.impact}
+              </div>
+            )}
+
+            {informationalFindings.length > 0 && (
+              <div className="mt-5 border-t border-[var(--border-subtle)] pt-4">
+                <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
+                  {localeText.report.informational}
+                </p>
+                <div className="mt-2 space-y-2">
+                  {informationalFindings.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3"
+                    >
+                      <p className="text-xs font-semibold text-[var(--text-secondary)]">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
+                        {lang === "zh" && item.id === "cdn.not-detected"
+                          ? "未识别到已知 CDN 特征；这不能证明网站直接连接源站。"
+                          : item.description}
+                      </p>
+                      {item.recommendedFix && (
+                        <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">
+                          {lang === "zh" && item.id === "cdn.not-detected"
+                            ? "如果你运营该站点且预期使用 CDN，请核对 DNS 与边缘代理配置。"
+                            : item.recommendedFix}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          <details className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--accent-text)]">{lang === "zh" ? "相关诊断入口" : "Related diagnostic tools"}</summary>
+            <div className="mt-4 space-y-3">
           {/* Cloudflare Error Banner */}
           {(() => {
             const cfErrorMatch = detectCloudflareErrorMatch(result);
             if (!cfErrorMatch) return null;
             return (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+              <div className="mb-6 rounded-2xl border border-red-500/20 bg-[var(--danger-soft)] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 blur-[50px] rounded-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 relative z-10">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--danger-soft)] text-[var(--danger-text)]">
                     <AlertCircle className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-red-800">
-                      Cloudflare Error {cfErrorMatch} Detected
+                    <h3 className="text-sm font-bold text-[var(--danger-text)]">
+                      {lang === "zh" ? `发现 Cloudflare 错误 ${cfErrorMatch}` : `Cloudflare Error ${cfErrorMatch} Detected`}
                     </h3>
-                    <p className="text-xs font-medium text-red-600/80 mt-0.5">
-                      We found a matching troubleshooting guide in our knowledge
-                      base.
+                    <p className="text-xs font-medium text-[var(--danger-text)] mt-0.5">
+                      {lang === "zh" ? "可以查看此错误的常见原因和排障步骤。" : "View the matching causes and troubleshooting steps."}
                     </p>
                   </div>
                 </div>
                 <Link
-                  href={`/errors/${cfErrorMatch}`}
+                  href={`/${lang}/errors/${cfErrorMatch}`}
                   className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm"
                 >
-                  Read {cfErrorMatch} Troubleshooting Guide
+                  {lang === "zh" ? `查看 ${cfErrorMatch} 排障指南` : `Read ${cfErrorMatch} Troubleshooting Guide`}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -1387,29 +1611,28 @@ export default function WebsiteCheckClient({
               (records.TXT && records.TXT.length > 0);
             if (!hasDnsSecurityRecords) return null;
             return (
-              <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+              <div className="mb-6 rounded-2xl border border-emerald-500/20 bg-[var(--accent-soft)] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 relative z-10">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)]">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-emerald-800">
-                      Email & DNS Security Validation Available
+                    <h3 className="text-sm font-bold text-[var(--accent-text)]">
+                      {lang === "zh" ? "继续检查邮件与 DNS 安全" : "Email & DNS Security Validation Available"}
                     </h3>
-                    <p className="text-xs font-medium text-emerald-600/80 mt-0.5">
-                      We detected MX/TXT records. Audit your SPF, DMARC, and CAA
-                      configurations.
+                    <p className="text-xs font-medium text-[var(--accent-text)] mt-0.5">
+                      {lang === "zh" ? "已发现 MX/TXT 记录，可继续检查 SPF、DMARC 与 CAA 配置。" : "MX/TXT records found. Audit your SPF, DMARC and CAA configurations."}
                     </p>
                   </div>
                 </div>
                 <TrackedLink
                   eventName="website_check_to_dns_audit"
-                  targetName={result.target}
-                  href={`/tools/dns-lookup?tab=security&domain=${encodeURIComponent(result.target)}`}
-                  className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm"
+                  targetName={displayedTarget}
+                  href={`/${lang}/tools/dns-lookup?tab=security&domain=${encodeURIComponent(displayedTarget)}`}
+                  className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-[var(--accent-contrast)] px-4 py-2.5 text-xs font-bold transition-colors shadow-sm"
                 >
-                  Run Security Audit
+                  {lang === "zh" ? "运行安全审计" : "Run Security Audit"}
                   <ArrowRight className="h-4 w-4" />
                 </TrackedLink>
               </div>
@@ -1426,298 +1649,43 @@ export default function WebsiteCheckClient({
               !!result.meta?.cfRay;
             if (!isCfCdn) return null;
             return (
-              <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+              <div className="mb-6 rounded-2xl border border-sky-500/20 bg-[var(--info-soft)] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 blur-[50px] rounded-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 relative z-10">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--info-soft)] text-[var(--info-text)]">
                     <Zap className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-sky-800">
-                      Cloudflare Edge Detected
+                    <h3 className="text-sm font-bold text-[var(--info-text)]">
+                      {lang === "zh" ? "发现 Cloudflare 边缘线索" : "Cloudflare Edge Detected"}
                     </h3>
-                    <p className="text-xs font-medium text-sky-600/80 mt-0.5">
-                      This domain is routed through Cloudflare's global network.
+                    <p className="text-xs font-medium text-[var(--info-text)] mt-0.5">
+                      {lang === "zh" ? "可以继续查看 Cloudflare 边缘路由与请求信息。" : "Inspect the Cloudflare edge routing and request details."}
                     </p>
                   </div>
                 </div>
                 <TrackedLink
                   eventName="website_check_to_trace"
-                  targetName={result.target}
-                  href={`/tools/cloudflare-trace`}
+                  targetName={displayedTarget}
+                  href={`/${lang}/tools/cloudflare-trace`}
                   className="relative z-10 shrink-0 inline-flex items-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 text-xs font-bold transition-colors shadow-sm"
                 >
-                  Analyze Cloudflare Trace
+                  {lang === "zh" ? "查看 Cloudflare Trace" : "Analyze Cloudflare Trace"}
                   <ArrowRight className="h-4 w-4" />
                 </TrackedLink>
               </div>
             );
           })()}
 
-          {/* Overall Status Bar */}
-          <div
-            className={`mb-6 p-4 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5 relative overflow-hidden ${
-              resultState?.healthy
-                ? "bg-white/90 border-emerald-100/80"
-                : resultState?.warning
-                  ? "bg-orange-50 border-orange-100"
-                  : "bg-red-50 border-red-100"
-            }`}
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none"></div>
-            <div className="flex items-center gap-5 z-10 w-full min-w-0">
-              <div
-                className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border ${
-                  resultState?.healthy
-                    ? "border-emerald-100 bg-emerald-50 text-emerald-600"
-                    : resultState?.warning
-                      ? "border-orange-100 bg-orange-50 text-orange-600"
-                      : "border-red-100 bg-red-50 text-red-600"
-                }`}
-              >
-                {resultState?.healthy ? (
-                  <CheckCircle2 className="h-8 w-8" />
-                ) : (
-                  <ShieldAlert className="h-8 w-8" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-[10px] font-semibold text-zinc-400 mb-1 tracking-[0.18em]">
-                  {lang === "zh" ? "可用性结论" : "AVAILABILITY VERDICT"}
-                </h2>
-                <h1
-                  className={`text-2xl sm:text-3xl font-semibold tracking-[-0.02em] ${
-                    resultState?.healthy
-                      ? "text-zinc-900"
-                      : resultState?.warning
-                        ? "text-orange-600"
-                        : "text-red-600"
-                  }`}
-                >
-                  {resultState?.verdict}
-                </h1>
-                <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-600 sm:text-sm">
-                  {diagnosticReport?.impact}
-                  {diagnosticReport?.inferences[0]
-                    ? ` ${lang === "zh" ? "可能原因" : "Possible cause"} (${diagnosticReport.inferences[0].confidence}): ${diagnosticReport.inferences[0].summary}`
-                    : ""}
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {attentionFindings.length > 0 && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.08em] text-orange-700">
-                      <AlertCircle className="h-3 w-3" />
-                      {localeText.report.attentionCount(
-                        attentionFindings.length,
-                      )}
-                    </span>
-                  )}
-                  <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-zinc-500">
-                    <Monitor className="h-3 w-3 shrink-0 text-zinc-400" />
-                    <span className="truncate">{displayedTarget}</span>
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${
-                      result.http.success || resultState?.corroboratedReachable
-                        ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-                        : resultState?.blocked
-                          ? "border-orange-100 bg-orange-50 text-orange-600"
-                          : "border-red-100 bg-red-50 text-red-600"
-                    }`}
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    {resultState?.corroboratedReachable
-                      ? `${resultState.browserReachable ? result.observations.browser.httpStatus || "OK" : `Edge ${result.observations.edge.httpStatus || "OK"}`} / Probe ${result.http.status_code}`
-                      : result.http.status_code || "ERR"}
-                  </span>
-                </div>
-              </div>
             </div>
-            <div className="relative z-10 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap lg:justify-end">
-              <button
-                onClick={copySummary}
-                className="flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-900"
-              >
-                {copiedAction === "summary" ? (
-                  <Check className="h-3 w-3 text-emerald-600" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
-                {copiedAction === "summary"
-                  ? localeText.copy.copied
-                  : localeText.actions.copySummary}
-              </button>
-              <button
-                onClick={copyShareLink}
-                className="flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-50/90 px-4 py-3 text-[10px] font-semibold tracking-[0.16em] text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-              >
-                {shareCopied ? (
-                  <Check className="h-3 w-3 text-emerald-500" />
-                ) : (
-                  <Link2 className="h-3 w-3" />
-                )}
-                {shareCopied
-                  ? localeText.actions.shareCopied
-                  : localeText.actions.share}
-              </button>
-              <button
-                onClick={() => toggleFavorite(result.domain)}
-                className={`flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-[10px] font-semibold tracking-[0.16em] transition-colors ${
-                  history.find((entry) => entry.target === result.domain)
-                    ?.pinned
-                    ? "border-amber-200 bg-amber-50 text-amber-600"
-                    : "border-zinc-200 bg-zinc-50/90 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                }`}
-              >
-                <Star
-                  className={`h-3 w-3 ${history.find((entry) => entry.target === result.domain)?.pinned ? "fill-current" : ""}`}
-                />
-                {history.find((entry) => entry.target === result.domain)?.pinned
-                  ? localeText.actions.unfavorite
-                  : localeText.actions.favorite}
-              </button>
-            </div>
-          </div>
+          </details>
 
-          <section
-            className="rounded-[2rem] border border-zinc-100 bg-white/90 p-5 shadow-sm sm:p-6"
-            data-testid="attention-findings"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
-                  {localeText.report.keyFindings}
-                </p>
-                <h3 className="mt-1 text-lg font-semibold text-zinc-900">
-                  {attentionFindings.length > 0
-                    ? localeText.report.attentionCount(
-                        attentionFindings.length,
-                      )
-                    : localeText.report.noAttention}
-                </h3>
-              </div>
-              {attentionFindings.length > 0 && (
-                <span className="inline-flex w-fit rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-[10px] font-semibold text-orange-700">
-                  {localeText.report.warning}
-                </span>
-              )}
-            </div>
-
-            {attentionFindings.length > 0 ? (
-              <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
-                {attentionFindings.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`rounded-2xl border p-4 ${
-                      item.severity === "critical"
-                        ? "border-red-100 bg-red-50/60"
-                        : "border-orange-100 bg-orange-50/50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <AlertCircle
-                        className={`mt-0.5 h-4 w-4 shrink-0 ${
-                          item.severity === "critical"
-                            ? "text-red-500"
-                            : "text-orange-500"
-                        }`}
-                      />
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-semibold text-zinc-900">
-                          {item.title}
-                        </h4>
-                        <p className="mt-1 text-xs leading-5 text-zinc-700">
-                          {lang === "zh" && item.id === "headers.missing"
-                            ? `缺少或配置较弱的响应头：${result.securityHeaders?.checks
-                                ?.filter((check: any) => !check.present)
-                                .map((check: any) => check.label)
-                                .join("、") || "未知"}。`
-                            : item.description}
-                        </p>
-                        {item.likelyCause && (
-                          <div className="mt-3 border-t border-black/5 pt-3">
-                            <p className="text-[10px] font-semibold tracking-[0.12em] text-zinc-400">
-                              {lang === "zh" ? "可能原因" : "Possible cause"}
-                            </p>
-                            <p className="mt-1 text-xs leading-5 text-zinc-600">
-                              {item.likelyCause}
-                            </p>
-                          </div>
-                        )}
-                        <div className="mt-3 border-t border-black/5 pt-3">
-                          <p className="text-[10px] font-semibold tracking-[0.12em] text-zinc-400">
-                            {lang === "zh" ? "建议" : "Guidance"}
-                          </p>
-                          <p className="mt-1 text-xs leading-5 text-zinc-700">
-                            {lang === "zh" && item.id === "headers.missing"
-                              ? "如果你运营该站点，请结合应用的安全策略与兼容性要求评估这些响应头。"
-                              : item.recommendedFix}
-                          </p>
-                          {item.verificationSteps.length > 0 && (
-                            <ul className="mt-2 space-y-1">
-                              {item.verificationSteps
-                                .slice(0, 2)
-                                .map((step: string) => (
-                                  <li
-                                    key={step}
-                                    className="text-xs leading-5 text-zinc-600"
-                                  >
-                                    · {step}
-                                  </li>
-                                ))}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-4 py-3 text-sm text-emerald-800">
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                {diagnosticReport?.impact}
-              </div>
-            )}
-
-            {informationalFindings.length > 0 && (
-              <div className="mt-5 border-t border-zinc-100 pt-4">
-                <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
-                  {localeText.report.informational}
-                </p>
-                <div className="mt-2 space-y-2">
-                  {informationalFindings.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-xl border border-zinc-100 bg-zinc-50/70 px-4 py-3"
-                    >
-                      <p className="text-xs font-semibold text-zinc-700">
-                        {item.title}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-zinc-600">
-                        {lang === "zh" && item.id === "cdn.not-detected"
-                          ? "未识别到已知 CDN 特征；这不能证明网站直接连接源站。"
-                          : item.description}
-                      </p>
-                      {item.recommendedFix && (
-                        <p className="mt-2 text-xs leading-5 text-zinc-600">
-                          {lang === "zh" && item.id === "cdn.not-detected"
-                            ? "如果你运营该站点且预期使用 CDN，请核对 DNS 与边缘代理配置。"
-                            : item.recommendedFix}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-
-          <div className="flex flex-col gap-3 rounded-3xl border border-zinc-100 bg-white/75 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold text-zinc-800">
+              <p className="text-xs font-semibold text-[var(--text-primary)]">
                 {localeText.report.technicalDetails}
               </p>
-              <p className="mt-1 text-[10px] leading-4 text-zinc-500">
+              <p className="mt-1 text-xs leading-4 text-[var(--text-muted)]">
                 {localeText.report.technicalDetailsHint}
               </p>
             </div>
@@ -1725,7 +1693,7 @@ export default function WebsiteCheckClient({
               type="button"
               onClick={() => setShowDetails((value) => !value)}
               aria-expanded={showDetails}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-[10px] font-semibold text-zinc-700 shadow-sm transition-colors hover:border-emerald-200 hover:text-emerald-700"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 py-2 text-xs font-semibold text-[var(--text-secondary)] shadow-sm transition-colors hover:border-emerald-500/20 hover:text-[var(--accent-text)]"
             >
               <ChevronDown
                 className={`h-3 w-3 transition-transform ${showDetails ? "rotate-180" : ""}`}
@@ -1737,15 +1705,15 @@ export default function WebsiteCheckClient({
           {showDetails && (
             <div className="space-y-5" data-testid="technical-summary">
           {passedFindings.length > 0 && (
-            <section className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-3">
-              <p className="text-[10px] font-semibold tracking-[0.16em] text-emerald-700">
+            <section className="rounded-2xl border border-emerald-500/20 bg-[var(--accent-soft)] px-4 py-3">
+              <p className="text-xs font-semibold tracking-[0.16em] text-[var(--accent-text)]">
                 {localeText.report.passedChecks}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {passedFindings.map((finding) => (
                   <span
                     key={finding.id}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-[var(--surface-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-text)]"
                   >
                     <CheckCircle2 className="h-3 w-3" />
                     {finding.title}
@@ -1754,19 +1722,19 @@ export default function WebsiteCheckClient({
               </div>
             </section>
           )}
-          <section className="mb-5 rounded-[2rem] border border-zinc-100 bg-white/90 p-4 shadow-sm sm:p-5">
+          <section className="mb-5 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 shadow-sm sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                   {lang === "zh" ? "多观测点复核" : "MULTI-VANTAGE VERIFICATION"}
                 </p>
-                <h3 className="mt-1 text-sm font-semibold text-zinc-900">
+                <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
                   {lang === "zh"
                     ? "分别验证用户、边缘和独立探针看到的结果"
                     : "Compare what the user, edge, and independent probe can reach"}
                 </h3>
               </div>
-              <span className="hidden rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 sm:inline-flex">
+              <span className="hidden rounded-full border border-[var(--border-strong)] bg-[var(--surface-secondary)] px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)] sm:inline-flex">
                 {lang === "zh" ? "避免单点误报" : "False-positive resistant"}
               </span>
             </div>
@@ -1808,39 +1776,39 @@ export default function WebsiteCheckClient({
                     key={observation.key}
                     className={`rounded-2xl border px-4 py-4 ${
                       observation.reachable
-                        ? "border-emerald-100 bg-emerald-50/40"
+                        ? "border-emerald-500/20 bg-[var(--accent-soft)]"
                         : restricted
-                          ? "border-orange-100 bg-orange-50/50"
-                          : "border-zinc-200 bg-zinc-50/70"
+                          ? "border-orange-500/20 bg-[var(--warning-soft)]"
+                          : "border-[var(--border-strong)] bg-[var(--surface-secondary)]"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white bg-white text-zinc-500 shadow-sm">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white bg-[var(--surface-primary)] text-[var(--text-muted)] shadow-sm">
                           <ObservationIcon className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-zinc-900">
+                          <p className="truncate text-xs font-semibold text-[var(--text-primary)]">
                             {observation.label}
                           </p>
-                          <p className="mt-0.5 truncate text-[10px] text-zinc-500">
+                          <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">
                             {observation.meta}
                           </p>
                         </div>
                       </div>
                       <span
-                        className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                           observation.reachable
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
                             : restricted
-                              ? "bg-orange-100 text-orange-700"
-                              : "bg-zinc-200 text-zinc-600"
+                              ? "bg-[var(--warning-soft)] text-[var(--warning-text)]"
+                              : "bg-zinc-200 text-[var(--text-secondary)]"
                         }`}
                       >
                         {observation.status || "—"}
                       </span>
                     </div>
-                    <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                       {restricted
                         ? lang === "zh"
                           ? "探针受限，不代表网站宕机"
@@ -1861,20 +1829,20 @@ export default function WebsiteCheckClient({
             {summaryFacts.slice(1).map((fact) => (
               <div
                 key={fact.label}
-                className="rounded-2xl border border-zinc-100 bg-white/85 backdrop-blur-md px-4 py-3 shadow-sm"
+                className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] backdrop-blur-md px-4 py-3 shadow-sm"
               >
-                <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <div className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                   {fact.label}
                 </div>
                 <div
                   className={`mt-2 truncate text-sm font-semibold ${
                     fact.tone === "emerald"
-                      ? "text-emerald-600"
+                      ? "text-[var(--accent-text)]"
                       : fact.tone === "orange"
                         ? "text-orange-500"
                         : fact.tone === "red"
                           ? "text-red-500"
-                          : "text-zinc-900"
+                          : "text-[var(--text-primary)]"
                   }`}
                 >
                   {fact.value}
@@ -1919,12 +1887,12 @@ export default function WebsiteCheckClient({
             ].map((item) => (
               <div
                 key={item.label}
-                className="rounded-2xl border border-zinc-100 bg-white/80 px-4 py-3 shadow-sm"
+                className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3 shadow-sm"
               >
-                <div className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <div className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                   {item.label}
                 </div>
-                <div className="mt-2 truncate text-xs font-semibold text-zinc-800">
+                <div className="mt-2 truncate text-xs font-semibold text-[var(--text-primary)]">
                   {item.value}
                 </div>
               </div>
@@ -1934,14 +1902,14 @@ export default function WebsiteCheckClient({
           <div className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               onClick={exportMarkdown}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:border-emerald-200 hover:text-emerald-700"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 py-3 text-xs font-semibold text-[var(--text-secondary)] shadow-sm transition-colors hover:border-emerald-500/20 hover:text-[var(--accent-text)]"
             >
               <Download className="h-4 w-4" />
               {localeText.actions.exportMarkdown}
             </button>
             <button
               onClick={exportJson}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-xs font-semibold text-zinc-700 shadow-sm transition-colors hover:border-emerald-200 hover:text-emerald-700"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 py-3 text-xs font-semibold text-[var(--text-secondary)] shadow-sm transition-colors hover:border-emerald-500/20 hover:text-[var(--accent-text)]"
             >
               <Download className="h-4 w-4" />
               {localeText.actions.exportJson}
@@ -1952,32 +1920,32 @@ export default function WebsiteCheckClient({
 
           {diagnosticReport && false && (
           <div className="hidden">
-            <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-5 shadow-sm sm:p-6">
+            <section className="rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-sm sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                  <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                     {localeText.report.keyFindings}
                   </p>
-                  <h3 className="mt-1 text-lg font-semibold text-zinc-900">
+                  <h3 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
                     {displayedTarget}
                   </h3>
                   {diagnosticReport && (
-                    <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-600">
+                    <p className="mt-2 max-w-2xl text-xs leading-5 text-[var(--text-secondary)]">
                       {diagnosticReport?.summary}
                     </p>
                   )}
                 </div>
                 <div
-                  className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold tracking-[0.14em] ${
                     diagnosticFindings.some(
                       (item: any) => item.status === "error",
                     )
-                      ? "border-red-100 bg-red-50 text-red-600"
+                      ? "border-red-500/20 bg-[var(--danger-soft)] text-[var(--danger-text)]"
                       : diagnosticFindings.some(
                             (item: any) => item.status === "warning",
                           )
-                        ? "border-orange-100 bg-orange-50 text-orange-600"
-                        : "border-emerald-100 bg-emerald-50 text-emerald-700"
+                        ? "border-orange-500/20 bg-[var(--warning-soft)] text-[var(--warning-text)]"
+                        : "border-emerald-500/20 bg-[var(--accent-soft)] text-[var(--accent-text)]"
                   }`}
                 >
                   {diagnosticFindings.some(
@@ -1991,15 +1959,15 @@ export default function WebsiteCheckClient({
                       : localeText.report.ok}
                 </div>
               </div>
-              <div className="mb-4 rounded-2xl border border-zinc-100 bg-zinc-50/80 px-4 py-3">
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+              <div className="mb-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3">
+                <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                   EXECUTIVE SUMMARY
                 </p>
-                <p className="mt-2 text-sm font-semibold text-zinc-900">
+                <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">
                   {diagnosticReport?.impact}
                 </p>
                 {diagnosticReport?.inferences[0] && (
-                  <p className="mt-1 text-xs leading-5 text-zinc-600">
+                  <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
                     {lang === "zh" ? "可能原因" : "Possible cause"} · {diagnosticReport?.inferences[0].confidence}: {diagnosticReport?.inferences[0].summary}
                   </p>
                 )}
@@ -2010,10 +1978,10 @@ export default function WebsiteCheckClient({
                     key={item.id}
                     className={`rounded-2xl border px-4 py-3 ${
                       item.status === "ok"
-                        ? "border-emerald-100 bg-emerald-50/40"
+                        ? "border-emerald-500/20 bg-[var(--accent-soft)]"
                         : item.status === "warning"
-                          ? "border-orange-100 bg-orange-50/50"
-                          : "border-red-100 bg-red-50/60"
+                          ? "border-orange-500/20 bg-[var(--warning-soft)]"
+                          : "border-red-500/20 bg-[var(--danger-soft)]"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -2030,36 +1998,36 @@ export default function WebsiteCheckClient({
                         <p
                           className={`text-xs font-semibold ${
                             item.status === "ok"
-                              ? "text-emerald-700"
+                              ? "text-[var(--accent-text)]"
                               : item.status === "warning"
-                                ? "text-orange-700"
-                                : "text-red-700"
+                                ? "text-[var(--warning-text)]"
+                                : "text-[var(--danger-text)]"
                           }`}
                         >
                           {item.title}
                         </p>
-                        <p className="mt-1 text-xs leading-5 text-zinc-600">
+                        <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
                           {item.description}
                         </p>
                         <div className="mt-3 space-y-2 border-t border-white/80 pt-3">
                           <div>
-                            <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                               CAUSE
                             </p>
-                            <p className="mt-1 text-xs leading-5 text-zinc-600">
+                            <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
                               {item.likelyCause}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                               FIX
                             </p>
-                            <p className="mt-1 text-xs leading-5 text-zinc-600">
+                            <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
                               {item.recommendedFix}
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                            <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                               VERIFY
                             </p>
                             <ul className="mt-1 space-y-1">
@@ -2068,7 +2036,7 @@ export default function WebsiteCheckClient({
                                 .map((step: string) => (
                                   <li
                                     key={step}
-                                    className="text-xs leading-5 text-zinc-600"
+                                    className="text-xs leading-5 text-[var(--text-secondary)]"
                                   >
                                     - {step}
                                   </li>
@@ -2083,18 +2051,18 @@ export default function WebsiteCheckClient({
               </div>
             </section>
 
-            <section className="rounded-[2rem] border border-zinc-100 bg-white/90 p-5 shadow-sm sm:p-6">
-              <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+            <section className="rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-sm sm:p-6">
+              <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                 {localeText.report.nextSteps}
               </p>
               <div className="mt-4 space-y-3">
                 {adviceList.slice(0, 3).map((advice, index) => (
                   <div
                     key={index}
-                    className="flex gap-3 rounded-2xl border border-zinc-100 bg-zinc-50/80 px-4 py-3"
+                    className="flex gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3"
                   >
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
-                    <p className="text-xs leading-5 text-zinc-700">{advice}</p>
+                    <p className="text-xs leading-5 text-[var(--text-secondary)]">{advice}</p>
                   </div>
                 ))}
               </div>
@@ -2104,16 +2072,16 @@ export default function WebsiteCheckClient({
 
           {false && (
           <div className="hidden">
-            <p className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em]">
+            <p className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em]">
               {localeText.detailsHint}
             </p>
             <button
               type="button"
               onClick={() => setShowDetails((value) => !value)}
-              className={`inline-flex items-center gap-2 rounded-full border bg-white/90 px-4 py-2 text-[10px] font-semibold shadow-sm transition-all ${
+              className={`inline-flex items-center gap-2 rounded-full border bg-[var(--surface-primary)] px-4 py-2 text-xs font-semibold shadow-sm transition-all ${
                 isAsianLanguage
-                  ? "border-zinc-200 text-zinc-700 tracking-[0.18em] hover:text-zinc-900 hover:border-emerald-300"
-                  : "border-black/5 tracking-[0.22em] text-zinc-500 hover:text-zinc-900 hover:border-emerald-200"
+                  ? "border-[var(--border-strong)] text-[var(--text-secondary)] tracking-[0.18em] hover:text-[var(--text-primary)] hover:border-emerald-300"
+                  : "border-black/5 tracking-[0.22em] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-emerald-500/20"
               }`}
             >
               <ChevronDown
@@ -2128,48 +2096,48 @@ export default function WebsiteCheckClient({
             <div className="space-y-4 mb-10">
               {/* Step: Geo-Location (Shown first for IPs) */}
               {result.isActuallyIp && (
-                <div className="bg-emerald-50/30 border border-emerald-100 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm transition-all animate-in fade-in slide-in-from-top-4">
-                  <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                    <span className="text-[10px] font-semibold text-emerald-600 tracking-[0.22em]">
+                <div className="bg-[var(--accent-soft)] border border-emerald-500/20 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm transition-all animate-in fade-in slide-in-from-top-4">
+                  <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                    <span className="text-xs font-semibold text-[var(--accent-text)] tracking-[0.22em]">
                       {localeText.geo.step}
                     </span>
                     <div className="flex items-center gap-2">
                       <Globe className="w-4 h-4 text-emerald-500" />
-                      <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                      <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                         {localeText.geo.title}
                       </span>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.geo.country}
                       </p>
-                      <p className="text-sm font-semibold text-zinc-900 truncate">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                         {result.geo.country}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.geo.city}
                       </p>
-                      <p className="text-sm font-semibold text-zinc-900 truncate">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                         {result.geo.city}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.geo.asn}
                       </p>
-                      <p className="text-sm font-semibold text-emerald-600">
+                      <p className="text-sm font-semibold text-[var(--accent-text)]">
                         {result.geo.asn}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.geo.isp}
                       </p>
-                      <p className="text-sm font-semibold text-zinc-900 truncate">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                         {result.geo.isp}
                       </p>
                     </div>
@@ -2178,30 +2146,30 @@ export default function WebsiteCheckClient({
               )}
 
               {/* Step 1: WHOIS */}
-              <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
-                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
+              <div className="bg-[var(--surface-primary)] border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                  <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
                     {localeText.whois.step}
                   </span>
                   <div className="flex items-center gap-2">
                     <Database className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.whois.title}
                     </span>
                   </div>
                 </div>
                 <div className="flex-grow">
                   {result.whois?.lookupTarget && (
-                    <p className="mb-4 text-[10px] font-semibold tracking-[0.14em] text-zinc-400">
+                    <p className="mb-4 text-xs font-semibold tracking-[0.14em] text-[var(--text-muted)]">
                       {localeText.whois.lookupTarget}: {result.whois.lookupTarget}
                     </p>
                   )}
                   {!result.whois?.success && result.whois?.error ? (
                     <div className="w-full h-full flex flex-col justify-center">
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.whois.rdapUnavailable}
                       </p>
-                      <p className="text-sm font-medium leading-6 text-zinc-700">
+                      <p className="text-sm font-medium leading-6 text-[var(--text-secondary)]">
                         {result.whois.errorCode
                           ? localeText.whois.rdapErrors[
                               result.whois.errorCode as keyof typeof localeText.whois.rdapErrors
@@ -2209,7 +2177,7 @@ export default function WebsiteCheckClient({
                           : result.whois.error}
                       </p>
                       {result.whois.httpStatus && (
-                        <p className="mt-1 text-[10px] text-zinc-400">
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">
                           RDAP HTTP {result.whois.httpStatus}
                         </p>
                       )}
@@ -2217,11 +2185,11 @@ export default function WebsiteCheckClient({
                   ) : (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                       <div>
-                        <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                        <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                           {result.isActuallyIp ? "Network Owner" : "Registrar"}
                         </p>
                         <p
-                          className={`text-sm font-semibold truncate ${result.whois?.success ? "text-zinc-900" : "text-zinc-400"}`}
+                          className={`text-sm font-semibold truncate ${result.whois?.success ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}
                         >
                           {result.whois?.success
                             ? result.whois.registrar
@@ -2231,24 +2199,24 @@ export default function WebsiteCheckClient({
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                        <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                           {result.isActuallyIp
                             ? localeText.whois.allocated
                             : localeText.whois.registered}
                         </p>
-                        <p className="text-sm text-zinc-700">
+                        <p className="text-sm text-[var(--text-secondary)]">
                           {result.whois?.success
                             ? result.whois.registered
                             : "N/A"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                        <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                           {result.isActuallyIp
                             ? localeText.whois.networkClass
                             : localeText.whois.expiry}
                         </p>
-                        <p className="text-sm text-zinc-700">
+                        <p className="text-sm text-[var(--text-secondary)]">
                           {result.isActuallyIp
                             ? result.isPrivate
                               ? localeText.whois.privateIp
@@ -2259,7 +2227,7 @@ export default function WebsiteCheckClient({
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                        <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                           {localeText.whois.status}
                         </p>
                         <p
@@ -2279,15 +2247,15 @@ export default function WebsiteCheckClient({
 
                   {/* Subdomain Discovery Add-on */}
                   {result.subdomains && result.subdomains.length > 0 && (
-                    <details className="mt-6 rounded-2xl border border-zinc-100 bg-zinc-50/50 px-4 py-3 group">
+                    <details className="mt-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3 group">
                       <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
-                          <LayoutGrid className="w-3 h-3 text-zinc-400" />
-                          <h4 className="text-[10px] font-semibold text-zinc-500 tracking-[0.18em]">
+                          <LayoutGrid className="w-3 h-3 text-[var(--text-muted)]" />
+                          <h4 className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em]">
                             {localeText.whois.assetTitle}
                           </h4>
                         </div>
-                        <span className="text-[9px] text-zinc-400">
+                        <span className="text-xs text-[var(--text-muted)]">
                           {result.subdomains.length}{" "}
                           {localeText.whois.assetCountSuffix}
                         </span>
@@ -2300,7 +2268,7 @@ export default function WebsiteCheckClient({
                               setDomain(sub);
                               runDiagnostic(sub);
                             }}
-                            className="text-left px-3 py-2 bg-white border border-zinc-100 rounded-lg text-[10px] text-zinc-600 hover:border-emerald-500 hover:text-emerald-600 transition-all hover:shadow-sm truncate group"
+                            className="text-left px-3 py-2 bg-[var(--surface-primary)] border border-[var(--border-subtle)] rounded-lg text-xs text-[var(--text-secondary)] hover:border-emerald-500 hover:text-[var(--accent-text)] transition-all hover:shadow-sm truncate group"
                           >
                             <span className="opacity-0 group-hover:opacity-100 transition-opacity">
                               →
@@ -2315,25 +2283,25 @@ export default function WebsiteCheckClient({
               </div>
 
               {/* Step 2: DNS */}
-              <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
-                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
+              <div className="bg-[var(--surface-primary)] border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                  <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
                     {localeText.dns.step}
                   </span>
                   <div className="flex items-center gap-2">
                     <Search className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.dns.title}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
                   <div className="col-span-2">
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.dns.resolved}
                     </p>
                     <p
-                      className="text-[12px] font-semibold text-zinc-800 break-all leading-tight"
+                      className="text-[12px] font-semibold text-[var(--text-primary)] break-all leading-tight"
                       title={result.dns.all_ips?.join(", ")}
                     >
                       {result.dns.all_ips && result.dns.all_ips.length > 0
@@ -2342,10 +2310,10 @@ export default function WebsiteCheckClient({
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] ${
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold tracking-[0.12em] ${
                           result.dns.ipv4?.length
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-zinc-200 bg-zinc-50 text-zinc-400"
+                            ? "border-emerald-500/20 bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                            : "border-[var(--border-strong)] bg-[var(--surface-secondary)] text-[var(--text-muted)]"
                         }`}
                       >
                         IPv4{" "}
@@ -2354,10 +2322,10 @@ export default function WebsiteCheckClient({
                           : "None"}
                       </span>
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] ${
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold tracking-[0.12em] ${
                           result.dns.ipv6?.length
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-zinc-200 bg-zinc-50 text-zinc-400"
+                            ? "border-emerald-500/20 bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                            : "border-[var(--border-strong)] bg-[var(--surface-secondary)] text-[var(--text-muted)]"
                         }`}
                       >
                         IPv6{" "}
@@ -2366,10 +2334,10 @@ export default function WebsiteCheckClient({
                           : "None"}
                       </span>
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-[0.12em] ${
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold tracking-[0.12em] ${
                           result.dns.dual_stack
                             ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                            : "border-amber-200 bg-amber-50 text-amber-700"
+                            : "border-amber-200 bg-[var(--warning-soft)] text-[var(--warning-text)]"
                         }`}
                       >
                         {result.dns.dual_stack ? "Dual stack" : "Single stack"}
@@ -2393,10 +2361,10 @@ export default function WebsiteCheckClient({
                             }`}
                           ></div>
                           <div className="flex flex-col">
-                            <span className="text-[9px] font-semibold text-zinc-800 leading-none tracking-[0.18em]">
+                            <span className="text-xs font-semibold text-[var(--text-primary)] leading-none tracking-[0.18em]">
                               {node.name}
                             </span>
-                            <span className="text-[8px] text-zinc-400 mt-1 font-semibold">
+                            <span className="text-[8px] text-[var(--text-muted)] mt-1 font-semibold">
                               {node.status === "FAILED"
                                 ? localeText.dns.restricted
                                 : node.ip
@@ -2421,7 +2389,7 @@ export default function WebsiteCheckClient({
                             <div
                               className={`w-1.5 h-1.5 rounded-full ${r.status === "OK" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-red-500"}`}
                             ></div>
-                            <span className="text-[9px] font-semibold text-zinc-400 tracking-[0.12em]">
+                            <span className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.12em]">
                               {r.resolver} {r.latencyMs ?? "—"}ms
                             </span>
                           </div>
@@ -2430,15 +2398,15 @@ export default function WebsiteCheckClient({
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.dns.latency}
                     </p>
-                    <p className="text-sm text-emerald-600 flex items-center gap-1 font-semibold">
+                    <p className="text-sm text-[var(--accent-text)] flex items-center gap-1 font-semibold">
                       <Activity className="w-3 h-3" /> {result.dns.latency}
                     </p>
                   </div>
                   <div className="col-span-2 lg:col-span-1">
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.dns.nameservers}
                     </p>
                     <div className="flex flex-col gap-2 max-h-[100px] overflow-y-auto pr-1 overflow-x-hidden">
@@ -2446,28 +2414,28 @@ export default function WebsiteCheckClient({
                         result.dns.ns.map((ns: string) => (
                           <p
                             key={ns}
-                            className="text-[10px] text-zinc-500 truncate leading-tight"
+                            className="text-xs text-[var(--text-muted)] truncate leading-tight"
                             title={ns}
                           >
                             {ns}
                           </p>
                         ))
                       ) : (
-                        <p className="text-[10px] text-zinc-400 font-semibold">
+                        <p className="text-xs text-[var(--text-muted)] font-semibold">
                           {localeText.dns.unknown}
                         </p>
                       )}
                     </div>
                   </div>
-                  <details className="col-span-2 lg:col-span-4 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 group">
+                  <details className="col-span-2 lg:col-span-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4 group">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                       <div className="flex min-w-0 items-center gap-2">
                         <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                        <h4 className="truncate text-[10px] font-semibold tracking-[0.18em] text-zinc-500">
+                        <h4 className="truncate text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                           {localeText.dns.recordOverview}
                         </h4>
                       </div>
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-transform group-open:rotate-180" />
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--text-faint)] transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
                       {(
@@ -2485,23 +2453,23 @@ export default function WebsiteCheckClient({
                         return (
                           <div
                             key={recordType}
-                            className="rounded-2xl border border-white bg-white/90 px-4 py-3 shadow-sm"
+                            className="rounded-2xl border border-white bg-[var(--surface-primary)] px-4 py-3 shadow-sm"
                           >
                             <div className="mb-2 flex items-center justify-between gap-3">
-                              <p className="text-xs font-semibold text-zinc-900">
+                              <p className="text-xs font-semibold text-[var(--text-primary)]">
                                 {recordType}
                               </p>
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                                   values.length
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : "bg-zinc-100 text-zinc-400"
+                                    ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                                    : "bg-[var(--bg-tertiary)] text-[var(--text-muted)]"
                                 }`}
                               >
                                 {values.length}
                               </span>
                             </div>
-                            <p className="mb-3 text-[10px] leading-4 text-zinc-500">
+                            <p className="mb-3 text-xs leading-4 text-[var(--text-muted)]">
                               {localeText.dns.recordNotes[recordType]}
                             </p>
                             <div className="space-y-1.5">
@@ -2509,18 +2477,18 @@ export default function WebsiteCheckClient({
                                 values.slice(0, 8).map((value: string) => (
                                   <p
                                     key={value}
-                                    className="rounded-lg bg-zinc-50 px-2.5 py-1.5 font-mono text-[10px] leading-4 text-zinc-700 break-all"
+                                    className="rounded-lg bg-[var(--surface-secondary)] px-2.5 py-1.5 font-mono text-xs leading-4 text-[var(--text-secondary)] break-all"
                                   >
                                     {value}
                                   </p>
                                 ))
                               ) : (
-                                <p className="rounded-lg bg-zinc-50 px-2.5 py-1.5 text-[10px] font-semibold text-zinc-400">
+                                <p className="rounded-lg bg-[var(--surface-secondary)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-muted)]">
                                   {localeText.dns.noRecords}
                                 </p>
                               )}
                               {values.length > 8 && (
-                                <p className="text-[10px] font-semibold text-zinc-400">
+                                <p className="text-xs font-semibold text-[var(--text-muted)]">
                                   +{values.length - 8}
                                 </p>
                               )}
@@ -2535,35 +2503,35 @@ export default function WebsiteCheckClient({
 
               {/* Step 3: Server HTTP */}
               <div
-                className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all ${result.http.success || resultState?.corroboratedReachable ? "bg-white border-black/5" : resultState?.blocked ? "bg-orange-50 border-orange-100" : "bg-red-50 border-red-100"}`}
+                className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all ${result.http.success || resultState?.corroboratedReachable ? "bg-[var(--surface-primary)] border-black/5" : resultState?.blocked ? "bg-[var(--warning-soft)] border-orange-500/20" : "bg-[var(--danger-soft)] border-red-500/20"}`}
               >
-                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                  <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
                     {localeText.http.step}
                   </span>
                   <div className="flex items-center gap-2">
                     <Server
                       className={`w-4 h-4 ${result.http.success || resultState?.corroboratedReachable ? "text-emerald-500" : resultState?.blocked ? "text-orange-500" : "text-red-500"}`}
                     />
-                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.http.title}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="rounded-full border border-zinc-200 bg-white px-2 py-1 text-[9px] font-semibold text-zinc-500">
+                    <span className="rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-2 py-1 text-xs font-semibold text-[var(--text-muted)]">
                       OpsKitPro Probe · AWS Lightsail · full
                     </span>
                     {result.observations?.browser && (
-                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700">
+                      <span className="rounded-full border border-emerald-500/20 bg-[var(--accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--accent-text)]">
                         Your Browser · full
                       </span>
                     )}
                     {result.observations?.edge && (
                       <span
-                        className={`rounded-full border px-2 py-1 text-[9px] font-semibold ${
+                        className={`rounded-full border px-2 py-1 text-xs font-semibold ${
                           resultState?.edgeReachable
-                            ? "border-sky-200 bg-sky-50 text-sky-700"
-                            : "border-orange-200 bg-orange-50 text-orange-700"
+                            ? "border-sky-500/20 bg-[var(--info-soft)] text-[var(--info-text)]"
+                            : "border-orange-500/20 bg-[var(--warning-soft)] text-[var(--warning-text)]"
                         }`}
                       >
                         Cloudflare Edge Probe · {result.observations.edge.colo} · full
@@ -2573,11 +2541,11 @@ export default function WebsiteCheckClient({
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.http.availability}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.http.success || resultState?.corroboratedReachable ? "text-emerald-500" : resultState?.blocked ? "text-orange-600" : "text-red-500"}`}
+                      className={`text-sm font-semibold ${result.http.success || resultState?.corroboratedReachable ? "text-emerald-500" : resultState?.blocked ? "text-[var(--warning-text)]" : "text-red-500"}`}
                     >
                       {resultState?.corroboratedReachable
                         ? lang === "zh"
@@ -2589,11 +2557,11 @@ export default function WebsiteCheckClient({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.http.status}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.http.success || resultState?.corroboratedReachable ? "text-zinc-900" : "text-red-500"}`}
+                      className={`text-sm font-semibold ${result.http.success || resultState?.corroboratedReachable ? "text-[var(--text-primary)]" : "text-red-500"}`}
                     >
                       {resultState?.corroboratedReachable
                         ? `${resultState.browserReachable ? result.observations.browser.httpStatus || "OK" : `Edge ${result.observations.edge.httpStatus || "OK"}`} / ${result.http.status_code}`
@@ -2601,45 +2569,45 @@ export default function WebsiteCheckClient({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.http.protocol}
                     </p>
-                    <p className="text-sm text-zinc-700">
+                    <p className="text-sm text-[var(--text-secondary)]">
                       {result.http.is_https ? "HTTPS" : "HTTP/TCP"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.http.responseTime}
                     </p>
-                    <p className="text-sm text-zinc-900 flex items-center gap-1 font-semibold">
+                    <p className="text-sm text-[var(--text-primary)] flex items-center gap-1 font-semibold">
                       <Zap className="w-3 h-3 text-emerald-500" />{" "}
                       {result.http.latency}
                     </p>
                   </div>
-                  <details className="col-span-2 lg:col-span-4 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 group">
+                  <details className="col-span-2 lg:col-span-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4 group">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                       <div className="flex min-w-0 items-center gap-2">
                         <Link2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                         <div className="min-w-0">
-                          <h4 className="truncate text-[10px] font-semibold tracking-[0.18em] text-zinc-500">
+                          <h4 className="truncate text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                             {localeText.http.redirects}
                           </h4>
-                          <p className="mt-1 truncate text-[10px] text-zinc-400">
+                          <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
                             {(result.http.redirect_count ?? 0) > 0
                               ? `${result.http.redirect_count} hop(s)`
                               : localeText.http.noRedirects}
                           </p>
                         </div>
                       </div>
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-transform group-open:rotate-180" />
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--text-faint)] transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="mt-4 space-y-3">
-                      <p className="text-[10px] leading-4 text-zinc-500">
+                      <p className="text-xs leading-4 text-[var(--text-muted)]">
                         {localeText.http.redirectHint}
                       </p>
                       {result.http.redirect_warning && (
-                        <div className="flex items-start gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2 text-[10px] text-orange-700">
+                        <div className="flex items-start gap-2 rounded-xl border border-orange-500/20 bg-[var(--warning-soft)] px-3 py-2 text-xs text-[var(--warning-text)]">
                           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                           <span>
                             <span className="font-semibold">
@@ -2649,11 +2617,11 @@ export default function WebsiteCheckClient({
                           </span>
                         </div>
                       )}
-                      <div className="rounded-2xl border border-white bg-white/90 p-3 shadow-sm">
-                        <p className="mb-2 text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                      <div className="rounded-2xl border border-white bg-[var(--surface-primary)] p-3 shadow-sm">
+                        <p className="mb-2 text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                           {localeText.http.finalUrl}
                         </p>
-                        <p className="break-all font-mono text-[10px] leading-4 text-zinc-700">
+                        <p className="break-all font-mono text-xs leading-4 text-[var(--text-secondary)]">
                           {result.http.final_url || "Unknown"}
                         </p>
                       </div>
@@ -2663,29 +2631,29 @@ export default function WebsiteCheckClient({
                             (hop: any, index: number) => (
                               <div
                                 key={`${hop.url}-${index}`}
-                                className="rounded-2xl border border-white bg-white/90 px-3 py-2 shadow-sm"
+                                className="rounded-2xl border border-white bg-[var(--surface-primary)] px-3 py-2 shadow-sm"
                               >
                                 <div className="mb-1 flex items-center gap-2">
                                   <span
-                                    className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${
+                                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                                       hop.status >= 300 && hop.status < 400
-                                        ? "bg-orange-50 text-orange-700"
+                                        ? "bg-[var(--warning-soft)] text-[var(--warning-text)]"
                                         : hop.status < 400
-                                          ? "bg-emerald-50 text-emerald-700"
-                                          : "bg-red-50 text-red-700"
+                                          ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                                          : "bg-[var(--danger-soft)] text-[var(--danger-text)]"
                                     }`}
                                   >
                                     {hop.status}
                                   </span>
-                                  <span className="text-[9px] font-semibold tracking-[0.14em] text-zinc-400">
+                                  <span className="text-xs font-semibold tracking-[0.14em] text-[var(--text-muted)]">
                                     HOP {index + 1}
                                   </span>
                                 </div>
-                                <p className="break-all font-mono text-[10px] leading-4 text-zinc-700">
+                                <p className="break-all font-mono text-xs leading-4 text-[var(--text-secondary)]">
                                   {hop.url}
                                 </p>
                                 {hop.location && (
-                                  <p className="mt-1 break-all font-mono text-[10px] leading-4 text-zinc-400">
+                                  <p className="mt-1 break-all font-mono text-xs leading-4 text-[var(--text-muted)]">
                                     → {hop.location}
                                   </p>
                                 )}
@@ -2693,7 +2661,7 @@ export default function WebsiteCheckClient({
                             ),
                           )
                         ) : (
-                          <p className="rounded-xl bg-white px-3 py-2 text-[10px] font-semibold text-zinc-400">
+                          <p className="rounded-xl bg-[var(--surface-primary)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)]">
                             {localeText.http.noRedirects}
                           </p>
                         )}
@@ -2704,16 +2672,16 @@ export default function WebsiteCheckClient({
               </div>
 
               {/* Step 4: Security Headers */}
-              <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
-                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
+              <div className="bg-[var(--surface-primary)] border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                  <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
                     {localeText.security.step}
                   </span>
                   <div className="flex items-center gap-2">
                     <ShieldCheck
                       className={`w-4 h-4 ${(result.securityHeaders?.score ?? 0) >= 75 ? "text-emerald-500" : "text-orange-500"}`}
                     />
-                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.security.title}
                     </span>
                   </div>
@@ -2721,30 +2689,30 @@ export default function WebsiteCheckClient({
                 <div className="flex-grow">
                   <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.security.score}
                       </p>
                       <p
-                        className={`text-sm font-semibold ${(result.securityHeaders?.score ?? 0) >= 75 ? "text-emerald-600" : (result.securityHeaders?.score ?? 0) >= 55 ? "text-orange-500" : "text-red-500"}`}
+                        className={`text-sm font-semibold ${(result.securityHeaders?.score ?? 0) >= 75 ? "text-[var(--accent-text)]" : (result.securityHeaders?.score ?? 0) >= 55 ? "text-orange-500" : "text-red-500"}`}
                       >
                         {result.securityHeaders?.grade || "—"} /{" "}
                         {result.securityHeaders?.score ?? 0}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.security.passed}
                       </p>
-                      <p className="text-sm font-semibold text-zinc-900">
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">
                         {result.securityHeaders?.passed ?? 0}/
                         {result.securityHeaders?.total ?? 0}
                       </p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.security.missing}
                       </p>
-                      <p className="text-sm font-semibold text-zinc-700">
+                      <p className="text-sm font-semibold text-[var(--text-secondary)]">
                         {(result.securityHeaders?.checks || [])
                           .filter((check: any) => !check.present)
                           .map((check: any) => check.label)
@@ -2757,17 +2725,17 @@ export default function WebsiteCheckClient({
                       (check: any) => (
                         <div
                           key={check.key}
-                          className={`rounded-2xl border px-4 py-3 ${check.present ? "border-emerald-100 bg-emerald-50/40" : "border-orange-100 bg-orange-50/50"}`}
+                          className={`rounded-2xl border px-4 py-3 ${check.present ? "border-emerald-500/20 bg-[var(--accent-soft)]" : "border-orange-500/20 bg-[var(--warning-soft)]"}`}
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <p
-                                className={`text-xs font-semibold ${check.present ? "text-emerald-700" : "text-orange-700"}`}
+                                className={`text-xs font-semibold ${check.present ? "text-[var(--accent-text)]" : "text-[var(--warning-text)]"}`}
                               >
                                 {check.label}
                               </p>
                               <p
-                                className="mt-1 truncate text-[10px] text-zinc-500"
+                                className="mt-1 truncate text-xs text-[var(--text-muted)]"
                                 title={check.value || check.recommendation}
                               >
                                 {check.present
@@ -2787,16 +2755,16 @@ export default function WebsiteCheckClient({
               </div>
 
               {/* Step 5: SSL */}
-              <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
-                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
+              <div className="bg-[var(--surface-primary)] border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                  <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
                     {localeText.ssl.step}
                   </span>
                   <div className="flex items-center gap-2">
                     <Lock
                       className={`w-4 h-4 ${result.ssl.valid ? "text-emerald-500" : "text-red-500"}`}
                     />
-                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.ssl.title}
                     </span>
                   </div>
@@ -2805,7 +2773,7 @@ export default function WebsiteCheckClient({
                   {/* Col 1: Status & Expiry */}
                   <div className="space-y-4">
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.ssl.certStatus}
                       </p>
                       <p
@@ -2821,42 +2789,42 @@ export default function WebsiteCheckClient({
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.ssl.expiry}
                       </p>
-                      <p className="text-sm text-zinc-700">
+                      <p className="text-sm text-[var(--text-secondary)]">
                         {result.ssl.expiry}
                       </p>
                     </div>
                   </div>
 
                   {/* Col 2: Precise Validation */}
-                  <div className="flex flex-col justify-center space-y-2 bg-zinc-50 rounded-2xl p-4 border border-black/5 relative">
-                    <p className="text-[9px] font-semibold text-zinc-400 tracking-[0.18em] mb-1">
+                  <div className="flex flex-col justify-center space-y-2 bg-[var(--surface-secondary)] rounded-2xl p-4 border border-black/5 relative">
+                    <p className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em] mb-1">
                       {lang === "en" ? "VALIDATION CHECKS" : "验证检查"}
                     </p>
                     <div className="flex items-center gap-2">
                        <div className={`w-1.5 h-1.5 rounded-full ${result.ssl.date_valid === true ? 'bg-emerald-500' : result.ssl.date_valid === false ? 'bg-red-500' : 'bg-zinc-300'}`}></div>
-                       <p className="text-[10px] text-zinc-700">{lang === "en" ? "Date Valid" : "日期有效"}</p>
+                       <p className="text-xs text-[var(--text-secondary)]">{lang === "en" ? "Date Valid" : "日期有效"}</p>
                     </div>
                     <div className="flex items-center gap-2">
                        <div className={`w-1.5 h-1.5 rounded-full ${result.ssl.hostname_valid === true ? 'bg-emerald-500' : result.ssl.hostname_valid === false ? 'bg-red-500' : 'bg-zinc-300'}`}></div>
-                       <p className="text-[10px] text-zinc-700">{lang === "en" ? "Hostname Match" : "主机名称相符"}</p>
+                       <p className="text-xs text-[var(--text-secondary)]">{lang === "en" ? "Hostname Match" : "主机名称相符"}</p>
                     </div>
                     <div className="flex items-center gap-2">
                        <div className={`w-1.5 h-1.5 rounded-full ${result.ssl.chain_authorized === true ? 'bg-emerald-500' : result.ssl.chain_authorized === false ? 'bg-red-500' : 'bg-zinc-300'}`}></div>
-                       <p className="text-[10px] text-zinc-700">{lang === "en" ? "Trusted Chain" : "受信任证书链"}</p>
+                       <p className="text-xs text-[var(--text-secondary)]">{lang === "en" ? "Trusted Chain" : "受信任证书链"}</p>
                     </div>
                   </div>
 
                   {/* Col 3: Headers & Tech */}
                   <div className="space-y-4">
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.ssl.hsts}
                       </p>
                       <p
-                        className={`text-[11px] font-semibold ${result.ssl.factors?.includes("HSTS_ENABLED") ? "text-emerald-500" : "text-orange-500"}`}
+                        className={`text-xs font-semibold ${result.ssl.factors?.includes("HSTS_ENABLED") ? "text-emerald-500" : "text-orange-500"}`}
                       >
                         {result.ssl.factors?.includes("HSTS_ENABLED")
                           ? lang === "en"
@@ -2868,19 +2836,19 @@ export default function WebsiteCheckClient({
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                      <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                         {localeText.ssl.cipher}
                       </p>
-                      <p className="text-[11px] text-zinc-600">
+                      <p className="text-xs text-[var(--text-secondary)]">
                         {result.ssl.tls_version || "TLS 1.3"}
                       </p>
                     </div>
                   </div>
 
                   {/* Col 4: Cert Chain View */}
-                  <details className="bg-zinc-50/50 rounded-2xl p-4 border border-zinc-100 relative overflow-hidden group">
+                  <details className="bg-[var(--surface-secondary)] rounded-2xl p-4 border border-[var(--border-subtle)] relative overflow-hidden group">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
-                      <p className="text-[9px] font-semibold text-zinc-400 tracking-[0.18em]">
+                      <p className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em]">
                         {localeText.ssl.chain}
                       </p>
                       <ShieldCheck className="w-4 h-4 text-emerald-500 opacity-60 group-open:opacity-100 transition-opacity" />
@@ -2898,11 +2866,11 @@ export default function WebsiteCheckClient({
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[9px] text-zinc-400 leading-none mb-1 tracking-[0.18em]">
+                              <p className="text-xs text-[var(--text-muted)] leading-none mb-1 tracking-[0.18em]">
                                 {link.level}
                               </p>
                               <p
-                                className="text-[10px] text-zinc-700 font-semibold truncate max-w-[120px]"
+                                className="text-xs text-[var(--text-secondary)] font-semibold truncate max-w-[120px]"
                                 title={link.name}
                               >
                                 {link.name}
@@ -2912,8 +2880,8 @@ export default function WebsiteCheckClient({
                         ))
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full py-4 opacity-30">
-                          <ShieldAlert className="w-6 h-6 mb-2 text-zinc-400" />
-                          <p className="text-[9px] text-center tracking-[0.18em] text-zinc-500">
+                          <ShieldAlert className="w-6 h-6 mb-2 text-[var(--text-muted)]" />
+                          <p className="text-xs text-center tracking-[0.18em] text-[var(--text-muted)]">
                             {localeText.ssl.chainUnavailable}
                           </p>
                         </div>
@@ -2924,35 +2892,35 @@ export default function WebsiteCheckClient({
               </div>
 
               {/* Step 5: CDN */}
-              <div className="bg-white border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
-                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-zinc-100 pr-5">
-                  <span className="text-[10px] font-semibold text-zinc-300 tracking-[0.22em]">
+              <div className="bg-[var(--surface-primary)] border border-black/5 p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all">
+                <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
+                  <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
                     {localeText.cdn.step}
                   </span>
                   <div className="flex items-center gap-2">
                     <Cloud
-                      className={`w-4 h-4 ${result.cdn.is_provider ? "text-emerald-500" : "text-zinc-400"}`}
+                      className={`w-4 h-4 ${result.cdn.is_provider ? "text-emerald-500" : "text-[var(--text-muted)]"}`}
                     />
-                    <span className="text-sm font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.cdn.title}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
                   <div className="col-span-2">
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.cdn.provider}
                     </p>
-                    <p className="text-sm font-semibold text-zinc-900 truncate">
+                    <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                       {result.cdn.provider}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.cdn.edge}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.cdn.is_provider ? "text-orange-500" : "text-zinc-400"}`}
+                      className={`text-sm font-semibold ${result.cdn.is_provider ? "text-orange-500" : "text-[var(--text-muted)]"}`}
                     >
                       {result.cdn.is_provider
                         ? localeText.cdn.proxied
@@ -2960,10 +2928,10 @@ export default function WebsiteCheckClient({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-zinc-400 font-semibold mb-2 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-muted)] font-semibold mb-2 tracking-[0.18em]">
                       {localeText.cdn.header}
                     </p>
-                    <p className="text-sm text-zinc-700 truncate">
+                    <p className="text-sm text-[var(--text-secondary)] truncate">
                       {result.cdn.server}
                     </p>
                   </div>
@@ -2974,17 +2942,17 @@ export default function WebsiteCheckClient({
 
           {/* Suggestions & Advice Section */}
           {showDetails && (
-            <div className="rounded-[2.5rem] border border-zinc-200/70 bg-white shadow-sm p-6 sm:p-10 md:p-12">
+            <div className="rounded-[2.5rem] border border-zinc-200/70 bg-[var(--surface-primary)] shadow-sm p-6 sm:p-10 md:p-12">
               <div className="flex items-start justify-between gap-6 mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600">
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--warning-soft)] border border-orange-500/20 flex items-center justify-center text-[var(--warning-text)]">
                     <ShieldAlert className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-semibold text-zinc-900 tracking-[-0.02em]">
+                    <h3 className="text-2xl font-semibold text-[var(--text-primary)] tracking-[-0.02em]">
                       {localeText.advice.title}
                     </h3>
-                    <p className="text-xs text-zinc-500 mt-1 tracking-[0.16em]">
+                    <p className="text-xs text-[var(--text-muted)] mt-1 tracking-[0.16em]">
                       {localeText.advice.subtitle}
                     </p>
                   </div>
@@ -2996,28 +2964,28 @@ export default function WebsiteCheckClient({
                     adviceList.map((advice, i) => (
                       <div
                         key={i}
-                        className="flex gap-4 p-5 bg-zinc-50/80 rounded-2xl border border-zinc-200/70 shadow-sm group overflow-hidden"
+                        className="flex gap-4 p-5 bg-[var(--surface-secondary)] rounded-2xl border border-zinc-200/70 shadow-sm group overflow-hidden"
                       >
                         <div className="mt-1 h-2.5 w-2.5 rounded-full bg-orange-500 shrink-0" />
                         <div className="flex-grow">
-                          <p className="text-sm sm:text-[15px] font-medium text-zinc-800 leading-relaxed">
+                          <p className="text-sm sm:text-[15px] font-medium text-[var(--text-primary)] leading-relaxed">
                             {advice}
                           </p>
-                          <p className="mt-2 text-[10px] text-zinc-400 tracking-[0.16em]">
+                          <p className="mt-2 text-xs text-[var(--text-muted)] tracking-[0.16em]">
                             {localeText.advice.itemLabel}
                           </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 bg-emerald-50/60 border border-emerald-100 rounded-2xl text-emerald-700">
+                    <div className="p-8 bg-[var(--accent-soft)] border border-emerald-500/20 rounded-2xl text-[var(--accent-text)]">
                       <div className="flex items-center gap-3">
                         <CheckCircle2 className="w-6 h-6 opacity-60 shrink-0" />
                         <div>
                           <span className="text-sm font-bold block">
                             {localeText.advice.noneTitle}
                           </span>
-                          <span className="text-[10px] opacity-70 mt-1 block tracking-[0.16em]">
+                          <span className="text-xs opacity-70 mt-1 block tracking-[0.16em]">
                             {localeText.advice.noneDesc}
                           </span>
                         </div>
@@ -3025,28 +2993,28 @@ export default function WebsiteCheckClient({
                     </div>
                   )}
                 </div>
-                <div className="rounded-2xl border border-zinc-200/70 bg-zinc-50/80 p-5 sm:p-6">
-                  <h5 className="text-[10px] font-semibold text-zinc-400 mb-5 tracking-[0.18em]">
+                <div className="rounded-2xl border border-zinc-200/70 bg-[var(--surface-secondary)] p-5 sm:p-6">
+                  <h5 className="text-xs font-semibold text-[var(--text-muted)] mb-5 tracking-[0.18em]">
                     {localeText.advice.nextTitle}
                   </h5>
                   <div className="space-y-3">
                     <Link
-                      href={`/tools/ip-lookup?q=${result.dns.resolved_ip}`}
-                      className="flex items-center justify-between p-4 bg-white rounded-2xl border border-zinc-200/70 hover:border-emerald-300 hover:-translate-y-0.5 transition-all group shadow-sm"
+                      href={`/${lang}/tools/ip-lookup?q=${result.dns.resolved_ip}`}
+                      className="flex items-center justify-between p-4 bg-[var(--surface-primary)] rounded-2xl border border-zinc-200/70 hover:border-emerald-300 hover:-translate-y-0.5 transition-all group shadow-sm"
                     >
-                      <span className="text-sm font-semibold text-zinc-900">
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">
                         {localeText.advice.ip}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-[var(--text-faint)] group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                     </Link>
                     <Link
-                      href={`/tools/dns-lookup?q=${domain}`}
-                      className="flex items-center justify-between p-4 bg-white rounded-2xl border border-zinc-200/70 hover:border-emerald-300 hover:-translate-y-0.5 transition-all group shadow-sm"
+                      href={`/${lang}/tools/dns-lookup?q=${domain}`}
+                      className="flex items-center justify-between p-4 bg-[var(--surface-primary)] rounded-2xl border border-zinc-200/70 hover:border-emerald-300 hover:-translate-y-0.5 transition-all group shadow-sm"
                     >
-                      <span className="text-sm font-semibold text-zinc-900">
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">
                         {localeText.advice.dns}
                       </span>
-                      <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-[var(--text-faint)] group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                     </Link>
                   </div>
                 </div>
@@ -3059,7 +3027,7 @@ export default function WebsiteCheckClient({
             <div className="mt-20">
               <button
                 onClick={() => setShowJson(!showJson)}
-                className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400 hover:text-zinc-900 transition-colors tracking-[0.18em] mb-6"
+                className="flex items-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors tracking-[0.18em] mb-6"
               >
                 <ChevronDown
                   className={`w-3 h-3 transition-transform ${showJson ? "rotate-180" : ""}`}
@@ -3067,7 +3035,7 @@ export default function WebsiteCheckClient({
                 {localeText.advice.json}
               </button>
               {showJson && (
-                <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-[11px] text-zinc-400 overflow-x-auto border border-zinc-800 shadow-2xl relative">
+                <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-xs text-zinc-200 overflow-x-auto border border-zinc-800 shadow-sm relative">
                   <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
                     <button
                       onClick={copyResult}
@@ -3090,15 +3058,7 @@ export default function WebsiteCheckClient({
         </div>
       )}
 
-      {/* Hero-State Empty View */}
-      {!result && !loading && (
-        <div className="max-w-2xl mx-auto mt-24 p-16 rounded-[3rem] border border-dashed border-zinc-200 bg-white/60 text-center animate-in fade-in duration-1000">
-          <Search className="w-16 h-16 text-zinc-100 mx-auto mb-8 animate-pulse" />
-          <p className="text-zinc-500 text-xs leading-relaxed tracking-[0.18em] opacity-40">
-            {localeText.emptyHint}
-          </p>
-        </div>
-      )}
+      {!result && !loading && !error && <WebsiteCheckIntro lang={lang} />}
     </main>
   );
 }

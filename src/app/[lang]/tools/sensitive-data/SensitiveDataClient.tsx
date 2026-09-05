@@ -105,16 +105,16 @@ function buildSegments(
 function getClassForType(type: SensitiveEntity | null) {
   if (!type) return "text-[var(--text-primary)]";
   const classes: Record<SensitiveEntity, string> = {
-    email: "bg-red-100 text-red-900",
-    phone: "bg-orange-100 text-orange-900",
-    api_key: "bg-amber-100 text-amber-900",
-    password: "bg-rose-100 text-rose-900",
+    email: "bg-[var(--danger-soft)] text-red-900",
+    phone: "bg-[var(--warning-soft)] text-orange-900",
+    api_key: "bg-[var(--warning-soft)] text-[var(--warning-text)]",
+    password: "bg-[var(--danger-soft)] text-rose-900",
     uuid: "bg-violet-100 text-violet-900",
     private_key: "bg-pink-100 text-pink-900",
-    credit_card: "bg-sky-100 text-sky-900",
-    ip: "bg-emerald-100 text-emerald-900",
+    credit_card: "bg-[var(--info-soft)] text-sky-900",
+    ip: "bg-[var(--accent-soft)] text-emerald-900",
   };
-  return `rounded px-1.5 py-0.5 font-mono text-[11px] ${classes[type]}`;
+  return `rounded px-1.5 py-0.5 font-mono text-xs ${classes[type]}`;
 }
 
 export default function SensitiveDataClient({ lang }: { lang: Lang }) {
@@ -167,16 +167,16 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={c.title} description={c.subtitle} processing={c.privacy} />
 
-      <section className="mt-8 ui-surface-elevated rounded-2xl p-4 sm:p-6">
+      <section className="mt-6 ui-surface-elevated rounded-2xl p-4 sm:p-6">
         <label className="text-sm font-semibold text-[var(--text-primary)]" htmlFor="sensitive-input">
           {c.inputLabel}
         </label>
         <textarea
           id="sensitive-input"
-          className="mt-2 min-h-52 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 outline-none focus:border-emerald-500/50"
+          className="mt-2 min-h-40 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 outline-none focus:border-emerald-500/50"
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={c.inputPlaceholder}
@@ -185,7 +185,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
         <p className="mt-2 text-xs text-[var(--text-muted)]">{c.onlyLocal}</p>
       </section>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <div className="ui-surface rounded-2xl p-4 sm:p-6">
           <p className="text-sm font-semibold text-[var(--text-primary)]">{c.matchesLabel}</p>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
@@ -208,24 +208,22 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
             </div>
           </div>
 
-          {input.length === 0 ? (
-            <p className="mt-4 text-sm text-[var(--text-muted)]">{c.noData}</p>
-          ) : result.matches.length === 0 ? (
-            <p className="mt-4 text-sm text-emerald-700">{c.empty}</p>
+          {input.length === 0 ? null : result.matches.length === 0 ? (
+            <p className="mt-4 text-sm text-[var(--accent-text)]">{c.empty}</p>
           ) : (
             <div className="mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-sm text-[var(--text-secondary)]">
               <p className="font-semibold">{summary.header}</p>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {summary.detail || c.empty}
               </p>
-              {result.limitHit && <p className="mt-2 text-xs text-amber-700">{c.limit(result.matches.length)}</p>}
+              {result.limitHit && <p className="mt-2 text-xs text-[var(--warning-text)]">{c.limit(result.matches.length)}</p>}
             </div>
           )}
 
           {result.matches.length > 0 && (
             <div className="mt-4 rounded-xl border border-[var(--border-subtle)] p-3">
               <p className="mb-2 text-xs font-semibold text-[var(--text-muted)]">{c.originalHighlighted}</p>
-              <pre className="whitespace-pre-wrap break-all rounded-lg border border-[var(--border-subtle)] bg-white p-3 text-sm leading-6">
+              <pre className="whitespace-pre-wrap break-all rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3 text-sm leading-6">
                 {highlighted.map((piece, index) => (
                   piece.type ? (
                     <mark key={`${piece.key}-${index}`} className={getClassForType(piece.type)}>
@@ -305,13 +303,13 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div>
               <p className="mb-2 text-xs text-[var(--text-muted)]">{lang === "zh" ? "原文" : "Original"}</p>
-              <pre className="whitespace-pre-wrap break-all rounded-xl border border-[var(--border-subtle)] bg-white p-3 text-xs leading-6">
+              <pre className="whitespace-pre-wrap break-all rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3 text-xs leading-6">
                 {input}
               </pre>
             </div>
             <div>
               <p className="mb-2 text-xs text-[var(--text-muted)]">{lang === "zh" ? "脱敏文本" : "Redacted"}</p>
-              <pre className="whitespace-pre-wrap break-all rounded-xl border border-[var(--border-subtle)] bg-white p-3 text-xs leading-6">
+              <pre className="whitespace-pre-wrap break-all rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3 text-xs leading-6">
                 {result.redactedText}
               </pre>
             </div>

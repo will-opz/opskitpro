@@ -108,9 +108,9 @@ export default function WebsocketClient({
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#fafafa] pb-12 font-sans text-zinc-700 selection:bg-cyan-500/20 selection:text-zinc-900 sm:pb-16">
+    <div className="relative overflow-hidden bg-[var(--bg-primary)] pb-12 font-sans text-[var(--text-secondary)] selection:bg-cyan-500/20 selection:text-[var(--text-primary)] sm:pb-16">
       {/* Background */}
-      <div className="absolute inset-0 bg-grid-zinc-900/[0.03] pointer-events-none" />
+
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       <main className="w-full max-w-6xl mx-auto px-6 mt-8 md:mt-12 z-20 relative font-sans">
@@ -123,14 +123,14 @@ export default function WebsocketClient({
 
         <div className="mb-6 mt-4 flex flex-wrap items-center gap-3">
               <div
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold uppercase tracking-widest transition-all ${
                   activeTab.status === "connected"
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-[var(--accent-text)]"
                     : activeTab.status === "connecting"
-                      ? "bg-amber-500/10 border-amber-500/20 text-amber-600 animate-pulse"
+                      ? "bg-amber-500/10 border-amber-500/20 text-[var(--warning-text)] animate-pulse"
                       : activeTab.status === "error"
-                        ? "bg-red-500/10 border-red-500/20 text-red-600"
-                        : "bg-zinc-100 border-zinc-200 text-zinc-500"
+                        ? "bg-red-500/10 border-red-500/20 text-[var(--danger-text)]"
+                        : "bg-[var(--bg-tertiary)] border-[var(--border-strong)] text-[var(--text-muted)]"
                 }`}
               >
                 <div
@@ -155,7 +155,7 @@ export default function WebsocketClient({
               <button
                 type="button"
                 onClick={() => setShowAdvanced((value) => !value)}
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-bold text-zinc-600 shadow-sm transition hover:border-cyan-500/30 hover:bg-cyan-50 hover:text-cyan-700"
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-3 py-2 text-xs font-bold text-[var(--text-secondary)] shadow-sm transition hover:border-cyan-500/30 hover:bg-[var(--info-soft)] hover:text-cyan-700"
               >
                 <Settings2 className="h-4 w-4" />
                 {shellText.advanced}
@@ -166,7 +166,7 @@ export default function WebsocketClient({
         </div>
 
         {showAdvanced && (
-          <section className="mb-6 rounded-2xl border border-zinc-100 bg-white/80 p-4 shadow-sm backdrop-blur-xl">
+          <section className="mb-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 shadow-sm backdrop-blur-xl">
             <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <ConnectionTabs
                 lang={lang}
@@ -204,7 +204,7 @@ export default function WebsocketClient({
                   mode: "ping" as ViewMode,
                   label: shellText.ping,
                   icon: Activity,
-                  tone: "text-amber-600",
+                  tone: "text-[var(--warning-text)]",
                 },
               ].map((item) => {
                 const Icon = item.icon;
@@ -214,10 +214,10 @@ export default function WebsocketClient({
                     key={item.mode}
                     type="button"
                     onClick={() => setViewMode(item.mode)}
-                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
                       active
-                        ? `border-zinc-200 bg-white shadow-sm ${item.tone}`
-                        : "border-transparent bg-zinc-50 text-zinc-400 hover:text-zinc-600"
+                        ? `border-[var(--border-strong)] bg-[var(--surface-primary)] shadow-sm ${item.tone}`
+                        : "border-transparent bg-[var(--surface-secondary)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />

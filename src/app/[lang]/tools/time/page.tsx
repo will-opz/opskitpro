@@ -35,7 +35,7 @@ export default async function TimePage({
       <SiteHeader dict={dict} lang={lang} />
       <TimeClient dict={dict} lang={lang} />
       <ToolGuide id="time" lang={lang} />
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

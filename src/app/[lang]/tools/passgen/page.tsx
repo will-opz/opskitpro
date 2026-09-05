@@ -36,7 +36,7 @@ export default async function PassPage({
       <SiteHeader dict={dict} lang={lang} />
       <PassClient dict={dict} lang={lang} />
       <ToolGuide id="passgen" lang={lang} />
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

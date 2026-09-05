@@ -17,12 +17,12 @@ export function ResultPanel({
   return (
     <div className="op-card rounded-2xl overflow-hidden">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border-subtle)]">
-        <span className="text-[var(--accent-color)]">{icon}</span>
+        <span className="text-[var(--accent-text)]">{icon}</span>
         <h2 className="text-sm font-semibold text-[var(--text-primary)] flex-1">
           {title}
         </h2>
         {phase === "loading" && (
-          <Loader2 className="w-4 h-4 text-[var(--accent-color)] animate-spin" />
+          <Loader2 className="w-4 h-4 text-[var(--accent-text)] animate-spin" />
         )}
         {phase === "done" && (
           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -75,7 +75,7 @@ export function StatBox({
   };
   return (
     <div className="op-card-soft rounded-xl p-4 text-center">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-2">
         {label}
       </p>
       {value !== null ? (
@@ -156,7 +156,7 @@ export function ScoreRing({ score, grade }: { score: number; grade: string }) {
         <p className="text-3xl font-black" style={{ color: gradeColor }}>
           {grade}
         </p>
-        <p className="text-[10px] font-semibold text-[var(--text-muted)]">
+        <p className="text-xs font-semibold text-[var(--text-muted)]">
           {score}/100
         </p>
       </div>

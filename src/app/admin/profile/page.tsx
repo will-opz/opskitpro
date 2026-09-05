@@ -66,9 +66,9 @@ export default async function AdminProfilePage() {
   ];
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-20 pt-8 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-8 pt-6 sm:px-6">
       <section className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-[var(--shadow-soft)]">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--accent-color)]">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--accent-text)]">
           <CircleUserRound className="h-4 w-4" />
           {t.badge}
         </div>
@@ -83,7 +83,7 @@ export default async function AdminProfilePage() {
       <section className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-soft)]">
           <div className="flex items-center gap-3 border-b border-[var(--border-subtle)] pb-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent-color)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[var(--accent-text)]">
               {identity.provider === "cloudflare_access" ? (
                 <ShieldCheck className="h-5 w-5" />
               ) : (

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { responsibilityText } from "@/content/cloudflare-errors";
 import {
   ChevronRight,
   Info,
@@ -82,27 +83,27 @@ export default async function ErrorDetailPage({
 
   const severityConfig = {
     critical: {
-      color: "text-red-600 bg-red-100 border-red-500/20",
+      color: "text-[var(--danger-text)] bg-[var(--danger-soft)] border-red-500/20",
       icon: <ShieldAlert className="h-4 w-4" />,
-      label: "Critical",
+      label: isZh ? "严重" : "Critical",
       desc:
         isZh
           ? "影响：网站完全不可访问"
           : "Impact: Website completely inaccessible",
     },
     warning: {
-      color: "text-amber-600 bg-amber-100 border-amber-500/20",
+      color: "text-[var(--warning-text)] bg-[var(--warning-soft)] border-amber-500/20",
       icon: <AlertCircle className="h-4 w-4" />,
-      label: "Warning",
+      label: isZh ? "警告" : "Warning",
       desc:
         isZh
           ? "影响：部分请求被拦截或受限"
           : "Impact: Requests partially blocked or limited",
     },
     info: {
-      color: "text-blue-600 bg-blue-100 border-blue-500/20",
+      color: "text-[var(--info-text)] bg-[var(--info-soft)] border-blue-500/20",
       icon: <Info className="h-4 w-4" />,
-      label: "Info",
+      label: isZh ? "提示" : "Info",
       desc:
         isZh
           ? "影响：提示性信息"
@@ -189,26 +190,26 @@ export default async function ErrorDetailPage({
 
       <SiteHeader dict={dict} lang={lang} />
 
-      <main className="relative mx-auto w-full max-w-4xl flex-grow px-6 pb-24 pt-8 z-10 md:pt-12">
+      <main className="relative mx-auto w-full max-w-4xl flex-grow px-6 pb-8 pt-6 z-10 md:pt-8">
         {/* Decorative Background */}
         <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[400px] w-full max-w-[800px] -translate-x-1/2 rounded-full bg-red-500/5 blur-[120px]" />
 
         {/* Breadcrumb Navigation */}
-        <nav className="mb-8 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
+        <nav className="mb-8 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
           <Link
             href={`/${lang}/errors`}
             className="hover:text-red-500 transition-colors"
           >
-            Encyclopedia
+            {isZh ? "错误速查" : "Encyclopedia"}
           </Link>
           <ChevronRight className="h-3 w-3" />
-          <span className="text-zinc-800">Error {error.code}</span>
+          <span className="text-[var(--text-primary)]">Error {error.code}</span>
         </nav>
 
         {/* Header Section */}
-        <header className="mb-12">
+        <header className="mb-6">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-bold text-zinc-600 shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-3 py-1 text-xs font-bold text-[var(--text-secondary)] shadow-sm">
               Cloudflare Error {error.code}
             </div>
             {error.severity && (
@@ -220,14 +221,14 @@ export default async function ErrorDetailPage({
               </div>
             )}
           </div>
-          <h1 className="text-3xl font-black leading-tight tracking-tight text-zinc-900 sm:text-4xl md:text-5xl">
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[var(--text-primary)] sm:text-3xl">
             {localizedTitle}
           </h1>
-          <p className="mt-5 text-base leading-8 text-zinc-600 sm:text-lg">
+          <p className="mt-5 text-base leading-8 text-[var(--text-secondary)] sm:text-lg">
             {localizedSummary}
           </p>
           {error.severity && (
-            <p className="mt-2 text-sm font-medium text-zinc-500 flex items-center gap-2">
+            <p className="mt-2 text-sm font-medium text-[var(--text-muted)] flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-zinc-400"></span>
               {currentSeverity.desc}
             </p>
@@ -235,9 +236,9 @@ export default async function ErrorDetailPage({
         </header>
 
         {/* Info Grid */}
-        <div className="mb-12 grid gap-6 sm:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
+        <div className="mb-6 grid gap-6 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm">
+            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
               <Globe className="h-4 w-4 text-emerald-500" />
               {responsibilityLabel}
             </div>
@@ -245,12 +246,12 @@ export default async function ErrorDetailPage({
               <div
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                   error.responsibility === "Origin Server"
-                    ? "bg-orange-100 text-orange-600"
+                    ? "bg-[var(--warning-soft)] text-orange-600"
                     : error.responsibility === "Configuration"
                       ? "bg-indigo-100 text-indigo-600"
                       : error.responsibility === "Client / Network"
-                        ? "bg-rose-100 text-rose-600"
-                        : "bg-sky-100 text-sky-600"
+                        ? "bg-[var(--danger-soft)] text-[var(--danger-text)]"
+                        : "bg-[var(--info-soft)] text-[var(--info-text)]"
                 }`}
               >
                 {error.responsibility === "Origin Server" ? (
@@ -261,11 +262,11 @@ export default async function ErrorDetailPage({
                   <Globe className="h-5 w-5" />
                 )}
               </div>
-              <div className="text-lg font-bold text-zinc-800">
-                {error.responsibility}
+              <div className="text-lg font-bold text-[var(--text-primary)]">
+                {responsibilityText(error.responsibility, lang)}
               </div>
             </div>
-            <p className="mt-4 text-xs leading-5 text-zinc-500">
+            <p className="mt-4 text-xs leading-5 text-[var(--text-muted)]">
               {error.responsibility === "Origin Server"
                 ? isZh
                     ? "此错误由源站服务器引起，请优先排查源站负载与日志。"
@@ -280,8 +281,8 @@ export default async function ErrorDetailPage({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm">
-            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
+          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm">
+            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
               <Info className="h-4 w-4 text-sky-500" />
               {causeLabel}
             </div>
@@ -289,7 +290,7 @@ export default async function ErrorDetailPage({
               {localizedCauses.map((cause, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-2 text-sm text-zinc-700"
+                  className="flex items-start gap-2 text-sm text-[var(--text-secondary)]"
                 >
                   <span className="mt-1 block h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
                   <span className="leading-snug">{cause}</span>
@@ -300,12 +301,12 @@ export default async function ErrorDetailPage({
         </div>
 
         {/* Troubleshooting Section */}
-        <section className="mb-12">
-          <div className="mb-6 flex items-center gap-3 border-b border-zinc-100 pb-4">
+        <section className="mb-6">
+          <div className="mb-6 flex items-center gap-3 border-b border-[var(--border-subtle)] pb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white">
               <Wrench className="h-4 w-4" />
             </div>
-            <h2 className="text-2xl font-black tracking-tight text-zinc-900">
+            <h2 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
               {guideLabel}
             </h2>
           </div>
@@ -314,15 +315,15 @@ export default async function ErrorDetailPage({
             {error.troubleshooting.map((step, index) => (
               <div
                 key={index}
-                className="group relative rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                className="group relative rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="absolute -left-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-red-100 text-sm font-black text-red-600">
+                <div className="absolute -left-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-[var(--danger-soft)] text-sm font-semibold text-[var(--danger-text)]">
                   {index + 1}
                 </div>
-                <h3 className="mb-3 pl-2 text-lg font-bold text-zinc-900">
+                <h3 className="mb-3 pl-2 text-lg font-bold text-[var(--text-primary)]">
                   {localize(step.title, lang)}
                 </h3>
-                <p className="pl-2 text-sm leading-7 text-zinc-600">
+                <p className="pl-2 text-sm leading-7 text-[var(--text-secondary)]">
                   {localize(step.content, lang)}
                 </p>
               </div>
@@ -332,10 +333,10 @@ export default async function ErrorDetailPage({
 
         {/* Related Tools & Errors */}
         {(error.relatedTools.length > 0 || error.relatedErrors?.length > 0) && (
-          <section className="rounded-3xl bg-zinc-50 p-6 sm:p-8 space-y-8">
+          <section className="rounded-3xl bg-[var(--surface-secondary)] p-6 sm:p-8 space-y-8">
             {/* Core Diagnostics CTAs */}
             <div>
-              <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
+              <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
                 <Activity className="h-4 w-4 text-emerald-500" />
                 {isZh
                     ? "诊断工具"
@@ -345,29 +346,29 @@ export default async function ErrorDetailPage({
                 <TrackedLink
                   href={`/${lang}/tools/website-check`}
                   eventName="error_page_to_website_check"
-                  className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-white p-5 text-center shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
+                  className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-100 bg-[var(--surface-primary)] p-5 text-center shadow-sm transition-all hover:border-emerald-500 hover:shadow-md"
                 >
-                  <Globe className="h-6 w-6 text-emerald-600 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-bold text-zinc-900">
+                  <Globe className="h-6 w-6 text-[var(--accent-text)] mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-bold text-[var(--text-primary)]">
                     {isZh
                         ? "诊断你的站点"
                         : "Diagnose Your Site"}
                   </span>
-                  <span className="text-xs text-zinc-500 font-medium">
+                  <span className="text-xs text-[var(--text-muted)] font-medium">
                     Website Check
                   </span>
                 </TrackedLink>
                 <Link
                   href={`/${lang}/tools/cloudflare-trace`}
-                  className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white p-5 text-center shadow-sm transition-all hover:border-sky-500 hover:shadow-md"
+                  className="flex-1 group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-[var(--surface-primary)] p-5 text-center shadow-sm transition-all hover:border-sky-500 hover:shadow-md"
                 >
-                  <Activity className="h-6 w-6 text-sky-600 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-bold text-zinc-900">
+                  <Activity className="h-6 w-6 text-[var(--info-text)] mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-bold text-[var(--text-primary)]">
                     {isZh
                         ? "追踪边缘连接"
                         : "Check Cloudflare Trace"}
                   </span>
-                  <span className="text-xs text-zinc-500 font-medium">
+                  <span className="text-xs text-[var(--text-muted)] font-medium">
                     Cloudflare Trace
                   </span>
                 </Link>
@@ -376,7 +377,7 @@ export default async function ErrorDetailPage({
 
             {error.relatedErrors?.length > 0 && (
               <div>
-                <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-zinc-400">
+                <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
                   <BookOpen className="h-4 w-4 text-rose-500" />
                   {relatedErrorsLabel}
                 </div>
@@ -384,11 +385,11 @@ export default async function ErrorDetailPage({
                   {error.relatedErrors.map((errCode) => (
                     <Link
                       key={errCode}
-                      href={`/errors/${errCode}`}
-                      className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-rose-500 hover:text-rose-600"
+                      href={`/${lang}/errors/${errCode}`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--text-secondary)] shadow-sm transition-colors hover:border-rose-500 hover:text-[var(--danger-text)]"
                     >
                       Error {errCode}
-                      <ArrowRight className="h-4 w-4 text-zinc-400" />
+                      <ArrowRight className="h-4 w-4 text-[var(--text-muted)]" />
                     </Link>
                   ))}
                 </div>
@@ -397,7 +398,7 @@ export default async function ErrorDetailPage({
           </section>
         )}
       </main>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

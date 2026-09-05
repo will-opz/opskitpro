@@ -41,7 +41,7 @@ export default async function ToolsPage({
           <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-4xl">
             {lang === "zh" ? "常用工具" : "Tools"}
           </h1>
-          <p className="mt-3 text-sm leading-6 text-[var(--text-muted)] sm:text-base">
+          <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
             {lang === "zh"
               ? "选择工具后直接开始使用；涉及敏感数据的常用操作优先在浏览器本地完成。"
               : "Choose a tool and start immediately. Common tasks involving sensitive data run locally where practical."}
@@ -49,7 +49,7 @@ export default async function ToolsPage({
           </div>
           <Link
             href={`/${lang}/tools/docs`}
-            className="shrink-0 text-sm font-semibold text-[var(--accent-color)] hover:underline"
+            className="shrink-0 text-sm font-semibold text-[var(--accent-text)] hover:underline"
           >
             {lang === "zh" ? "数据处理说明" : "Data handling guide"} →
           </Link>

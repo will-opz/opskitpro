@@ -35,7 +35,7 @@ export default async function EncodePage({
       <SiteHeader dict={dict} lang={lang} />
       <EncodeClient dict={dict} lang={lang} />
       <ToolGuide id="encode" lang={lang} />
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

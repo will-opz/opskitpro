@@ -97,20 +97,20 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
   }, [currentBuffer]);
 
   return (
-    <div className="glass-card rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl overflow-hidden">
+    <div className="glass-card rounded-2xl border border-black/5 bg-[var(--surface-primary)] backdrop-blur-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-white/60">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--surface-primary)]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-purple-500/10 flex items-center justify-center rounded-lg">
             <Binary className="w-4 h-4 text-purple-600" />
           </div>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-700">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">
             Binary Composer
           </h3>
         </div>
 
         {/* Mode tabs */}
-        <div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-[var(--bg-tertiary)] rounded-lg p-0.5">
           {[
             { mode: "hex" as InputMode, icon: Hash, label: "Hex" },
             { mode: "base64" as InputMode, icon: Type, label: "Base64" },
@@ -120,10 +120,10 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
             <button
               key={m.mode}
               onClick={() => setMode(m.mode)}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-all ${
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition-all ${
                 mode === m.mode
-                  ? "bg-white text-purple-600 shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-600"
+                  ? "bg-[var(--surface-primary)] text-purple-600 shadow-sm"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
               }`}
             >
               <m.icon className="w-3 h-3" />
@@ -142,10 +142,10 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
               onChange={(e) => setHexInput(e.target.value)}
               placeholder="48 65 6c 6c 6f (space/dash separated hex bytes)"
               rows={3}
-              className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border-strong)] rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
               spellCheck={false}
             />
-            <p className="text-[10px] text-zinc-400 mt-1">
+            <p className="text-xs text-[var(--text-muted)] mt-1">
               Enter hex bytes separated by spaces or dashes
             </p>
           </div>
@@ -158,10 +158,10 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
               onChange={(e) => setBase64Input(e.target.value)}
               placeholder="SGVsbG8gV29ybGQ="
               rows={3}
-              className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border-strong)] rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
               spellCheck={false}
             />
-            <p className="text-[10px] text-zinc-400 mt-1">
+            <p className="text-xs text-[var(--text-muted)] mt-1">
               Enter base64 encoded data
             </p>
           </div>
@@ -174,9 +174,9 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
               onChange={(e) => setTextInput(e.target.value)}
               placeholder="Enter text to encode as UTF-8 binary"
               rows={3}
-              className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              className="w-full p-3 bg-[var(--surface-secondary)] border border-[var(--border-strong)] rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20"
             />
-            <p className="text-[10px] text-zinc-400 mt-1">
+            <p className="text-xs text-[var(--text-muted)] mt-1">
               Text will be encoded as UTF-8
             </p>
           </div>
@@ -184,7 +184,7 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
 
         {mode === "file" && (
           <div>
-            <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-zinc-200 rounded-xl cursor-pointer hover:bg-zinc-50 transition-colors">
+            <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[var(--border-strong)] rounded-xl cursor-pointer hover:bg-[var(--surface-secondary)] transition-colors">
               <input
                 type="file"
                 className="hidden"
@@ -192,15 +192,15 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
               />
               {fileName ? (
                 <div className="text-center">
-                  <div className="text-sm font-semibold text-zinc-700">
+                  <div className="text-sm font-semibold text-[var(--text-secondary)]">
                     {fileName}
                   </div>
-                  <div className="text-[10px] text-zinc-500 mt-1">
+                  <div className="text-xs text-[var(--text-muted)] mt-1">
                     {fileData ? `${fileData.byteLength} bytes` : ""}
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-zinc-400">
+                <div className="text-center text-[var(--text-muted)]">
                   <FileUp className="w-6 h-6 mx-auto mb-1" />
                   <span className="text-xs">Click to select file</span>
                 </div>
@@ -212,10 +212,10 @@ export function BinaryComposer({ status, onSend }: BinaryComposerProps) {
         {/* Preview */}
         {currentBuffer && currentBuffer.byteLength > 0 && (
           <div className="mt-3 p-3 bg-zinc-900 rounded-xl">
-            <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1">
+            <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">
               Preview ({currentBuffer.byteLength} bytes)
             </div>
-            <div className="font-mono text-[11px] text-purple-400 break-all">
+            <div className="font-mono text-xs text-purple-400 break-all">
               {previewHex}
             </div>
           </div>

@@ -11,12 +11,14 @@ import {
   ShieldCheck,
   ShieldAlert,
   Hash,
+  Fingerprint,
 } from "lucide-react";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo";
+import HomeSearch from "@/components/HomeSearch";
 import { HomePasswordGenerator } from "@/components/HomePasswordGenerator";
 import { localizeTool, productTools } from "@/lib/tool-catalog";
 
@@ -39,67 +41,32 @@ export async function generateMetadata({
 
 const homeDashboardCopy = {
   en: {
-    previewEyebrow: "Website Check includes",
-    previewTitle: "Enter a domain to begin",
-    previewStatus: "Ready",
-    previewRows: [
-      ["DNS", "Resolution and records"],
-      ["SSL", "Certificate and expiry"],
-      ["CDN", "Provider and edge signals"],
-      ["HTTP", "Status, latency and headers"],
-    ],
-    heroTags: [
-      "DNS / SSL / HTTP",
-      "Multi-point diagnostics",
-      "Local browser tools",
-      "No signup",
-    ],
-    runFullCheck: "Open full check",
-    openDnsLookup: "Open DNS Security",
-    openAllTools: "Open all tools",
-    browseLocalTools: "Browse secure tools",
-    probePrivacy:
-      "Website targets are sent to OpsKitPro probes for public-network checks. No account is required, and results are not published as public reports.",
-    privacyLink: "Privacy details",
+    title: "Website diagnostics and developer tools, in one place",
+    subtitle: "Check DNS, certificate and HTTP issues. Everyday tools run locally in your browser.",
+    previewTitle: "Check a website",
+    openAllTools: "Browse all tools",
+    probePrivacy: "Your hostname is sent to OpsKitPro probes and public DNS resolvers. Results are not published as public reports.",
+    privacyLink: "Data handling details",
     localToolsTitle: "Local security tools",
     localToolsDesc: "Sensitive input stays in this browser and is not uploaded to OpsKitPro.",
     networkToolsTitle: "Website & network diagnostics",
     networkToolsDesc: "Internet-assisted checks state what is sent and where the evidence is observed.",
     localBadge: "Local processing · Not uploaded",
     networkBadge: "Internet required · Data flow explained",
-    starterTools:
-      "Starter path: Password Generator, Hash, Sensitive Data Detector, JWT Decoder",
   },
   zh: {
-    previewEyebrow: "网站检测包含",
-    previewTitle: "输入域名后开始",
-    previewStatus: "已就绪",
-    previewRows: [
-      ["DNS", "解析与记录"],
-      ["SSL", "证书与有效期"],
-      ["CDN", "提供商与边缘线索"],
-      ["HTTP", "状态、延迟与响应头"],
-    ],
-    heroTags: [
-      "DNS / SSL / HTTP",
-      "多观察点诊断",
-      "浏览器本地工具",
-      "无需登录",
-    ],
-    runFullCheck: "打开完整检测",
-    openDnsLookup: "打开 DNS 安全检查",
-    openAllTools: "打开全部工具",
-    browseLocalTools: "浏览安全工具",
-    probePrivacy:
-      "网站目标会发送给 OpsKitPro 探针执行公开网络检测；无需登录，结果不会作为公开报告发布。",
-    privacyLink: "查看隐私说明",
+    title: "网站诊断与开发者工具，一处完成",
+    subtitle: "检测 DNS、证书和 HTTP 问题；常用工具在浏览器本地运行。",
+    previewTitle: "检测你的网站",
+    openAllTools: "浏览全部工具",
+    probePrivacy: "域名将发送给 OpsKitPro 探针和公共 DNS 解析服务；结果不会公开发布。",
+    privacyLink: "数据处理说明",
     localToolsTitle: "本地安全工具",
     localToolsDesc: "敏感输入只在当前浏览器处理，不会上传到 OpsKitPro。",
     networkToolsTitle: "网站与网络诊断",
     networkToolsDesc: "联网检测会明确说明发送内容、接收位置和证据观测点。",
     localBadge: "本地处理 · 不上传",
     networkBadge: "需要联网 · 数据流透明",
-    starterTools: "推荐起步：密码生成器、Hash、敏感信息检测、JWT 解码",
   },
 } as const;
 
@@ -110,8 +77,6 @@ export default async function Home({
 }) {
   const lang = ((await params).lang || "en") as "zh" | "en";
   const dict = await getDictionary(lang);
-  const heroBadge = dict.home.title_part1;
-  const heroSubtitle = dict.home.subtitle;
   const dashboardCopy = homeDashboardCopy[lang];
   const homeToolIcons = {
     passgen: KeyRound,
@@ -123,7 +88,7 @@ export default async function Home({
     hash: Hash,
     jwt: ShieldCheck,
     "sensitive-data": ShieldAlert,
-    uuid: KeyRound,
+    uuid: Fingerprint,
     "network-doctor": Network,
     "dns-security": ShieldCheck,
   } as const;
@@ -155,111 +120,29 @@ export default async function Home({
     <>
       <SiteHeader dict={dict} lang={lang} />
 
-      <main className="relative z-10 flex-grow px-4 pb-20 pt-8 sm:px-6 md:pb-24">
+      <main className="relative z-10 flex-grow px-4 pb-8 pt-6 sm:px-6 md:pb-24">
         <div className="pointer-events-none absolute left-1/2 top-0 z-[-1] h-[420px] w-full max-w-6xl -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
 
         <section className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_440px]">
-          <div className="ui-surface-elevated rounded-2xl p-5 text-left sm:p-7 lg:p-8">
-            <div
-              className={`ui-chip mb-5 ${"font-mono tracking-widest"}`}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {heroBadge}
-            </div>
-            <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-[var(--text-primary)] sm:text-4xl lg:text-5xl">
-              {(
-                <>
-                  {dict.home.title_part2_pre}
-                  {lang === "en" ? " " : null}
-                  <span className="mx-2 bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-text text-transparent ai-glow">
-                    {dict.home.title_part2_ai}
-                  </span>
-                  {lang === "en" ? " " : null}
-                  {dict.home.title_part2_suf}
-                </>
-              )}
+          <div className="flex flex-col justify-center rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 text-left sm:p-7 lg:p-8">
+            <p className="mb-4 text-sm font-medium text-[var(--text-secondary)]">{lang === "zh" ? "实用工具 · 无需登录" : "Practical tools · No signup"}</p>
+            <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-[var(--text-primary)] sm:text-4xl lg:text-[2.75rem]">
+              {dashboardCopy.title}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-[var(--text-secondary)] md:text-base">
-              {heroSubtitle}
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link href={`/${lang}/tools`} className="ui-button-primary min-h-11 px-5 py-3 text-sm">
-                {dashboardCopy.browseLocalTools}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href={`/${lang}/tools/website-check`} className="ui-button-ghost min-h-11 border border-[var(--border-subtle)] px-5 py-3 text-sm">
-                {dashboardCopy.runFullCheck}
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">{dashboardCopy.subtitle}</p>
+            <div className="mt-6">
+              <Link href={`/${lang}/tools`} className="ui-button-ghost min-h-11 border border-[var(--border-strong)] px-5 py-3 text-sm">
+                {dashboardCopy.openAllTools}<ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {dashboardCopy.heroTags.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-            <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">
-              {dashboardCopy.starterTools}
-            </p>
           </div>
-
-          <aside className="ui-surface rounded-2xl p-4 text-left">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                  {dashboardCopy.previewEyebrow}
-                </div>
-                <h2 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
-                  {dashboardCopy.previewTitle}
-                </h2>
-              </div>
-              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-600">
-                {dashboardCopy.previewStatus}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {dashboardCopy.previewRows.map(([label, description]) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-2.5"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500/70" />
-                    <span className="truncate text-xs font-semibold text-[var(--text-primary)]">
-                      {label}
-                    </span>
-                  </div>
-                  <span className="truncate text-right text-xs text-[var(--text-muted)]">
-                    {description}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Link
-                href={`/${lang}/tools/website-check`}
-                className="ui-button-primary px-3 py-2 text-xs"
-              >
-                {dashboardCopy.runFullCheck}
-              </Link>
-              <Link
-                href={`/${lang}/tools/dns-lookup`}
-                className="ui-button-ghost border border-[var(--border-subtle)] px-3 py-2 text-xs"
-              >
-                {dashboardCopy.openDnsLookup}
-              </Link>
-            </div>
-            <p className="mt-4 text-xs leading-5 text-[var(--text-muted)]">
+          <aside className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 text-left sm:p-6">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)]">{dashboardCopy.previewTitle}</h2>
+            <p className="mb-5 mt-2 text-sm text-[var(--text-secondary)]">DNS · SSL · CDN · HTTP</p>
+            <HomeSearch lang={lang} />
+            <p className="mt-2 text-[13px] leading-5 text-[var(--text-secondary)]">
               {dashboardCopy.probePrivacy}{" "}
-              <Link
-                href={`/${lang}/privacy`}
-                className="font-semibold text-[var(--accent-color)] hover:underline"
-              >
-                {dashboardCopy.privacyLink}
-              </Link>
+              <Link href={`/${lang}/tools/docs#website-check`} className="font-semibold text-[var(--accent-text)] underline underline-offset-4">{dashboardCopy.privacyLink}</Link>
             </p>
           </aside>
         </section>
@@ -276,7 +159,7 @@ export default async function Home({
             </div>
             <Link
               href={`/${lang}/tools`}
-              className="group hidden shrink-0 items-center gap-1 text-xs font-semibold text-[var(--accent-color)] sm:inline-flex"
+              className="group hidden shrink-0 items-center gap-1 text-xs font-semibold text-[var(--accent-text)] sm:inline-flex"
             >
               {dashboardCopy.openAllTools}
               <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" />
@@ -293,23 +176,23 @@ export default async function Home({
                   <tool.icon className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-color)]">
+                  <span className="block text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)]">
                     {tool.title}
                   </span>
                   <span className="mt-0.5 block line-clamp-1 text-xs text-[var(--text-muted)]">
                     {tool.description}
                   </span>
-                  <span className="mt-1 block text-[10px] font-semibold text-emerald-600">
+                  <span className="mt-1 block text-xs font-semibold text-[var(--accent-text)]">
                     {dashboardCopy.localBadge}
                   </span>
                 </span>
-                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--accent-color)]" />
+                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--text-faint)] transition group-hover:translate-x-0.5 group-hover:text-[var(--accent-text)]" />
               </Link>
             ))}
           </div>
           <Link
             href={`/${lang}/tools`}
-            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-color)] sm:hidden"
+            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent-text)] sm:hidden"
           >
             {dashboardCopy.openAllTools}
             <ArrowRight className="h-3 w-3" />
@@ -327,10 +210,10 @@ export default async function Home({
             {networkTools.map((tool) => (
               <Link key={tool.id} href={`/${lang}${tool.href}`} className="group flex min-h-40 flex-col rounded-2xl border border-sky-500/15 bg-sky-500/[0.03] p-5 transition hover:-translate-y-0.5 hover:border-sky-500/30">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600"><tool.icon className="h-5 w-5" /></span>
-                  <span className="rounded-full border border-sky-500/20 px-2.5 py-1 text-[10px] font-semibold text-sky-600">{dashboardCopy.networkBadge}</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-[var(--info-text)]"><tool.icon className="h-5 w-5" /></span>
+                  <span className="rounded-full border border-sky-500/20 px-2.5 py-1 text-xs font-semibold text-[var(--info-text)]">{dashboardCopy.networkBadge}</span>
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)] group-hover:text-sky-600">{tool.title}</h3>
+                <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--info-text)]">{tool.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{tool.description}</p>
               </Link>
             ))}

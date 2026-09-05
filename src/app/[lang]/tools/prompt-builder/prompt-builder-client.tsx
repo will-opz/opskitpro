@@ -27,21 +27,21 @@ const copy = {
     home: "首页",
     tools: "工具",
     badge: "AI 工程工作流",
-    title: "Prompt Builder",
+    title: "提示词构建器",
     desc: "把任务目标、边界、验证方式整理成可直接交给 AI Coding Agent 的工程 prompt。所有内容只在本地生成。",
     goal: "任务目标",
     goalPlaceholder: "例如：优化 /tools 的 AI Engineering 区块，让入口更清晰。",
     scope: "目标页面 / 模块",
     scopePlaceholder:
-      "例如：src/app/services/ServicesClient.tsx、/tools/prompt-builder",
+      "例如：产品列表页面与搜索组件",
     constraints: "必须遵守的约束",
     constraintsPlaceholder:
-      "例如：最小改动、不加依赖、先读 Obsidian、保持 public/private 边界。",
+      "例如：沿用现有组件，不增加依赖，支持手机与键盘操作。",
     avoid: "不要改什么",
     avoidPlaceholder: "例如：不要重构全站，不要改无关页面，不要提交草稿内容。",
     verification: "验证命令",
     verificationPlaceholder: "npm test\nnpx tsc --noEmit\nnpm run build",
-    notes: "需要写回 Obsidian",
+    notes: "记录验证结果",
     publicBoundary: "严格检查公开 / 私有边界",
     output: "生成的 Prompt",
     copy: "复制",
@@ -58,16 +58,16 @@ const copy = {
     goalPlaceholder: "Example: polish the AI Engineering section on /tools.",
     scope: "Target page / module",
     scopePlaceholder:
-      "Example: src/app/services/ServicesClient.tsx, /tools/prompt-builder",
+      "Example: the product list page and search component",
     constraints: "Required constraints",
     constraintsPlaceholder:
-      "Example: minimal changes, no new dependencies, read Obsidian first, preserve public/private boundaries.",
+      "Example: minimal changes, no new dependencies, support keyboard use, preserve public/private boundaries.",
     avoid: "Do not change",
     avoidPlaceholder:
       "Example: do not refactor the whole site, do not touch unrelated pages, do not publish draft content.",
     verification: "Verification commands",
     verificationPlaceholder: "npm test\nnpx tsc --noEmit\nnpm run build",
-    notes: "Write results back to Obsidian",
+    notes: "Document verification results",
     publicBoundary: "Check public/private boundaries strictly",
     output: "Generated Prompt",
     copy: "Copy",
@@ -77,14 +77,14 @@ const copy = {
 } satisfies Record<Lang, Record<string, string>>;
 
 const initialState: FormState = {
-  goal: "Build the smallest useful version of an OpsKitPro feature.",
+  goal: "Add search to an existing product list.",
   scope: "Target only the directly related page or component.",
   constraints:
     "Keep changes minimal. Do not add dependencies. Preserve existing design patterns. Run tests and build checks.",
   avoid:
     "Do not refactor unrelated pages. Do not publish private notes, drafts, credentials, or internal process details.",
   verification: "npm test\nnpx tsc --noEmit\nnpm run build",
-  notes: true,
+  notes: false,
   publicBoundary: true,
 };
 
@@ -112,34 +112,19 @@ export default function PromptBuilderClient({
   lang: Lang;
 }) {
   const t = copy[lang] || copy.zh;
-  const [form, setForm] = useState<FormState>(initialState);
+  const defaults: FormState = lang === "zh" ? { ...initialState, goal: "为现有产品列表增加搜索。", scope: "产品列表及搜索组件。", constraints: "沿用现有设计与依赖，支持手机和键盘操作。", avoid: "保留现有数据与无关功能。" } : initialState;
+  const [form, setForm] = useState<FormState>(defaults);
   const [copied, setCopied] = useState(false);
-
-  const prompt = useMemo(() => {
-    const lines = [
-      "You are Codex working inside an existing OpsKitPro Next.js project.",
-      "",
-      `Task goal:\n${form.goal.trim() || "(describe the goal)"}`,
-      "",
-      `Target scope:\n${form.scope.trim() || "(list pages, modules, or files)"}`,
-      "",
-      `Required constraints:\n${form.constraints.trim() || "Keep changes minimal and follow existing patterns."}`,
-      "",
-      `Do not change:\n${form.avoid.trim() || "Do not touch unrelated files or publish private material."}`,
-      "",
-      form.publicBoundary
-        ? "Public/private boundary:\nOnly use already-public content. Do not expose drafts, credentials, personal notes, internal paths, or unclear private material. If the boundary is uncertain, stop and explain the risk."
-        : "",
-      form.notes
-        ? "Project memory:\nRead the relevant Obsidian project notes first, write a short plan before editing, and write results, changed files, verification, risks, and rollback points back to Obsidian."
-        : "",
-      `Verification:\n${form.verification.trim() || "Run the project test and build checks."}`,
-      "",
-      "Execution rules:\nCreate the smallest safe implementation, avoid broad refactors, run verification, then summarize changed files and residual risks.",
-    ].filter(Boolean);
-
-    return lines.join("\n\n");
-  }, [form]);
+  const prompt = useMemo(() => [
+    lang === "zh" ? "请协助完成以下项目任务。" : "Help implement the following project task.",
+    `${t.goal}:\n${form.goal.trim() || t.goalPlaceholder}`,
+    `${t.scope}:\n${form.scope.trim() || t.scopePlaceholder}`,
+    `${t.constraints}:\n${form.constraints.trim()}`,
+    `${t.avoid}:\n${form.avoid.trim()}`,
+    `${t.verification}:\n${form.verification.trim()}`,
+    form.publicBoundary ? lang === "zh" ? "不要公开凭据、个人资料或未授权的私有内容。" : "Do not publish credentials, personal data or unauthorized private content." : "",
+    form.notes ? lang === "zh" ? "记录修改、验证结果和剩余限制。" : "Document changes, verification results and remaining limitations." : "",
+  ].filter(Boolean).join("\n\n"), [form, lang, t]);
 
   const update = (key: keyof FormState, value: string | boolean) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -152,7 +137,7 @@ export default function PromptBuilderClient({
   };
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
+    <main className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
       <div className="mx-auto max-w-6xl">
         <ToolPageHeader
           title={t.title}
@@ -160,7 +145,7 @@ export default function PromptBuilderClient({
           processing={lang === "zh" ? "本地处理 · 不上传" : "Local processing · Not uploaded"}
         />
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_0.95fr]">
+        <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_0.95fr]">
           <div className="op-card-soft rounded-[2rem] p-5 sm:p-6">
             <div className="grid gap-4">
               <Field
@@ -175,28 +160,30 @@ export default function PromptBuilderClient({
                 placeholder={t.scopePlaceholder}
                 onChange={(value) => update("scope", value)}
               />
+              <details className="rounded-xl border border-[var(--border-subtle)] p-3"><summary className="cursor-pointer text-sm font-semibold">{lang === "zh" ? "约束与验证" : "Constraints & verification"}</summary><div className="mt-3 grid gap-3">
               <Field
                 label={t.constraints}
                 value={form.constraints}
                 placeholder={t.constraintsPlaceholder}
-                rows={5}
+                rows={3}
                 onChange={(value) => update("constraints", value)}
               />
               <Field
                 label={t.avoid}
                 value={form.avoid}
                 placeholder={t.avoidPlaceholder}
-                rows={4}
+                rows={2}
                 onChange={(value) => update("avoid", value)}
               />
               <Field
                 label={t.verification}
                 value={form.verification}
                 placeholder={t.verificationPlaceholder}
-                rows={4}
+                rows={2}
                 onChange={(value) => update("verification", value)}
               />
 
+              </div></details>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Toggle
                   checked={form.notes}
@@ -218,15 +205,15 @@ export default function PromptBuilderClient({
                 <div className="op-icon-box h-10 w-10 rounded-xl">
                   <FileText className="h-5 w-5" />
                 </div>
-                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-700">
+                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
                   {t.output}
                 </h2>
               </div>
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <button
                   type="button"
-                  onClick={() => setForm(initialState)}
-                  className="op-action px-3 py-2 text-xs"
+                  onClick={() => setForm(defaults)}
+                  className="op-action whitespace-nowrap px-3 py-2 text-xs"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                   {t.reset}
@@ -234,10 +221,10 @@ export default function PromptBuilderClient({
                 <button
                   type="button"
                   onClick={copyPrompt}
-                  className="op-action px-3 py-2 text-xs"
+                  className="op-action whitespace-nowrap px-3 py-2 text-xs"
                 >
                   {copied ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <Check className="h-3.5 w-3.5 text-[var(--accent-text)]" />
                   ) : (
                     <Copy className="h-3.5 w-3.5" />
                   )}
@@ -245,7 +232,7 @@ export default function PromptBuilderClient({
                 </button>
               </div>
             </div>
-            <pre className="max-h-[680px] overflow-auto whitespace-pre-wrap rounded-2xl border border-zinc-100 bg-zinc-950 p-5 text-xs leading-6 text-zinc-200 shadow-inner">
+            <pre className="max-h-[680px] overflow-auto whitespace-pre-wrap rounded-2xl border border-[var(--border-subtle)] bg-zinc-950 p-5 text-xs leading-6 text-zinc-200 shadow-inner">
               {prompt}
             </pre>
           </div>
@@ -270,7 +257,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
         {label}
       </span>
       <textarea
@@ -278,7 +265,7 @@ function Field({
         placeholder={placeholder}
         rows={rows}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full resize-y rounded-2xl border border-zinc-100 bg-white px-4 py-3 text-sm leading-6 text-zinc-800 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500/40 focus:ring-4 focus:ring-emerald-500/10"
+        className="w-full resize-y rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3 text-sm leading-6 text-[var(--text-primary)] shadow-sm outline-none transition placeholder:text-[var(--text-muted)] focus:border-emerald-500/40 focus:ring-4 focus:ring-emerald-500/10"
       />
     </label>
   );
@@ -294,14 +281,14 @@ function Toggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-zinc-100 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 shadow-sm">
+    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3 text-sm font-semibold text-[var(--text-secondary)] shadow-sm">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+        className="h-4 w-4 rounded border-zinc-300 text-[var(--accent-text)] focus:ring-emerald-500"
       />
-      <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+      <ClipboardCheck className="h-4 w-4 text-[var(--accent-text)]" />
       {label}
     </label>
   );

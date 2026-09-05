@@ -35,7 +35,7 @@ export default async function PromptBuilderPage({
       <SiteHeader dict={dict} lang={lang} />
       <PromptBuilderClient dict={dict} lang={lang} />
       <ToolGuide id="prompt-builder" lang={lang} />
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

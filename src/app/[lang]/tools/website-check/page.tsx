@@ -48,14 +48,14 @@ export default async function DiagnosticPage({
         <Suspense
           fallback={
             <div className="min-h-[60vh] flex flex-col items-center justify-center px-6">
-              <div className="rounded-[2rem] border border-zinc-100 bg-white/80 px-8 py-7 shadow-sm">
+              <div className="rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] px-8 py-7 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
                   <div>
-                    <p className="text-[10px] font-semibold tracking-[0.24em] text-zinc-400">
+                    <p className="text-xs font-semibold tracking-[0.24em] text-[var(--text-muted)]">
                       {dict.tools.diagnostic_title}
                     </p>
-                    <p className="mt-1 text-sm font-medium text-zinc-700">
+                    <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
                       {dict.tools.website_check.loading}
                     </p>
                   </div>
@@ -126,7 +126,7 @@ export default async function DiagnosticPage({
         <ToolGuide id="website-check" lang={lang} />
         <RelatedTools currentTool="website-check" lang={lang} />
       </div>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

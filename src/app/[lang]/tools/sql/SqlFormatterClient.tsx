@@ -115,10 +115,10 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={t.title} description={t.subtitle} processing={t.privacy} />
 
-      <section className="mt-8 grid gap-6 xl:grid-cols-2">
+      <section className="tool-grid">
         <article className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <div className="mb-2 flex items-center justify-between gap-4">
             <p className="text-sm font-semibold text-[var(--text-primary)]">{t.inputLabel}</p>
@@ -131,7 +131,7 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           </label>
           <textarea
             id="sql-input"
-            rows={14}
+            rows={9}
             spellCheck={false}
             value={input}
             onChange={(event) => {
@@ -145,7 +145,7 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
             className="mt-3 min-h-64 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 outline-none focus:border-emerald-500/50"
           />
 
-          <p className="mt-3 text-xs text-amber-700">{t.warning}</p>
+          <p className="mt-3 text-xs text-[var(--warning-text)]">{t.warning}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <button
               type="button"
@@ -162,7 +162,7 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           </div>
 
           {error && (
-            <div className="mt-5 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-red-700">
+            <div className="mt-5 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-[var(--danger-text)]">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               {error}
             </div>
@@ -173,7 +173,7 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           <p className="text-sm font-semibold text-[var(--text-primary)]">{t.outputLabel}</p>
           <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">{t.outputInfo}</p>
           <pre
-            className="mt-3 min-h-80 max-h-[28rem] overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
+            className="mt-3 min-h-20 max-h-[28rem] overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
             data-testid="sql-output"
             aria-live="polite"
           >
@@ -183,7 +183,7 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
             type="button"
             disabled={!result}
             onClick={copyOutput}
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Clipboard className="h-4 w-4" />
             {copyState === "copied" ? t.copied : copyState === "failed" ? t.copyFailed : t.copyButton}

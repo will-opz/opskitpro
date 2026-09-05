@@ -1,4 +1,5 @@
 "use client";
+import { productTools } from "@/lib/tool-catalog";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -427,8 +428,11 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
   }, []);
 
   const allItems = useMemo(
-    () => [...defaultItems, ...customItems],
-    [customItems],
+    () => [...defaultItems.map(item => {
+      const tool = productTools.find(tool => tool.href === item.url);
+      return tool ? { ...item, url: `/${lang}${item.url}`, title: tool.title[lang], description: tool.description[lang] } : item;
+    }), ...customItems],
+    [customItems, lang],
   );
   const pinnedItems = useMemo(
     () => allItems.filter((item) => item.pinned),
@@ -495,11 +499,11 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
 
   return (
     <main className="w-full flex-grow bg-[#f9fafb] text-[#17201c] dark:bg-[#0d100f] dark:text-[var(--text-primary)]">
-      <section className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 pb-20 pt-8 sm:px-6 md:pt-10">
-        <div className="rounded-2xl border border-black/[0.045] bg-white px-5 py-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] dark:border-white/[0.07] dark:bg-[#141816] sm:px-6">
+      <section className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 pb-8 pt-6 sm:px-6 md:pt-10">
+        <div className="rounded-2xl border border-black/[0.045] bg-[var(--surface-primary)] px-5 py-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] dark:border-white/[0.07] dark:bg-[#141816] sm:px-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
-              <div className="mb-3 inline-flex items-center gap-2 text-[10px] font-semibold uppercase text-[#1a6f4e]">
+              <div className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase text-[#1a6f4e]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#1a6f4e]" />
                 {t.badge}
               </div>
@@ -544,7 +548,7 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-2 border-t border-black/[0.055] pt-4 dark:border-white/[0.07]">
+          <div className="mt-3 grid grid-cols-3 gap-2 border-t border-black/[0.055] pt-4 dark:border-white/[0.07]">
             <StatCard
               label={t.pinnedCount}
               value={pinnedItems.length}
@@ -569,12 +573,13 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
             <input
               id="tool-search"
               type="search"
+              aria-label={t.search}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t.search}
-              className="h-12 w-full rounded-xl border border-black/[0.07] bg-white pl-11 pr-16 text-[13px] font-medium text-[#25302a] shadow-[0_8px_30px_rgba(0,0,0,0.025)] outline-none placeholder:font-normal placeholder:text-[#9da59f] focus:border-[#1a6f4e]/40 focus:ring-4 focus:ring-[#1a6f4e]/[0.07] dark:border-white/[0.08] dark:bg-[#141816] dark:text-[var(--text-primary)]"
+              className="h-12 w-full rounded-xl border border-black/[0.07] bg-[var(--surface-primary)] pl-11 pr-16 text-[13px] font-medium text-[#25302a] shadow-[0_8px_30px_rgba(0,0,0,0.025)] outline-none placeholder:font-normal placeholder:text-[#9da59f] focus:border-[#1a6f4e]/40 focus:ring-4 focus:ring-[#1a6f4e]/[0.07] dark:border-white/[0.08] dark:bg-[#141816] dark:text-[var(--text-primary)]"
             />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-black/[0.06] bg-[#f5f7f6] px-2 py-1 text-[10px] font-medium text-[#8b948f] dark:border-white/[0.08] dark:bg-white/[0.04]">
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-black/[0.06] bg-[#f5f7f6] px-2 py-1 text-xs font-medium text-[#8b948f] dark:border-white/[0.08] dark:bg-white/[0.04]">
               ⌘ K
             </span>
           </label>
@@ -588,7 +593,7 @@ export default function ToolsNavigatorClient({ lang }: { lang: Lang }) {
                 className={`shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold ${
                   activeCategory === category
                     ? "border-[#1a6f4e] bg-[#1a6f4e] text-white shadow-sm"
-                    : "border-black/[0.06] bg-white text-[#68736d] hover:border-[#1a6f4e]/25 hover:bg-[#1a6f4e]/[0.035] hover:text-[#1a6f4e] dark:border-white/[0.08] dark:bg-[#141816] dark:text-[var(--text-secondary)]"
+                    : "border-black/[0.06] bg-[var(--surface-primary)] text-[#68736d] hover:border-[#1a6f4e]/25 hover:bg-[#1a6f4e]/[0.035] hover:text-[#1a6f4e] dark:border-white/[0.08] dark:bg-[#141816] dark:text-[var(--text-secondary)]"
                 }`}
               >
                 {labels[category]}
@@ -668,7 +673,7 @@ function StatCard({
           {value}
         </span>
       </div>
-      <div className="mt-1.5 whitespace-nowrap text-[8px] font-medium uppercase text-[#8a948e] sm:text-[10px]">
+      <div className="mt-1.5 whitespace-nowrap text-[8px] font-medium uppercase text-[#8a948e] sm:text-xs">
         {label}
       </div>
     </div>
@@ -699,7 +704,7 @@ function NavCard({
   const editable = authenticated && item.kind === "custom";
 
   return (
-    <article className="group relative flex min-h-[178px] flex-col justify-between overflow-hidden rounded-xl border border-black/[0.055] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] transition duration-200 hover:-translate-y-0.5 hover:border-[#1a6f4e]/20 hover:shadow-[0_16px_40px_rgba(26,111,78,0.08)] dark:border-white/[0.07] dark:bg-[#141816]">
+    <article className="group relative flex min-h-[136px] flex-col justify-between overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 transition duration-200 hover:border-[var(--accent-text)]">
       <Link
         href={item.url}
         target={external ? "_blank" : undefined}
@@ -728,13 +733,13 @@ function NavCard({
 
       <div className="mt-5 flex items-end justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-md bg-[#1a6f4e]/[0.055] px-2 py-1 text-[10px] font-medium text-[#1a6f4e]">
+          <span className="rounded-md bg-[#1a6f4e]/[0.055] px-2 py-1 text-xs font-medium text-[#1a6f4e]">
             #{labels[item.category].toLowerCase()}
           </span>
           {item.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="rounded-md bg-[#f5f7f6] px-2 py-1 text-[10px] font-medium text-[#89938d] dark:bg-white/[0.04]"
+              className="rounded-md bg-[#f5f7f6] px-2 py-1 text-xs font-medium text-[#89938d] dark:bg-white/[0.04]"
             >
               #{tag.toLowerCase()}
             </span>
@@ -742,7 +747,7 @@ function NavCard({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className="translate-y-1 text-[10px] font-medium text-[#1a6f4e] opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+          <span className="translate-y-1 text-xs font-medium text-[#1a6f4e] opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
             {openLabel} ↗
           </span>
           {editable && (
@@ -750,7 +755,7 @@ function NavCard({
               <button
                 type="button"
                 onClick={() => onEdit(item)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/[0.06] bg-white text-[#748078] hover:border-[#1a6f4e]/30 hover:text-[#1a6f4e] dark:border-white/[0.08] dark:bg-[#141816]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/[0.06] bg-[var(--surface-primary)] text-[#748078] hover:border-[#1a6f4e]/30 hover:text-[#1a6f4e] dark:border-white/[0.08] dark:bg-[#141816]"
                 aria-label={editLabel}
               >
                 <Edit3 className="h-4 w-4" />
@@ -758,7 +763,7 @@ function NavCard({
               <button
                 type="button"
                 onClick={() => onDelete(item)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/[0.06] bg-white text-[#748078] hover:border-red-500/30 hover:text-red-500 dark:border-white/[0.08] dark:bg-[#141816]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/[0.06] bg-[var(--surface-primary)] text-[#748078] hover:border-red-500/30 hover:text-red-500 dark:border-white/[0.08] dark:bg-[#141816]"
                 aria-label={deleteLabel}
               >
                 <Trash2 className="h-4 w-4" />
@@ -806,7 +811,7 @@ function EditorDialog({
     <Modal onClose={onClose}>
       <form
         onSubmit={submit}
-        className="w-full max-w-xl rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-5 shadow-2xl"
+        className="w-full max-w-xl rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-5 shadow-sm"
       >
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="text-lg font-black">{item ? t.edit : t.add}</h2>

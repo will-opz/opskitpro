@@ -224,10 +224,10 @@ export default function CronGeneratorClient({ lang }: { lang: Lang }) {
       : t.noInput;
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={t.title} description={t.subtitle} processing={t.privacy} />
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-2">
+      <section className="tool-grid">
         <article className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <p className="text-sm font-semibold text-[var(--text-primary)]">{t.presetsTitle}</p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -275,10 +275,10 @@ export default function CronGeneratorClient({ lang }: { lang: Lang }) {
           </div>
 
           <div
-            className={`mt-4 rounded-xl border p-3 text-sm ${result?.ok ? "border-emerald-500/20 bg-emerald-500/[0.05] text-emerald-700" : "border-amber-500/30 bg-amber-500/[0.06] text-amber-800"}`}
+            className={`${!result ? "hidden" : "mt-4"} rounded-xl border p-3 text-sm ${result?.ok ? "border-emerald-500/20 bg-emerald-500/[0.05] text-[var(--accent-text)]" : "border-amber-500/30 bg-amber-500/[0.06] text-[var(--warning-text)]"}`}
             aria-live="polite"
           >
-            {statusMessage}
+            {result ? statusMessage : ""}
             {result && !result.ok ? (
               <ul className="mt-2 list-disc pl-5">
                 {describeErrors(result, lang).map((error) => (
@@ -291,12 +291,12 @@ export default function CronGeneratorClient({ lang }: { lang: Lang }) {
 
         <article className="ui-surface rounded-2xl p-4 sm:p-6">
           <p className="text-sm font-semibold text-[var(--text-primary)]">{t.parsedTitle}</p>
-          {result && result.ok ? renderParsed(result, t) : <p className="mt-2 text-sm text-[var(--text-muted)]">{t.noInput}</p>}
+          {result && result.ok ? renderParsed(result, t) : null}
 
           <p className="mt-5 text-sm font-semibold text-[var(--text-primary)]">{t.explanationTitle}</p>
           <pre
             data-testid="cron-explain-output"
-            className="mt-2 min-h-44 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
+            className="mt-2 min-h-20 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
             aria-live="polite"
           >
             {explainText || t.noInput}
@@ -307,7 +307,7 @@ export default function CronGeneratorClient({ lang }: { lang: Lang }) {
               type="button"
               onClick={copyExplain}
               disabled={!explainText}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {copyState === "copied" ? <ClipboardCheck className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
               {copyState === "copied" ? t.copied : copyState === "failed" ? t.copyFailed : t.copyButton}

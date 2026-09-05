@@ -1,271 +1,54 @@
+import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ToolGuide } from "@/components/ToolGuide";
+import { CodeBlock } from "@/components/CodeBlock";
 import { getDictionary } from "@/dictionaries";
 import { buildPageMetadata } from "@/lib/seo";
-import type { Metadata } from "next";
-import Link from "next/link";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ lang: string }>;
-}): Promise<Metadata> {
-  const lang = ((await params).lang || "en") as "zh" | "en";
-
-  const title = "Public JSON API for DNS, IP and HTTP Checks";
-  const description =
-    "Use OpsKitPro Public JSON API to run DNS lookup, IP lookup, and HTTP checks from curl, scripts, and automation workflows.";
-
-  return buildPageMetadata(title, description, lang, "/tools/api");
+type Props = { params: Promise<{ lang: string }> };
+export async function generateMetadata({ params }: Props) {
+  const lang = (await params).lang === "zh" ? "zh" : "en";
+  return buildPageMetadata(lang === "zh" ? "公开 JSON API：DNS、IP 与 HTTP 检测" : "Public JSON API for DNS, IP and HTTP Checks", lang === "zh" ? "使用 curl 或脚本调用诊断工具，查看参数、响应和使用限制。" : "Diagnostic tools for curl and scripts. Parameters, responses and limits.", lang, "/tools/api");
 }
 
-export default async function ApiDocsPage({
-  params,
-}: {
-  params: Promise<{ lang: string }>;
-}) {
-  const lang = ((await params).lang || "en") as "zh" | "en";
+export default async function ApiDocsPage({ params }: Props) {
+  const lang = (await params).lang === "zh" ? "zh" : "en";
+  const zh = lang === "zh";
   const dict = await getDictionary(lang);
-
-  return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA]">
-      <SiteHeader dict={dict} lang={lang} />
-
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 mt-16">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 prose prose-slate max-w-none prose-headings:font-semibold prose-a:text-emerald-600">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl mb-4">
-            OpsKitPro Public JSON API (v0)
-          </h1>
-          <p className="text-lg text-slate-600 mb-8">
-            The OpsKitPro Public JSON API provides programmatic access to our
-            core diagnostic tools. Integrate DNS lookups, IP intel, and HTTP
-            checks directly into your CI/CD pipelines, shell scripts, or AI
-            Agent workflows.
-          </p>
-
-          <div className="not-prose mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-            <p className="font-semibold text-emerald-900">
-              {lang === "zh" ? "让 AI 直接调用网站检测" : "Let AI agents call Website Check"}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-emerald-800">
-              {lang === "zh"
-                ? "OpsKitPro 现在提供只读远程 MCP 服务，返回观察点、证据、限制和下一步建议。"
-                : "OpsKitPro now provides a read-only remote MCP server with explicit observation points, evidence, limitations and next actions."}
-            </p>
-            <Link
-              href={`/${lang}/mcp`}
-              className="mt-3 inline-flex text-sm font-semibold text-emerald-800 hover:text-emerald-950"
-            >
-              {lang === "zh" ? "查看 MCP 接入说明 →" : "View MCP setup →"}
-            </Link>
-          </div>
-
-          <hr className="border-slate-100 my-8" />
-
-          <h2>1. Overview</h2>
-          <p>
-            All API endpoints return standard JSON responses and are optimized
-            for <code>curl</code> and automation scripts. The current v0 API
-            includes three core endpoints:
-          </p>
-          <ul>
-            <li>
-              <code>/api/tools/dns-lookup</code>
-            </li>
-            <li>
-              <code>/api/tools/ip-lookup</code>
-            </li>
-            <li>
-              <code>/api/tools/http-check</code>
-            </li>
-          </ul>
-
-          <h2>2. Authentication</h2>
-          <p>
-            <strong>Not required for v0.</strong> The API is completely public
-            and open for use without any API keys or registration.
-          </p>
-
-          <h2>3. Rate Limits</h2>
-          <p>
-            To prevent abuse while keeping lightweight automation usable,
-            public endpoints use tiered per-IP limits based on probe cost:
-          </p>
-          <ul>
-            <li>
-              <strong>Low-cost lookups:</strong>{" "}
-              <code>/api/tools/dns-lookup</code> and{" "}
-              <code>/api/tools/ip-lookup</code> allow{" "}
-              <strong>60 requests per minute</strong>.
-            </li>
-            <li>
-              <strong>Medium-cost checks:</strong>{" "}
-              <code>/api/tools/http-check</code> and <code>/api/trace</code>{" "}
-              allow <strong>15 requests per minute</strong>.
-            </li>
-            <li>
-              <strong>Full diagnostics:</strong> <code>/api/diagnostic</code>{" "}
-              allows <strong>3 requests per minute</strong>.
-            </li>
-          </ul>
-          <p>
-            Rate-limited responses return <code>429 Too Many Requests</code>{" "}
-            with <code>X-RateLimit-Limit</code>,{" "}
-            <code>X-RateLimit-Remaining</code>,{" "}
-            <code>X-RateLimit-Reset</code>, and <code>Retry-After</code>{" "}
-            headers.
-          </p>
-
-          <h2>4. Common Response Format</h2>
-          <p>
-            Every successful API response follows this standard JSON envelope:
-          </p>
-          <pre className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-            <code className="text-sm text-slate-800">
-              {`{
-  "ok": true,
-  "tool": "dns-lookup",
-  "input": { ... },
-  "result": { ... },
-  "meta": {
-    "durationMs": 142,
-    "timestamp": "2026-06-23T00:00:00.000Z"
-  }
-}`}
-            </code>
-          </pre>
-
-          <h2>5. Error Format</h2>
-          <p>
-            If a request fails (e.g., validation error, rate limit, or security
-            block), the response will include an <code>error</code> object:
-          </p>
-          <pre className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-            <code className="text-sm text-slate-800">
-              {`{
-  "ok": false,
-  "tool": "http-check",
-  "input": { ... },
-  "error": {
-    "code": "SSRF_BLOCKED",
-    "message": "Security Exception: Private IP addresses are not allowed."
-  },
-  "meta": { ... }
-}`}
-            </code>
-          </pre>
-
-          <hr className="border-slate-100 my-10" />
-
-          <h2>6. DNS Lookup API</h2>
-          <p>Fetch DNS records (A, AAAA, MX, TXT, CNAME, NS) for any domain.</p>
-          <ul>
-            <li>
-              <strong>Endpoint:</strong>{" "}
-              <code>GET https://opskitpro.com/api/tools/dns-lookup</code>
-            </li>
-            <li>
-              <strong>Parameters:</strong> <code>domain</code> (required),{" "}
-              <code>type</code> (optional, defaults to all)
-            </li>
-          </ul>
-          <pre className="bg-slate-800 rounded-lg p-4 mb-4 overflow-x-auto">
-            <code className="text-sm text-emerald-400">
-              curl -s
-              "https://opskitpro.com/api/tools/dns-lookup?domain=example.com" |
-              jq
-            </code>
-          </pre>
-
-          <h2>7. IP Lookup API</h2>
-          <p>
-            Retrieve geolocation, ASN, and network provider context for any IPv4
-            or IPv6 address.
-          </p>
-          <ul>
-            <li>
-              <strong>Endpoint:</strong>{" "}
-              <code>GET https://opskitpro.com/api/tools/ip-lookup</code>
-            </li>
-            <li>
-              <strong>Parameters:</strong> <code>ip</code> (optional, defaults
-              to requester's IP)
-            </li>
-          </ul>
-          <pre className="bg-slate-800 rounded-lg p-4 mb-4 overflow-x-auto">
-            <code className="text-sm text-emerald-400">
-              curl -s "https://opskitpro.com/api/tools/ip-lookup?ip=8.8.8.8" |
-              jq
-            </code>
-          </pre>
-
-          <h2>8. HTTP Check API</h2>
-          <p>
-            Perform an HTTP GET request to check status codes, headers, and
-            redirect chains.
-          </p>
-          <ul>
-            <li>
-              <strong>Endpoint:</strong>{" "}
-              <code>GET https://opskitpro.com/api/tools/http-check</code>
-            </li>
-            <li>
-              <strong>Parameters:</strong> <code>url</code> (required, must
-              start with http:// or https://)
-            </li>
-          </ul>
-          <pre className="bg-slate-800 rounded-lg p-4 mb-4 overflow-x-auto">
-            <code className="text-sm text-emerald-400">
-              curl -s
-              "https://opskitpro.com/api/tools/http-check?url=https://example.com"
-              | jq
-            </code>
-          </pre>
-
-          <hr className="border-slate-100 my-10" />
-
-          <h2>9. Security Restrictions (SSRF Protection)</h2>
-          <p>
-            The OpsKitPro backend is heavily fortified against Server-Side
-            Request Forgery (SSRF) and DNS Rebinding attacks. The following
-            restrictions apply to tools that make outbound network requests
-            (like HTTP Check):
-          </p>
-          <ul>
-            <li>
-              Requests to private subnets (<code>10.x.x.x</code>,{" "}
-              <code>192.168.x.x</code>, etc.) are blocked.
-            </li>
-            <li>
-              Requests to loopback/link-local addresses (<code>127.0.0.1</code>,{" "}
-              <code>localhost</code>, <code>169.254.x.x</code>) are blocked.
-            </li>
-            <li>
-              Unusual ports are restricted; only <code>80</code>,{" "}
-              <code>443</code>, <code>8080</code>, and <code>8443</code> are
-              allowed.
-            </li>
-            <li>
-              The HTTP Check API will manually follow redirects up to 5 times.
-              It explicitly runs SSRF validation checks on the target of{" "}
-              <strong>every</strong> redirect hop.
-            </li>
-          </ul>
-
-          <h2>10. CORS Policy</h2>
-          <p>
-            The Public JSON API v0 is meant for public, read-only consumption.
-            It currently responds with{" "}
-            <code>Access-Control-Allow-Origin: *</code>. You can safely fetch
-            these endpoints directly from client-side JavaScript in browsers.
-          </p>
-        </div>
-      </main>
-
-      <ToolGuide id="api" lang={lang} />
-
-      <SiteFooter dict={dict} />
-    </div>
-  );
+  const endpoints = [
+    { id: "dns", title: zh ? "DNS 查询" : "DNS Lookup", path: "dns-lookup", params: zh ? "domain 必填；type 可选，默认 all。查询 A、AAAA、MX、TXT、CNAME、NS 等记录。" : "domain is required; type is optional and defaults to all. Query A, AAAA, MX, TXT, CNAME, NS and other records.", query: "domain=example.com" },
+    { id: "ip", title: zh ? "IP 查询" : "IP Lookup", path: "ip-lookup", params: zh ? "ip 可选，默认请求者 IP。支持 IPv4 / IPv6，返回地区、ASN 和网络服务商信息。" : "ip is optional and defaults to the requester's IP. Supports IPv4 / IPv6 and returns location, ASN and provider context.", query: "ip=8.8.8.8" },
+    { id: "http", title: zh ? "HTTP 检测" : "HTTP Check", path: "http-check", params: zh ? "url 必填，以 http:// 或 https:// 开头。通过 GET 检查状态码、响应头和重定向链。" : "url is required and must begin with http:// or https://. Sends GET to inspect status, headers and redirects.", query: "url=https://example.com" },
+  ];
+  return <><SiteHeader dict={dict} lang={lang} />
+    <main className="tool-page max-w-4xl space-y-6">
+      <header><h1 className="text-2xl font-semibold sm:text-3xl">{zh ? "公开 JSON API" : "Public JSON API"} <span className="text-base text-[var(--text-muted)]">v0</span></h1>
+        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{zh ? "从终端、脚本或自动化流程调用 DNS、IP 和 HTTP 检测。无需注册或 API 密钥。" : "Call DNS, IP and HTTP checks from your terminal, scripts or automation. No registration or API key required."}</p>
+        <Link href={`/${lang}/mcp`} className="mt-3 inline-block text-sm font-semibold text-[var(--accent-text)]">{zh ? "AI 客户端：查看 MCP 接入 →" : "AI clients: MCP setup →"}</Link>
+      </header>
+      <nav aria-label={zh ? "API 目录" : "API contents"} className="flex flex-wrap gap-2">
+        {[...endpoints, {id:"limits",title:zh?"限流":"Rate limits"},{id:"responses",title:zh?"响应与错误":"Responses & errors"},{id:"security",title:zh?"安全与 CORS":"Security & CORS"}].map(e=><a className="ui-button-secondary" href={`#${e.id}`} key={e.id}>{e.title}</a>)}
+      </nav>
+      {endpoints.map(e=><section key={e.id} id={e.id} className="scroll-mt-24 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5">
+        <h2 className="text-xl font-semibold">{e.title}</h2><p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{e.params}</p>
+        <CodeBlock lang={lang}>{`curl -s "https://opskitpro.com/api/tools/${e.path}?${e.query}" | jq`}</CodeBlock>
+      </section>)}
+      <section id="limits" className="scroll-mt-24 space-y-3"><h2 className="text-xl font-semibold">{zh ? "限流" : "Rate limits"}</h2>
+        <p className="text-sm text-[var(--text-secondary)]">{zh ? "按请求 IP 和查询成本分级，每分钟：DNS/IP 60 次，HTTP/Trace 15 次，完整网站诊断 3 次。" : "Tiered per-IP limits per minute: DNS/IP 60 requests; HTTP/Trace 15; full Website Check 3."}</p>
+        <p className="text-sm leading-6 break-words">{zh ? "超限返回 429 Too Many Requests。请读取以下响应头后重试：" : "A rate limit returns 429 Too Many Requests. Read these headers before retrying:"} <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, <code>X-RateLimit-Reset</code>, <code>Retry-After</code>.</p>
+      </section>
+      <section id="responses" className="scroll-mt-24"><h2 className="text-xl font-semibold">{zh ? "响应与错误" : "Responses & errors"}</h2>
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">{zh ? "以下为简化结构示例，字段值并非实时数据。失败时返回 error.code 和 error.message。" : "Simplified examples below are not live results. Failures return error.code and error.message."}</p>
+        <CodeBlock lang={lang}>{JSON.stringify({ok:true,tool:"dns-lookup",input:{domain:"example.com",type:"all"},result:{},meta:{durationMs:142,timestamp:"2026-06-23T00:00:00.000Z"}},null,2)}</CodeBlock>
+        <CodeBlock lang={lang}>{JSON.stringify({ok:false,tool:"http-check",input:{},error:{code:"SSRF_BLOCKED",message:"Private IP addresses are not allowed."},meta:{}},null,2)}</CodeBlock>
+      </section>
+      <section id="security" className="scroll-mt-24"><h2 className="text-xl font-semibold">{zh ? "安全与 CORS" : "Security & CORS"}</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-[var(--text-secondary)]">
+          <li>{zh ? "外部探测禁止私网、环回和链路本地地址，并防范 DNS 重绑定。" : "Outbound probes reject private, loopback and link-local addresses and guard against DNS rebinding."}</li>
+          <li>{zh ? "HTTP 检测仅允许端口 80、443、8080、8443；最多跟随 5 次重定向，每次重新验证目标。" : "HTTP checks allow ports 80, 443, 8080 and 8443, follow up to 5 redirects and validate every target."}</li>
+          <li>{zh ? "公开 API 返回 Access-Control-Allow-Origin: *，可从浏览器调用。请求目标由 OpsKitPro 服务处理，结果不代表你的浏览器网络观测。" : "Public APIs return Access-Control-Allow-Origin: * for browser clients. Targets are processed by OpsKitPro; results are not observations of your browser's network."}</li>
+        </ul>
+      </section>
+    </main><ToolGuide id="api" lang={lang} /><SiteFooter dict={dict} lang={lang} /></>;
 }

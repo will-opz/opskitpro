@@ -22,15 +22,9 @@ export function SiteFooter({ dict, lang }: { dict: any; lang?: "zh" | "en" }) {
           </span>
         </div>
 
-        <div className="ui-surface flex cursor-help items-center gap-3 rounded-full px-4 py-2 hover:border-emerald-500/30">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 duration-1000"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <span className="ui-muted text-[11px] font-medium tracking-[0.14em]">
-            {dict.footer.all_systems_operational}
-          </span>
-        </div>
+        <nav aria-label={lang === "zh" ? "更多页面" : "More pages"} className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)]">
+          {[["about", lang === "zh" ? "关于" : "About"], ["nav", lang === "zh" ? "我的导航" : "My navigation"], ["errors", lang === "zh" ? "错误速查" : "Error reference"], ["mcp", "MCP"]].map(([path, label]) => <Link key={path} href={`/${lang ?? "en"}/${path}`} className="hover:underline">{label}</Link>)}
+        </nav>
       </div>
     </footer>
   );

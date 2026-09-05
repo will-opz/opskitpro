@@ -95,25 +95,25 @@ export function RelatedTools({ currentTool, lang }: RelatedToolsProps) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-12 border-t border-zinc-100 mt-12">
-      <h2 className="text-lg font-black text-zinc-900 mb-6">{sectionTitle}</h2>
+    <div className="mx-auto w-full max-w-5xl px-6 py-5 border-t border-[var(--border-subtle)] mt-4">
+      <h2 className="text-base font-semibold text-[var(--text-primary)] mb-3">{sectionTitle}</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {relatedTools.map((tool) => (
           <Link
             key={tool.id}
             href={resolveLocalizedHref(lang, tool.href)}
-            className={`group relative flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:shadow-md ${colorStyles[tool.color].hoverBorder}`}
+            className={`group relative flex items-start gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 transition-all ${colorStyles[tool.color].hoverBorder}`}
           >
             <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl ${colorStyles[tool.color].bg}`}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)]"
             >
               {tool.icon}
             </div>
             <div>
-              <h3 className="font-bold text-zinc-900 group-hover:text-zinc-900">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
                 {tool.title}
               </h3>
-              <p className="mt-1 text-xs text-zinc-500 leading-relaxed">
+              <p className="mt-1 text-sm text-[var(--text-secondary)] leading-relaxed">
                 {tool.desc}
               </p>
             </div>

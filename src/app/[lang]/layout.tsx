@@ -10,16 +10,7 @@ import {
 import "../globals.css";
 import { buildSiteJsonLd, serializeJsonLd } from "@/lib/structured-data";
 
-const themeInitScript = `
-(function() {
-  try {
-    var stored = localStorage.getItem('opskit-theme');
-    var theme = stored === 'dark' ? 'dark' : 'light';
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.dataset.theme = theme;
-  } catch (_) {}
-})();
-`;
+import { themeInitScript } from "@/lib/theme-init";
 
 async function resolveLocale(params: Promise<{ lang: string }>) {
   const { lang } = await params;

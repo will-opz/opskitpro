@@ -40,7 +40,7 @@ export default async function JSONToolPage({
           fallback={
             <div className="min-h-[60vh] flex flex-col items-center justify-center font-sans">
               <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
-              <p className="text-zinc-400 tracking-[0.24em] text-[10px]">
+              <p className="text-[var(--text-muted)] tracking-[0.24em] text-xs">
                 {false
                   ? "JSON を読み込み中..."
                   : lang === "zh"
@@ -56,7 +56,7 @@ export default async function JSONToolPage({
         </Suspense>
         <ToolGuide id="json" lang={lang} />
       </div>
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

@@ -118,7 +118,7 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
   };
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-zinc-700 sm:px-6 md:pt-12">
+    <main className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
       <div className="mx-auto max-w-5xl">
         <ToolPageHeader
           title={t.title}
@@ -130,11 +130,11 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
           {t.now}
         </button>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="op-card rounded-[1.5rem] p-5">
             <label
               htmlFor="time-input"
-              className="mb-3 block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500"
+              className="mb-3 block text-xs font-bold uppercase tracking-[0.24em] text-[var(--text-muted)]"
             >
               {t.input}
             </label>
@@ -143,11 +143,11 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder={t.placeholder}
-              className="h-12 w-full rounded-2xl border border-zinc-200 bg-white px-4 font-mono text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10"
+              className="h-12 w-full rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 font-mono text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10"
             />
 
             {!parsedDate && input.trim() && (
-              <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+              <p className="mt-3 rounded-xl border border-red-100 bg-[var(--danger-soft)] px-3 py-2 text-sm text-[var(--danger-text)]">
                 {t.invalid}
               </p>
             )}
@@ -178,8 +178,8 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
 
           <aside className="op-card rounded-[1.5rem] p-5">
             <div className="mb-4 flex items-center gap-2">
-              <TimerReset className="h-4 w-4 text-emerald-600" />
-              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-700">
+              <TimerReset className="h-4 w-4 text-[var(--accent-text)]" />
+              <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
                 {t.timezone}
               </h2>
             </div>
@@ -189,20 +189,20 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
                   key={row.value}
                   type="button"
                   onClick={() => copyValue(row.label, row.valueText)}
-                  className="group flex w-full items-center justify-between gap-3 rounded-xl border border-zinc-100 bg-zinc-50/70 px-3 py-2.5 text-left transition hover:border-emerald-500/20 hover:bg-emerald-50"
+                  className="group flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-2.5 text-left transition hover:border-emerald-500/20 hover:bg-[var(--accent-soft)]"
                 >
                   <span className="min-w-0">
-                    <span className="block text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                    <span className="block text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                       {row.label}
                     </span>
-                    <span className="mt-1 block truncate font-mono text-sm text-zinc-900">
+                    <span className="mt-1 block truncate font-mono text-sm text-[var(--text-primary)]">
                       {row.valueText}
                     </span>
                   </span>
                   {copied === row.label ? (
-                    <Check className="h-4 w-4 text-emerald-600" />
+                    <Check className="h-4 w-4 text-[var(--accent-text)]" />
                   ) : (
-                    <Copy className="h-4 w-4 shrink-0 text-zinc-300 transition group-hover:text-emerald-600" />
+                    <Copy className="h-4 w-4 shrink-0 text-[var(--text-faint)] transition group-hover:text-[var(--accent-text)]" />
                   )}
                 </button>
               ))}
@@ -228,25 +228,25 @@ function OutputCard({
   onCopy: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
+    <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+        <div className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
           {label}
         </div>
         <button
           type="button"
           onClick={onCopy}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-zinc-500 transition hover:bg-white hover:text-emerald-700"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-[var(--text-muted)] transition hover:bg-[var(--surface-primary)] hover:text-[var(--accent-text)]"
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-emerald-600" />
+            <Check className="h-3.5 w-3.5 text-[var(--accent-text)]" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}
           {copyLabel}
         </button>
       </div>
-      <div className="break-all font-mono text-sm leading-6 text-zinc-900">
+      <div className="break-all font-mono text-sm leading-6 text-[var(--text-primary)]">
         {value}
       </div>
     </div>

@@ -130,14 +130,14 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
   const isConnected = status === "connected";
 
   return (
-    <div className="glass-card rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl overflow-hidden">
+    <div className="glass-card rounded-2xl border border-black/5 bg-[var(--surface-primary)] backdrop-blur-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-white/60">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--surface-primary)]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-amber-500/10 flex items-center justify-center rounded-lg">
-            <Activity className="w-4 h-4 text-amber-600" />
+            <Activity className="w-4 h-4 text-[var(--warning-text)]" />
           </div>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-700">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">
             Ping Monitor
           </h3>
         </div>
@@ -145,7 +145,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
         <div className="flex items-center gap-3">
           {/* Interval setting */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-500">Every</span>
+            <span className="text-xs text-[var(--text-muted)]">Every</span>
             <input
               type="number"
               value={interval}
@@ -153,11 +153,11 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
                 setIntervalValue(Math.max(1, parseInt(e.target.value) || 5))
               }
               disabled={isRunning}
-              className="w-12 px-2 py-1 text-xs font-mono bg-white border border-zinc-200 rounded focus:outline-none focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
+              className="w-12 px-2 py-1 text-xs font-mono bg-[var(--surface-primary)] border border-[var(--border-strong)] rounded focus:outline-none focus:ring-1 focus:ring-amber-400 disabled:opacity-50"
               min={1}
               max={60}
             />
-            <span className="text-[10px] text-zinc-500">sec</span>
+            <span className="text-xs text-[var(--text-muted)]">sec</span>
           </div>
 
           {/* Control buttons */}
@@ -165,7 +165,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
             <button
               onClick={startPinging}
               disabled={!isConnected}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[11px] font-bold hover:bg-amber-600 transition-all disabled:opacity-30"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition-all disabled:opacity-30"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               Start
@@ -173,7 +173,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
           ) : (
             <button
               onClick={stopPinging}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-lg text-[11px] font-bold hover:bg-red-600 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition-all"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               Stop
@@ -184,7 +184,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
           <button
             onClick={sendPing}
             disabled={!isConnected || isRunning}
-            className="p-1.5 text-zinc-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-30"
+            className="p-1.5 text-[var(--text-muted)] hover:text-[var(--warning-text)] hover:bg-[var(--warning-soft)] rounded-lg transition-all disabled:opacity-30"
             title="Send single ping"
           >
             <Zap className="w-4 h-4" />
@@ -194,33 +194,33 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
 
       {/* Stats Grid */}
       <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-zinc-50 rounded-xl p-3 text-center">
-          <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1">
+        <div className="bg-[var(--surface-secondary)] rounded-xl p-3 text-center">
+          <div className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">
             Sent
           </div>
-          <div className="text-xl font-black text-zinc-700">{stats.sent}</div>
+          <div className="text-xl font-black text-[var(--text-secondary)]">{stats.sent}</div>
         </div>
-        <div className="bg-emerald-50 rounded-xl p-3 text-center">
-          <div className="text-[9px] text-emerald-600 uppercase tracking-wider mb-1">
+        <div className="bg-[var(--accent-soft)] rounded-xl p-3 text-center">
+          <div className="text-xs text-[var(--accent-text)] uppercase tracking-wider mb-1">
             Received
           </div>
-          <div className="text-xl font-black text-emerald-600">
+          <div className="text-xl font-black text-[var(--accent-text)]">
             {stats.received}
           </div>
         </div>
-        <div className="bg-red-50 rounded-xl p-3 text-center">
-          <div className="text-[9px] text-red-600 uppercase tracking-wider mb-1">
+        <div className="bg-[var(--danger-soft)] rounded-xl p-3 text-center">
+          <div className="text-xs text-[var(--danger-text)] uppercase tracking-wider mb-1">
             Timeouts
           </div>
-          <div className="text-xl font-black text-red-600">
+          <div className="text-xl font-black text-[var(--danger-text)]">
             {stats.timeouts}
           </div>
         </div>
-        <div className="bg-amber-50 rounded-xl p-3 text-center">
-          <div className="text-[9px] text-amber-600 uppercase tracking-wider mb-1">
+        <div className="bg-[var(--warning-soft)] rounded-xl p-3 text-center">
+          <div className="text-xs text-[var(--warning-text)] uppercase tracking-wider mb-1">
             Avg Latency
           </div>
-          <div className="text-xl font-black text-amber-600">
+          <div className="text-xl font-black text-[var(--warning-text)]">
             {stats.avgLatency || "--"}ms
           </div>
         </div>
@@ -229,7 +229,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
       {/* Latency chart (simple bar visualization) */}
       {pingHistory.length > 0 && (
         <div className="px-4 pb-4">
-          <div className="flex items-end gap-0.5 h-16 bg-zinc-50 rounded-xl p-2">
+          <div className="flex items-end gap-0.5 h-16 bg-[var(--surface-secondary)] rounded-xl p-2">
             {pingHistory.slice(-50).map((ping) => {
               const height = ping.timeout
                 ? 100
@@ -258,7 +258,7 @@ export function PingMonitor({ status, onSendPing }: PingMonitorProps) {
               );
             })}
           </div>
-          <div className="flex justify-between text-[9px] text-zinc-400 mt-1 px-1">
+          <div className="flex justify-between text-xs text-[var(--text-muted)] mt-1 px-1">
             <span>
               Min: {stats.minLatency === Infinity ? "--" : stats.minLatency}ms
             </span>

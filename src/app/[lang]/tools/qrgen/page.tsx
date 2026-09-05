@@ -36,7 +36,7 @@ export default async function QRPage({
       <SiteHeader dict={dict} lang={lang} />
       <QRClient dict={dict} lang={lang} />
       <ToolGuide id="qrgen" lang={lang} />
-      <SiteFooter dict={dict} />
+      <SiteFooter dict={dict} lang={lang} />
     </>
   );
 }

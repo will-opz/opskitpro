@@ -24,7 +24,7 @@ const errors: CloudflareError[] = [
   {
     code: "520",
     title: {
-      zh: "Web server is returning an unknown error",
+      zh: "源站返回未知错误",
       en: "Web server is returning an unknown error",
     },
     summary: {
@@ -69,7 +69,7 @@ const errors: CloudflareError[] = [
   {
     code: "521",
     title: {
-      zh: "Web server is down",
+      zh: "源站无法连接",
       en: "Web server is down",
     },
     summary: {
@@ -115,7 +115,7 @@ const errors: CloudflareError[] = [
   {
     code: "522",
     title: {
-      zh: "Connection timed out",
+      zh: "连接超时",
       en: "Connection timed out",
     },
     summary: {
@@ -161,7 +161,7 @@ const errors: CloudflareError[] = [
   {
     code: "523",
     title: {
-      zh: "Origin is unreachable",
+      zh: "无法到达源站",
       en: "Origin is unreachable",
     },
     summary: {
@@ -195,7 +195,7 @@ const errors: CloudflareError[] = [
   {
     code: "524",
     title: {
-      zh: "A timeout occurred",
+      zh: "源站响应超时",
       en: "A timeout occurred",
     },
     summary: {
@@ -231,7 +231,7 @@ const errors: CloudflareError[] = [
   {
     code: "525",
     title: {
-      zh: "SSL handshake failed",
+      zh: "SSL 握手失败",
       en: "SSL handshake failed",
     },
     summary: {
@@ -270,7 +270,7 @@ const errors: CloudflareError[] = [
   {
     code: "526",
     title: {
-      zh: "Invalid SSL certificate",
+      zh: "无效的 SSL 证书",
       en: "Invalid SSL certificate",
     },
     summary: {
@@ -311,7 +311,7 @@ const errors: CloudflareError[] = [
   {
     code: "1006",
     title: {
-      zh: "Access Denied",
+      zh: "访问被拒绝",
       en: "Access Denied",
     },
     summary: {
@@ -350,7 +350,7 @@ const errors: CloudflareError[] = [
   {
     code: "1015",
     title: {
-      zh: "You are being rate limited",
+      zh: "请求受到限流",
       en: "You are being rate limited",
     },
     summary: {
@@ -384,7 +384,7 @@ const errors: CloudflareError[] = [
   {
     code: "1020",
     title: {
-      zh: "Access Denied (WAF Violation)",
+      zh: "访问被安全规则拒绝",
       en: "Access Denied (WAF Violation)",
     },
     summary: {
@@ -432,4 +432,8 @@ export function getCloudflareError(code: string) {
 
 export function localize<T>(value: Record<Lang, T>, lang: Lang): T {
   return value[lang] ?? value.zh;
+}
+
+export function responsibilityText(value: ErrorResponsibility, lang: Lang) {
+  return lang === "zh" ? ({ "Cloudflare Edge": "Cloudflare 边缘节点", "Origin Server": "源站", "Configuration": "配置", "Client / Network": "客户端 / 网络" }[value]) : value;
 }

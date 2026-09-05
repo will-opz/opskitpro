@@ -1,85 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, ArrowRight, Zap, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { parseWebsiteTarget } from "@/lib/diagnostic-target";
 
-export default function HomeSearch({
-  dict,
-  lang,
-  compact = false,
-}: {
-  dict: any;
-  lang: "zh" | "en";
-  compact?: boolean;
-}) {
+export default function HomeSearch({ lang }: { lang: "zh" | "en" }) {
   const [query, setQuery] = useState("");
+  const [error, setError] = useState(false);
   const router = useRouter();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-    router.push(
-      `/${lang}/tools/website-check?q=${encodeURIComponent(query.trim())}`,
-    );
-  };
-
-  const quickChecks = [
-    { name: dict.home.features.dns, icon: Zap },
-    { name: dict.home.features.ssl, icon: ShieldCheck },
-    { name: dict.home.features.cdn, icon: Globe },
-  ];
-
+  const id = useId();
+  const zh = lang === "zh";
   return (
-    <div
-      className={`${compact ? "w-full" : "mx-auto mb-10 w-full max-w-3xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 md:mb-12"}`}
-    >
-      <form onSubmit={handleSearch} className="relative group">
-        <div className="absolute inset-0 rounded-xl bg-emerald-500/10 blur-2xl opacity-0 transition-opacity duration-500 group-focus-within:opacity-100 group-hover:opacity-100"></div>
-        <div
-          className={`ui-surface-elevated relative flex flex-col gap-2 overflow-hidden ${compact ? "rounded-xl p-1.5" : "rounded-2xl p-2"} sm:flex-row sm:items-center`}
-        >
-          <div className="flex min-w-0 flex-1 items-center">
-            <div
-              className={`${compact ? "h-10 w-10" : "h-12 w-12"} flex shrink-0 items-center justify-center text-[var(--text-muted)]`}
-            >
-              <Globe
-                className={`${compact ? "h-4 w-4" : "h-5 w-5"} group-focus-within:text-[var(--accent-color)]`}
-              />
-            </div>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={dict.home.diagnostics_placeholder}
-              className={`${compact ? "min-h-10 text-sm" : "min-h-12"} min-w-0 flex-grow border-none bg-transparent px-2 font-sans text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)]`}
-            />
-          </div>
-          <button
-            type="submit"
-            className={`ui-button-primary shrink-0 ${compact ? "min-h-10 rounded-lg px-4 text-xs" : "min-h-12"}`}
-          >
-            {dict.home.diagnostics_btn}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </form>
-      {!compact && (
-        <>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            {quickChecks.map((item) => (
-              <div key={item.name} className="ui-chip select-none">
-                <item.icon className="w-3 h-3" />
-                <span>{item.name}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="ui-faint mt-6 text-[10px] tracking-[0.2em]">
-            {dict.home.trust_footer}
-          </div>
-        </>
-      )}
-    </div>
+    <form onSubmit={(event) => {
+      event.preventDefault();
+      const target = parseWebsiteTarget(query);
+      if (!target) { setError(true); return; }
+      router.push(`/${lang}/tools/website-check?q=${encodeURIComponent(target)}`);
+    }}>
+      <label htmlFor={id} className="block text-sm font-semibold text-[var(--text-primary)]">
+        {zh ? "域名或 URL" : "Domain or URL"}
+      </label>
+      <input id={id} type="text" required value={query}
+        onChange={(event) => { setQuery(event.target.value); setError(false); }}
+        placeholder="example.com" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+        aria-invalid={error || undefined}
+        aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
+        className="mt-2 min-h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--bg-secondary)] px-3 text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)]" />
+      {error && <p id={`${id}-error`} role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
+        {zh ? "请输入有效域名或 HTTP(S) URL，例如 example.com。" : "Enter a valid domain or HTTP(S) URL, such as example.com."}
+      </p>}
+      <button type="submit" className="ui-button-primary mt-3 min-h-12 w-full">
+        {zh ? "开始检测" : "Start check"}<ArrowRight aria-hidden="true" className="h-4 w-4" />
+      </button>
+      <p id={`${id}-hint`} className="mt-3 text-[13px] leading-5 text-[var(--text-secondary)]">
+        {zh ? "仅检测域名；URL 路径、参数和登录信息不会传递。" : "Only the hostname is checked. URL paths, query parameters and credentials are not passed on."}
+      </p>
+    </form>
   );
 }

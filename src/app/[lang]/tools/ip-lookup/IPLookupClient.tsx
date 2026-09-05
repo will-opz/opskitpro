@@ -223,17 +223,17 @@ function StatCard({
   icon: ReactNode;
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-zinc-100 bg-white/80 p-4 shadow-sm">
+    <div className="rounded-[1.75rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+        <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
           {label}
         </p>
-        <span className="text-zinc-300">{icon}</span>
+        <span className="text-[var(--text-faint)]">{icon}</span>
       </div>
-      <p className="mt-3 text-base font-semibold text-zinc-900 break-words">
+      <p className="mt-3 text-base font-semibold text-[var(--text-primary)] break-words">
         {value}
       </p>
-      {note ? <p className="mt-1 text-[11px] text-zinc-500">{note}</p> : null}
+      {note ? <p className="mt-1 text-xs text-[var(--text-muted)]">{note}</p> : null}
     </div>
   );
 }
@@ -345,51 +345,53 @@ export default function IPLookupClient({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 pb-24 font-sans">
-      <div className="fixed inset-0 -z-10 bg-[#fafafa]" />
+    <div className="max-w-6xl mx-auto px-4 pt-6 pb-8 sm:px-6 md:pt-8 font-sans">
+      <div className="fixed inset-0 -z-10 bg-[var(--bg-primary)]" />
       <div className="fixed top-0 left-1/2 -translate-x-1/2 h-[540px] w-[960px] rounded-full bg-emerald-500/5 blur-[140px] -z-10" />
 
       <div className="text-center lg:text-left">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-4 py-1.5 text-[11px] font-semibold tracking-[0.18em] text-emerald-700">
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-[var(--accent-soft)] px-4 py-1.5 text-xs font-semibold tracking-[0.18em] text-[var(--accent-text)]">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           {copy.badge}
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-5 justify-center lg:justify-start">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tighter text-zinc-900 leading-none">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tighter text-[var(--text-primary)] leading-none">
             {copy.title}
           </h1>
           <Link
             href={`/${lang}/tools/api`}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-[var(--accent-text)] hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0"
           >
             <Terminal className="w-3.5 h-3.5" />
-            JSON API Available
+            JSON API
           </Link>
         </div>
-        <p className="mt-4 max-w-3xl text-sm sm:text-base leading-7 text-zinc-500 mx-auto lg:mx-0">
+        <p className="mt-4 max-w-3xl text-sm sm:text-base leading-7 text-[var(--text-muted)] mx-auto lg:mx-0">
           {copy.subtitle}
         </p>
       </div>
 
       <form
         onSubmit={handleSearch}
-        className="mt-10 rounded-[2rem] border border-zinc-100 bg-white/90 p-3 shadow-sm backdrop-blur"
+        className="mt-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3 shadow-sm backdrop-blur"
       >
+        <label htmlFor="lookup-ip" className="mb-2 block text-sm font-semibold">{lang === "zh" ? "IP 地址（留空查询当前 IP）" : "IP address (leave blank for your IP)"}</label>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
+              id="lookup-ip"
               type="text"
               value={inputIp}
               onChange={(event) => setInputIp(event.target.value)}
               placeholder={labels.ip_placeholder || "Enter IP address"}
-              className="h-14 w-full rounded-[1.25rem] border border-zinc-100 bg-zinc-50/80 pl-11 pr-4 text-[15px] text-zinc-900 outline-none transition focus:border-emerald-300 focus:bg-white"
+              className="h-14 w-full rounded-[1.25rem] border border-[var(--border-subtle)] bg-[var(--surface-secondary)] pl-11 pr-4 text-[15px] text-[var(--text-primary)] outline-none transition focus:border-emerald-300 focus:bg-[var(--surface-primary)]"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex h-14 items-center justify-center gap-2 rounded-[1.25rem] bg-emerald-500 px-6 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+            className="ui-button-primary h-12"
           >
             {loading ? (
               <Activity className="h-4 w-4 animate-spin" />
@@ -399,7 +401,7 @@ export default function IPLookupClient({
             {labels.ip_btn || "Search"}
           </button>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-zinc-400">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
           <span>{copy.helper}</span>
           <span className="hidden sm:inline">·</span>
           <span>
@@ -414,11 +416,11 @@ export default function IPLookupClient({
 
       {(error || notice) && (
         <div
-          className={`mt-6 rounded-[1.75rem] border px-5 py-4 shadow-sm ${error ? "border-amber-200 bg-amber-50 text-amber-900" : "border-zinc-200 bg-white/80 text-zinc-600"}`}
+          className={`mt-6 rounded-[1.75rem] border px-5 py-4 shadow-sm ${error ? "border-amber-200 bg-[var(--warning-soft)] text-[var(--warning-text)]" : "border-[var(--border-strong)] bg-[var(--surface-primary)] text-[var(--text-secondary)]"}`}
         >
           <div className="flex items-start gap-3">
             <AlertCircle
-              className={`mt-0.5 h-5 w-5 shrink-0 ${error ? "text-amber-600" : "text-zinc-400"}`}
+              className={`mt-0.5 h-5 w-5 shrink-0 ${error ? "text-[var(--warning-text)]" : "text-[var(--text-muted)]"}`}
             />
             <div className="min-w-0">
               <div className="text-sm font-semibold">
@@ -434,53 +436,53 @@ export default function IPLookupClient({
 
       {loading && !data ? (
         <div className="mt-8 space-y-6 animate-pulse">
-          <div className="rounded-[2rem] border border-zinc-100 bg-white/80 p-6 shadow-sm">
+          <div className="rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="h-6 w-20 rounded-full bg-zinc-100" />
-              <div className="h-6 w-28 rounded-full bg-zinc-100" />
-              <div className="h-6 w-36 rounded-full bg-zinc-100" />
+              <div className="h-6 w-20 rounded-full bg-[var(--bg-tertiary)]" />
+              <div className="h-6 w-28 rounded-full bg-[var(--bg-tertiary)]" />
+              <div className="h-6 w-36 rounded-full bg-[var(--bg-tertiary)]" />
             </div>
-            <div className="mt-6 h-12 w-72 rounded-2xl bg-zinc-100" />
-            <div className="mt-4 h-5 w-full max-w-2xl rounded bg-zinc-100" />
+            <div className="mt-6 h-12 w-72 rounded-2xl bg-[var(--bg-tertiary)]" />
+            <div className="mt-4 h-5 w-full max-w-2xl rounded bg-[var(--bg-tertiary)]" />
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="h-24 rounded-[1.75rem] bg-zinc-50" />
-              <div className="h-24 rounded-[1.75rem] bg-zinc-50" />
-              <div className="h-24 rounded-[1.75rem] bg-zinc-50" />
-              <div className="h-24 rounded-[1.75rem] bg-zinc-50" />
+              <div className="h-24 rounded-[1.75rem] bg-[var(--surface-secondary)]" />
+              <div className="h-24 rounded-[1.75rem] bg-[var(--surface-secondary)]" />
+              <div className="h-24 rounded-[1.75rem] bg-[var(--surface-secondary)]" />
+              <div className="h-24 rounded-[1.75rem] bg-[var(--surface-secondary)]" />
             </div>
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
-            <div className="h-56 rounded-[2rem] border border-zinc-100 bg-white/70" />
-            <div className="h-56 rounded-[2rem] border border-zinc-100 bg-white/70" />
-            <div className="h-56 rounded-[2rem] border border-zinc-100 bg-white/70" />
+            <div className="h-56 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)]" />
+            <div className="h-56 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)]" />
+            <div className="h-56 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)]" />
           </div>
         </div>
       ) : data ? (
         <div className="mt-8 space-y-6">
-          <section className="rounded-[2rem] border border-emerald-100 bg-white/90 p-6 sm:p-8 shadow-sm">
+          <section className="rounded-[2rem] border border-emerald-100 bg-[var(--surface-primary)] p-6 sm:p-8 shadow-sm">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-emerald-700"
+                    className="inline-flex items-center rounded-full border border-emerald-200 bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold tracking-[0.16em] text-[var(--accent-text)]"
                   >
                     {copy.lookupComplete}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-sky-700">
+                  <span className="inline-flex items-center rounded-full border border-sky-200 bg-[var(--info-soft)] px-3 py-1 text-xs font-semibold tracking-[0.16em] text-[var(--info-text)]">
                     {copy.countryLevel}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-zinc-500">
+                  <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-secondary)] px-3 py-1 text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {toSourceLabel(data._source, copy)}
                   </span>
-                  <span className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-zinc-500">
+                  <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-3 py-1 text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {data.provider}
                   </span>
                 </div>
 
-                <h2 className="mt-4 break-words text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tighter text-zinc-900">
+                <h2 className="mt-4 break-words text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tighter text-[var(--text-primary)]">
                   {data.ip}
                 </h2>
-                <p className="mt-3 max-w-3xl text-sm sm:text-base leading-7 text-zinc-500">
+                <p className="mt-3 max-w-3xl text-sm sm:text-base leading-7 text-[var(--text-muted)]">
                   {data.country_name !== "Unknown"
                     ? `${data.country_name}${data.city !== "Unknown" ? ` · ${data.city}` : ""}${data.region !== "Unknown" ? ` · ${data.region}` : ""}`
                     : copy.fallbackDesc}
@@ -491,7 +493,7 @@ export default function IPLookupClient({
                 <button
                   type="button"
                   onClick={() => void copyText(data.ip, "ip")}
-                  className="inline-flex h-11 items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                  className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 text-sm font-semibold text-[var(--text-secondary)] transition hover:border-emerald-200 hover:text-[var(--accent-text)]"
                 >
                   {copied === "ip" ? (
                     <Check className="h-4 w-4 text-emerald-500" />
@@ -510,7 +512,7 @@ export default function IPLookupClient({
                       "geo",
                     )
                   }
-                  className="inline-flex h-11 items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                  className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 text-sm font-semibold text-[var(--text-secondary)] transition hover:border-emerald-200 hover:text-[var(--accent-text)]"
                 >
                   {copied === "geo" ? (
                     <Check className="h-4 w-4 text-emerald-500" />
@@ -565,13 +567,13 @@ export default function IPLookupClient({
           </section>
 
           <div className="grid min-w-0 gap-6 lg:grid-cols-2">
-            <section className="min-w-0 rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
+            <section className="min-w-0 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                  <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                     {copy.summary}
                   </p>
-                  <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
+                  <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--text-primary)]">
                     <Fingerprint className="h-5 w-5 text-emerald-500" />
                     {copy.networkAttribution}
                   </h3>
@@ -579,71 +581,71 @@ export default function IPLookupClient({
               </div>
 
               <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="min-w-0 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
-                  <dt className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                <div className="min-w-0 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4">
+                  <dt className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {labels.asn || "ASN"}
                   </dt>
-                  <dd className="mt-2 break-words text-sm font-semibold text-zinc-900">
+                  <dd className="mt-2 break-words text-sm font-semibold text-[var(--text-primary)]">
                     {String(data.asn || "—")}
                   </dd>
                 </div>
-                <div className="min-w-0 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
-                  <dt className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                <div className="min-w-0 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4">
+                  <dt className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {copy.organization}
                   </dt>
-                  <dd className="mt-2 break-words text-sm font-semibold text-zinc-900">
+                  <dd className="mt-2 break-words text-sm font-semibold text-[var(--text-primary)]">
                     {data.org || data.isp || copy.unknown}
                   </dd>
                 </div>
-                <div className="min-w-0 rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 sm:col-span-2">
-                  <dt className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                <div className="min-w-0 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4 sm:col-span-2">
+                  <dt className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {copy.organizationDomain}
                   </dt>
-                  <dd className="mt-2 break-all text-sm font-semibold text-zinc-900">
+                  <dd className="mt-2 break-all text-sm font-semibold text-[var(--text-primary)]">
                     {data.as_domain || "—"}
                   </dd>
                 </div>
               </dl>
             </section>
 
-            <section className="min-w-0 rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
+            <section className="min-w-0 rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm">
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                   {copy.insights}
                 </p>
-                <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
+                <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--text-primary)]">
                   <Globe className="h-5 w-5 text-emerald-500" />
                   {copy.dataCoverage}
                 </h3>
               </div>
 
               <div className="mt-6 space-y-4">
-                <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
-                  <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4">
+                  <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {copy.includedData}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-700">
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                     {copy.includedDataDesc}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
-                  <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4">
+                  <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {copy.excludedData}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-700">
+                  <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                     {copy.excludedDataDesc}
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4">
-                  <p className="text-[10px] font-semibold tracking-[0.16em] text-zinc-400">
+                <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-4">
+                  <p className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {copy.source}
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-zinc-900">
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">
                     {data.provider}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
                     {toSourceLabel(data._source, copy)}
                   </p>
                   {data._source === "ipinfo-lite" ? (
@@ -651,13 +653,13 @@ export default function IPLookupClient({
                       href="https://ipinfo.io"
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-2 inline-flex text-xs font-medium text-emerald-700 underline decoration-emerald-200 underline-offset-4"
+                      className="mt-2 inline-flex text-xs font-medium text-[var(--accent-text)] underline decoration-emerald-200 underline-offset-4"
                     >
                       IP address data powered by IPinfo
                     </a>
                   ) : null}
                   {data.data_notice ? (
-                    <p className="mt-2 text-xs leading-5 text-zinc-500">
+                    <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
                       {lang === "zh"
                         ? "免费数据仅覆盖国家级位置和 ASN；不包含城市、坐标、时区、网络类型或代理状态。"
                         : data.data_notice}
@@ -669,13 +671,13 @@ export default function IPLookupClient({
 
           </div>
 
-          <section className="min-w-0 overflow-hidden rounded-[2rem] border border-zinc-100 bg-white/90 p-6 shadow-sm">
+          <section className="min-w-0 overflow-hidden rounded-[2rem] border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-6 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-zinc-400">
+                <p className="text-xs font-semibold tracking-[0.18em] text-[var(--text-muted)]">
                   {copy.rawJson}
                 </p>
-                <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900">
+                <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--text-primary)]">
                   <Copy className="h-5 w-5 text-emerald-500" />
                   {labels.ip_json_toggle || "JSON"}
                 </h3>
@@ -685,7 +687,7 @@ export default function IPLookupClient({
                 onClick={() => setShowJson((value) => !value)}
                 aria-expanded={showJson}
                 aria-controls="ip-lookup-raw-json"
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-emerald-200 hover:text-emerald-700"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 text-sm font-semibold text-[var(--text-secondary)] transition hover:border-emerald-200 hover:text-[var(--accent-text)]"
               >
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${showJson ? "rotate-180" : ""}`}
@@ -694,7 +696,7 @@ export default function IPLookupClient({
               </button>
             </div>
 
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-muted)]">
               {copy.rawJsonDesc}
             </p>
 
@@ -702,10 +704,10 @@ export default function IPLookupClient({
               <div
                 id="ip-lookup-raw-json"
                 data-testid="ip-lookup-raw-json"
-                className="mt-6 min-w-0 max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-100 bg-zinc-950 p-4 text-[11px] leading-6 text-zinc-300"
+                className="mt-6 min-w-0 max-w-full overflow-hidden rounded-[1.5rem] border border-[var(--border-subtle)] bg-zinc-950 p-4 text-xs leading-6 text-[var(--text-faint)]"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="text-[10px] font-semibold tracking-[0.16em] text-zinc-500">
+                  <span className="text-xs font-semibold tracking-[0.16em] text-[var(--text-muted)]">
                     {labels.copy_json || "Copy JSON"}
                   </span>
                   <button
@@ -713,7 +715,7 @@ export default function IPLookupClient({
                     onClick={() =>
                       void copyText(JSON.stringify(data, null, 2), "json")
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/10"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10"
                   >
                     {copied === "json" ? (
                       <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -731,12 +733,12 @@ export default function IPLookupClient({
           </section>
         </div>
       ) : (
-        <div className="mt-8 rounded-[2rem] border border-dashed border-zinc-200 bg-white/70 p-10 text-center shadow-sm">
+        <div className="mt-8 rounded-[2rem] border border-dashed border-[var(--border-strong)] bg-[var(--surface-primary)] p-10 text-center shadow-sm">
           <Globe className="mx-auto h-14 w-14 text-emerald-300" />
-          <h3 className="mt-5 text-2xl font-semibold tracking-tight text-zinc-900">
+          <h3 className="mt-5 text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
             {copy.emptyTitle}
           </h3>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-zinc-500">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">
             {copy.emptyDesc}
           </p>
         </div>

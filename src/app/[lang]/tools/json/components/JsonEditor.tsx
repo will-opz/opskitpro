@@ -34,7 +34,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Tab") {
+      if (e.key === "Tab" && !e.shiftKey && e.altKey) {
         e.preventDefault();
         const ta = textareaRef.current;
         if (!ta) return;
@@ -60,8 +60,8 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
       <div className="relative flex">
         <div
           ref={lineNumberRef}
-          className="hidden sm:flex flex-col items-end px-3 py-6 bg-zinc-50/50 border-r border-zinc-100 text-[11px] font-mono text-zinc-300 select-none overflow-hidden leading-relaxed shrink-0 min-w-[3rem]"
-          style={{ height: value ? undefined : "400px" }}
+          className="hidden sm:flex flex-col items-end px-3 py-6 bg-[var(--surface-secondary)] border-r border-[var(--border-subtle)] text-xs font-mono text-[var(--text-faint)] select-none overflow-hidden leading-relaxed shrink-0 min-w-[3rem]"
+          aria-hidden="true"
         >
           {Array.from({ length: lineCount }, (_, i) => (
             <div key={i} className="leading-relaxed">
@@ -71,13 +71,14 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
         </div>
         <textarea
           ref={textareaRef}
+          aria-labelledby="json-input-title"
           value={value}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           onScroll={handleScroll}
           placeholder={placeholder}
           spellCheck={false}
-          className="w-full min-h-[300px] sm:min-h-[400px] p-6 bg-transparent text-zinc-900 font-mono text-[13px] leading-relaxed focus:outline-none resize-y placeholder:text-zinc-300 selection:bg-emerald-100"
+          className="w-full min-h-[240px] sm:min-h-[320px] p-4 bg-transparent text-[var(--text-primary)] font-mono text-[13px] leading-relaxed focus:outline-none resize-y placeholder:text-[var(--text-faint)] selection:bg-[var(--accent-soft)]"
           style={{ tabSize: 2 }}
         />
       </div>

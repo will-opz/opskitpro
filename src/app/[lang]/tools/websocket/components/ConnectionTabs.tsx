@@ -63,7 +63,7 @@ export function ConnectionTabs({
       case "error":
         return <AlertCircle className="w-3 h-3 text-red-500" />;
       default:
-        return <WifiOff className="w-3 h-3 text-zinc-400" />;
+        return <WifiOff className="w-3 h-3 text-[var(--text-muted)]" />;
     }
   };
 
@@ -85,15 +85,15 @@ export function ConnectionTabs({
   };
 
   return (
-    <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl overflow-x-auto">
+    <div className="flex items-center gap-1 bg-[var(--bg-tertiary)] p-1 rounded-xl overflow-x-auto">
       {tabs.map((tab) => (
         <div
           key={tab.id}
           onClick={() => onSelectTab(tab.id)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all border-b-2 ${
             activeTabId === tab.id
-              ? `bg-white shadow-sm ${getStatusColor(tab.status, true)}`
-              : "hover:bg-white/50 border-transparent"
+              ? `bg-[var(--surface-primary)] shadow-sm ${getStatusColor(tab.status, true)}`
+              : "hover:bg-[var(--surface-primary)] border-transparent"
           }`}
         >
           {getStatusIcon(tab.status)}
@@ -108,14 +108,14 @@ export function ConnectionTabs({
                 if (e.key === "Escape") setEditingId(null);
               }}
               onBlur={() => confirmEdit(tab.id)}
-              className="w-24 px-1 py-0.5 text-xs bg-zinc-50 border border-zinc-200 rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
+              className="w-24 px-1 py-0.5 text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <span
               className={`text-xs font-medium truncate max-w-[100px] ${
-                activeTabId === tab.id ? "text-zinc-800" : "text-zinc-500"
+                activeTabId === tab.id ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"
               }`}
             >
               {displayName(tab.name)}
@@ -125,7 +125,7 @@ export function ConnectionTabs({
           {/* Message count badge */}
           {tab.logs.filter((l) => l.type === "sent" || l.type === "received")
             .length > 0 && (
-            <span className="px-1.5 py-0.5 bg-zinc-200 rounded-full text-[9px] font-bold text-zinc-500">
+            <span className="px-1.5 py-0.5 bg-zinc-200 rounded-full text-xs font-bold text-[var(--text-muted)]">
               {
                 tab.logs.filter(
                   (l) => l.type === "sent" || l.type === "received",
@@ -139,7 +139,7 @@ export function ConnectionTabs({
             {editingId !== tab.id && (
               <button
                 onClick={(e) => startEdit(tab, e)}
-                className="p-0.5 text-zinc-300 hover:text-zinc-600 opacity-0 group-hover:opacity-100 transition-all"
+                className="p-0.5 text-[var(--text-faint)] hover:text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-all"
                 aria-label={renameLabel}
                 title={renameLabel}
               >
@@ -153,7 +153,7 @@ export function ConnectionTabs({
                   e.stopPropagation();
                   onRemoveTab(tab.id);
                 }}
-                className="p-0.5 text-zinc-300 hover:text-red-500 transition-colors"
+                className="p-0.5 text-[var(--text-faint)] hover:text-red-500 transition-colors"
                 aria-label={closeLabel}
                 title={closeLabel}
               >
@@ -168,7 +168,7 @@ export function ConnectionTabs({
       {canAddTab && (
         <button
           onClick={onAddTab}
-          className="p-2 text-zinc-400 hover:text-cyan-600 hover:bg-white rounded-lg transition-all"
+          className="p-2 text-[var(--text-muted)] hover:text-cyan-600 hover:bg-[var(--surface-primary)] rounded-lg transition-all"
           aria-label={addLabel}
           title={addLabel}
         >

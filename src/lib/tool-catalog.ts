@@ -295,7 +295,7 @@ export const productTools: ProductTool[] = [
     networkPath: "none",
     inputType: { en: "JWT token text", zh: "JWT 文本" },
     title: { en: "JWT Decoder & Verifier", zh: "JWT 解码与校验" },
-    description: { en: "Decode JWT header and payload in-browser, then verify local signatures with supported algorithms.", zh: "在本地解码 JWT 的 header/payload，并校验支持的签名算法。" },
+    description: { en: "Decode JWT header/payload and verify supported signatures locally.", zh: "在本地解码 JWT 的 header/payload，并校验支持的签名算法。" },
     observationPoints: ["browser"],
   },
   {
@@ -308,8 +308,8 @@ export const productTools: ProductTool[] = [
     inputType: { en: "UUID generation and validation parameters", zh: "UUID 生成与校验参数" },
     title: { en: "UUID Generator & Validator", zh: "UUID 生成与校验" },
     description: {
-      en: "Generate UUID locally (v1/v4/v5), validate UUID formats, and copy results locally.",
-      zh: "本地生成 UUID（v1/v4/v5）、验证 UUID 格式，并支持本地复制结果。",
+      en: "Generate UUID v1/v4/v5, validate their format and copy results locally.",
+      zh: "本地生成 UUID v1/v4/v5、校验格式并复制结果。",
     },
     observationPoints: ["browser"],
   },
@@ -323,8 +323,8 @@ export const productTools: ProductTool[] = [
     inputType: { en: "Text or log samples", zh: "文本/日志样本" },
     title: { en: "Sensitive Data Detector", zh: "敏感信息检测与脱敏" },
     description: {
-      en: "Detect emails, IPs, explicit credentials, tokens, and common secret-like patterns locally, then redact for safe sharing.",
-      zh: "在本地检测邮箱、IP、显式密码凭据和密钥/Token，并一键生成脱敏文本。",
+      en: "Detect and redact emails, IPs, credentials and secret-like text locally.",
+      zh: "在本地检测邮箱、IP、密码凭据和密钥，并生成脱敏文本。",
     },
     observationPoints: ["browser"],
   },

@@ -28,13 +28,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
     },
   }[lang];
 
-  const isActive = (path: string) => {
-    const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)/, "") || "/";
-    return (
-      normalizedPathname === path ||
-      (path !== "/" && normalizedPathname.startsWith(path + "/"))
-    );
-  };
+  const normalizedPathname = pathname.replace(/^\/(zh|en|ja|tw)(?=\/|$)/, "") || "/";
 
   const navItems = [
     {
@@ -46,12 +40,17 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
     { href: "/tools/passgen", label: copy.password, icon: KeyRound },
   ];
 
+  const activeHref = navItems
+    .filter(({ href }) => normalizedPathname === href || normalizedPathname.startsWith(href + "/"))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const isActive = (path: string) => path === activeHref;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--border-subtle)] bg-[var(--bg-primary)] backdrop-blur-2xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         <Link
           href={localizedHref("/")}
-          className="group relative z-50 flex items-center gap-3 no-underline outline-none"
+          className="group relative z-50 flex shrink-0 items-center gap-2 no-underline outline-none sm:gap-3"
         >
           <div className="relative transition-transform duration-500 group-hover:-rotate-6">
             <Image
@@ -59,10 +58,10 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
               alt="OpsKitPro logo"
               width={44}
               height={44}
-              className="rounded-xl border border-[var(--border-subtle)] bg-zinc-950 shadow-[0_0_18px_rgba(16,185,129,0.28)]"
+              className="h-9 w-9 rounded-xl border border-[var(--border-subtle)] bg-zinc-950 shadow-[0_0_18px_rgba(16,185,129,0.28)] sm:h-11 sm:w-11"
             />
           </div>
-          <span className="text-lg font-semibold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent-color)] sm:text-xl">
+          <span className="text-base font-semibold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent-color)] sm:text-xl">
             OpsKit<span className="text-emerald-500">Pro_</span>
           </span>
           <div className="ui-surface hidden items-center gap-2 rounded-full px-3 py-1.5 lg:flex">
@@ -80,6 +79,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
               <Link
                 key={item.href}
                 href={localizedHref(item.href)}
+                aria-current={normalizedPathname === item.href ? "page" : undefined}
                 className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 hover:-translate-y-0.5 ${
                   isActive(item.href)
                     ? "bg-[var(--accent-soft)] font-semibold text-[var(--text-primary)]"
@@ -133,6 +133,7 @@ export function SiteHeader({ dict, lang }: { dict: any; lang: Locale }) {
                     <Link
                       key={item.href}
                       href={localizedHref(item.href)}
+                      aria-current={normalizedPathname === item.href ? "page" : undefined}
                       onClick={() => setIsMenuOpen(false)}
                       className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] ${
                         isActive(item.href) ? "bg-[var(--accent-soft)] text-[var(--accent-color)]" : ""

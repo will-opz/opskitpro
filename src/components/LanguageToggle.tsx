@@ -48,10 +48,10 @@ export function LanguageToggle({ currentLang }: { currentLang: ActiveLocale }) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-1.5 hover:bg-[var(--surface-elevated)] focus:outline-none"
+        className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-1.5 hover:bg-[var(--surface-elevated)]"
       >
         <Globe className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-        <span className="text-xs font-semibold text-[var(--text-primary)]">
+        <span className="whitespace-nowrap text-xs font-semibold text-[var(--text-primary)]">
           {langNames[currentLang as keyof typeof langNames] || "Language"}
         </span>
         <ChevronDown

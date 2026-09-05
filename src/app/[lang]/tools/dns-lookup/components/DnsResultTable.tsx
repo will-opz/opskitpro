@@ -36,10 +36,10 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
 
   if (loading) {
     return (
-      <div className="glass-card p-8 rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl">
+      <div className="glass-card p-8 rounded-2xl border border-black/5 bg-[var(--surface-primary)] backdrop-blur-xl">
         <div className="flex flex-col items-center justify-center py-12">
           <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4" />
-          <p className="text-sm text-zinc-500">Querying DNS servers...</p>
+          <p className="text-sm text-[var(--text-muted)]">Querying DNS servers...</p>
         </div>
       </div>
     );
@@ -51,13 +51,13 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
   const hasAnswers = result.answers && result.answers.length > 0;
 
   return (
-    <div className="glass-card rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl overflow-hidden">
+    <div className="glass-card rounded-2xl border border-black/5 bg-[var(--surface-primary)] backdrop-blur-xl overflow-hidden">
       {/* Header */}
       <div
         className={`px-6 py-4 border-b flex items-center justify-between ${
           isError
-            ? "bg-red-50 border-red-100"
-            : "bg-emerald-50 border-emerald-100"
+            ? "bg-[var(--danger-soft)] border-red-100"
+            : "bg-[var(--accent-soft)] border-emerald-100"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -68,20 +68,20 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
           )}
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-zinc-800">
+              <span className="font-semibold text-[var(--text-primary)]">
                 {result.domain}
               </span>
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                className={`px-2 py-0.5 rounded text-xs font-bold ${
                   isError
-                    ? "bg-red-100 text-red-700"
-                    : "bg-emerald-100 text-emerald-700"
+                    ? "bg-[var(--danger-soft)] text-[var(--danger-text)]"
+                    : "bg-[var(--accent-soft)] text-[var(--accent-text)]"
                 }`}
               >
                 {result.status}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-[11px] text-zinc-500 mt-1">
+            <div className="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-1">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {result.responseTime}ms
@@ -101,12 +101,12 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
           {hasAnswers && (
             <button
               onClick={copyAllAnswers}
-              className="flex items-center gap-1 px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium hover:bg-zinc-50 transition-all"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[var(--surface-primary)] border border-[var(--border-strong)] rounded-lg text-xs font-medium hover:bg-[var(--surface-secondary)] transition-all"
             >
               {copiedField === "all" ? (
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
               ) : (
-                <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                <Copy className="w-3.5 h-3.5 text-[var(--text-muted)]" />
               )}
               Copy All
             </button>
@@ -115,8 +115,8 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
             onClick={() => setShowRaw(!showRaw)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               showRaw
-                ? "bg-amber-100 text-amber-700"
-                : "bg-white border border-zinc-200 hover:bg-zinc-50"
+                ? "bg-[var(--warning-soft)] text-[var(--warning-text)]"
+                : "bg-[var(--surface-primary)] border border-[var(--border-strong)] hover:bg-[var(--surface-secondary)]"
             }`}
           >
             <FileJson className="w-3.5 h-3.5" />
@@ -130,7 +130,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-zinc-50 text-left text-[10px] font-semibold text-zinc-500 tracking-[0.18em]">
+              <tr className="bg-[var(--surface-secondary)] text-left text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em]">
                 <th className="px-6 py-3">Name</th>
                 <th className="px-6 py-3">Type</th>
                 <th className="px-6 py-3">TTL</th>
@@ -140,21 +140,21 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {result.answers.map((answer, idx) => (
-                <tr key={idx} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-3 text-sm text-zinc-600">
+                <tr key={idx} className="hover:bg-[var(--surface-secondary)] transition-colors">
+                  <td className="px-6 py-3 text-sm text-[var(--text-secondary)]">
                     {answer.name}
                   </td>
                   <td className="px-6 py-3">
-                    <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs font-bold">
+                    <span className="px-2 py-0.5 bg-[var(--info-soft)] text-cyan-700 rounded text-xs font-bold">
                       {answer.type}
                     </span>
                   </td>
                   <td className="px-6 py-3">
-                    <span className="text-sm text-zinc-500">
+                    <span className="text-sm text-[var(--text-muted)]">
                       {formatTTL(answer.ttl)}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-sm text-zinc-800 break-all max-w-md">
+                  <td className="px-6 py-3 text-sm text-[var(--text-primary)] break-all max-w-md">
                     {answer.priority !== undefined && (
                       <span className="text-purple-600 mr-2">
                         [{answer.priority}]
@@ -167,7 +167,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
                       onClick={() =>
                         copyToClipboard(answer.data, `answer-${idx}`)
                       }
-                      className="p-1.5 text-zinc-300 hover:text-zinc-600 rounded transition-colors"
+                      className="p-1.5 text-[var(--text-faint)] hover:text-[var(--text-secondary)] rounded transition-colors"
                     >
                       {copiedField === `answer-${idx}` ? (
                         <Check className="w-4 h-4 text-emerald-500" />
@@ -183,23 +183,23 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
         </div>
       ) : (
         <div className="px-6 py-12 text-center">
-          <AlertCircle className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
-          <p className="text-zinc-500">No records found for this query</p>
+          <AlertCircle className="w-12 h-12 text-[var(--text-faint)] mx-auto mb-3" />
+          <p className="text-[var(--text-muted)]">No records found for this query</p>
           {result.comment && (
-            <p className="text-sm text-zinc-400 mt-2">{result.comment}</p>
+            <p className="text-sm text-[var(--text-muted)] mt-2">{result.comment}</p>
           )}
         </div>
       )}
 
       {/* Authority Section (if no answers but has authority) */}
       {!hasAnswers && result.authority && result.authority.length > 0 && (
-        <div className="px-6 py-4 bg-amber-50 border-t border-amber-100">
-          <div className="text-[10px] font-semibold text-amber-600 tracking-[0.18em] mb-2">
+        <div className="px-6 py-4 bg-[var(--warning-soft)] border-t border-amber-100">
+          <div className="text-xs font-semibold text-[var(--warning-text)] tracking-[0.18em] mb-2">
             Authority Section
           </div>
           <div className="space-y-1">
             {result.authority.map((auth, idx) => (
-              <div key={idx} className="text-xs text-amber-800">
+              <div key={idx} className="text-xs text-[var(--warning-text)]">
                 {auth.name} → {auth.data}
               </div>
             ))}
@@ -209,16 +209,16 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
 
       {/* Raw JSON */}
       {showRaw && (
-        <div className="border-t border-zinc-100">
+        <div className="border-t border-[var(--border-subtle)]">
           <div className="px-6 py-3 bg-zinc-900 flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em]">
+            <span className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em]">
               Raw Response
             </span>
             <button
               onClick={() =>
                 copyToClipboard(JSON.stringify(result.raw, null, 2), "raw")
               }
-              className="flex items-center gap-1 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-zinc-300 transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-[var(--text-faint)] transition-colors"
             >
               {copiedField === "raw" ? (
                 <Check className="w-3 h-3 text-emerald-400" />
@@ -235,7 +235,7 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
       )}
 
       {/* Flags */}
-      <div className="px-6 py-3 bg-zinc-50 border-t border-zinc-100 flex flex-wrap gap-2">
+      <div className="px-6 py-3 bg-[var(--surface-secondary)] border-t border-[var(--border-subtle)] flex flex-wrap gap-2">
         {[
           {
             flag: "RD",
@@ -252,10 +252,10 @@ export function DnsResultTable({ result, loading }: DnsResultTableProps) {
         ].map(({ flag, active, label }) => (
           <span
             key={flag}
-            className={`px-2 py-0.5 rounded text-[9px] font-semibold tracking-[0.18em] ${
+            className={`px-2 py-0.5 rounded text-xs font-semibold tracking-[0.18em] ${
               active
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-zinc-200 text-zinc-400"
+                ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
+                : "bg-zinc-200 text-[var(--text-muted)]"
             }`}
             title={label}
           >

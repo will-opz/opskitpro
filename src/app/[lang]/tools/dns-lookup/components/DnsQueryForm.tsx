@@ -57,11 +57,11 @@ export function DnsQueryForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="glass-card p-6 rounded-2xl border border-black/5 bg-white/50 backdrop-blur-xl"
+      className="glass-card p-6 rounded-2xl border border-black/5 bg-[var(--surface-primary)] backdrop-blur-xl"
     >
       {/* Domain Input */}
       <div className="mb-4">
-        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
           Domain Name
         </label>
         <div className="relative">
@@ -70,10 +70,10 @@ export function DnsQueryForm({
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="example.com"
-            className="w-full px-4 py-3 pr-12 bg-white border border-zinc-200 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
+            className="w-full px-4 py-3 pr-12 bg-[var(--surface-primary)] border border-[var(--border-strong)] rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
             disabled={loading}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-300">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)]">
             <Search className="w-5 h-5" />
           </div>
         </div>
@@ -83,7 +83,7 @@ export function DnsQueryForm({
       <div className="flex flex-wrap gap-3 mb-6">
         {/* Record Type Dropdown */}
         <div className="relative flex-1 min-w-[140px]">
-          <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
             Record Type
           </label>
           <button
@@ -92,23 +92,23 @@ export function DnsQueryForm({
               setShowTypeDropdown(!showTypeDropdown);
               setShowProviderDropdown(false);
             }}
-            className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-all"
+            className="w-full flex items-center justify-between px-4 py-2.5 bg-[var(--surface-primary)] border border-[var(--border-strong)] rounded-xl text-sm font-medium hover:bg-[var(--surface-secondary)] transition-all"
           >
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded font-bold text-xs">
+              <span className="px-2 py-0.5 bg-[var(--info-soft)] text-cyan-700 rounded font-bold text-xs">
                 {selectedType?.value}
               </span>
-              <span className="text-zinc-500 text-xs hidden sm:inline">
+              <span className="text-[var(--text-muted)] text-xs hidden sm:inline">
                 {selectedType?.desc}
               </span>
             </div>
             <ChevronDown
-              className={`w-4 h-4 text-zinc-400 transition-transform ${showTypeDropdown ? "rotate-180" : ""}`}
+              className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${showTypeDropdown ? "rotate-180" : ""}`}
             />
           </button>
 
           {showTypeDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 z-50 max-h-64 overflow-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--surface-primary)] rounded-xl shadow-sm border border-[var(--border-strong)] z-50 max-h-64 overflow-auto">
               {RECORD_TYPES.map((type) => (
                 <button
                   key={type.value}
@@ -117,20 +117,20 @@ export function DnsQueryForm({
                     setRecordType(type.value);
                     setShowTypeDropdown(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 transition-colors ${
-                    recordType === type.value ? "bg-cyan-50" : ""
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--info-soft)] transition-colors ${
+                    recordType === type.value ? "bg-[var(--info-soft)]" : ""
                   }`}
                 >
                   <span
                     className={`px-2 py-0.5 rounded font-bold text-xs ${
                       recordType === type.value
                         ? "bg-cyan-600 text-white"
-                        : "bg-zinc-100 text-zinc-600"
+                        : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
                     }`}
                   >
                     {type.value}
                   </span>
-                  <span className="text-xs text-zinc-500">{type.desc}</span>
+                  <span className="text-xs text-[var(--text-muted)]">{type.desc}</span>
                 </button>
               ))}
             </div>
@@ -139,7 +139,7 @@ export function DnsQueryForm({
 
         {/* DNS Provider Dropdown */}
         <div className="relative flex-1 min-w-[140px]">
-          <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
             DNS Server
           </label>
           <button
@@ -148,22 +148,22 @@ export function DnsQueryForm({
               setShowProviderDropdown(!showProviderDropdown);
               setShowTypeDropdown(false);
             }}
-            className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-all"
+            className="w-full flex items-center justify-between px-4 py-2.5 bg-[var(--surface-primary)] border border-[var(--border-strong)] rounded-xl text-sm font-medium hover:bg-[var(--surface-secondary)] transition-all"
           >
             <div className="flex items-center gap-2">
-              <Server className="w-4 h-4 text-zinc-400" />
+              <Server className="w-4 h-4 text-[var(--text-muted)]" />
               <span>{selectedProvider?.label}</span>
-              <span className="text-xs text-zinc-400 font-mono">
+              <span className="text-xs text-[var(--text-muted)] font-mono">
                 {selectedProvider?.ip}
               </span>
             </div>
             <ChevronDown
-              className={`w-4 h-4 text-zinc-400 transition-transform ${showProviderDropdown ? "rotate-180" : ""}`}
+              className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${showProviderDropdown ? "rotate-180" : ""}`}
             />
           </button>
 
           {showProviderDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 z-50">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--surface-primary)] rounded-xl shadow-sm border border-[var(--border-strong)] z-50">
               {DNS_PROVIDERS.map((p) => (
                 <button
                   key={p.value}
@@ -172,15 +172,15 @@ export function DnsQueryForm({
                     setProvider(p.value);
                     setShowProviderDropdown(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-cyan-50 transition-colors ${
-                    provider === p.value ? "bg-cyan-50" : ""
+                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--info-soft)] transition-colors ${
+                    provider === p.value ? "bg-[var(--info-soft)]" : ""
                   }`}
                 >
                   <Server
-                    className={`w-4 h-4 ${provider === p.value ? "text-cyan-600" : "text-zinc-400"}`}
+                    className={`w-4 h-4 ${provider === p.value ? "text-cyan-600" : "text-[var(--text-muted)]"}`}
                   />
                   <span className="font-medium">{p.label}</span>
-                  <span className="text-xs text-zinc-400 font-mono ml-auto">
+                  <span className="text-xs text-[var(--text-muted)] font-mono ml-auto">
                     {p.ip}
                   </span>
                 </button>
@@ -219,14 +219,14 @@ export function DnsQueryForm({
 
       {/* Quick domains */}
       <div className="mt-4 flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] text-zinc-400">Try:</span>
+        <span className="text-xs text-[var(--text-muted)]">Try:</span>
         {["google.com", "cloudflare.com", "github.com", "example.com"].map(
           (d) => (
             <button
               key={d}
               type="button"
               onClick={() => setDomain(d)}
-              className="text-[10px] px-2 py-1 bg-zinc-100 hover:bg-cyan-100 hover:text-cyan-700 rounded-lg transition-colors font-mono"
+              className="text-xs px-2 py-1 bg-[var(--bg-tertiary)] hover:bg-[var(--info-soft)] hover:text-cyan-700 rounded-lg transition-colors font-mono"
             >
               {d}
             </button>

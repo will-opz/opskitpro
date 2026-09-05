@@ -77,10 +77,10 @@ export default function YamlClient({ lang }: { lang: Lang }) {
   }, [c.invalid, c.ready, c.valid, input, status, validation.valid]);
 
   const statusColor = validation.valid || status === "formatted"
-    ? "text-emerald-700"
+    ? "text-[var(--accent-text)]"
     : status === "invalid"
-      ? "text-red-600"
-      : "text-zinc-500";
+      ? "text-[var(--danger-text)]"
+      : "text-[var(--text-muted)]";
 
   const runValidation = () => {
     setStatus(validation.valid ? "valid" : "invalid");
@@ -120,10 +120,10 @@ export default function YamlClient({ lang }: { lang: Lang }) {
   const outputLabel = status === "invalid" ? c.invalid : c.outputLabel;
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={c.title} description={c.description} processing={c.badge} />
 
-      <section className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="ui-surface rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <label htmlFor="yaml-input" className="text-sm font-semibold text-[var(--text-primary)]">{c.inputLabel}</label>
@@ -137,17 +137,17 @@ export default function YamlClient({ lang }: { lang: Lang }) {
               setStatus("idle");
             }}
             placeholder={c.inputPlaceholder}
-            className="mt-2 min-h-80 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 outline-none focus:border-emerald-500/50"
+            className="mt-2 min-h-64 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 outline-none focus:border-emerald-500/50"
           />
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {[2, 4, 8].map((item) => (
+            <span className="text-sm text-[var(--text-secondary)]">{lang === "zh" ? "缩进空格" : "Indent spaces"}</span>{[2, 4, 8].map((item) => (
               <button
                 key={item}
                 type="button"
                 aria-pressed={indent === item}
                 onClick={() => setIndent(item)}
-                className={`min-h-10 rounded-full border px-3 text-xs font-semibold ${indent === item ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-[var(--border-subtle)] text-[var(--text-muted)]"}`}
+                className={`min-h-10 rounded-full border px-3 text-xs font-semibold ${indent === item ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-muted)]"}`}
               >
                 {item}
               </button>
@@ -169,7 +169,7 @@ export default function YamlClient({ lang }: { lang: Lang }) {
 
         <div className="ui-surface rounded-2xl p-4 sm:p-6">
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">{outputLabel}</h2>
-          <div className={`mt-2 min-h-80 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 font-mono text-sm leading-6 whitespace-pre-wrap ${status === "invalid" ? "text-red-700" : "text-[var(--text-primary)]"}`}>
+          <div className={`mt-2 min-h-20 max-h-96 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 font-mono text-sm leading-6 whitespace-pre-wrap ${status === "invalid" ? "text-[var(--danger-text)]" : "text-[var(--text-primary)]"}`}>
             {output || c.ready}
           </div>
           <div className="mt-4 flex items-center justify-between gap-2">

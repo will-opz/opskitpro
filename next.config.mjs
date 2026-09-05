@@ -67,6 +67,8 @@ const securityHeaders = [
 
 
 const nextConfig = {
+  // Public and admin routes have independent root layouts.
+  experimental: { globalNotFound: true },
   output: 'standalone',
   poweredByHeader: false,
   images: {

@@ -132,7 +132,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
   const getTypeStyles = (type: LogEntry["type"]) => {
     switch (type) {
       case "info":
-        return { badge: "bg-blue-500/20 text-blue-400", text: "text-zinc-500" };
+        return { badge: "bg-blue-500/20 text-blue-400", text: "text-[var(--text-muted)]" };
       case "error":
         return { badge: "bg-red-500/20 text-red-400", text: "text-red-400" };
       case "sent":
@@ -143,7 +143,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
           text: "text-emerald-300",
         };
       default:
-        return { badge: "bg-zinc-500/20 text-zinc-400", text: "text-zinc-400" };
+        return { badge: "bg-zinc-500/20 text-[var(--text-muted)]", text: "text-[var(--text-muted)]" };
     }
   };
 
@@ -174,25 +174,25 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
   };
 
   return (
-    <section className="glass-card flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-zinc-950 shadow-2xl sm:min-h-[380px]">
+    <section className="glass-card flex min-h-[300px] flex-col overflow-hidden rounded-2xl border border-black/5 bg-zinc-950 shadow-sm sm:min-h-[380px]">
       {/* Header */}
       <div className="bg-zinc-900 p-4 border-b border-white/5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="rounded-md bg-cyan-500/15 px-2 py-1 font-mono text-[10px] font-bold text-cyan-300">
+            <span className="rounded-md bg-cyan-500/15 px-2 py-1 font-mono text-xs font-bold text-cyan-300">
               {copy.step}
             </span>
             <h3 className="text-xs font-bold text-white">
               {copy.title}
             </h3>
-            <span className="text-[10px] text-zinc-500">
+            <span className="text-xs text-[var(--text-muted)]">
               {filteredLogs.length} / {logs.length}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Stats */}
-            <div className="hidden sm:flex items-center gap-3 text-[9px] font-mono mr-3">
+            <div className="hidden sm:flex items-center gap-3 text-xs font-mono mr-3">
               <span className="text-cyan-400">↑{stats.sent}</span>
               <span className="text-emerald-400">↓{stats.received}</span>
               {stats.errors > 0 && (
@@ -206,7 +206,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
               className={`p-1.5 rounded-lg transition-all ${
                 autoScroll
                   ? "bg-cyan-500/20 text-cyan-400"
-                  : "text-zinc-500 hover:text-white"
+                  : "text-[var(--text-muted)] hover:text-white"
               }`}
               aria-label={autoScroll ? copy.autoOn : copy.autoOff}
               title={autoScroll ? copy.autoOn : copy.autoOff}
@@ -218,7 +218,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
             <button
               onClick={exportLogs}
               disabled={logs.length === 0}
-              className="p-1.5 text-zinc-500 hover:text-white transition-colors disabled:opacity-30"
+              className="p-1.5 text-[var(--text-muted)] hover:text-white transition-colors disabled:opacity-30"
               aria-label={copy.export}
               title={copy.export}
             >
@@ -229,7 +229,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
             <button
               onClick={onClear}
               disabled={logs.length === 0}
-              className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors disabled:opacity-30"
+              className="p-1.5 text-[var(--text-muted)] hover:text-red-400 transition-colors disabled:opacity-30"
               aria-label={copy.clear}
               title={copy.clear}
             >
@@ -246,10 +246,10 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-2 py-1 text-[9px] font-bold uppercase tracking-wider rounded transition-all ${
+                  className={`px-2 py-1 text-xs font-bold uppercase tracking-wider rounded transition-all ${
                     filter === f
                       ? "bg-zinc-700 text-white"
-                      : "text-zinc-500 hover:text-zinc-300"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-faint)]"
                   }`}
                 >
                   {copy.filters[f]}
@@ -264,7 +264,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={copy.search}
             aria-label={copy.search}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:max-w-[240px]"
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-white placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-cyan-500 sm:max-w-[240px]"
           />
         </div>
       </div>
@@ -275,9 +275,9 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
         className="flex-grow overflow-y-auto p-4 space-y-1 font-mono scrollbar-thin scrollbar-thumb-zinc-800"
       >
         {filteredLogs.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center space-y-4 py-14 text-zinc-600 sm:py-16">
+          <div className="flex h-full flex-col items-center justify-center space-y-4 py-14 text-[var(--text-secondary)] sm:py-16">
             <History className="h-10 w-10 opacity-10" />
-            <p className="max-w-sm px-4 text-center text-xs leading-5 text-zinc-500">
+            <p className="max-w-sm px-4 text-center text-xs leading-5 text-[var(--text-muted)]">
               {logs.length === 0
                 ? copy.empty
                 : copy.noMatch}
@@ -296,7 +296,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
               >
                 <div className="flex gap-3">
                   {/* Time */}
-                  <div className="text-[10px] text-zinc-600 mt-1 whitespace-nowrap w-16 shrink-0">
+                  <div className="text-xs text-[var(--text-secondary)] mt-1 whitespace-nowrap w-16 shrink-0">
                     {log.time}
                   </div>
 
@@ -305,12 +305,12 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
                     {/* Header row */}
                     <div className="flex items-center gap-2 mb-1">
                       <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded leading-none ${styles.badge}`}
+                        className={`text-xs font-bold px-1.5 py-0.5 rounded leading-none ${styles.badge}`}
                       >
                         {getTypeLabel(log.type)}
                       </span>
                       {getMessageTypeIcon(log.messageType)}
-                      <span className="text-[9px] text-zinc-600">
+                      <span className="text-xs text-[var(--text-secondary)]">
                         {log.size}B
                       </span>
 
@@ -319,7 +319,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
                         {isJson && (
                           <button
                             onClick={() => toggleExpand(log.id)}
-                            className="text-zinc-500 hover:text-amber-400 transition-colors"
+                            className="text-[var(--text-muted)] hover:text-amber-400 transition-colors"
                             aria-label={copy.expand}
                             title={copy.expand}
                           >
@@ -332,7 +332,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
                         )}
                         <button
                           onClick={() => copyMessage(log.message, log.id)}
-                          className="text-zinc-500 hover:text-white transition-colors"
+                          className="text-[var(--text-muted)] hover:text-white transition-colors"
                           aria-label={copy.copy}
                           title={copy.copy}
                         >
@@ -352,7 +352,7 @@ export function LogViewer({ lang, logs, onClear }: LogViewerProps) {
                       }`}
                     >
                       {isJson && isExpanded ? (
-                        <pre className="whitespace-pre-wrap bg-zinc-900/50 p-2 rounded mt-1 text-[11px]">
+                        <pre className="whitespace-pre-wrap bg-zinc-900/50 p-2 rounded mt-1 text-xs">
                           {formatJson(log.message)}
                         </pre>
                       ) : (

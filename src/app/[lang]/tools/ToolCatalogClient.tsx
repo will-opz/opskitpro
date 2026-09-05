@@ -15,6 +15,7 @@ import {
   Palette,
   ImageIcon,
   KeyRound,
+  Fingerprint,
   ShieldAlert,
   Network,
   QrCode,
@@ -43,8 +44,8 @@ const icons = {
   websocket: Network,
   passgen: KeyRound,
   qrgen: QrCode,
-  jwt: KeyRound,
-  uuid: KeyRound,
+  jwt: ShieldCheck,
+  uuid: Fingerprint,
   encode: Binary,
   time: Clock3,
   "prompt-builder": WandSparkles,
@@ -101,7 +102,6 @@ const copy = {
     empty: "No tools match this search.",
     local: "Local processing · Not uploaded",
     network: "Internet required",
-    localTag: "Local-first",
     networkTag: "Network-assisted",
     paths: {
       none: "Stays in this browser",
@@ -116,7 +116,7 @@ const copy = {
         "Generate, detect, hash, and mask sensitive data locally before sharing.",
       ],
       "developer-tooling": [
-        "Developer helpers",
+        "Text & data",
         "Common text, data, and logic tools for daily engineering work.",
       ],
       "content-utility": [
@@ -124,7 +124,7 @@ const copy = {
         "Practical local tools for prompts, time, colors, QR, and routine conversions.",
       ],
       "developer-debug": [
-        "Developer networking tools",
+        "API & connection debugging",
         "Local workflow + network-aware helpers for API and real-time debugging.",
       ],
       "ops-network": [
@@ -140,7 +140,6 @@ const copy = {
     empty: "没有符合条件的工具。",
     local: "本地处理 · 不上传",
     network: "需要联网",
-    localTag: "本地优先",
     networkTag: "需联网",
     paths: {
       none: "数据留在当前浏览器",
@@ -155,7 +154,7 @@ const copy = {
         "生成、检测、哈希与脱敏，优先在浏览器本地完成。",
       ],
       "developer-tooling": [
-        "开发者工具",
+        "文本与数据",
         "日常开发常用的文本、数据和逻辑类本地辅助。",
       ],
       "content-utility": [
@@ -163,7 +162,7 @@ const copy = {
         "面向日常工作流的本地辅助，如时间、二维码、颜色、提示词。",
       ],
       "developer-debug": [
-        "开发者调试工具",
+        "API 与连接调试",
         "兼具本地处理与网络场景的 API 与 WebSocket 排障辅助。",
       ],
       "ops-network": [
@@ -213,7 +212,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
   }, [filter, categoryFilter, lang, query, text.categories]);
 
   return (
-    <div className="mt-9">
+    <div className="mt-6">
       <div className="ui-surface rounded-2xl p-4 sm:p-5">
         <label htmlFor="tool-search" className="text-sm font-semibold text-[var(--text-primary)]">
           {text.search}
@@ -226,7 +225,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={text.searchHint}
-            className="min-h-11 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] py-2.5 pl-10 pr-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
+            className="min-h-11 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] py-2.5 pl-10 pr-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-secondary)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
           />
         </div>
         <div className="mt-3 flex flex-wrap gap-2" aria-label={lang === "zh" ? "按处理方式筛选" : "Filter by processing mode"}>
@@ -236,7 +235,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
               type="button"
               aria-pressed={filter === value}
               onClick={() => setFilter(value)}
-              className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${filter === value ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"}`}
+              className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${filter === value ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"}`}
             >
               {text.filters[value]}
             </button>
@@ -247,7 +246,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
             type="button"
             aria-pressed={categoryFilter === "all"}
             onClick={() => setCategoryFilter("all")}
-            className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${categoryFilter === "all" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"}`}
+            className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${categoryFilter === "all" ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"}`}
           >
             {lang === "zh" ? "全部分类" : "All categories"}
           </button>
@@ -257,7 +256,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
               type="button"
               aria-pressed={categoryFilter === category}
               onClick={() => setCategoryFilter(category)}
-              className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${categoryFilter === category ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600" : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"}`}
+              className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${categoryFilter === category ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"}`}
             >
               {text.categories[category][0]}
             </button>
@@ -266,9 +265,9 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
       </div>
 
       {groups.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-[var(--border-subtle)] p-10 text-center text-sm text-[var(--text-muted)]">{text.empty}</div>
+        <div className="mt-8 rounded-2xl border border-dashed border-[var(--border-subtle)] p-10 text-center text-sm text-[var(--text-secondary)]">{text.empty}</div>
       ) : (
-        <div className="mt-10 space-y-12">
+        <div className="mt-7 space-y-8">
           {groups.map(({ category, tools }) => {
             const [title, description] = text.categories[category];
             const CategoryIcon =
@@ -287,30 +286,24 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
                   <span className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-500"><CategoryIcon className="h-5 w-5" /></span>
                   <div>
                     <h2 id={`category-${category}`} className="text-xl font-semibold text-[var(--text-primary)]">{title}</h2>
-                    <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">{description}</p>
+                    <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">{description}</p>
                   </div>
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {tools.map((rawTool) => {
                     const tool = localizeTool(rawTool, lang);
                     const Icon = icons[tool.id];
-                    const isLocal = tool.processingMode === "local";
-                    const modeTag = isLocal ? text.localTag : text.networkTag;
+                    const isLocal = tool.processingMode === "local" && tool.networkPath === "none";
                     return (
-                      <Link key={tool.id} href={`/${lang}${tool.href}`} className="ui-surface group flex min-h-44 flex-col rounded-2xl p-5 transition hover:-translate-y-0.5 hover:border-emerald-500/30">
-                        <div className="flex items-start justify-between gap-3">
-                          <span className={`rounded-xl p-2.5 ${isLocal ? "bg-emerald-500/10 text-emerald-600" : "bg-sky-500/10 text-sky-600"}`}><Icon className="h-5 w-5" /></span>
-                          <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${isLocal ? "border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-600" : "border-sky-500/20 bg-sky-500/[0.07] text-sky-600"}`}>
-                            {modeTag}
-                          </span>
+                      <Link key={tool.id} href={`/${lang}${tool.href}`} className="group flex min-h-[136px] flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 transition hover:border-[var(--accent-text)] hover:shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <span className="shrink-0 rounded-lg bg-[var(--accent-soft)] p-1.5 text-[var(--accent-text)]"><Icon aria-hidden="true" className="h-5 w-5" /></span>
+                          <h3 className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)]">{tool.title}</h3>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-color)]">{tool.title}</h3>
-                        <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">{tool.description}</p>
-                        {!isLocal ? (
-                          <p className="mt-auto border-t border-[var(--border-subtle)] pt-3 text-xs font-medium leading-5 text-[var(--text-secondary)]">
-                            {text.paths[tool.networkPath]}
-                          </p>
-                        ) : null}
+                        <p className="mb-1.5 mt-1.5 text-sm leading-5 text-[var(--text-secondary)]">{tool.description}</p>
+                        <p className="mt-auto text-[13px] font-medium leading-5 text-[var(--accent-text)]">
+                          {isLocal ? text.local : `${text.networkTag} · ${text.paths[tool.networkPath]}`}
+                        </p>
                       </Link>
                     );
                   })}

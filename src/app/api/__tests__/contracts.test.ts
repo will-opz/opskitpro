@@ -1,5 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Contract tests must not depend on live DNS/TLS while HTTP is already mocked.
+vi.mock("tls", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("tls")>();
+  const { EventEmitter } = await import("node:events");
+  const connect = vi.fn((options: import("tls").ConnectionOptions) => {
+    const socket = Object.assign(new EventEmitter(), {
+      authorized: true,
+      alpnProtocol: "h2",
+      getProtocol: () => "TLSv1.3",
+      getCipher: () => ({ name: "TLS_AES_256_GCM_SHA384" }),
+      getPeerCertificate: () => ({
+        subjectaltname: `DNS:${options.servername}`,
+        valid_from: new Date(Date.now() - 86400000).toISOString(),
+        valid_to: new Date(Date.now() + 90 * 86400000).toISOString(),
+        issuer: { O: "Synthetic test CA" },
+      }),
+      end: vi.fn(),
+      destroy: vi.fn(),
+    });
+    queueMicrotask(() => options.maxVersion === "TLSv1.1"
+      ? socket.emit("error", new Error("protocol version"))
+      : socket.emit("secureConnect"));
+    return socket;
+  });
+  return { ...actual, default: { ...actual, connect }, connect };
+});
+
 vi.mock("@/lib/ipinfo-lite", () => ({
   lookupIpinfoLite: vi.fn(async (ip: string) => ({
     ok: true,

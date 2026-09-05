@@ -224,10 +224,10 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
             : result?.message ?? text.idle;
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={text.title} description={text.subtitle} processing={text.privacy} />
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+      <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <label htmlFor="regex-pattern" className="text-sm font-semibold text-[var(--text-primary)]">{text.pattern}</label>
           <div className="mt-2 flex min-h-12 items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/10">
@@ -243,7 +243,8 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
             <legend className="text-sm font-semibold text-[var(--text-primary)]">{text.flags}</legend>
             <div className="mt-2 flex flex-wrap gap-2">
               {FLAG_OPTIONS.map((flag) => (
-                <button key={flag} type="button" aria-pressed={flags.includes(flag)} onClick={() => toggleFlag(flag)} className={`min-h-11 min-w-11 rounded-xl border px-3 font-mono text-sm font-semibold transition ${flags.includes(flag) ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"}`}>{flag}</button>
+                <button key={flag} type="button" aria-pressed={flags.includes(flag)}
+                    title={({g:"Global",i:"Ignore case",m:"Multiline",s:"Dot all",u:"Unicode",y:"Sticky"} as Record<string,string>)[flag]} onClick={() => toggleFlag(flag)} className={`min-h-11 min-w-11 rounded-xl border px-3 font-mono text-sm font-semibold transition ${flags.includes(flag) ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"}`}>{flag}</button>
               ))}
             </div>
           </fieldset>
@@ -252,7 +253,7 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
             <label htmlFor="regex-text" className="text-sm font-semibold text-[var(--text-primary)]">{text.testText}</label>
             <span className="text-xs tabular-nums text-[var(--text-muted)]">{text.limit(testText.length, REGEX_TEXT_LIMIT)}</span>
           </div>
-          <textarea id="regex-text" value={testText} maxLength={REGEX_TEXT_LIMIT} onChange={(event) => setTestText(event.target.value)} placeholder={text.textPlaceholder} spellCheck={false} className="mt-2 min-h-72 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10" />
+          <textarea id="regex-text" value={testText} maxLength={REGEX_TEXT_LIMIT} onChange={(event) => setTestText(event.target.value)} placeholder={text.textPlaceholder} spellCheck={false} className="mt-2 min-h-48 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10" />
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={loadExample} className="ui-button-primary min-h-11 px-4 text-sm"><FlaskConical className="h-4 w-4" />{text.loadExample}</button>
             <button type="button" onClick={clear} className="ui-button-ghost min-h-11 border border-[var(--border-subtle)] px-4 text-sm"><Eraser className="h-4 w-4" />{text.clear}</button>
@@ -264,21 +265,21 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
             <h2 className="text-lg font-semibold text-[var(--text-primary)]">{text.results}</h2>
             {result?.ok && result.matches.length > 0 && (
               <button type="button" onClick={copySummary} className="ui-button-ghost min-h-10 border border-[var(--border-subtle)] px-3 text-xs">
-                {copyStatus === "copied" ? <Check className="h-4 w-4 text-emerald-600" /> : <Clipboard className="h-4 w-4" />}
+                {copyStatus === "copied" ? <Check className="h-4 w-4 text-[var(--accent-text)]" /> : <Clipboard className="h-4 w-4" />}
                 {copyStatus === "copied" ? text.copied : copyStatus === "failed" ? text.copyFailed : text.copySummary}
               </button>
             )}
           </div>
-          <div aria-live="polite" className={`mt-4 rounded-xl border p-3 text-sm ${state === "timeout" || state === "worker_error" || (result && !result.ok) ? "border-amber-500/25 bg-amber-500/[0.06] text-amber-800" : "border-[var(--border-subtle)] bg-[var(--surface-secondary)] text-[var(--text-secondary)]"}`}>
+          <div aria-live="polite" className={`mt-4 rounded-xl border p-3 text-sm ${state === "timeout" || state === "worker_error" || (result && !result.ok) ? "border-amber-500/25 bg-amber-500/[0.06] text-[var(--warning-text)]" : "border-[var(--border-subtle)] bg-[var(--surface-secondary)] text-[var(--text-secondary)]"}`}>
             {statusMessage}{result?.ok && result.truncated ? ` ${text.truncated}` : ""}
           </div>
 
-          <div className="mt-5">
+          {testText && <div className="mt-5">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{text.highlighted}</h3>
-            <pre data-testid="regex-highlight" className="mt-2 max-h-72 min-h-40 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 text-[var(--text-secondary)]"><HighlightedText text={testText} result={result} /></pre>
-          </div>
+            <pre data-testid="regex-highlight" className="mt-2 max-h-72 min-h-24 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 text-[var(--text-secondary)]"><HighlightedText text={testText} result={result} /></pre>
+          </div>}
 
-          <div className="mt-6">
+          {result?.ok && result.matches.length > 0 && <div className="mt-6">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">{text.details}</h3>
             {result?.ok && result.matches.length > 0 ? (
               <ol className="mt-3 max-h-[32rem] space-y-3 overflow-y-auto pr-1">
@@ -286,7 +287,7 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
                   <li key={`${match.index}-${index}`} className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs font-semibold text-[var(--text-primary)]">#{index + 1} · {text.index} {match.index}–{match.end}</span>
-                      {match.zeroLength && <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-semibold text-amber-700">{text.zeroLength}</span>}
+                      {match.zeroLength && <span className="rounded-full bg-amber-500/10 px-2 py-1 text-xs font-semibold text-[var(--warning-text)]">{text.zeroLength}</span>}
                     </div>
                     <p className="mt-2 text-xs font-semibold text-[var(--text-muted)]">{text.fullMatch}</p>
                     <code className="mt-1 block overflow-x-auto whitespace-pre-wrap break-words rounded-lg bg-[var(--surface-secondary)] p-2 text-xs text-[var(--text-primary)]">{match.value || "∅"}</code>
@@ -300,7 +301,7 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
                 ))}
               </ol>
             ) : null}
-          </div>
+          </div>}
         </div>
       </section>
     </main>

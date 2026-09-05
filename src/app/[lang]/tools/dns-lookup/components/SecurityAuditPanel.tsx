@@ -42,13 +42,13 @@ export function SecurityAuditPanel({
   const getStatusColor = (status: AuditStatus) => {
     switch (status) {
       case "pass":
-        return "text-emerald-600 bg-emerald-50 border-emerald-200";
+        return "text-[var(--accent-text)] bg-[var(--accent-soft)] border-emerald-200";
       case "warning":
-        return "text-amber-600 bg-amber-50 border-amber-200";
+        return "text-[var(--warning-text)] bg-[var(--warning-soft)] border-amber-200";
       case "fail":
-        return "text-red-600 bg-red-50 border-red-200";
+        return "text-[var(--danger-text)] bg-[var(--danger-soft)] border-red-200";
       case "info":
-        return "text-sky-600 bg-sky-50 border-sky-200";
+        return "text-[var(--info-text)] bg-[var(--info-soft)] border-sky-200";
     }
   };
 
@@ -145,27 +145,27 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
   return (
     <div className="space-y-6">
       {/* Score Header */}
-      <div className="bg-white rounded-[2rem] p-8 border border-zinc-100 shadow-sm flex items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-50 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
+      <div className="bg-[var(--surface-primary)] rounded-[2rem] p-8 border border-[var(--border-subtle)] shadow-sm flex items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surface-secondary)] rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
         <div className="relative z-10 flex items-center gap-6">
           <div
             className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-black ${
               result.score === "A"
-                ? "bg-emerald-100 text-emerald-600"
+                ? "bg-[var(--accent-soft)] text-[var(--accent-text)]"
                 : result.score === "B"
-                  ? "bg-amber-100 text-amber-600"
+                  ? "bg-[var(--warning-soft)] text-[var(--warning-text)]"
                   : result.score === "C"
-                    ? "bg-orange-100 text-orange-600"
-                    : "bg-red-100 text-red-600"
+                    ? "bg-[var(--warning-soft)] text-orange-600"
+                    : "bg-[var(--danger-soft)] text-[var(--danger-text)]"
             }`}
           >
             {result.score}
           </div>
           <div>
-            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1">
+            <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">
               {t.scoreTitle}
             </h3>
-            <p className="text-2xl font-semibold text-zinc-900">
+            <p className="text-2xl font-semibold text-[var(--text-primary)]">
               {result.domain}
             </p>
           </div>
@@ -194,7 +194,7 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
       <div className="grid md:grid-cols-3 gap-6">
         {/* SPF */}
         <div
-          className={`bg-white rounded-[2rem] p-6 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${getStatusColor(result.spf.status).replace("bg-", "hover:bg-").replace("border-", "hover:border-")}`}
+          className={`bg-[var(--surface-primary)] rounded-[2rem] p-6 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${getStatusColor(result.spf.status).replace("bg-", "hover:bg-").replace("border-", "hover:border-")}`}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -204,16 +204,16 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
                 <Mail className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-zinc-900">{t.spfTitle}</h4>
-                <p className="text-xs text-zinc-500">{t.spfDesc}</p>
+                <h4 className="font-bold text-[var(--text-primary)]">{t.spfTitle}</h4>
+                <p className="text-xs text-[var(--text-muted)]">{t.spfDesc}</p>
               </div>
             </div>
             <div className={getStatusColor(result.spf.status).split(" ")[0]}>
               {getStatusIcon(result.spf.status)}
             </div>
           </div>
-          <div className="bg-zinc-50 p-3 rounded-xl mb-4 min-h-16 flex items-center">
-            <p className="text-sm font-medium text-zinc-700">
+          <div className="bg-[var(--surface-secondary)] p-3 rounded-xl mb-4 min-h-16 flex items-center">
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
               {result.spf.message}
             </p>
           </div>
@@ -221,21 +221,21 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
             {result.spf.records.map((r, i) => (
               <div
                 key={i}
-                className="text-xs font-mono text-zinc-500 bg-zinc-100/50 p-2 rounded truncate"
+                className="text-xs font-mono text-[var(--text-muted)] bg-[var(--surface-secondary)] p-2 rounded truncate"
                 title={r}
               >
                 {r}
               </div>
             ))}
             {result.spf.records.length === 0 && (
-              <div className="text-xs text-zinc-400 italic">No record</div>
+              <div className="text-xs text-[var(--text-muted)] italic">No record</div>
             )}
           </div>
         </div>
 
         {/* DMARC */}
         <div
-          className={`bg-white rounded-[2rem] p-6 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${getStatusColor(result.dmarc.status).replace("bg-", "hover:bg-").replace("border-", "hover:border-")}`}
+          className={`bg-[var(--surface-primary)] rounded-[2rem] p-6 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${getStatusColor(result.dmarc.status).replace("bg-", "hover:bg-").replace("border-", "hover:border-")}`}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -245,36 +245,36 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-zinc-900">{t.dmarcTitle}</h4>
-                <p className="text-xs text-zinc-500">{t.dmarcDesc}</p>
+                <h4 className="font-bold text-[var(--text-primary)]">{t.dmarcTitle}</h4>
+                <p className="text-xs text-[var(--text-muted)]">{t.dmarcDesc}</p>
               </div>
             </div>
             <div className={getStatusColor(result.dmarc.status).split(" ")[0]}>
               {getStatusIcon(result.dmarc.status)}
             </div>
           </div>
-          <div className="bg-zinc-50 p-3 rounded-xl mb-4 min-h-16 flex items-center">
-            <p className="text-sm font-medium text-zinc-700">
+          <div className="bg-[var(--surface-secondary)] p-3 rounded-xl mb-4 min-h-16 flex items-center">
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
               {result.dmarc.message}
             </p>
           </div>
           <div className="space-y-2">
             {result.dmarc.record ? (
               <div
-                className="text-xs font-mono text-zinc-500 bg-zinc-100/50 p-2 rounded truncate"
+                className="text-xs font-mono text-[var(--text-muted)] bg-[var(--surface-secondary)] p-2 rounded truncate"
                 title={result.dmarc.record}
               >
                 {result.dmarc.record}
               </div>
             ) : (
-              <div className="text-xs text-zinc-400 italic">No record</div>
+              <div className="text-xs text-[var(--text-muted)] italic">No record</div>
             )}
           </div>
         </div>
 
         {/* CAA */}
         <div
-          className={`bg-white rounded-[2rem] p-6 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${getStatusColor(result.caa.status).replace("bg-", "hover:bg-").replace("border-", "hover:border-")}`}
+          className={`bg-[var(--surface-primary)] rounded-[2rem] p-6 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${getStatusColor(result.caa.status).replace("bg-", "hover:bg-").replace("border-", "hover:border-")}`}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -284,16 +284,16 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
                 <Lock className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-zinc-900">{t.caaTitle}</h4>
-                <p className="text-xs text-zinc-500">{t.caaDesc}</p>
+                <h4 className="font-bold text-[var(--text-primary)]">{t.caaTitle}</h4>
+                <p className="text-xs text-[var(--text-muted)]">{t.caaDesc}</p>
               </div>
             </div>
             <div className={getStatusColor(result.caa.status).split(" ")[0]}>
               {getStatusIcon(result.caa.status)}
             </div>
           </div>
-          <div className="bg-zinc-50 p-3 rounded-xl mb-4 min-h-16 flex items-center">
-            <p className="text-sm font-medium text-zinc-700">
+          <div className="bg-[var(--surface-secondary)] p-3 rounded-xl mb-4 min-h-16 flex items-center">
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
               {result.caa.message}
             </p>
           </div>
@@ -301,14 +301,14 @@ ${result.caa.records.length > 0 ? result.caa.records.map((r) => `- \`${r}\``).jo
             {result.caa.records.map((r, i) => (
               <div
                 key={i}
-                className="text-xs font-mono text-zinc-500 bg-zinc-100/50 p-2 rounded truncate"
+                className="text-xs font-mono text-[var(--text-muted)] bg-[var(--surface-secondary)] p-2 rounded truncate"
                 title={r}
               >
                 {r}
               </div>
             ))}
             {result.caa.records.length === 0 && (
-              <div className="text-xs text-zinc-400 italic">No record</div>
+              <div className="text-xs text-[var(--text-muted)] italic">No record</div>
             )}
           </div>
         </div>

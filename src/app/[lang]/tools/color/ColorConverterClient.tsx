@@ -121,10 +121,10 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={t.title} description={t.subtitle} processing={t.privacy} />
 
-      <section className="mt-8 grid gap-6 xl:grid-cols-2">
+      <section className="tool-grid">
         <article className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <p className="text-sm font-semibold text-[var(--text-primary)]">{t.inputLabel}</p>
           <label className="sr-only" htmlFor="color-input">
@@ -166,10 +166,7 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
             />
             {parsedFromPicker && (
               <span
-                className="rounded-full border border-[var(--border-subtle)] px-3 py-1 text-xs"
-                style={{
-                  backgroundColor: `rgba(${parsedFromPicker.r}, ${parsedFromPicker.g}, ${parsedFromPicker.b}, ${parsedFromPicker.a / 255})`,
-                }}
+                className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-secondary)] text-[var(--text-secondary)] px-3 py-1 text-xs"
               >
                 {t.pickerFallback}: {formatColor(parsedFromPicker).hex}
               </span>
@@ -196,7 +193,7 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
           </div>
 
           {error && (
-            <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-red-700">
+            <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-[var(--danger-text)]">
               {error || t.noMatch}
             </div>
           )}
@@ -208,7 +205,7 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
           <pre
             data-testid="color-output"
             aria-live="polite"
-            className="mt-3 min-h-60 max-h-80 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
+            className="mt-3 min-h-20 max-h-80 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
           >
             {output || t.noResult}
           </pre>
@@ -223,7 +220,7 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
             type="button"
             disabled={!output}
             onClick={copyAll}
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Clipboard className="h-4 w-4" />
             {copyState === "copied" ? t.copied : copyState === "failed" ? t.copyFailed : t.copyButton}

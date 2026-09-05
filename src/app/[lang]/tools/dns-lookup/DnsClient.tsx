@@ -210,59 +210,59 @@ export default function DnsClient({
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center font-sans">
         <Activity className="w-10 h-10 text-orange-500 animate-pulse mb-6" />
-        <p className="text-zinc-400 tracking-[0.24em] text-[10px]">
+        <p className="text-[var(--text-muted)] tracking-[0.24em] text-xs">
           {"Loading DNS environment..."}
         </p>
       </div>
     );
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 font-sans pb-32">
+    <div className="tool-page max-w-6xl">
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 mb-12 text-[10px] tracking-[0.24em] text-zinc-400">
+      <nav className="flex items-center gap-2 mb-4 text-xs tracking-[0.24em] text-[var(--text-muted)]">
         <Link
           href={`/${lang}`}
-          className="hover:text-zinc-900 transition-colors"
+          className="hover:text-[var(--text-primary)] transition-colors"
         >
           {lang === "zh"
               ? "首页"
               : "Home"}
         </Link>
         <span>/</span>
-        <span className="text-zinc-900 border-b border-emerald-500/30 font-semibold">
+        <span className="text-[var(--text-primary)] border-b border-emerald-500/30 font-semibold">
           {dict.tools.dns_lookup_title}
         </span>
       </nav>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
-        <div className="text-center md:text-left">
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4 mb-5">
+        <div className="text-left">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 justify-center md:justify-start">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-zinc-900 tracking-tighter leading-none break-words">
+            <h1 className="text-2xl sm:text-3xl md:text-3xl font-semibold text-[var(--text-primary)] tracking-tighter leading-none break-words">
               {dict.tools.dns_lookup_title}
             </h1>
             <Link
               href={`/${lang}/tools/api`}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-[var(--accent-text)] hover:bg-emerald-500/20 text-xs font-semibold tracking-wide transition-colors border border-emerald-500/20 w-max mx-auto sm:mx-0"
             >
               <Terminal className="w-3.5 h-3.5" />
-              JSON API Available
+              JSON API
             </Link>
           </div>
-          <p className="text-sm text-zinc-500 leading-relaxed max-w-2xl">
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed max-w-2xl">
             {dict.tools.dns_lookup_desc}
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="inline-flex rounded-xl bg-zinc-100 p-1 mb-8 border border-zinc-200">
+      <div className="inline-flex rounded-xl bg-[var(--bg-tertiary)] p-1 mb-4 border border-[var(--border-strong)]">
         <button
           onClick={() => setActiveTab("standard")}
           className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
             activeTab === "standard"
-              ? "bg-white text-zinc-900 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-900"
+              ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-sm"
+              : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           }`}
         >
           {isZh
@@ -273,8 +273,8 @@ export default function DnsClient({
           onClick={() => setActiveTab("security")}
           className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
             activeTab === "security"
-              ? "bg-white text-emerald-600 shadow-sm"
-              : "text-zinc-500 hover:text-zinc-900"
+              ? "bg-[var(--surface-primary)] text-[var(--accent-text)] shadow-sm"
+              : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -285,32 +285,35 @@ export default function DnsClient({
       </div>
 
       {/* Control Center */}
-      <div className="bg-white border border-black/5 rounded-[2.5rem] p-3 shadow-sm mb-16 relative group">
+      <div className="bg-[var(--surface-primary)] border border-black/5 rounded-2xl p-4 shadow-sm mb-6 relative group">
+        <label htmlFor="dns-domain" className="mb-2 block text-sm font-semibold">{isZh ? "域名" : "Domain"}</label>
         <form
           onSubmit={handleSearch}
           className="flex flex-col md:flex-row items-stretch md:items-center gap-3"
         >
-          <div className="flex-grow flex items-center px-6 py-4">
-            <Globe className="w-5 h-5 text-zinc-400 mr-4 group-focus-within:text-emerald-500 transition-colors" />
+          <div className="min-w-0 flex-grow flex items-center px-3 py-3 border border-[var(--border-strong)] rounded-xl">
+            <Globe className="w-5 h-5 text-[var(--text-muted)] mr-4 group-focus-within:text-emerald-500 transition-colors" />
             <input
+              id="dns-domain"
               type="text"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               placeholder={dict.tools.dns.placeholder}
-              className="w-full bg-transparent border-none outline-none text-zinc-900 text-lg focus:ring-0"
+              className="w-full bg-transparent border-none outline-none text-[var(--text-primary)] text-lg focus:ring-0"
             />
           </div>
 
           {activeTab === "standard" && (
-            <div className="flex flex-wrap items-center gap-4 p-3 bg-zinc-50 rounded-[2rem] border border-zinc-100">
-              <div className="flex items-center gap-3 px-4 border-r border-zinc-200">
-                <Filter className="w-4 h-4 text-zinc-400" />
-                <select
+            <div className="flex flex-wrap items-center gap-4 p-3 bg-[var(--surface-secondary)] rounded-[2rem] border border-[var(--border-subtle)]">
+              <div className="flex items-center gap-3 px-4 border-r border-[var(--border-strong)]">
+                <Filter className="w-4 h-4 text-[var(--text-muted)]" />
+                <label htmlFor="dns-type" className="text-xs">{isZh ? "记录类型" : "Type"}</label>
+                <select id="dns-type"
                   value={selectedType}
                   onChange={(e) =>
                     setSelectedType(e.target.value as DnsRecordType)
                   }
-                  className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-zinc-600 appearance-none tracking-[0.18em]"
+                  className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-[var(--text-secondary)] appearance-none tracking-[0.18em]"
                 >
                   {recordTypes.map((t) => (
                     <option key={t} value={t}>
@@ -320,13 +323,14 @@ export default function DnsClient({
                 </select>
               </div>
               <div className="flex items-center gap-3 px-4">
-                <Server className="w-4 h-4 text-zinc-400" />
-                <select
+                <Server className="w-4 h-4 text-[var(--text-muted)]" />
+                <label htmlFor="dns-provider" className="text-xs">{isZh ? "解析器" : "Resolver"}</label>
+                <select id="dns-provider"
                   value={selectedProvider}
                   onChange={(e) =>
                     setSelectedProvider(e.target.value as DnsProvider)
                   }
-                  className="bg-transparent text-[10px] font-semibold outline-none cursor-pointer text-zinc-500 appearance-none tracking-[0.16em]"
+                  className="bg-transparent text-xs font-semibold outline-none cursor-pointer text-[var(--text-muted)] appearance-none tracking-[0.16em]"
                 >
                   {providers.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -334,7 +338,7 @@ export default function DnsClient({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-3 h-3 text-zinc-300" />
+                <ChevronDown className="w-3 h-3 text-[var(--text-faint)]" />
               </div>
             </div>
           )}
@@ -342,7 +346,7 @@ export default function DnsClient({
           <button
             type="submit"
             disabled={activeTab === "standard" ? loading : auditLoading}
-            className={`text-white px-6 sm:px-10 py-4 sm:py-5 rounded-[2rem] transition-all flex items-center justify-center gap-3 font-semibold shadow-lg disabled:opacity-50 group/btn ${activeTab === "security" ? "bg-zinc-900 hover:bg-zinc-800" : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-500/20"}`}
+            className="ui-button-primary"
           >
             {(activeTab === "standard" ? loading : auditLoading) ? (
               <Activity className="w-5 h-5 animate-spin" />
@@ -360,10 +364,11 @@ export default function DnsClient({
             </span>
           </button>
         </form>
+        <p className="mt-3 text-sm text-[var(--text-secondary)]">{isZh ? "域名将发送到 OpsKitPro 服务，再向所选公共 DNS 解析器查询。" : "The domain is sent to OpsKitPro, which queries the selected public DNS resolver."}</p>
       </div>
 
       {(activeTab === "standard" ? error : auditError) && (
-        <div className="mb-12 p-10 bg-red-50 border border-red-100 rounded-[2.5rem] text-red-600 flex items-start gap-6 animate-in fade-in slide-in-from-top-4">
+        <div className="mb-12 p-10 bg-[var(--danger-soft)] border border-red-100 rounded-[2.5rem] text-[var(--danger-text)] flex items-start gap-6 animate-in fade-in slide-in-from-top-4">
           <AlertCircle className="w-8 h-8 shrink-0" />
           <div>
             <h3 className="text-xl font-semibold tracking-tight mb-2">
@@ -395,12 +400,12 @@ export default function DnsClient({
                 <Monitor className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-zinc-900 tracking-tight">
+                <h3 className="text-xl font-semibold text-[var(--text-primary)] tracking-tight">
                   {lang === "zh"
                       ? "本地联查"
                       : "Local Perspective"}
                 </h3>
-                <p className="text-[10px] text-zinc-400 tracking-[0.18em]">
+                <p className="text-xs text-[var(--text-muted)] tracking-[0.18em]">
                   {lang === "zh"
                       ? "通过多个本地解析器交叉确认"
                       : "Client-side multi-resolver checks"}
@@ -411,10 +416,10 @@ export default function DnsClient({
               {Object.values(localResolvers).map((node: any) => (
                 <div
                   key={node.id}
-                  className="bg-white p-5 rounded-3xl border border-zinc-100 flex flex-col gap-3 transition-all hover:border-indigo-500 group"
+                  className="bg-[var(--surface-primary)] p-5 rounded-3xl border border-[var(--border-subtle)] flex flex-col gap-3 transition-all hover:border-indigo-500 group"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-semibold text-zinc-900 tracking-[0.18em]">
+                    <span className="text-xs font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {node.name}
                     </span>
                     <div
@@ -423,12 +428,12 @@ export default function DnsClient({
                   </div>
                   <div>
                     <p
-                      className="text-[10px] text-zinc-500 truncate"
+                      className="text-xs text-[var(--text-muted)] truncate"
                       title={node.ip}
                     >
                       {node.ip || "NXDOMAIN"}
                     </p>
-                    <p className="text-[9px] text-zinc-300 mt-1 tracking-[0.18em]">
+                    <p className="text-xs text-[var(--text-faint)] mt-1 tracking-[0.18em]">
                       {node.latency}
                     </p>
                   </div>
@@ -440,7 +445,7 @@ export default function DnsClient({
                   .map((_, i) => (
                     <div
                       key={i}
-                      className="bg-zinc-50/50 h-24 rounded-3xl border border-dashed border-zinc-200 animate-pulse"
+                      className="bg-[var(--surface-secondary)] h-24 rounded-3xl border border-dashed border-[var(--border-strong)] animate-pulse"
                     ></div>
                   ))}
             </div>
@@ -448,11 +453,11 @@ export default function DnsClient({
 
           {/* Quick Stats Panel */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40 group relative overflow-hidden transition-all hover:shadow-xl">
+            <div className="bg-[var(--surface-primary)] p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40 group relative overflow-hidden transition-all hover:shadow-sm">
               <div className="absolute top-0 right-0 p-8 scale-150 opacity-[0.03] group-hover:opacity-10 transition-transform">
                 <ShieldCheck className="w-12 h-12" />
               </div>
-              <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
+              <span className="text-xs text-[var(--text-muted)] tracking-[0.24em] font-semibold">
                 {lang === "zh"
                     ? "解析状态"
                     : "Resolver Status"}
@@ -466,49 +471,49 @@ export default function DnsClient({
                 </span>
               </div>
             </div>
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
-              <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
+            <div className="bg-[var(--surface-primary)] p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
+              <span className="text-xs text-[var(--text-muted)] tracking-[0.24em] font-semibold">
                 {lang === "zh"
                     ? "响应时间"
                     : "Response Time"}
               </span>
               <div>
-                <div className="text-4xl font-semibold text-zinc-900 tracking-tighter">
+                <div className="text-4xl font-semibold text-[var(--text-primary)] tracking-tighter">
                   {result.responseTime}
                 </div>
-                <div className="text-[10px] text-emerald-500 font-semibold tracking-[0.18em] mt-1">
+                <div className="text-xs text-emerald-500 font-semibold tracking-[0.18em] mt-1">
                   {lang === "zh"
                       ? "毫秒"
                       : "Milliseconds"}
                 </div>
               </div>
             </div>
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
-              <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
+            <div className="bg-[var(--surface-primary)] p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
+              <span className="text-xs text-[var(--text-muted)] tracking-[0.24em] font-semibold">
                 {lang === "zh"
                     ? "协议"
                     : "Protocol"}
               </span>
-              <div className="text-xl font-semibold text-zinc-900">
+              <div className="text-xl font-semibold text-[var(--text-primary)]">
                 {"TLS 1.3 / ECH"}
               </div>
             </div>
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
-              <span className="text-[10px] text-zinc-400 tracking-[0.24em] font-semibold">
+            <div className="bg-[var(--surface-primary)] p-8 rounded-[2rem] shadow-sm border border-black/5 flex flex-col justify-between h-40">
+              <span className="text-xs text-[var(--text-muted)] tracking-[0.24em] font-semibold">
                 {lang === "zh"
                     ? "记录类型"
                     : "Record Type"}
               </span>
-              <div className="text-4xl font-semibold text-emerald-600 tracking-tighter underline decoration-2 underline-offset-8 decoration-emerald-500/30">
+              <div className="text-4xl font-semibold text-[var(--accent-text)] tracking-tighter underline decoration-2 underline-offset-8 decoration-emerald-500/30">
                 {result.type}
               </div>
             </div>
           </div>
 
           {/* Answer Manifest Grid */}
-          <div className="bg-white border border-black/5 rounded-[2.5rem] overflow-hidden shadow-sm transition-all hover:shadow-xl">
-            <div className="px-6 sm:px-10 py-6 bg-zinc-50 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h3 className="text-[10px] font-semibold text-zinc-400 tracking-[0.18em] flex items-center gap-3">
+          <div className="bg-[var(--surface-primary)] border border-black/5 rounded-[2.5rem] overflow-hidden shadow-sm transition-all hover:shadow-sm">
+            <div className="px-6 sm:px-10 py-6 bg-[var(--surface-secondary)] border-b border-[var(--border-subtle)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h3 className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em] flex items-center gap-3">
                 <Database className="w-4 h-4 text-emerald-500" />{" "}
                 {lang === "zh"
                     ? "响应记录 JSON"
@@ -516,7 +521,7 @@ export default function DnsClient({
               </h3>
               <button
                 onClick={() => copyData(JSON.stringify(result.answers))}
-                className="text-[10px] font-semibold text-zinc-400 hover:text-orange-600 flex items-center gap-2 group transition-colors"
+                className="text-xs font-semibold text-[var(--text-muted)] hover:text-orange-600 flex items-center gap-2 group transition-colors"
               >
                 {copied ? (
                   <Check className="w-4 h-4 text-emerald-500" />
@@ -538,45 +543,45 @@ export default function DnsClient({
                 result.answers.map((answer, idx) => (
                   <div
                     key={idx}
-                    className="p-6 sm:p-10 hover:bg-zinc-50/50 transition-all group flex flex-col md:flex-row md:items-center gap-6 sm:gap-10"
+                    className="p-6 sm:p-10 hover:bg-[var(--surface-secondary)] transition-all group flex flex-col md:flex-row md:items-center gap-6 sm:gap-10"
                   >
                     <div className="flex-grow">
                       <div className="flex items-center gap-4 mb-4">
-                        <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-semibold tracking-[0.18em]">
+                        <span className="px-3 py-1 bg-orange-500 text-white rounded-lg text-xs font-semibold tracking-[0.18em]">
                           {answer.type}
                         </span>
                         <span className="text-zinc-200 font-light opacity-50">
                           /
                         </span>
-                        <span className="text-xs font-semibold text-zinc-400 tracking-[0.18em]">
+                        <span className="text-xs font-semibold text-[var(--text-muted)] tracking-[0.18em]">
                           {answer.name}
                         </span>
                       </div>
-                      <div className="font-semibold text-xl md:text-2xl text-zinc-900 break-all leading-tight flex items-start gap-3">
+                      <div className="font-semibold text-xl md:text-2xl text-[var(--text-primary)] break-all leading-tight flex items-start gap-3">
                         {answer.priority !== undefined && (
                           <span className="text-purple-500 text-sm mt-1">
                             [{answer.priority}]
                           </span>
                         )}
-                        <span className="group-hover:text-emerald-600 transition-colors">
+                        <span className="group-hover:text-[var(--accent-text)] transition-colors">
                           {answer.data}
                         </span>
                       </div>
                     </div>
-                    <div className="flex md:flex-col items-center md:items-end justify-between gap-4 border-t md:border-t-0 pt-6 md:pt-0 border-zinc-100 min-w-max">
+                    <div className="flex md:flex-col items-center md:items-end justify-between gap-4 border-t md:border-t-0 pt-6 md:pt-0 border-[var(--border-subtle)] min-w-max">
                       <div className="flex flex-col md:items-end gap-1">
-                        <div className="text-[10px] text-zinc-400 font-semibold tracking-[0.18em] flex items-center gap-2">
+                        <div className="text-xs text-[var(--text-muted)] font-semibold tracking-[0.18em] flex items-center gap-2">
                           <Clock className="w-3 h-3" />{" "}
                           {"Time_To_Live"}
                         </div>
-                        <div className="text-lg font-semibold text-zinc-900">
+                        <div className="text-lg font-semibold text-[var(--text-primary)]">
                           {answer.ttl}
-                          <span className="text-xs text-zinc-400 ml-1">S</span>
+                          <span className="text-xs text-[var(--text-muted)] ml-1">S</span>
                         </div>
                       </div>
                       <button
                         onClick={() => copyData(answer.data)}
-                        className="p-3 bg-zinc-100 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-500 hover:text-white"
+                        className="p-3 bg-[var(--bg-tertiary)] rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-500 hover:text-white"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
@@ -584,12 +589,12 @@ export default function DnsClient({
                   </div>
                 ))
               ) : (
-                <div className="py-32 text-center flex flex-col items-center bg-white">
+                <div className="py-32 text-center flex flex-col items-center bg-[var(--surface-primary)]">
                   <Terminal className="w-20 h-20 text-zinc-100 mb-6 animate-pulse" />
-                  <p className="text-zinc-400 text-sm tracking-[0.18em]">
+                  <p className="text-[var(--text-muted)] text-sm tracking-[0.18em]">
                     {dict.tools.dns.no_records}
                   </p>
-                  <p className="text-[10px] text-zinc-300 mt-2">
+                  <p className="text-xs text-[var(--text-faint)] mt-2">
                     {lang === "zh"
                         ? "请检查 NXDOMAIN / 超时"
                         : "Check NXDOMAIN / timeout"}
@@ -603,7 +608,7 @@ export default function DnsClient({
           <div className="mt-16">
             <button
               onClick={() => setShowJson(!showJson)}
-              className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400 hover:text-zinc-900 transition-colors tracking-[0.18em] mb-6"
+              className="flex items-center gap-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors tracking-[0.18em] mb-6"
             >
               <ChevronDown
                 className={`w-3 h-3 transition-transform ${showJson ? "rotate-180" : ""}`}
@@ -613,7 +618,7 @@ export default function DnsClient({
                   : "Raw DNS Audit JSON"}
             </button>
             {showJson && (
-              <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-[11px] text-zinc-500 overflow-x-auto border border-zinc-800 shadow-2xl relative">
+              <div className="bg-zinc-900 rounded-[2.5rem] p-6 sm:p-10 text-xs text-[var(--text-muted)] overflow-x-auto border border-zinc-800 shadow-sm relative">
                 <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
                   <button
                     onClick={() => copyData(JSON.stringify(result.raw))}
@@ -641,15 +646,15 @@ export default function DnsClient({
         !loading &&
         history.length > 0 && (
           <div className="animate-in fade-in duration-1000 mt-24">
-            <div className="flex items-center justify-between mb-10 border-b border-zinc-100 pb-6">
+            <div className="flex items-center justify-between mb-10 border-b border-[var(--border-subtle)] pb-6">
               <div>
-                <h4 className="text-[11px] font-semibold text-zinc-900 tracking-[0.18em] flex items-center gap-3">
+                <h4 className="text-xs font-semibold text-[var(--text-primary)] tracking-[0.18em] flex items-center gap-3">
                   <History className="w-5 h-5 text-emerald-500" />{" "}
                   {lang === "zh"
                       ? "最近的 DNS 记录"
                       : "Recent DNS Checks"}
                 </h4>
-                <p className="text-[10px] text-zinc-400 mt-1 tracking-[0.18em]">
+                <p className="text-xs text-[var(--text-muted)] mt-1 tracking-[0.18em]">
                   {lang === "zh"
                       ? "缓存查询记录"
                       : "Cached query history"}
@@ -661,22 +666,22 @@ export default function DnsClient({
                 <button
                   key={h.id}
                   onClick={() => lookup(h.domain, h.type, h.provider)}
-                  className="p-8 bg-white border border-black/5 rounded-3xl hover:border-orange-500/40 hover:-translate-y-1 transition-all text-left flex flex-col justify-between group shadow-sm h-40"
+                  className="p-8 bg-[var(--surface-primary)] border border-black/5 rounded-3xl hover:border-orange-500/40 hover:-translate-y-1 transition-all text-left flex flex-col justify-between group shadow-sm h-40"
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="px-2 py-0.5 bg-orange-500/10 text-orange-600 rounded-lg text-[9px] font-semibold tracking-[0.18em]">
+                      <span className="px-2 py-0.5 bg-orange-500/10 text-orange-600 rounded-lg text-xs font-semibold tracking-[0.18em]">
                         {h.type}
                       </span>
-                      <span className="text-[9px] font-semibold text-zinc-300 tracking-[0.18em]">
+                      <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.18em]">
                         @ {h.provider.split("_")[0]}
                       </span>
                     </div>
-                    <p className="font-semibold text-zinc-900 text-base group-hover:text-orange-600 transition-colors truncate w-full">
+                    <p className="font-semibold text-[var(--text-primary)] text-base group-hover:text-orange-600 transition-colors truncate w-full">
                       {h.domain}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 text-[9px] text-zinc-400 font-semibold tracking-[0.18em] group-hover:text-zinc-900 transition-colors">
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-semibold tracking-[0.18em] group-hover:text-[var(--text-primary)] transition-colors">
                     {"Replay_Probe"}{" "}
                     <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                   </div>
@@ -688,12 +693,12 @@ export default function DnsClient({
 
       {/* Hero Empty State View */}
       {!result && !auditResult && !loading && !auditLoading && (
-        <div className="max-w-2xl mx-auto mt-16 sm:mt-24 p-10 sm:p-20 rounded-[3.5rem] border border-dashed border-zinc-200 bg-white/60 text-center animate-in fade-in duration-1000">
-          <Cpu className="w-16 h-16 text-zinc-100 mx-auto mb-8 animate-pulse text-orange-500/20" />
-          <p className="text-zinc-500 text-[10px] leading-relaxed tracking-[0.18em] opacity-40">
+        <div className="tool-empty mt-6">
+          <Cpu className="w-5 h-5 text-[var(--accent-text)] mb-2" />
+          <p className="text-[var(--text-secondary)] text-sm leading-6">
             {activeTab === "standard"
-              ? "A_Record • AAAA • CNAME • MX • NS • TXT • CAA Resolution Engines"
-              : "DMARC • SPF • CAA Security Diagnostics"}
+              ? (isZh ? "输入域名，查询 A、AAAA、CNAME、MX、NS、TXT 或 CAA 记录。" : "Enter a domain to query A, AAAA, CNAME, MX, NS, TXT or CAA records.")
+              : (isZh ? "输入域名，检查 DMARC、SPF 与 CAA 策略。" : "Enter a domain to inspect DMARC, SPF and CAA policies.")}
           </p>
         </div>
       )}

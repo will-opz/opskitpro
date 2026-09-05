@@ -9,17 +9,17 @@ import {
 
 export default function AdminAnalyticsPage() {
   return (
-    <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-20 pt-8 sm:px-6">
+    <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-8 pt-6 sm:px-6">
       <Link
         href="/admin"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--accent-color)]"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--accent-text)]"
       >
         <ArrowLeft className="h-4 w-4" />
         Admin
       </Link>
 
       <div className="mt-6">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--accent-color)]">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--accent-text)]">
           <BarChart3 className="h-4 w-4" />
           Analytics
         </div>
@@ -39,7 +39,7 @@ export default function AdminAnalyticsPage() {
           rel="noreferrer"
           className="group rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-soft)] hover:border-emerald-500/25"
         >
-          <Cloud className="h-6 w-6 text-[var(--accent-color)]" />
+          <Cloud className="h-6 w-6 text-[var(--accent-text)]" />
           <h2 className="mt-5 flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             Cloudflare Analytics
             <ExternalLink className="h-4 w-4 text-[var(--text-faint)]" />
@@ -54,7 +54,7 @@ export default function AdminAnalyticsPage() {
           rel="noreferrer"
           className="group rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-soft)] hover:border-emerald-500/25"
         >
-          <Laptop className="h-6 w-6 text-[var(--accent-color)]" />
+          <Laptop className="h-6 w-6 text-[var(--accent-text)]" />
           <h2 className="mt-5 flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
             Private ops dashboard
             <ExternalLink className="h-4 w-4 text-[var(--text-faint)]" />

@@ -150,6 +150,7 @@ export default function JwtClient({ lang }: { lang: Lang }) {
   const [analysis, setAnalysis] = useState<JwtAnalysis>(analyzeJwt("", ""));
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [verifying, setVerifying] = useState(false);
+  const [hasAnalysis, setHasAnalysis] = useState(false);
 
   const risks = useMemo(() => {
     const items: string[] = [];
@@ -161,11 +162,12 @@ export default function JwtClient({ lang }: { lang: Lang }) {
   }, [analysis, text]);
 
   const handleAnalyze = () => {
+    setHasAnalysis(Boolean(token.trim()));
     setAnalysis(analyzeJwt(token, secret));
   };
 
   const verify = async () => {
-    if (!analysis.isJwt) return;
+    if (!hasAnalysis || !analysis.isJwt) return;
     setVerifying(true);
     const result = await verifyJwtSignature(token, secret, analysis.metadata.alg || "HS256");
     setAnalysis((current) => ({
@@ -180,6 +182,7 @@ export default function JwtClient({ lang }: { lang: Lang }) {
   };
 
   const clear = () => {
+    setHasAnalysis(false);
     setToken("");
     setSecret("");
     setAnalysis(analyzeJwt("", ""));
@@ -229,22 +232,23 @@ export default function JwtClient({ lang }: { lang: Lang }) {
   }, [analysis.parts.header.json, analysis.parts.payload.json]);
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 sm:py-12">
+    <main className="tool-page">
       <ToolPageHeader title={text.title} description={text.subtitle} processing={text.privacy} />
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-2">
+      <section className="tool-grid">
         <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <label htmlFor="jwt-token" className="text-sm font-semibold text-[var(--text-primary)]">{text.input}</label>
           <textarea
             id="jwt-token"
             value={token}
-            onChange={(event) => setToken(event.target.value)}
+            disabled={verifying}
+            onChange={(event) => { setToken(event.target.value); setHasAnalysis(false); }}
             placeholder={text.placeholder}
             maxLength={JWT_TEXT_LIMIT}
             className="mt-2 min-h-44 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 text-sm font-mono text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
           />
           <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-xs text-[var(--text-muted)]">{text.malformed}</p>
+            <p className="text-xs text-[var(--text-muted)]">{hasAnalysis ? analysis.isJwt ? text.decodeInfo : text.malformed : "header.payload.signature"}</p>
             <span className="text-xs tabular-nums text-[var(--text-muted)]">{token.length.toLocaleString()} / {JWT_TEXT_LIMIT.toLocaleString()}</span>
           </div>
 
@@ -253,21 +257,21 @@ export default function JwtClient({ lang }: { lang: Lang }) {
             id="jwt-secret"
             type="password"
             value={secret}
-            onChange={(event) => setSecret(event.target.value)}
+            disabled={verifying}
+            onChange={(event) => { setSecret(event.target.value); if (hasAnalysis) setAnalysis(analyzeJwt(token, event.target.value)); }}
             placeholder={text.secretPlaceholder}
             className="mt-2 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-faint)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
           />
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={handleAnalyze} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 font-semibold text-emerald-700 transition hover:bg-emerald-500/[0.14]">{text.parse}</button>
-            <button type="button" onClick={verify} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-500/[0.08] px-4 py-2 font-semibold text-sky-700 transition hover:bg-sky-500/[0.14]" disabled={verifying || !analysis.isJwt || analysis.verification.state === "unsupported" || analysis.verification.state === "no-secret" || analysis.metadata.alg === "NONE"}>{verifying ? text.verifying : text.verify}</button>
-            <button type="button" onClick={clear} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border-subtle)] px-4 py-2 font-semibold text-[var(--text-muted)] transition hover:bg-[var(--surface-secondary)]"><Eraser className="h-4 w-4" />{text.clear}</button>
+            <button type="button" onClick={handleAnalyze} disabled={!token.trim() || verifying} className="ui-button-primary">{text.parse}</button>
+            <button type="button" onClick={verify} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-sky-500/30 bg-sky-500/[0.08] px-4 py-2 font-semibold text-[var(--info-text)] transition hover:bg-sky-500/[0.14]" disabled={!hasAnalysis || verifying || !analysis.isJwt || analysis.verification.state === "unsupported" || analysis.verification.state === "no-secret" || analysis.metadata.alg === "NONE"}>{verifying ? text.verifying : text.verify}</button>
+            <button type="button" onClick={clear} disabled={verifying} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border-subtle)] px-4 py-2 font-semibold text-[var(--text-muted)] transition hover:bg-[var(--surface-secondary)]"><Eraser className="h-4 w-4" />{text.clear}</button>
           </div>
 
-          {!analysis.isJwt ? <p className="mt-4 text-sm text-[var(--text-faint)]">{text.noInput}</p> : null}
-          {analysis.risks.malformed ? <p className="mt-4 flex items-start gap-2 text-sm text-red-600"><AlertTriangle className="mt-0.5 h-4 w-4" />{analysis.risks.malformedMessage ?? text.malformed}</p> : null}
-          {risks.length > 0 ? (
-            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-900">
+          {hasAnalysis && analysis.risks.malformed ? <p className="mt-4 flex items-start gap-2 text-sm text-[var(--danger-text)]"><AlertTriangle className="mt-0.5 h-4 w-4" />{analysis.risks.malformedMessage ?? text.malformed}</p> : null}
+          {hasAnalysis && risks.length > 0 ? (
+            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-[var(--warning-text)]">
               <p className="font-semibold">{text.risks}</p>
               <ul className="mt-2 list-disc pl-4 text-sm">
                 {risks.map((risk) => <li key={risk}>{risk}</li>)}
@@ -275,24 +279,25 @@ export default function JwtClient({ lang }: { lang: Lang }) {
             </div>
           ) : null}
 
-          <div className="mt-4 rounded-xl border border-[var(--border-subtle)] p-3 text-sm text-[var(--text-muted)]">
+          {hasAnalysis && analysis.isJwt && <div className="mt-4 rounded-xl border border-[var(--border-subtle)] p-3 text-sm text-[var(--text-muted)]">
             <p className="font-semibold text-[var(--text-primary)]">{text.verification}</p>
             <p className="mt-1">
-              {formatVerification(analysis) === "ok" ? <span className="text-emerald-600">{text.valid}</span> : formatVerification(analysis) === "unsigned" ? <span className="text-amber-700">{text.unsigned}</span> : formatVerification(analysis) === "mismatch" ? <span className="text-rose-600">{text.invalid}</span> : <span>{analysis.verification.message ?? text.notProvided}</span>}
+              {formatVerification(analysis) === "ok" ? <span className="text-[var(--accent-text)]">{text.valid}</span> : formatVerification(analysis) === "unsigned" ? <span className="text-[var(--warning-text)]">{text.unsigned}</span> : formatVerification(analysis) === "mismatch" ? <span className="text-[var(--danger-text)]">{text.invalid}</span> : <span>{analysis.verification.message ?? text.notProvided}</span>}
             </p>
-            {analysis.verification.state === "no-secret" ? <p className="mt-2 text-xs text-amber-700">{text.notProvided}</p> : null}
-            {analysis.verification.state === "unsupported" ? <p className="mt-2 text-xs text-amber-700">Unsupported algorithm. HS256 / HS384 / HS512 / NONE only.</p> : null}
-          </div>
+            {analysis.verification.state === "no-secret" ? <p className="mt-2 text-xs text-[var(--warning-text)]">{text.notProvided}</p> : null}
+            {analysis.verification.state === "unsupported" ? <p className="mt-2 text-xs text-[var(--warning-text)]">Unsupported algorithm. HS256 / HS384 / HS512 / NONE only.</p> : null}
+          </div>}
         </div>
 
         <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">{text.resultLocal}</h2>
+          {!hasAnalysis ? <p className="tool-empty mt-4">{text.noInput}</p> : !analysis.isJwt ? <p role="status" className="tool-empty mt-4">{text.malformed}</p> : <>
           <p className="mt-2 text-sm text-[var(--text-muted)]">{text.decodeInfo}</p>
 
           <div className="mt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text-primary)]">Header</p>
-              <button type="button" onClick={() => copyText(headerJson)} className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700"><Clipboard className="h-4 w-4" />{text.copy}</button>
+              <button type="button" onClick={() => copyText(headerJson)} className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-text)]"><Clipboard className="h-4 w-4" />{text.copy}</button>
             </div>
             <pre className="mt-2 max-h-52 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs text-[var(--text-primary)]">{analysis.parts.header.parseError ?? headerJson}</pre>
           </div>
@@ -300,14 +305,14 @@ export default function JwtClient({ lang }: { lang: Lang }) {
           <div className="mt-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text-primary)]">Payload</p>
-              <button type="button" onClick={() => copyText(payloadJson)} className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700"><Clipboard className="h-4 w-4" />{text.copy}</button>
+              <button type="button" onClick={() => copyText(payloadJson)} className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--accent-text)]"><Clipboard className="h-4 w-4" />{text.copy}</button>
             </div>
             <pre className="mt-2 max-h-52 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs text-[var(--text-primary)]">{analysis.parts.payload.parseError ?? payloadJson}</pre>
           </div>
 
           <div className="mt-4">
             <p className="text-sm font-semibold text-[var(--text-primary)]">{text.claims}</p>
-            <dl className="mt-2 space-y-2 text-sm text-[var(--text-muted)]">
+            <dl className="mt-2 grid grid-cols-2 gap-3 text-sm text-[var(--text-muted)]">
               <div><dt className="text-[var(--text-primary)]">alg</dt><dd className="break-all">{analysis.metadata.alg || text.unknown}</dd></div>
               <div><dt className="text-[var(--text-primary)]">typ</dt><dd className="break-all">{analysis.metadata.typ || text.unknown}</dd></div>
               <div><dt className="text-[var(--text-primary)]">kid</dt><dd className="break-all">{analysis.metadata.kid || text.unknown}</dd></div>
@@ -331,9 +336,9 @@ export default function JwtClient({ lang }: { lang: Lang }) {
             <p className="font-semibold text-[var(--text-primary)]">{text.examples[0]}</p>
             <p>{text.examples[1]}</p>
           </div>
-          <p className="mt-3 text-xs text-[var(--text-muted)]">{copyState === "copied" ? text.copied : copyState === "failed" ? text.copyFailed : ""}</p>
-          {analysis.verification.state === "ok" ? <CheckCircle2 className="mt-3 h-4 w-4 text-emerald-600" /> : analysis.verification.state === "mismatch" ? <XCircle className="mt-3 h-4 w-4 text-rose-600" /> : null}
-          <p className="mt-2 text-xs">{analysis.verification.message}</p>
+          <p role="status" className="mt-3 text-xs text-[var(--text-muted)]">{copyState === "copied" ? text.copied : copyState === "failed" ? text.copyFailed : ""}</p>
+          {analysis.verification.state === "ok" ? <CheckCircle2 className="mt-3 h-4 w-4 text-[var(--accent-text)]" /> : analysis.verification.state === "mismatch" ? <XCircle className="mt-3 h-4 w-4 text-[var(--danger-text)]" /> : null}
+          <p className="mt-2 text-xs">{analysis.verification.message}</p></>}
         </div>
       </section>
     </main>
