@@ -39,11 +39,11 @@ import { TrackedLink } from "@/components/TrackedLink";
 import { useDiagnosticHistory } from "./_hooks/useDiagnosticHistory";
 import { useWebsiteCheck } from "./_hooks/useWebsiteCheck";
 import {
-  isBlockedHttpStatus,
   normalizeTargetInput,
 } from "./_hooks/helpers";
 import { parseWebsiteTarget } from "@/lib/diagnostic-target";
 import { WebsiteCheckIntro } from "./WebsiteCheckIntro";
+import { assessHttpEvidence, describeHttpAssessment } from "@/lib/http-assessment";
 import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
 import {
   buildWebsiteCheckMarkdown,
@@ -577,24 +577,15 @@ export default function WebsiteCheckClient({
 
   const getResultState = useCallback(
     (data: any) => {
-      const blocked =
-        !data?.http?.success &&
-        (data?.http?.classification === "probe_blocked" ||
-          isBlockedHttpStatus(data?.http?.status_code));
-      const browserReachable =
-        data?.observations?.browser?.status === "reachable" &&
-        data?.observations?.browser?.precision === "full";
-      const edgeReachable =
-        (data?.observations?.edge?.status === "reachable" ||
-          data?.observations?.edge?.status === "redirected") &&
-        data?.observations?.edge?.precision === "full";
-      const corroboratedReachable = browserReachable || edgeReachable;
+      const http = assessHttpEvidence(data);
+      const { probeBlocked: blocked, browserReachable, edgeReachable, corroboratedReachable } = http;
       const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp);
       const verdict = buildWebsiteDiagnosticModel(data).verdict;
       const healthy = verdict === "Healthy";
       const warning = verdict === "Degraded" || verdict === "Unknown";
 
       return {
+        http,
         blocked,
         browserReachable,
         edgeReachable,
@@ -608,6 +599,13 @@ export default function WebsiteCheckClient({
     },
     [],
   );
+
+  const httpToneClass = {
+    emerald: "text-[var(--accent-text)] border-emerald-500/20 bg-[var(--accent-soft)]",
+    orange: "text-[var(--warning-text)] border-orange-500/20 bg-[var(--warning-soft)]",
+    red: "text-[var(--danger-text)] border-red-500/20 bg-[var(--danger-soft)]",
+    zinc: "text-[var(--text-muted)] border-[var(--border-subtle)] bg-[var(--surface-secondary)]",
+  };
 
   const summaryFacts = useMemo(() => {
     if (!result) return [];
@@ -627,14 +625,8 @@ export default function WebsiteCheckClient({
       },
       {
         label: localeText.http.title,
-        value: state.corroboratedReachable
-          ? `${state.browserReachable ? result.observations.browser.httpStatus || "OK" : `Edge ${result.observations.edge.httpStatus || "OK"}`} / Probe ${result.http.status_code}`
-          : `${result.http.status_code}`,
-        tone: result.http.success || state.corroboratedReachable
-          ? "emerald"
-          : state.blocked
-            ? "orange"
-            : "red",
+        value: describeHttpAssessment(state.http, lang),
+        tone: state.http.tone,
       },
       {
         label: localeText.ssl.title,
@@ -665,7 +657,7 @@ export default function WebsiteCheckClient({
         tone: result.cdn.is_provider ? "emerald" : "zinc",
       },
     ];
-  }, [getResultState, localeText, result]);
+  }, [getResultState, localeText, result, lang]);
 
   // Tracks the last run query to avoid infinite loops in useEffect
   const lastProcessedQuery = React.useRef<string | undefined>(null as any);
@@ -911,10 +903,12 @@ export default function WebsiteCheckClient({
 
     const state = getResultState(data);
 
-    if (!data.http.success) {
-      if (state.browserReachable && state.blocked) {
+    if (state.http.probe.state !== "success") {
+      if (state.http.probe.state === "unknown") {
+        advice.push(lang === "zh" ? "探针证据不足，请重新检测。" : "Probe evidence is insufficient. Run the check again.");
+      } else if (state.browserReachable && state.blocked) {
         advice.push(copy.probeLimited);
-      } else if (isBlockedHttpStatus(data.http.status_code)) {
+      } else if (state.blocked) {
         advice.push(copy.blocked);
       } else if (data.http.status_code === 530) {
         advice.push(copy.http530);
@@ -1372,19 +1366,12 @@ export default function WebsiteCheckClient({
                     <Monitor className="h-3 w-3 shrink-0 text-[var(--text-muted)]" />
                     <span className="truncate">{displayedTarget}</span>
                   </span>
+                  {resultState && <span className="text-xs text-[var(--text-muted)]" data-testid="http-freshness">{({ fresh: lang === "zh" ? "本次结果" : "Current result", cached: lang === "zh" ? "缓存结果" : "Cached result", stale: lang === "zh" ? "结果已过期，请重新检测" : "Stale result — run again" })[resultState.http.freshness]}</span>}
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold tracking-[0.14em] ${
-                      result.http.success || resultState?.corroboratedReachable
-                        ? "border-emerald-500/20 bg-[var(--accent-soft)] text-[var(--accent-text)]"
-                        : resultState?.blocked
-                          ? "border-orange-500/20 bg-[var(--warning-soft)] text-[var(--warning-text)]"
-                          : "border-red-500/20 bg-[var(--danger-soft)] text-[var(--danger-text)]"
-                    }`}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${httpToneClass[resultState?.http.tone ?? "zinc"]}`}
                   >
                     <CheckCircle2 className="h-3 w-3" />
-                    {resultState?.corroboratedReachable
-                      ? `${resultState.browserReachable ? result.observations.browser.httpStatus || "OK" : `Edge ${result.observations.edge.httpStatus || "OK"}`} / Probe ${result.http.status_code}`
-                      : result.http.status_code || "ERR"}
+                    {resultState && describeHttpAssessment(resultState.http, lang)}
                   </span>
                 </div>
               </div>
@@ -1762,9 +1749,9 @@ export default function WebsiteCheckClient({
                   key: "probe",
                   label: "OpsKitPro Probe",
                   meta: "AWS Lightsail",
-                  reachable: result.http.success,
+                  reachable: resultState?.http.probe.state === "success",
                   status: result.http.status_code,
-                  detail: result.http.classification,
+                  detail: resultState?.http.probe.state,
                   icon: Server,
                 },
               ].map((observation) => {
@@ -2503,7 +2490,7 @@ export default function WebsiteCheckClient({
 
               {/* Step 3: Server HTTP */}
               <div
-                className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all ${result.http.success || resultState?.corroboratedReachable ? "bg-[var(--surface-primary)] border-black/5" : resultState?.blocked ? "bg-[var(--warning-soft)] border-orange-500/20" : "bg-[var(--danger-soft)] border-red-500/20"}`}
+                className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row gap-5 lg:gap-8 shadow-sm hover:shadow-md transition-all ${httpToneClass[resultState?.http.tone ?? "zinc"]}`}
               >
                 <div className="md:w-40 shrink-0 flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-2 md:border-r border-[var(--border-subtle)] pr-5">
                   <span className="text-xs font-semibold text-[var(--text-faint)] tracking-[0.22em]">
@@ -2511,7 +2498,7 @@ export default function WebsiteCheckClient({
                   </span>
                   <div className="flex items-center gap-2">
                     <Server
-                      className={`w-4 h-4 ${result.http.success || resultState?.corroboratedReachable ? "text-emerald-500" : resultState?.blocked ? "text-orange-500" : "text-red-500"}`}
+                      className={`w-4 h-4 ${httpToneClass[resultState?.http.tone ?? "zinc"]}`}
                     />
                     <span className="text-sm font-semibold text-[var(--text-primary)] tracking-[0.18em]">
                       {localeText.http.title}
@@ -2523,7 +2510,7 @@ export default function WebsiteCheckClient({
                     </span>
                     {result.observations?.browser && (
                       <span className="rounded-full border border-emerald-500/20 bg-[var(--accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--accent-text)]">
-                        Your Browser · full
+                        Your Browser · {result.observations.browser.precision}
                       </span>
                     )}
                     {result.observations?.edge && (
@@ -2545,15 +2532,9 @@ export default function WebsiteCheckClient({
                       {localeText.http.availability}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.http.success || resultState?.corroboratedReachable ? "text-emerald-500" : resultState?.blocked ? "text-[var(--warning-text)]" : "text-red-500"}`}
+                      className={`text-sm font-semibold ${httpToneClass[resultState?.http.tone ?? "zinc"]}`}
                     >
-                      {resultState?.corroboratedReachable
-                        ? lang === "zh"
-                          ? `${resultState.browserReachable ? "浏览器" : "边缘"}正常 / Lightsail 受限`
-                          : `${resultState.browserReachable ? "Browser" : "Edge"} OK / Lightsail restricted`
-                        : result.http.success
-                        ? localeText.http.success
-                        : localeText.http.failure}
+                      {resultState && describeHttpAssessment(resultState.http, lang)}
                     </p>
                   </div>
                   <div>
@@ -2561,11 +2542,9 @@ export default function WebsiteCheckClient({
                       {localeText.http.status}
                     </p>
                     <p
-                      className={`text-sm font-semibold ${result.http.success || resultState?.corroboratedReachable ? "text-[var(--text-primary)]" : "text-red-500"}`}
+                      className={`text-sm font-semibold ${httpToneClass[resultState?.http.tone ?? "zinc"]}`}
                     >
-                      {resultState?.corroboratedReachable
-                        ? `${resultState.browserReachable ? result.observations.browser.httpStatus || "OK" : `Edge ${result.observations.edge.httpStatus || "OK"}`} / ${result.http.status_code}`
-                        : result.http.status_code || "Err"}
+                      {resultState && describeHttpAssessment(resultState.http, lang)}
                     </p>
                   </div>
                   <div>

@@ -77,3 +77,32 @@ describe("SensitiveDataClient", () => {
     expect(screen.queryByText("Original (highlighted)")).not.toBeInTheDocument();
   });
 });
+
+
+describe("redaction copy safety", () => {
+  beforeEach(() => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: vi.fn().mockResolvedValue(undefined) } });
+  });
+  it.each([121, 500])("copies all %i redactions while previewing only 120", async (count) => {
+    render(<SensitiveDataClient lang="en" />);
+    fireEvent.change(screen.getByLabelText("Text to scan"), { target: { value: Array.from({ length: count }, (_, i) => `demo${i}@example.com`).join("\n") } });
+    expect(screen.getByText("Detected")).toBeVisible();
+    expect(screen.getByText("Redacted")).toBeVisible();
+    expect(screen.getByText("Displayed")).toBeVisible();
+    expect(screen.getByText("Preview: first 120 matches. All detected matches were redacted.")).toBeVisible();
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Copy redacted text" })); });
+    expect(navigator.clipboard.writeText).toHaveBeenCalledExactlyOnceWith(Array.from({ length: count }, (_, i) => `[EMAIL_${i + 1}]`).join("\n"));
+  });
+  it("blocks copy when input is too long, even after a successful scan", () => {
+    render(<SensitiveDataClient lang="zh" />);
+    fireEvent.change(screen.getByLabelText("待扫描文本"), { target: { value: "demo@example.com" } });
+    expect(screen.getByRole("button", { name: "复制脱敏文本" })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText("待扫描文本"), { target: { value: "demo@example.com " + "x".repeat(50000) } });
+    const button = screen.getByRole("button", { name: "复制脱敏文本" });
+    expect(button).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent("扫描未完成");
+    fireEvent.click(button);
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+    expect(screen.queryByText("[EMAIL_1]")).not.toBeInTheDocument();
+  });
+});

@@ -1,7 +1,7 @@
+import { assessHttpEvidence, describeHttpAssessment } from "@/lib/http-assessment";
 import {
   calculateScore,
   createSafeDiagnosticResult,
-  isBlockedHttpStatus,
   parseLatencyMs,
 } from "../_hooks/helpers";
 import { buildWebsiteDiagnosticModel } from "@/lib/diagnostic-model";
@@ -252,18 +252,9 @@ export function buildWebsiteCheckReport(
   const score = calculateScore(data);
   const diagnosis = buildWebsiteDiagnosticModel(data);
   const isIpOrVisitor = Boolean(data.isVisitor || data.isActuallyIp);
-  const blocked =
-    !data.http.success &&
-    (data.http.classification === "probe_blocked" ||
-      isBlockedHttpStatus(data.http.status_code));
-  const browserReachable =
-    data.observations?.browser?.status === "reachable" &&
-    data.observations.browser.precision === "full";
-  const edgeReachable =
-    (data.observations?.edge?.status === "reachable" ||
-      data.observations?.edge?.status === "redirected") &&
-    data.observations.edge.precision === "full";
-  const corroboratedReachable = browserReachable || edgeReachable;
+  const http = assessHttpEvidence(data);
+  const probeSuccess = http.probe.state === "success";
+  const { probeBlocked: blocked, browserReachable, corroboratedReachable } = http;
   const missingHeaders =
     data.securityHeaders?.checks?.filter((check: any) => !check.present) || [];
   const findings: WebsiteCheckFinding[] = [];
@@ -309,21 +300,13 @@ export function buildWebsiteCheckReport(
   );
 
   const cloudflareHint = getCloudflareHint(data);
-  const httpSeverity: WebsiteCheckFindingSeverity =
-    corroboratedReachable && blocked
-      ? "info"
-      : data.http.success
-    ? data.http.redirect_warning
-      ? "warning"
-      : parseLatencyMs(data.http.latency) > 2000
-        ? "warning"
-        : "success"
-    : blocked
-      ? "warning"
-      : "critical";
+  const httpSeverity: WebsiteCheckFindingSeverity = http.availability === "unknown" ? "info"
+    : http.availability === "partial" ? "warning"
+      : http.availability === "failed" ? "critical"
+        : data.http.redirect_warning || parseLatencyMs(data.http.latency) > 2000 ? "warning" : "success";
   findings.push(
     makeFinding({
-      id: data.http.success
+      id: http.availability === "unknown" ? "http.unknown" : probeSuccess
         ? "http.reachable"
         : corroboratedReachable && blocked
           ? browserReachable
@@ -335,15 +318,7 @@ export function buildWebsiteCheckReport(
       key: "http",
       severity: httpSeverity,
       title: copy.labels.http,
-      summary: data.http.success
-        ? `HTTP returned ${data.http.status_code || "OK"} in ${data.http.latency}.`
-        : corroboratedReachable && blocked
-          ? lang === "zh"
-            ? `${browserReachable ? "用户浏览器" : "Cloudflare Edge"}访问正常，但 OpsKitPro Probe 被 HTTP ${data.http.status_code || "ERR"} 拒绝。`
-            : `${browserReachable ? "Your browser" : "Cloudflare Edge"} can reach the site, but OpsKitPro Probe was rejected with HTTP ${data.http.status_code || "ERR"}.`
-        : blocked
-          ? copy.httpBlockedSummary(data.http.status_code || "ERR")
-          : copy.httpFailureSummary(data.http.status_code),
+      summary: describeHttpAssessment(http, lang),
       evidence: [
         browserReachable
           ? `Your Browser: HTTP ${data.observations?.browser?.httpStatus || "OK"} · ${data.observations?.browser?.latencyMs ?? "—"}ms`
@@ -358,7 +333,7 @@ export function buildWebsiteCheckReport(
         `Redirects: ${data.http.redirect_count ?? 0}${data.http.redirect_warning ? ` (${data.http.redirect_warning})` : ""}`,
         cloudflareHint ? `Edge hint: ${cloudflareHint}` : "",
       ].filter(Boolean),
-      likelyCause: data.http.success
+      likelyCause: http.availability === "unknown" ? "" : probeSuccess
         ? data.http.redirect_warning || copy.noIssueCause
         : corroboratedReachable && blocked
           ? lang === "zh"
@@ -369,7 +344,9 @@ export function buildWebsiteCheckReport(
           : cloudflareHint
             ? `${cloudflareHint} usually points to an origin connectivity, TLS, DNS, or edge security rule problem.`
             : copy.httpFailureCause,
-      recommendedFix: data.http.success
+      recommendedFix: http.availability === "unknown"
+        ? lang === "zh" ? "证据不足，请重新检测并比较观察点。" : "Insufficient evidence. Run again and compare observation points."
+        : probeSuccess
         ? data.http.redirect_warning
           ? "Review redirect rules and remove loops or unnecessary hops."
           : copy.noIssueFix
@@ -380,7 +357,7 @@ export function buildWebsiteCheckReport(
         : blocked
           ? copy.httpBlockedFix
           : copy.httpFailureFix,
-      verificationSteps: data.http.success
+      verificationSteps: probeSuccess
         ? [
             "Open the final URL from a clean browser session.",
             "Re-run Website Check after redirect or application changes.",
@@ -630,12 +607,12 @@ export function buildWebsiteCheckReport(
   const status: WebsiteCheckReportStatus =
     diagnosis.verdict === "Healthy"
       ? "healthy"
-      : diagnosis.verdict === "Degraded"
+      : (diagnosis.verdict === "Degraded" || diagnosis.verdict === "Unknown")
         ? "degraded"
         : "critical";
   const evidence = [
     `DNS: ${data.dns.success ? "OK" : "FAIL"} · ${data.dns.latency} · ${data.dns.resolved_ip}`,
-    `HTTP: ${data.http.success ? "OK" : blocked ? "BLOCKED" : "FAIL"} · ${data.http.status_code || "ERR"} · ${data.http.latency}`,
+    `HTTP: ${http.probe.state.toUpperCase()} · ${data.http.status_code || "ERR"} · ${data.http.latency}`,
     `SSL: ${data.ssl.valid ? "OK" : "FAIL"} · ${data.ssl.protocol || "Unknown"} · expires ${data.ssl.expiry}`,
     `Security Headers: ${data.securityHeaders?.passed ?? 0}/${data.securityHeaders?.total ?? 0} · ${data.securityHeaders?.grade || "Unknown"}`,
     `CDN: ${data.cdn.is_provider ? data.cdn.provider : "Unknown · No known CDN signature identified"} · server ${data.cdn.server || "Unknown"}`,
@@ -656,17 +633,14 @@ export function buildWebsiteCheckReport(
     score,
     status,
     verdict: diagnosis.verdict,
-    summary:
-      corroboratedReachable && blocked
+    summary: http.availability !== "success"
+      ? describeHttpAssessment(http, lang)
+      : diagnosis.verdict === "Healthy"
         ? lang === "zh"
-          ? `网站可从${browserReachable ? "用户浏览器" : " Cloudflare Edge"}正常访问，但 OpsKitPro 服务端探针受到安全策略限制。`
-          : `The site is reachable from ${browserReachable ? "your browser" : "Cloudflare Edge"}, but security policy limits the OpsKitPro server probe.`
-        : diagnosis.verdict === "Healthy"
-          ? lang === "zh"
-            ? "网站可访问；DNS、HTTP 与公开 TLS 检查已从当前观察点完成。其他发现不会单独改变可用性结论。"
-            : "The website is reachable; DNS, HTTP, and public TLS checks completed from the current observation point. Other findings do not independently change the availability verdict."
-          : copy.summary[status],
-    impact: copy.impact[status],
+          ? "网站可访问；DNS、HTTP 与公开 TLS 检查已从当前观察点完成。其他发现不会单独改变可用性结论。"
+          : "The website is reachable; DNS, HTTP, and public TLS checks completed from the current observation point. Other findings do not independently change the availability verdict."
+        : copy.summary[status],
+    impact: http.availability === "success" ? copy.impact[status] : describeHttpAssessment(http, lang),
     suspectedCause: diagnosis.inferences[0]?.summary,
     evidence,
     evidenceRecords: diagnosis.evidence,
@@ -798,7 +772,7 @@ export function buildWebsiteCheckMarkdown(
     `- Lookup latency: ${data.dns.latency}`,
     "",
     "## HTTP",
-    `- Reachable: ${data.http.success ? "Yes" : "No"}`,
+    `- Reachable: ${describeHttpAssessment(assessHttpEvidence(data), "en")}`,
     `- Status: ${data.http.status_code || "Error"}`,
     `- Classification: ${data.http.classification || "unknown"}`,
     `- Challenge detected: ${data.http.challenge ? "Yes" : "No"}`,

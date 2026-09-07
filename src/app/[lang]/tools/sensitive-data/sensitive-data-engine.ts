@@ -51,11 +51,17 @@ export type SensitiveMatch = {
 
 export type SensitiveScanOptions = Partial<{
   enabled: Partial<EnabledEntityMap>;
+  /** Preview only; never limits detection or redaction. */
   maxMatches: number;
 }>;
 
 export type SensitiveScanResult = {
+  /** Bounded preview of the complete scan. */
   matches: SensitiveMatch[];
+  complete: boolean;
+  failureReason?: "input_too_long" | "processing_failed";
+  redacted: number;
+  displayed: number;
   truncated: boolean;
   total: number;
   counts: Record<SensitiveEntity, number>;
@@ -174,8 +180,10 @@ function isEnabled(type: SensitiveEntity, options: Partial<EnabledEntityMap> = {
   return options[type] !== false;
 }
 
-export function detectSensitive(input: string, options: SensitiveScanOptions = {}): SensitiveScanResult {
-  const maxMatches = options.maxMatches ?? 120;
+function scanSensitive(input: string, options: SensitiveScanOptions = {}): SensitiveScanResult {
+  const maxMatches = Number.isFinite(options.maxMatches)
+    ? Math.max(0, Math.floor(options.maxMatches!))
+    : 120;
   const enabled = options.enabled ?? {};
   const counts: Record<SensitiveEntity, number> = {
     email: 0,
@@ -188,7 +196,9 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
     ip: 0,
   };
 
-  const safeInput = input.slice(0, MAX_INPUT_CHARS);
+  // Reject before scanning: a prefix is never presented as a complete output.
+  if (input.length > MAX_INPUT_CHARS) return failedScan("input_too_long");
+  const safeInput = input;
   const matchesByType: Record<SensitiveEntity, SensitiveMatch[]> = {
     email: isEnabled("email", enabled) && safeInput.includes("@")
       ? collectMatches(EMAIL_RE, "email", safeInput)
@@ -224,14 +234,9 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
 
   const filtered: SensitiveMatch[] = [];
   let cursor = 0;
-  let limitHit = false;
   for (const match of result) {
     if (match.start < cursor) continue;
     if (match.end <= match.start) continue;
-    if (filtered.length >= maxMatches) {
-      limitHit = true;
-      break;
-    }
     filtered.push(match);
     counts[match.type] += 1;
     cursor = match.end;
@@ -263,15 +268,39 @@ export function detectSensitive(input: string, options: SensitiveScanOptions = {
   parts.push(safeInput.slice(cursorOutput));
 
   return {
-    matches: filtered,
-    truncated: input.length > MAX_INPUT_CHARS,
+    matches: filtered.slice(0, maxMatches),
+    complete: true,
+    redacted: filtered.length,
+    displayed: Math.min(filtered.length, maxMatches),
+    truncated: false,
     total: filtered.length,
     counts,
     redactedText: parts.join(""),
-    redactionMap,
-    limitHit,
+    redactionMap: Object.fromEntries(
+      filtered.slice(0, maxMatches).map((match) => [match.placeholder!, redactionMap[match.placeholder!]]),
+    ),
+    limitHit: filtered.length > maxMatches,
   };
 };
+
+function failedScan(failureReason: NonNullable<SensitiveScanResult["failureReason"]>): SensitiveScanResult {
+  return {
+    matches: [], complete: false, failureReason,
+    truncated: failureReason === "input_too_long",
+    total: 0, redacted: 0, displayed: 0,
+    counts: Object.fromEntries(ENTITY_ORDER.map((type) => [type, 0])) as Record<SensitiveEntity, number>,
+    redactedText: "", redactionMap: {}, limitHit: false,
+  };
+}
+
+export function detectSensitive(input: string, options: SensitiveScanOptions = {}): SensitiveScanResult {
+  try {
+    return scanSensitive(input, options);
+  } catch {
+    // Fail closed: no partial output can escape through copy/export consumers.
+    return failedScan("processing_failed");
+  }
+}
 
 export function buildSummaryText(
   result: SensitiveScanResult,

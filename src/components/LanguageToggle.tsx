@@ -2,13 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Globe, ChevronDown } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { ACTIVE_LOCALES, type ActiveLocale } from "@/lib/i18n";
 
 export function LanguageToggle({ currentLang }: { currentLang: ActiveLocale }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const menuId = useId();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,9 +46,17 @@ export function LanguageToggle({ currentLang }: { currentLang: ActiveLocale }) {
   } satisfies Record<ActiveLocale, string>;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef} onKeyDown={(event) => {
+      if (event.key === "Escape" && isOpen) {
+        event.stopPropagation();
+        setIsOpen(false);
+        dropdownRef.current?.querySelector("button")?.focus();
+      }
+    }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={menuId}
         className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 py-1.5 hover:bg-[var(--surface-elevated)]"
       >
         <Globe className="w-3.5 h-3.5 text-[var(--text-muted)]" />
@@ -60,7 +69,7 @@ export function LanguageToggle({ currentLang }: { currentLang: ActiveLocale }) {
       </button>
 
       {isOpen && (
-        <div className="ui-surface-elevated absolute right-0 z-50 mt-2 w-32 rounded-xl py-2 animate-in fade-in zoom-in-95 duration-200">
+        <div id={menuId} className="ui-surface-elevated absolute right-0 z-50 mt-2 w-32 rounded-xl py-2 animate-in fade-in zoom-in-95 duration-200">
           {ACTIVE_LOCALES.map((l) => (
             <button
               key={l}

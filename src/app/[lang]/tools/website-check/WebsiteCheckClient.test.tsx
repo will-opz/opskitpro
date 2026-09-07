@@ -56,4 +56,22 @@ describe("WebsiteCheck entry", () => {
     rerender(<WebsiteCheckClient dict={dict} lang="en" />);
     expect(screen.queryByText("What we’ll check")).not.toBeInTheDocument();
   });
+  it.each(["en", "zh"] as const)("keeps probe and edge 200 consistent in summary and details (%s)", (lang) => {
+    state.result = createSafeDiagnosticResult({
+      domain: "example.com", dns: { success: true, resolved_ip: "192.0.2.1" },
+      http: { success: true, status_code: 200 }, ssl: { valid: true },
+      observations: { edge: { source: "cloudflare_edge", status: "reachable", precision: "full", colo: "NRT", httpStatus: 200, checkedAt: "2026-09-07T00:00:00Z" } },
+      meta: { cacheStatus: "HIT", cacheAgeSeconds: 42 },
+    }, "example.com");
+    render(<WebsiteCheckClient dict={dict} lang={lang} />);
+    expect(screen.getByTestId("http-freshness")).toHaveTextContent(lang === "zh" ? "缓存结果" : "Cached result");
+    const text = lang === "zh" ? "边缘 正常 · HTTP 200 / 探针 正常 · HTTP 200" : "Edge OK · HTTP 200 / Probe OK · HTTP 200";
+    expect(screen.getAllByText(text).length).toBeGreaterThan(0);
+    const toggle = screen.getAllByRole("button").find((button) => button.getAttribute("aria-expanded") === "false");
+    expect(toggle).toBeDefined();
+    fireEvent.click(toggle!);
+    expect(screen.getByTestId("technical-summary")).toHaveTextContent(text);
+    expect(screen.queryByText(/Lightsail (受限|restricted)/)).not.toBeInTheDocument();
+  });
+
 });

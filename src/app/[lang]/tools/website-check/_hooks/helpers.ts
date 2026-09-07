@@ -1,3 +1,4 @@
+import { assessHttpEvidence } from "@/lib/http-assessment";
 export const normalizeTargetInput = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -149,21 +150,14 @@ export function isBlockedHttpStatus(
 export function calculateScore(data: any) {
   let score = 100;
   const statusCode = Number(data?.http?.status_code ?? 0);
-  const blocked = isBlockedHttpStatus(statusCode);
+  const http = assessHttpEvidence(data);
+  const blocked = http.probeBlocked;
   const isIpOrVisitor = Boolean(data?.isVisitor || data?.isActuallyIp);
-  const browserReachable =
-    data?.observations?.browser?.status === "reachable" &&
-    data?.observations?.browser?.precision === "full";
-  const edgeReachable =
-    (data?.observations?.edge?.status === "reachable" ||
-      data?.observations?.edge?.status === "redirected") &&
-    data?.observations?.edge?.precision === "full";
-  const probeBlocked =
-    data?.http?.classification === "probe_blocked" || blocked;
-  const corroboratedReachable = browserReachable || edgeReachable;
+  const probeBlocked = http.probeBlocked;
+  const corroboratedReachable = http.corroboratedReachable;
 
   if (!data?.dns?.success) score -= 25;
-  if (!data?.http?.success && !(corroboratedReachable && probeBlocked)) {
+  if (http.probe.state !== "success" && !(corroboratedReachable && probeBlocked)) {
     score -= probeBlocked ? 10 : 40;
   }
   if (

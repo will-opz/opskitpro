@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { JsonEditor } from "./components";
 import { getJsonStats, jsonToToml, jsonToYaml, repairJson } from "./hooks";
+import { useLocalToolResult } from "@/hooks/useLocalToolResult";
 import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 type Lang = "zh" | "en";
@@ -31,10 +32,14 @@ const ACTION_CLASS = "flex min-h-10 items-center gap-1.5 rounded-lg border borde
 
 export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
   const copy = dict.tools.json;
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
-  const [resultKind, setResultKind] = useState<ResultKind>(null);
-  const [fixes, setFixes] = useState<string[]>([]);
+  const tool = useLocalToolResult<{ output: string; kind: ResultKind; fixes: string[] }>();
+  const { input, status: resultStatus } = tool;
+  const output = tool.result?.output ?? "";
+  const resultKind = tool.result?.kind ?? null;
+  const fixes = tool.result?.fixes ?? [];
+  const staleMessage = lang === "zh"
+    ? "结果基于之前的输入，请重新运行后再复制或用作输入。"
+    : "Result is based on previous input. Run again before copying or applying it.";
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
   const [showConvert, setShowConvert] = useState(false);
@@ -57,73 +62,51 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     [input, validation.state],
   );
 
-  const setJsonResult = (kind: Exclude<ResultKind, "repaired" | "yaml" | "toml" | null>) => {
+  const resetFeedback = () => { setCopied(false); setCopyError(""); };
+  const setInput = (value: string) => { tool.setInput(value); resetFeedback(); };
+  const publish = (output: string, kind: ResultKind, fixes: string[] = []) => {
+    tool.publish({ output, kind, fixes });
+    resetFeedback();
+  };
+  const setJsonResult = (kind: "formatted" | "minified") => {
     try {
       const parsed = JSON.parse(input);
-      setOutput(kind === "formatted" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed));
-      setResultKind(kind);
-      setFixes([]);
+      publish(kind === "formatted" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed), kind);
     } catch {
-      setOutput("");
-      setResultKind(null);
+      tool.clearResult(); resetFeedback();
     }
   };
-
   const handleRepair = () => {
     if (!input.trim()) return;
     const repaired = repairJson(input);
     try {
-      setOutput(JSON.stringify(JSON.parse(repaired.repaired), null, 2));
-      setResultKind("repaired");
-      setFixes(repaired.fixes);
+      publish(JSON.stringify(JSON.parse(repaired.repaired), null, 2), "repaired", repaired.fixes);
     } catch {
-      setOutput("");
-      setResultKind(null);
-      setFixes(repaired.fixes);
+      tool.clearResult(); resetFeedback();
     }
   };
-
   const handleConvert = (target: "yaml" | "toml") => {
     const converted = target === "yaml" ? jsonToYaml(input) : jsonToToml(input);
     setShowConvert(false);
-    setFixes([]);
-    if (converted.error) {
-      setOutput("");
-      setResultKind(null);
-      return;
-    }
-    setOutput(converted.output);
-    setResultKind(target);
+    if (converted.error) { tool.clearResult(); resetFeedback(); return; }
+    publish(converted.output, target);
   };
-
   const copyResult = async () => {
-    if (!output) return;
+    if (!output || !tool.canUseResult) return;
     try {
       await navigator.clipboard.writeText(output);
-      setCopied(true);
-      setCopyError("");
+      setCopied(true); setCopyError("");
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setCopied(false);
-      setCopyError(copy.copy_error);
+      setCopied(false); setCopyError(copy.copy_error);
     }
   };
-
   const clearAll = () => {
-    setInput("");
-    setOutput("");
-    setResultKind(null);
-    setFixes([]);
-    setCopyError("");
-    setShowConvert(false);
+    tool.reset(); resetFeedback(); setShowConvert(false);
   };
-
   const applyOutput = () => {
-    if (!output || resultKind === "yaml" || resultKind === "toml") return;
-    setInput(output);
-    setOutput("");
-    setResultKind(null);
-    setFixes([]);
+    if (!output || !tool.canUseResult || resultKind === "yaml" || resultKind === "toml") return;
+    setInput(output); tool.clearResult();
   };
 
   const resultLabel = resultKind ? copy[`result_${resultKind}`] : copy.output;
@@ -187,15 +170,16 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
               <div className="flex min-h-11 items-center justify-between gap-2 border-b border-[var(--border-subtle)] px-4">
                 <h2 id="json-output-title" className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--accent-text)]">{resultLabel}</h2>
                 <div className="flex items-center gap-2">
-                  {output && resultKind !== "yaml" && resultKind !== "toml" && <button type="button" onClick={applyOutput} className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--accent-text)]">{copy.apply_input}</button>}
-                  <button type="button" onClick={copyResult} disabled={!output} className={`${ACTION_CLASS} !min-h-8 !px-2.5 !py-1.5`}>
-                    {copied ? <Check className="h-3.5 w-3.5 text-[var(--accent-text)]" /> : <Copy className="h-3.5 w-3.5" />}{copied ? copy.copied : copy.copy}
+                  {output && resultKind !== "yaml" && resultKind !== "toml" && <button type="button" onClick={applyOutput} disabled={!tool.canUseResult} className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--accent-text)]">{copy.apply_input}</button>}
+                  <button type="button" onClick={copyResult} disabled={!output || !tool.canUseResult} aria-describedby={resultStatus === "stale" ? "json-stale-result" : undefined} className={`${ACTION_CLASS} !min-h-8 !px-2.5 !py-1.5`}>
+                    {copied && tool.canUseResult ? <Check className="h-3.5 w-3.5 text-[var(--accent-text)]" /> : <Copy className="h-3.5 w-3.5" />}{copied && tool.canUseResult ? copy.copied : copy.copy}
                   </button>
                 </div>
               </div>
-              <pre data-testid="json-output" className="min-h-24 max-h-[640px] overflow-auto whitespace-pre-wrap break-words p-5 font-mono text-[13px] leading-relaxed text-[var(--text-primary)] sm:p-6">{output || <span className="italic text-[var(--text-faint)]">{copy.output_hint}</span>}</pre>
+              {resultStatus === "stale" && <p id="json-stale-result" role="status" className="border-b border-[var(--border-subtle)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning-text)]"><strong>STALE</strong> · {staleMessage}</p>}
+              <pre data-result-state={resultStatus} data-testid="json-output" className="min-h-24 max-h-[640px] overflow-auto whitespace-pre-wrap break-words p-5 font-mono text-[13px] leading-relaxed text-[var(--text-primary)] sm:p-6">{output || <span className="italic text-[var(--text-faint)]">{copy.output_hint}</span>}</pre>
               <div className="min-h-12 border-t border-[var(--border-subtle)] bg-[var(--surface-primary)] px-4 py-3 text-xs text-[var(--text-muted)]">
-                {copyError || (fixes.length ? `${copy.repair_summary}: ${fixes.join("; ")}` : copy.local_note)}
+                {(tool.canUseResult ? copyError : "") || (fixes.length ? `${copy.repair_summary}: ${fixes.join("; ")}` : copy.local_note)}
               </div>
             </section>
           </div>

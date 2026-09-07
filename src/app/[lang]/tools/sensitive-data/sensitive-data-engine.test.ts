@@ -70,17 +70,22 @@ describe("sensitive data engine", () => {
     expect(result.total).toBe(0);
   });
 
-  it("marks input truncation for long text", () => {
+  it("rejects over-limit text without releasing a partial output", () => {
     const long = "a".repeat(SENSITIVE_TEXT_LIMIT + 10);
     const result = detectSensitive(long);
     expect(result.truncated).toBe(true);
-    expect(result.redactedText.length).toBeLessThanOrEqual(SENSITIVE_TEXT_LIMIT);
+    expect(result.complete).toBe(false);
+    expect(result.failureReason).toBe("input_too_long");
+    expect(result.redactedText).toBe("");
   });
 
   it("supports entity toggles and max match capping", () => {
     const input = "a@b.com ".repeat(20);
     const partial = detectSensitive(input, { enabled: { email: true, phone: false, api_key: false, uuid: false, private_key: false, credit_card: false, ip: false }, maxMatches: 3 });
     expect(partial.matches).toHaveLength(3);
+    expect(partial.total).toBe(20);
+    expect(partial.redacted).toBe(20);
+    expect(partial.redactedText).not.toContain("a@b.com");
   });
 
   it("detects and redacts the screenshot sample", () => {
@@ -143,4 +148,54 @@ describe("sensitive data engine", () => {
     expect(noIp.counts.password).toBe(1);
     expect(noIp.counts.ip).toBe(0);
   });
+});
+
+
+describe("redaction completeness regression", () => {
+  it.each([120, 121, 500])("redacts every one of %i detected emails with a bounded preview", (count) => {
+    const input = Array.from({ length: count }, (_, i) => `demo${i}@example.com`).join("\n");
+    const result = detectSensitive(input);
+    expect(result.complete).toBe(true);
+    expect(result.total).toBe(count);
+    expect(result.redacted).toBe(count);
+    expect(result.displayed).toBe(Math.min(120, count));
+    expect(result.counts.email).toBe(count);
+    expect(result.matches).toHaveLength(result.displayed);
+    expect(Object.keys(result.redactionMap)).toHaveLength(result.displayed);
+    expect(result.redactedText).toBe(Array.from({ length: count }, (_, i) => `[EMAIL_${i + 1}]`).join("\n"));
+  });
+
+  it("redacts mixed entities beyond the preview limit without losing surrounding text", () => {
+    const input = Array.from({ length: 100 }, (_, i) =>
+      `row: demo${i}@example.com password=secret-${i} ip=192.0.2.10 token=sk-abcdefghijklmnopqrstuvwxyz`,
+    ).join("\n");
+    const result = detectSensitive(input);
+    expect(result.total).toBe(400);
+    expect(result.redacted).toBe(400);
+    expect(result.counts).toMatchObject({ email: 100, password: 100, ip: 100, api_key: 100 });
+    expect(result.redactedText).not.toMatch(/example\.com|secret-|192\.0|sk-abc/);
+    expect(result.redactedText.split("\n")).toHaveLength(100);
+    expect(result.redactedText).toContain("row: [EMAIL_100] password=[PASSWORD_100] ip=[IP_100] token=[API_KEY_100]");
+  });
+
+  it("redacts a match at the exact text limit and fails closed one character over", () => {
+    const tail = " end@example.com";
+    const input = "x".repeat(SENSITIVE_TEXT_LIMIT - tail.length) + tail;
+    const result = detectSensitive(input);
+    expect(result.complete).toBe(true);
+    expect(result.redactedText).toBe("x".repeat(SENSITIVE_TEXT_LIMIT - tail.length) + " [EMAIL_1]");
+    expect(detectSensitive(input + "!")).toMatchObject({ complete: false, redactedText: "", failureReason: "input_too_long" });
+  });
+
+  it("does not let a zero preview cap affect processing", () => {
+    const result = detectSensitive("password=sk-abcdefghijklmnopqrstuvwxyz", { maxMatches: 0 });
+    expect(result).toMatchObject({ total: 1, redacted: 1, displayed: 0, complete: true });
+    expect(result.redactedText).toBe("password=[API_KEY_1]");
+  });
+});
+
+
+it("fails closed on a processing exception", () => {
+  const options = { get enabled(): never { throw new Error("scan interrupted"); } };
+  expect(detectSensitive("demo@example.com", options)).toMatchObject({ complete: false, failureReason: "processing_failed", redactedText: "" });
 });

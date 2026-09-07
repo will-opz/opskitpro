@@ -47,7 +47,10 @@ const copy = {
     clear: "Clear",
     noData: "No text input yet.",
     placeholderHint: (value: string) => `Found ${value}`,
-    limit: (limit: number) => `Only first ${limit} matches are shown for performance.`,
+    limit: (limit: number) => `Preview: first ${limit} matches. All detected matches were redacted.`,
+    detected: "Detected", redacted: "Redacted", displayed: "Displayed",
+    tooLong: "Scan not completed. Limit: 50,000 characters. Shorten the input and scan again; no redacted output is available to copy.",
+    failed: "Scan failed. No redacted output is available to copy. Please try again.",
     empty: "No sensitive findings.",
     onlyLocal: "All matching happens in your browser.",
     originalHighlighted: "Original (highlighted)",
@@ -72,7 +75,10 @@ const copy = {
     clear: "清空",
     noData: "尚未输入文本。",
     placeholderHint: (value: string) => `发现 ${value}`,
-    limit: (limit: number) => `为保证性能，仅展示前 ${limit} 条匹配。`,
+    limit: (limit: number) => `预览仅展示前 ${limit} 条匹配；全部已检测匹配均已完成脱敏。`,
+    detected: "检测到", redacted: "已脱敏", displayed: "已展示",
+    tooLong: "扫描未完成：最多支持 50,000 字符。请缩短输入后重新扫描；当前不提供脱敏输出或复制。",
+    failed: "扫描失败，当前不提供脱敏输出或复制。请重试。",
     empty: "未发现敏感信息。",
     onlyLocal: "所有匹配均在你的浏览器内完成。",
     originalHighlighted: "原文（已高亮）",
@@ -146,12 +152,16 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
       .map(([key, value]) => ({ key, ...value }));
   }, [result.redactionMap]);
 
+  const resetCopyFeedback = () => { setCopied(false); setCopyFailed(false); };
+  const failureMessage = result.failureReason === "input_too_long" ? c.tooLong : c.failed;
+
   const toggleEntity = (id: SensitiveEntity) => {
+    resetCopyFeedback();
     setEnabled((current) => ({ ...current, [id]: !current[id] }));
   };
 
   const copyRedacted = async () => {
-    if (!result.redactedText) return;
+    if (!result.complete || !result.redactedText) return;
     try {
       await navigator.clipboard.writeText(result.redactedText);
       setCopied(true);
@@ -178,7 +188,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
           id="sensitive-input"
           className="mt-2 min-h-40 w-full resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-3 font-mono text-sm leading-6 outline-none focus:border-emerald-500/50"
           value={input}
-          onChange={(event) => setInput(event.target.value)}
+          onChange={(event) => { setInput(event.target.value); resetCopyFeedback(); }}
           placeholder={c.inputPlaceholder}
           spellCheck={false}
         />
@@ -189,9 +199,16 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
         <div className="ui-surface rounded-2xl p-4 sm:p-6">
           <p className="text-sm font-semibold text-[var(--text-primary)]">{c.matchesLabel}</p>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            {input.length ? summary.header : c.noData}
+            {input.length ? result.complete ? summary.header : failureMessage : c.noData}
           </p>
 
+          {input && result.complete && (
+            <dl aria-label={lang === "zh" ? "处理完整性" : "Processing completeness"} className="mt-3 flex flex-wrap gap-4 text-sm" aria-live="polite">
+              {[[c.detected, result.total], [c.redacted, result.redacted], [c.displayed, result.displayed]].map(([label, value]) => (
+                <div key={label}><dt className="text-[var(--text-muted)]">{label}</dt><dd className="font-mono font-semibold">{value}</dd></div>
+              ))}
+            </dl>
+          )}
           <div className="mt-3">
             {summary.detail ? <p className="text-xs text-[var(--text-secondary)]">{summary.detail}</p> : null}
             <div className="mt-2 flex flex-wrap gap-2">
@@ -208,7 +225,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
             </div>
           </div>
 
-          {input.length === 0 ? null : result.matches.length === 0 ? (
+          {input.length === 0 || !result.complete ? null : result.total === 0 ? (
             <p className="mt-4 text-sm text-[var(--accent-text)]">{c.empty}</p>
           ) : (
             <div className="mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-sm text-[var(--text-secondary)]">
@@ -254,7 +271,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
 
             <div className="mt-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] p-3 text-sm leading-6">
               {showRedacted ? (
-                <pre className="whitespace-pre-wrap break-all">{input ? result.redactedText : c.noData}</pre>
+                <pre className="whitespace-pre-wrap break-all">{input ? result.complete ? result.redactedText : failureMessage : c.noData}</pre>
               ) : (
                 <span className="text-[var(--text-muted)]">{showRedacted ? c.noData : c.noData}</span>
               )}
@@ -263,12 +280,13 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
             <button
               type="button"
               onClick={copyRedacted}
-              disabled={!input || result.matches.length === 0}
+              disabled={!input || !result.complete || result.redacted === 0}
+              aria-describedby={!result.complete ? "redaction-failure" : undefined}
               className="ui-button-primary mt-4 min-h-10 px-3 text-xs"
             >
               <Clipboard className="h-4 w-4" />{copied ? c.copied : copyFailed ? c.copyFailed : c.copyRedacted}
             </button>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">{result.truncated ? "Input truncated to 50,000 chars for local processing." : ""}</p>
+            {!result.complete && <p id="redaction-failure" role="alert" className="mt-2 text-sm text-[var(--danger-text)]">{failureMessage}</p>}
           </div>
 
           <div className="ui-surface rounded-2xl p-4 sm:p-5">
@@ -280,7 +298,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
               {c.compare}
             </button>
             <p className="mt-3 text-xs text-[var(--text-muted)]">
-              {c.detectedEntities(result.total)}
+              {result.complete ? c.detectedEntities(result.total) : failureMessage}
             </p>
           </div>
 
@@ -288,6 +306,7 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
             type="button"
             onClick={() => {
               setInput("");
+              resetCopyFeedback();
               setShowRedacted(true);
             }}
             className="ui-button-ghost min-h-10 w-full border border-[var(--border-subtle)] px-3 text-sm"

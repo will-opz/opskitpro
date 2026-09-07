@@ -194,7 +194,7 @@ describe("website check report builder", () => {
       severity: "warning",
     });
     expect(httpFinding?.relatedToolHref).toBeUndefined();
-    expect(httpFinding?.summary).toContain("探测被 HTTP 403 拒绝");
+    expect(httpFinding?.summary).toContain("探针 受限 · HTTP 403");
     expect(httpFinding?.likelyCause).toContain("机器人防护");
     expect(report.inferences[0]).toMatchObject({ confidence: "Medium" });
     expect(report.guidance.map((item) => item.summary).join(" ")).toContain(
@@ -234,7 +234,7 @@ describe("website check report builder", () => {
     expect(report.evidence.join(" ")).not.toContain("Not detected");
   });
 
-  it("keeps the site healthy when the browser is reachable but the server probe is blocked", () => {
+  it("reports partial observations without claiming downtime when the browser succeeds but the probe is blocked", () => {
     const result = createSafeDiagnosticResult(
       {
         ...healthyResult(),
@@ -276,14 +276,14 @@ describe("website check report builder", () => {
       (finding) => finding.key === "http",
     );
 
-    expect(report.status).toBe("healthy");
+    expect(report.status).toBe("degraded");
     expect(report.score).toBe(100);
-    expect(report.summary).toContain("用户浏览器正常访问");
+    expect(report.summary).toContain("浏览器 正常 · HTTP 200");
     expect(httpFinding).toMatchObject({
       id: "http.browser-reachable-probe-blocked",
-      severity: "info",
+      severity: "warning",
     });
-    expect(httpFinding?.summary).toContain("用户浏览器访问正常");
+    expect(httpFinding?.summary).toContain("浏览器 正常 · HTTP 200");
     expect(report.observations?.browser?.httpStatus).toBe(200);
 
     const markdown = buildWebsiteCheckMarkdown(report, result);
@@ -328,13 +328,13 @@ describe("website check report builder", () => {
       (finding) => finding.key === "http",
     );
     expect(report).toMatchObject({
-      status: "healthy",
+      status: "degraded",
       score: 100,
     });
-    expect(report.summary).toContain("Cloudflare Edge");
+    expect(report.summary).toContain("Edge OK · HTTP 200");
     expect(httpFinding).toMatchObject({
       id: "http.edge-reachable-probe-blocked",
-      severity: "info",
+      severity: "warning",
     });
 
     const markdown = buildWebsiteCheckMarkdown(report, result);
@@ -357,4 +357,15 @@ describe("website check report builder", () => {
     expect(markdown).toContain("## Prioritized Findings");
     expect(markdown).toContain("Recommended fix");
   });
+});
+
+
+it("uses normalized evidence in both findings and export without mutating raw flags", () => {
+  const input = createSafeDiagnosticResult({ ...healthyResult(), http: { success: false, status_code: 200, classification: "unknown" } }, "example.com");
+  const report = buildWebsiteCheckReport(input, { lang: "en" });
+  expect(report.verdict).toBe("Healthy");
+  expect(report.findings.find((item) => item.key === "http")).toMatchObject({ severity: "success", summary: "Probe OK · HTTP 200" });
+  expect(report.assessments.find((item) => item.id === "http.availability")).toMatchObject({ status: "healthy" });
+  expect(report.evidenceRecords.find((item) => item.id === "http.result")?.value).toMatchObject({ success: false, statusCode: 200 });
+  expect(buildWebsiteCheckMarkdown(report, input)).toContain("Probe OK · HTTP 200");
 });

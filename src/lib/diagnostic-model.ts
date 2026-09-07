@@ -1,3 +1,4 @@
+import { assessHttpEvidence, describeHttpAssessment } from "./http-assessment";
 import type {
   DiagnosticAssessment,
   DiagnosticEvidence,
@@ -60,7 +61,7 @@ type WebsiteDiagnosticInput = {
       checkedAt: string;
     };
   };
-  meta?: { checkedAt?: string };
+  meta?: { checkedAt?: string; cacheStatus?: string; cacheAgeSeconds?: number };
 };
 
 const POLICY = {
@@ -89,18 +90,8 @@ export function buildWebsiteDiagnosticModel(
   input: WebsiteDiagnosticInput,
 ): DiagnosticModel {
   const isIp = Boolean(input.isVisitor || input.isActuallyIp);
-  const browserReachable =
-    input.observations?.browser?.status === "reachable" &&
-    input.observations.browser.precision === "full";
-  const edgeReachable =
-    ["reachable", "redirected"].includes(
-      input.observations?.edge?.status || "",
-    ) && input.observations?.edge?.precision === "full";
-  const corroboratedReachable = browserReachable || edgeReachable;
-  const probeBlocked =
-    !input.http.success &&
-    (input.http.classification === "probe_blocked" ||
-      [401, 403, 407, 429].includes(Number(input.http.status_code)));
+  const httpAssessment = assessHttpEvidence(input);
+  const { corroboratedReachable, probeBlocked } = httpAssessment;
   const hasAddress =
     input.dns.success &&
     Boolean(input.dns.all_ips?.length || input.dns.resolved_ip);
@@ -176,25 +167,9 @@ export function buildWebsiteDiagnosticModel(
     {
       id: "http.availability",
       area: "http",
-      status:
-        input.http.success || (corroboratedReachable && probeBlocked)
-          ? "healthy"
-          : probeBlocked
-            ? "degraded"
-            : hasAddress
-              ? "unreachable"
-              : "unknown",
-      evidenceIds: [
-        "http.result",
-        ...(browserReachable ? ["browser.http"] : []),
-        ...(edgeReachable ? ["edge.http"] : []),
-      ],
-      summary:
-        input.http.success || (corroboratedReachable && probeBlocked)
-          ? "The website is reachable from at least one full-precision observation point."
-          : probeBlocked
-            ? "The automated probe was rejected, so public availability is only partially assessed."
-            : "The website did not return a reachable HTTP response.",
+      status: ({ success: "healthy", partial: "degraded", failed: "unreachable", unknown: "unknown" } as const)[httpAssessment.availability],
+      evidenceIds: ["http.result", ...(input.observations?.browser ? ["browser.http"] : []), ...(input.observations?.edge ? ["edge.http"] : [])],
+      summary: describeHttpAssessment(httpAssessment, "en"),
     },
     {
       id: "tls.public-certificate",
@@ -242,11 +217,11 @@ export function buildWebsiteDiagnosticModel(
   ];
 
   let verdict: DiagnosticVerdict;
-  if (!hasAddress || domainHold) verdict = "Unreachable";
-  else if (input.http.success || (corroboratedReachable && probeBlocked)) {
+  if (!hasAddress || domainHold) verdict = httpAssessment.reachable ? "Degraded" : "Unreachable";
+  else if (httpAssessment.availability === "success") {
     verdict = input.ssl.valid || isIp ? "Healthy" : "Degraded";
-  } else if (probeBlocked) verdict = "Degraded";
-  else if (input.http.classification === "network_error" || input.http.status_code >= 500)
+  } else if (httpAssessment.availability === "partial") verdict = "Degraded";
+  else if (httpAssessment.availability === "failed")
     verdict = "Unreachable";
   else verdict = "Unknown";
 
@@ -267,7 +242,7 @@ export function buildWebsiteDiagnosticModel(
       evidenceIds: ["http.result"],
       summary: "An access-control, WAF, or bot policy may be rejecting the automated probe.",
     });
-  } else if (!input.http.success && input.http.status_code >= 500) {
+  } else if (httpAssessment.probe.state === "failed" && input.http.status_code >= 500) {
     inferences.push({
       id: "http.upstream-failure",
       area: "http",
