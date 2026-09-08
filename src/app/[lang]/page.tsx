@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Activity, ArrowRight, Braces, Cloud, Fingerprint, Hash, KeyRound, Network, Regex, ShieldCheck, ShieldAlert, Terminal, type LucideIcon } from "lucide-react";
 import { getDictionary } from "@/dictionaries";
 import { buildPageMetadata } from "@/lib/seo";
-import { productTools } from "@/lib/tool-catalog";
 import HomeSearch from "@/components/HomeSearch";
 import { CodeBlock } from "@/components/CodeBlock";
 import { HomeHeader } from "@/components/home/HomeHeader";
@@ -84,14 +83,10 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
     { path: "regex", icon: Regex, title: "Regex", description: zh ? "测试表达式与匹配结果" : "Test patterns and inspect matches" },
     { path: "passgen", icon: KeyRound, title: zh ? "密码生成器" : "Password", description: zh ? "使用设备加密随机源生成" : "Generate with device cryptographic randomness" },
   ];
-  const searchTools = productTools.filter((tool) => tool.id !== "api").map((tool) => ({
-    title: tool.title[lang], href: `/${lang}${tool.href}`,
-    keywords: `${tool.title.en} ${tool.title.zh} ${tool.description.en} ${tool.description.zh} ${tool.id === "website-check" ? "SSL TLS certificate 证书" : ""}`,
-  }));
   const data: Array<[ProcessingLocation, string]> = [["local", c.localData], ["edge", c.edgeData], ["remote", c.remoteData]];
   const footer = [["tools", zh ? "工具" : "Tools"], ["tools/docs", zh ? "文档" : "Docs"], ["tools/api", "API"], ["mcp", "MCP"], ["about", zh ? "关于" : "About"], ["privacy", zh ? "隐私" : "Privacy"], ["errors", zh ? "错误速查" : "Errors"], ["nav", zh ? "我的导航" : "My navigation"]];
   return <div className={styles.home}>
-    <HomeHeader lang={lang} tools={searchTools} />
+    <HomeHeader lang={lang} />
     <main id="home-main" className={styles.container} tabIndex={-1}>
       <section className={styles.hero} aria-labelledby="home-title"><h1 id="home-title">{zh ? <><span className={styles.headlinePhrase}>排查网站问题，</span><span className={styles.headlinePhrase}>先看证据。</span></> : c.title}</h1><p>{c.subtitle}</p></section>
       <HomeSearch lang={lang} />

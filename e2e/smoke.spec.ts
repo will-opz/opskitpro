@@ -275,39 +275,24 @@ test('website diagnostics renders mocked result without external network depende
   await page.getByRole('button', { name: /Start website check/i }).click()
 
   await expect(page.getByPlaceholder(/Enter a domain/i)).toHaveValue('opskitpro.com')
-  await expect(page.getByText('Healthy', { exact: true })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'AVAILABILITY VERDICT' })).toBeVisible()
-  const attention = page.getByTestId('attention-findings')
-  await expect(attention.getByText('Needs Attention')).toBeVisible()
-  await expect(attention.getByText('Nothing needs action right now.')).toBeVisible()
-  await expect(page.getByText('Technical Details')).toBeVisible()
-  await expect(page.getByText('MULTI-VANTAGE VERIFICATION')).toBeHidden()
-  await expect(page.getByText('Core Probe')).toBeHidden()
-  await expect(page.getByRole('button', { name: /Copy Summary/i })).toHaveCount(1)
-  await page.getByRole('button', { name: /Copy Summary/i }).click()
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Impact:')
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Evidence:')
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Assessment:')
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Guidance:')
+  await expect(page.getByRole('heading', { name: 'Normal', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Key evidence', exact: true })).toBeVisible()
+  await expect(page.getByText('HTTP 200', {exact:true})).toBeVisible()
+  await expect(page.getByRole('button', {name:'Copy result summary'})).toBeHidden()
+  await page.getByText('Details · raw data and export').click()
+  await page.getByRole('button', {name:'Copy result summary'}).click()
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('HTTP 200')
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Normal:')
   await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).not.toContain('Score:')
-  await page.getByRole('button', { name: /Show Details/i }).click()
-  await expect(page.getByText('MULTI-VANTAGE VERIFICATION')).toBeVisible()
-  await expect(page.getByText('Your Browser', { exact: true })).toBeVisible()
-  await expect(page.getByText('Cloudflare Edge', { exact: true })).toBeVisible()
-  await expect(page.getByText('OpsKitPro Probe', { exact: true })).toBeVisible()
-  await expect(page.getByText('Core Probe')).toBeVisible()
-  await expect(page.getByText('Full Check')).toBeVisible()
-  await expect(page.getByTestId('technical-summary').getByText('Passed Checks', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Export Markdown/i })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'DNS Records' })).toBeVisible()
-  await page.getByRole('heading', { name: 'DNS Records' }).click()
-  await expect(page.getByText('v=spf1 include:_spf.example.com ~all')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Redirect Chain' })).toBeVisible()
-  await page.getByRole('heading', { name: 'Redirect Chain' }).click()
-  await expect(page.getByText('https://opskitpro.com/').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Export Markdown' })).toBeVisible()
+  await page.getByText('DNS records and resolvers', {exact:true}).click()
+  await expect(page.locator('#result-dns pre')).toContainText('v=spf1 include:_spf.example.com ~all')
+  await page.getByText('HTTP and observation details', {exact:true}).click()
+  await expect(page.locator('#result-http pre')).toContainText('https://opskitpro.com/')
+
 })
 
-test('website diagnostics puts needs-review findings ahead of technical detail', async ({ page }) => {
+test('website diagnostics keeps header hardening separate from availability', async ({ page }) => {
   await page.route('**/api/diagnostic**', (route) =>
     route.fulfill({
       status: 200,
@@ -320,20 +305,14 @@ test('website diagnostics puts needs-review findings ahead of technical detail',
   await page.getByPlaceholder(/Enter a domain/i).fill('example.com')
   await page.getByRole('button', { name: /Start website check/i }).click()
 
-  const attention = page.getByTestId('attention-findings')
-  await expect(attention.getByText('1 item needs attention')).toBeVisible()
-  await expect(attention.getByText('Security Headers')).toBeVisible()
-  await expect(attention.getByText('CDN', { exact: true })).toBeVisible()
-  await expect(attention.getByText('Informational')).toBeVisible()
-  await expect(attention.getByText('DNS', { exact: true })).toHaveCount(0)
-  await expect(attention.getByText('HTTP', { exact: true })).toHaveCount(0)
-  await expect(attention.getByText('SSL', { exact: true })).toHaveCount(0)
-  await expect(attention.getByText('CAUSE', { exact: true })).toHaveCount(0)
-  await expect(page.getByTestId('technical-summary')).toHaveCount(0)
-  await page.getByRole('button', { name: /Show Details/i }).click()
-  await expect(page.getByText('Registration lookup target: example.com')).toBeVisible()
-  await expect(page.getByText('No registration record was found for this domain.')).toBeVisible()
-  await expect(page.getByText('RDAP HTTP 404')).toBeVisible()
+  await expect(page.getByRole('heading', {name:'Normal',exact:true})).toBeVisible()
+  await expect(page.locator('#result-context')).toBeHidden()
+  await page.getByText('Details · raw data and export').click()
+  await page.getByText('CDN / registration context', {exact:true}).click()
+  await expect(page.locator('#result-context pre')).toContainText('No RDAP registration record was found')
+  await page.getByText('Collected response headers', {exact:true}).click()
+  await expect(page.locator('#result-headers pre')).toContainText('content-security-policy')
+
 })
 
 test('website diagnostics separates a reachable browser from a blocked server probe', async ({ page }) => {
@@ -384,13 +363,10 @@ test('website diagnostics separates a reachable browser from a blocked server pr
   await page.getByPlaceholder(/Enter a domain/i).fill('127.0.0.1')
   await page.getByRole('button', { name: /Start website check/i }).click()
 
-  await expect(page.getByText('Healthy', { exact: true })).toBeVisible()
-  await expect(page.getByTestId('attention-findings').getByText(/Do not treat this as downtime/)).toBeVisible()
-  await page.getByRole('button', { name: /Show Details/i }).click()
-  await expect(page.getByText('Browser OK / Lightsail restricted')).toBeVisible()
-  await expect(page.getByText('Your Browser · full')).toBeVisible()
-  await expect(page.getByText('Cloudflare Edge Probe · NRT · full')).toBeVisible()
-  await expect(page.getByText('OpsKitPro Probe · AWS Lightsail · full')).toBeVisible()
+  await expect(page.getByRole('heading', {name:'Partial availability',exact:true})).toBeVisible()
+  await expect(page.locator('[data-evidence="http.remote"]')).toContainText('HTTP 403')
+  await expect(page.locator('[data-evidence="http.edge"]')).toContainText('HTTP 200')
+  await expect(page.locator('[data-evidence="http.local"]')).toContainText('HTTP 200')
   expect(directThirdPartyRequests).toBe(0)
 })
 
@@ -440,11 +416,10 @@ test('website diagnostics labels edge-only corroboration without claiming browse
   await page.getByPlaceholder(/Enter a domain/i).fill('example.com')
   await page.getByRole('button', { name: /Start website check/i }).click()
 
-  await expect(page.getByText('Healthy', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: /Show Details/i }).click()
-  await expect(page.getByText('Edge OK / Lightsail restricted')).toBeVisible()
-  await expect(page.getByText('Cloudflare Edge Probe · NRT · full')).toBeVisible()
-  await expect(page.getByText('Your Browser · full')).toHaveCount(0)
+  await expect(page.getByRole('heading', {name:'Partial availability',exact:true})).toBeVisible()
+  await expect(page.locator('[data-evidence="http.remote"]')).toContainText('HTTP 403')
+  await expect(page.locator('[data-evidence="http.edge"]')).toContainText('HTTP 200')
+  await expect(page.locator('[data-evidence="http.local"]')).toHaveCount(0)
   expect(directTargetRequests).toBe(0)
 })
 
@@ -495,12 +470,13 @@ test('website diagnostics explains partial failures with next actions', async ({
   await page.getByPlaceholder(/Enter a domain/i).fill('down.example.com')
   await page.getByRole('button', { name: /Start website check/i }).click()
 
-  await expect(page.getByText('Connection Timeout')).toBeVisible()
-  await expect(page.getByText('Possible Cause · Low Confidence')).toBeVisible()
-  await expect(page.getByText('Guidance').first()).toBeVisible()
-  await page.getByRole('button', { name: /Copy Fault Summary/i }).click()
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Possible Cause (Confidence: Low):')
-  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Evidence:')
+  await expect(page.getByRole('heading', {name:'Unknown',exact:true})).toBeVisible()
+  await expect(page.getByText('203.0.113.10',{exact:true})).toBeVisible()
+  await expect(page.getByText('Connection Timeout',{exact:true})).toHaveCount(0)
+  await page.getByText('Details · raw data and export').click()
+  await page.getByRole('button', {name:'Copy result summary'}).click()
+  await expect.poll(() => page.evaluate(() => (window as any).__copiedText)).toContain('Unknown:')
+
 })
 
 test('time converter parses a Unix timestamp', async ({ page }) => {
@@ -577,14 +553,11 @@ test('retired localized articles redirect to the matching tool and locale', asyn
 test('mobile menu opens and exposes primary navigation', async ({ page }) => {
   test.skip((page.viewportSize()?.width ?? 0) >= 768, 'Mobile menu is only visible on mobile viewports.')
 
-  await page.goto('/')
-  await page.getByRole('button', { name: /Open tools menu/i }).click()
+  await page.goto('/en')
+  await page.getByLabel('Navigation menu',{exact:true}).click()
+  const nav=page.getByRole('navigation',{name:'Mobile navigation',exact:true})
+  await expect(nav.getByRole('link')).toHaveText(['Diagnose','Tools','Docs','API / MCP'])
 
-  await expect(page.getByRole('link', { name: 'All tools', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Website Check', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Password Generator', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Knowledge Base', exact: true })).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'About', exact: true })).toHaveCount(0)
 })
 
 test('website diagnostics detects Cloudflare errors and links to encyclopedia', async ({ page }) => {
@@ -626,7 +599,7 @@ test('website diagnostics detects Cloudflare errors and links to encyclopedia', 
   await page.getByRole('button', { name: /Start website check/i }).click()
 
   // Verify the CF Error banner is displayed
-  await expect(page.getByText('Cloudflare Error 522 Detected')).toBeVisible()
+  await expect(page.getByText('HTTP 522',{exact:true})).toBeVisible()
   
   // Verify the link points to the encyclopedia
   const link = page.getByRole('link', { name: /Read 522 Troubleshooting Guide/i })

@@ -122,13 +122,12 @@ test.describe('Diagnostics Hub Closed-Loop', () => {
     await page.getByPlaceholder(/example\.com/i).first().fill('example.com')
     await page.getByRole('button', { name: /Start website check|开始网站检测/i }).click()
 
-    // The component will eventually render the banners.
-    // 1. Cloudflare Error Encyclopedia link
-    await expect(page.getByText(/Cloudflare Error 522/i)).toBeVisible({ timeout: 10000 })
-    // 2. DNS Security Audit banner
-    await expect(page.getByText(/Email & DNS Security Validation Available/i)).toBeVisible()
-    // 3. Cloudflare Edge CDN banner
-    await expect(page.getByRole('heading', { name: /Cloudflare Edge/i })).toBeVisible()
+    await expect(page.getByText('HTTP 522',{exact:true})).toBeVisible({timeout:10000})
+    await expect(page.getByRole('link',{name:'Read 522 Troubleshooting Guide'})).toHaveAttribute('href','/errors/522')
+    await page.getByText('Details · raw data and export').click()
+    await page.getByText('CDN / registration context',{exact:true}).click()
+    await expect(page.locator('#result-context pre')).toContainText('Cloudflare')
+
   })
 
   test('4. Sitemap includes dynamic routes', async ({ page }) => {

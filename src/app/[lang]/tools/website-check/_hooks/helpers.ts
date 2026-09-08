@@ -22,13 +22,14 @@ export const createSafeDiagnosticResult = (
   data: any,
   fallbackDomain: string,
   fallbackError?: string,
-): DiagnosticResponse => {
+): DiagnosticResponse & { rawEvidence: any } => {
   const domain = data?.domain || fallbackDomain || "opskitpro.com";
   const isVisitor = Boolean(data?.isVisitor);
   const isActuallyIp = Boolean(data?.isActuallyIp);
   const isPrivate = Boolean(data?.isPrivate);
 
   return {
+    rawEvidence: data?.rawEvidence ?? data ?? {},
     domain,
     status: data?.status || "partial_error",
     isVisitor,
@@ -36,7 +37,7 @@ export const createSafeDiagnosticResult = (
     isPrivate,
     error: data?.error || fallbackError,
     dns: {
-      resolved_ip: data?.dns?.resolved_ip || domain,
+      resolved_ip: data?.dns?.resolved_ip || "",
       latency: data?.dns?.latency || "---",
       success: Boolean(data?.dns?.success),
       all_ips: data?.dns?.all_ips || [],
@@ -122,7 +123,7 @@ export const createSafeDiagnosticResult = (
       nameservers: data?.whois?.nameservers || [],
     },
     meta: {
-      checkedAt: data?.meta?.checkedAt || new Date().toISOString(),
+      checkedAt: data?.meta?.checkedAt,
       servedAt: data?.meta?.servedAt,
       totalMs: Number(data?.meta?.totalMs || 0),
       coreMs: Number(data?.meta?.coreMs || 0),

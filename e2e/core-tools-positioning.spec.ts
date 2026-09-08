@@ -6,9 +6,9 @@ test("homepage and public catalog expose the current privacy-first tool groups",
   await page.goto("/en");
 
   const localTools = page.locator("section").filter({
-    has: page.getByRole("heading", { name: "Local security tools" }),
+    has: page.getByRole("heading", { name: "Local developer workbench" }),
   });
-  await expect(localTools.getByRole("link", { name: /Password Generator/ })).toBeVisible();
+  await expect(localTools.getByRole("link", { name: /Password/ })).toBeVisible();
   await expect(localTools.getByRole("link", { name: /Hash/ })).toBeVisible();
 
   const diagnostics = page.locator("section").filter({
@@ -19,8 +19,8 @@ test("homepage and public catalog expose the current privacy-first tool groups",
   await page.goto("/en/tools");
   await expect(page.getByRole("heading", { name: "Tools", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /Data handling guide/ })).toHaveAttribute("href", "/en/tools/docs");
-  await expect(page.getByRole("heading", { name: "Security & privacy tooling" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Ops & network diagnostics" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Secure", exact:true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Diagnose", exact:true })).toBeVisible();
   await expect(page.locator('main a[href="/en/tools/passgen"]')).toBeVisible();
   await expect(page.getByRole("link", { name: /QR Generator/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Encode \/ Decode/i })).toBeVisible();
@@ -71,10 +71,10 @@ test("localized pages keep metadata aligned and expose the homepage trust story"
 
   await page.goto("/zh");
   await expect(
-    page.getByText("敏感输入只在当前浏览器处理，不会上传到 OpsKitPro。"),
+    page.getByText("这些工具在浏览器内处理输入，无需上传内容。"),
   ).toBeVisible();
-  await expect(page.getByText(/网站目标会发送给 OpsKitPro 探针/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "查看隐私说明" })).toHaveAttribute(
+  await expect(page.getByText(/OpsKitPro 服务端探针对公开目标发起请求/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "隐私", exact:true })).toHaveAttribute(
     "href",
     "/zh/privacy",
   );

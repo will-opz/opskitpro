@@ -32,10 +32,26 @@ export type ToolTaskCategory =
 export type ToolProcessingMode = "local" | "network";
 export type ToolNetworkPath = "none" | "direct-target" | "cloudflare-edge" | "opskitpro-probe" | "mixed";
 
+export type ToolPrimaryCategory = "diagnose" | "inspect" | "format-convert" | "secure" | "generate";
+export const toolCategoryOrder: ToolPrimaryCategory[] = ["diagnose", "inspect", "format-convert", "secure", "generate"];
+export const toolCategoryCopy = {
+  en: { diagnose:["Diagnose","Find the cause of website and network problems."], inspect:["Inspect","Inspect addresses, tokens, messages and differences."], "format-convert":["Format & Convert","Format, validate and convert data locally."], secure:["Secure","Inspect sensitive text and verify integrity locally."], generate:["Generate","Create passwords, identifiers and reusable outputs."] },
+  zh: { diagnose:["诊断","排查网站、解析和网络问题。"], inspect:["检查","检查地址、令牌、消息与文本差异。"], "format-convert":["格式化与转换","在本地整理、校验和转换数据。"], secure:["安全","在本地检查敏感文本并校验内容完整性。"], generate:["生成","生成密码、标识符和可复用内容。"] },
+} as const;
+
 export type ProductTool = {
+  primaryCategory: ToolPrimaryCategory;
+  tags: string[];
+  aliases: Record<ProductLocale, string[]>;
+  tasks: Record<ProductLocale, string[]>;
+  acceptedInputTypes: string[];
+  processingLocations: Array<"LOCAL" | "EDGE" | "REMOTE">;
+  searchNotes?: { terms: string[]; text: Record<ProductLocale, string> }[];
   id: ProductToolId;
   href: string;
+  /** Legacy public manifest classification; discovery uses primaryCategory. */
   category: "core" | "diagnostic" | "developer" | "utility";
+  /** Legacy public manifest field, retained for compatibility. */
   taskCategory: ToolTaskCategory;
   processingMode: ToolProcessingMode;
   networkPath: ToolNetworkPath;
@@ -81,6 +97,13 @@ export const observationPointCopy = {
 export const productTools: ProductTool[] = [
   {
     id: "website-check",
+    primaryCategory: "diagnose",
+    tags: ["ssl", "tls", "certificate", "证书", "网站"],
+    aliases: {"en": ["ssl", "tls", "certificate", "https", "http", "cdn"], "zh": ["证书", "网站", "证书检查"]},
+    tasks: {"en": ["certificate expired", "website down", "site unreachable", "website not loading", "check certificate"], "zh": ["证书过期", "网站打不开", "网站无法访问", "检查证书", "网站宕机"]},
+    acceptedInputTypes: ["hostname", "ip", "url"],
+    processingLocations: ["LOCAL", "EDGE", "REMOTE"],
+
     href: "/tools/website-check",
     category: "core",
     taskCategory: "website-network",
@@ -96,6 +119,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "network-doctor",
+    primaryCategory: "diagnose",
+    tags: ["network", "latency", "connectivity", "网络", "延迟"],
+    aliases: {"en": ["network", "latency", "connectivity", "ipv6"], "zh": ["网络", "延迟", "网速"]},
+    tasks: {"en": ["slow internet", "dns latency", "connection problems"], "zh": ["解析慢", "网络慢", "网络不通", "网络延迟"]},
+    acceptedInputTypes: ["current-connection"],
+    processingLocations: ["LOCAL", "EDGE", "REMOTE"],
+
     href: "/tools/network-check",
     category: "core",
     taskCategory: "website-network",
@@ -111,6 +141,14 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "dns-security",
+    primaryCategory: "diagnose",
+    tags: ["dns", "resolver", "dns lookup", "域名解析", "解析记录"],
+    aliases: {"en": ["dns", "resolver", "dns lookup", "spf", "dmarc", "caa", "dnssec"], "zh": ["域名解析", "解析记录", "邮件安全"]},
+    tasks: {"en": ["dns lookup", "dns records", "slow dns", "dns security"], "zh": ["查解析", "查询域名解析", "检查解析记录", "解析慢", "邮件防伪"]},
+    acceptedInputTypes: ["hostname"],
+    processingLocations: ["LOCAL", "REMOTE"],
+    searchNotes: [{"terms": ["dnssec"], "text": {"en": "Related DNS lookup; DNSSEC validation is not currently supported.", "zh": "相关 DNS 解析入口；当前不支持 DNSSEC 验证。"}}],
+
     href: "/tools/dns-lookup",
     category: "core",
     taskCategory: "website-network",
@@ -126,6 +164,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "ip-lookup",
+    primaryCategory: "inspect",
+    tags: ["ip", "asn", "geoip", "属地", "归属"],
+    aliases: {"en": ["ip", "asn", "geoip", "ip location"], "zh": ["属地", "归属", "归属地", "地址"]},
+    tasks: {"en": ["ip location", "ip ownership", "ip lookup", "lookup asn"], "zh": ["ip归属", "查ip属地", "查ip归属地", "ip地址归属", "查ip", "查地址归属"]},
+    acceptedInputTypes: ["ip", "current-connection"],
+    processingLocations: ["REMOTE"],
+
     href: "/tools/ip-lookup",
     category: "diagnostic",
     taskCategory: "website-network",
@@ -141,6 +186,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "cloudflare-trace",
+    primaryCategory: "inspect",
+    tags: ["trace", "colo", "warp", "边缘机房", "请求信息"],
+    aliases: {"en": ["trace", "colo", "warp", "cloudflare"], "zh": ["边缘机房", "请求信息"]},
+    tasks: {"en": ["cloudflare trace", "edge routing"], "zh": ["查看边缘路由", "查看请求信息"]},
+    acceptedInputTypes: ["hostname", "current-connection"],
+    processingLocations: ["LOCAL", "EDGE", "REMOTE"],
+
     href: "/tools/cloudflare-trace",
     category: "diagnostic",
     taskCategory: "website-network",
@@ -156,6 +208,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "api",
+    primaryCategory: "diagnose",
+    tags: ["api", "curl", "automation", "接口", "自动化"],
+    aliases: {"en": ["api", "curl", "automation"], "zh": ["接口", "自动化"]},
+    tasks: {"en": ["diagnostic api", "json api"], "zh": ["诊断接口", "自动化检测"]},
+    acceptedInputTypes: ["hostname", "ip", "url"],
+    processingLocations: ["REMOTE"],
+
     href: "/tools/api",
     category: "developer",
     taskCategory: "website-network",
@@ -171,6 +230,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "json",
+    primaryCategory: "format-convert",
+    tags: ["json", "format", "formatter", "格式化", "压缩"],
+    aliases: {"en": ["json", "format", "formatter", "prettify", "minify"], "zh": ["格式化", "压缩", "修复"]},
+    tasks: {"en": ["json format", "format json", "repair json", "json to yaml"], "zh": ["json格式化", "格式化json", "压缩json", "修复json"]},
+    acceptedInputTypes: ["json"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/json",
     category: "developer",
     taskCategory: "encoding-data",
@@ -186,6 +252,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "websocket",
+    primaryCategory: "inspect",
+    tags: ["websocket", "ws", "wss", "连接调试", "实时消息"],
+    aliases: {"en": ["websocket", "ws", "wss"], "zh": ["连接调试", "实时消息"]},
+    tasks: {"en": ["test websocket", "inspect messages"], "zh": ["调试websocket", "查看实时消息"]},
+    acceptedInputTypes: ["websocket-url", "text"],
+    processingLocations: ["LOCAL", "REMOTE"],
+
     href: "/tools/websocket",
     category: "developer",
     taskCategory: "website-network",
@@ -201,6 +274,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "passgen",
+    primaryCategory: "generate",
+    tags: ["password", "passphrase", "pin", "密码", "口令"],
+    aliases: {"en": ["password", "passphrase", "pin"], "zh": ["密码", "口令"]},
+    tasks: {"en": ["generate password", "strong password", "random password"], "zh": ["生成密码", "随机密码", "安全密码"]},
+    acceptedInputTypes: ["preferences"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/passgen",
     category: "utility",
     taskCategory: "password-checksum",
@@ -216,6 +296,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "qrgen",
+    primaryCategory: "generate",
+    tags: ["qr", "qrcode", "qr code", "二维码"],
+    aliases: {"en": ["qr", "qrcode", "qr code"], "zh": ["二维码"]},
+    tasks: {"en": ["generate qr code"], "zh": ["生成二维码", "网址转二维码"]},
+    acceptedInputTypes: ["url", "text"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/qrgen",
     category: "utility",
     taskCategory: "image-file",
@@ -231,6 +318,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "encode",
+    primaryCategory: "format-convert",
+    tags: ["base64", "urlencode", "urldecode", "编码", "解码"],
+    aliases: {"en": ["base64", "urlencode", "urldecode", "html entities"], "zh": ["编码", "解码", "转义"]},
+    tasks: {"en": ["base64 decode", "url decode", "url encode"], "zh": ["base64解码", "url解码", "编码转换"]},
+    acceptedInputTypes: ["text"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/encode",
     category: "utility",
     taskCategory: "encoding-data",
@@ -246,6 +340,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "time",
+    primaryCategory: "format-convert",
+    tags: ["timestamp", "unix", "timezone", "时间戳", "时区"],
+    aliases: {"en": ["timestamp", "unix", "timezone", "epoch"], "zh": ["时间戳", "时区", "日期"]},
+    tasks: {"en": ["convert timestamp", "time zone conversion"], "zh": ["时间戳转换", "时区转换"]},
+    acceptedInputTypes: ["timestamp", "date"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/time",
     category: "utility",
     taskCategory: "text-development",
@@ -261,6 +362,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "regex",
+    primaryCategory: "inspect",
+    tags: ["regex", "regexp", "regular expression", "正则", "正则表达式"],
+    aliases: {"en": ["regex", "regexp", "regular expression"], "zh": ["正则", "正则表达式"]},
+    tasks: {"en": ["test regex", "regex match"], "zh": ["测试正则", "正则匹配"]},
+    acceptedInputTypes: ["regex", "text"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/regex",
     category: "developer",
     taskCategory: "text-development",
@@ -276,6 +384,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "hash",
+    primaryCategory: "secure",
+    tags: ["hash", "checksum", "sha256", "哈希", "校验和"],
+    aliases: {"en": ["hash", "checksum", "sha256", "sha512", "md5"], "zh": ["哈希", "校验和", "摘要"]},
+    tasks: {"en": ["file checksum", "compare hashes"], "zh": ["文件校验", "计算哈希", "比对校验和"]},
+    acceptedInputTypes: ["text", "file"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/hash",
     category: "developer",
     taskCategory: "password-checksum",
@@ -288,6 +403,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "jwt",
+    primaryCategory: "inspect",
+    tags: ["jwt", "token", "decode", "令牌", "签名"],
+    aliases: {"en": ["jwt", "token", "decode", "signature"], "zh": ["令牌", "签名"]},
+    tasks: {"en": ["decode jwt", "verify jwt"], "zh": ["解码jwt", "校验jwt", "查看令牌"]},
+    acceptedInputTypes: ["jwt"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/jwt",
     category: "developer",
     taskCategory: "text-development",
@@ -300,6 +422,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "uuid",
+    primaryCategory: "generate",
+    tags: ["uuid", "guid", "uuidv4", "唯一标识", "标识符"],
+    aliases: {"en": ["uuid", "guid", "uuidv4"], "zh": ["唯一标识", "标识符"]},
+    tasks: {"en": ["generate uuid", "validate uuid"], "zh": ["生成uuid", "生成唯一标识"]},
+    acceptedInputTypes: ["preferences", "uuid"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/uuid",
     category: "developer",
     taskCategory: "text-development",
@@ -315,6 +444,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "sensitive-data",
+    primaryCategory: "secure",
+    tags: ["redact", "redaction", "pii", "脱敏", "敏感信息"],
+    aliases: {"en": ["redact", "redaction", "pii", "secrets", "mask"], "zh": ["脱敏", "敏感信息", "密钥", "凭据"]},
+    tasks: {"en": ["redact logs", "mask sensitive data", "detect secrets"], "zh": ["日志脱敏", "敏感信息脱敏", "隐藏密码", "检测密钥", "脱敏"]},
+    acceptedInputTypes: ["text"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/sensitive-data",
     category: "developer",
     taskCategory: "text-development",
@@ -330,6 +466,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "cron",
+    primaryCategory: "generate",
+    tags: ["cron", "crontab", "schedule", "定时任务", "计划任务"],
+    aliases: {"en": ["cron", "crontab", "schedule"], "zh": ["定时任务", "计划任务"]},
+    tasks: {"en": ["generate cron", "explain cron"], "zh": ["生成cron", "定时任务表达式"]},
+    acceptedInputTypes: ["cron", "preferences"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/cron",
     category: "developer",
     taskCategory: "text-development",
@@ -345,6 +488,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "yaml",
+    primaryCategory: "format-convert",
+    tags: ["yaml", "yml", "format", "格式化", "校验"],
+    aliases: {"en": ["yaml", "yml", "format", "validate"], "zh": ["格式化", "校验"]},
+    tasks: {"en": ["format yaml", "validate yaml"], "zh": ["yaml格式化", "校验yaml"]},
+    acceptedInputTypes: ["yaml"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/yaml",
     category: "developer",
     taskCategory: "encoding-data",
@@ -360,6 +510,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "sql",
+    primaryCategory: "format-convert",
+    tags: ["sql", "format", "prettify", "格式化", "排版"],
+    aliases: {"en": ["sql", "format", "prettify"], "zh": ["格式化", "排版"]},
+    tasks: {"en": ["format sql", "sql formatter"], "zh": ["sql格式化", "sql排版"]},
+    acceptedInputTypes: ["sql"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/sql",
     category: "developer",
     taskCategory: "encoding-data",
@@ -375,6 +532,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "color",
+    primaryCategory: "format-convert",
+    tags: ["color", "hex", "rgb", "颜色", "色值"],
+    aliases: {"en": ["color", "hex", "rgb", "rgba", "hsl"], "zh": ["颜色", "色值"]},
+    tasks: {"en": ["convert color", "hex to rgb"], "zh": ["颜色转换", "色值转换"]},
+    acceptedInputTypes: ["color"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/color",
     category: "utility",
     taskCategory: "image-file",
@@ -390,6 +554,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "diff",
+    primaryCategory: "inspect",
+    tags: ["diff", "compare", "text diff", "对比", "差异"],
+    aliases: {"en": ["diff", "compare", "text diff"], "zh": ["对比", "差异"]},
+    tasks: {"en": ["compare text", "text difference"], "zh": ["文本对比", "比较文本", "查看差异"]},
+    acceptedInputTypes: ["text-pair"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/diff",
     category: "developer",
     taskCategory: "text-development",
@@ -405,6 +576,13 @@ export const productTools: ProductTool[] = [
   },
   {
     id: "prompt-builder",
+    primaryCategory: "generate",
+    tags: ["prompt", "template", "提示词", "模板"],
+    aliases: {"en": ["prompt", "template"], "zh": ["提示词", "模板"]},
+    tasks: {"en": ["build prompt", "prompt template"], "zh": ["编写提示词", "生成提示词"]},
+    acceptedInputTypes: ["text", "preferences"],
+    processingLocations: ["LOCAL"],
+
     href: "/tools/prompt-builder",
     category: "utility",
     taskCategory: "text-development",

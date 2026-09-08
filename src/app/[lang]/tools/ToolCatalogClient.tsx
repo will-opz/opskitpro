@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   Binary,
@@ -27,11 +27,15 @@ import {
 } from "lucide-react";
 import {
   localizeTool,
-  productTools,
+  toolCategoryOrder,
+  toolCategoryCopy,
+  type ToolPrimaryCategory,
   type ProductLocale,
   type ProductToolId,
   type ToolProcessingMode,
 } from "@/lib/tool-catalog";
+
+import { searchTools } from "@/lib/tool-search";
 
 const icons = {
   "website-check": Activity,
@@ -59,41 +63,6 @@ const icons = {
   diff: GitCompareArrows,
 } satisfies Record<ProductToolId, typeof Activity>;
 
-type DisplayCategory = "security-first" | "developer-tooling" | "content-utility" | "ops-network" | "developer-debug";
-const categoryOrder: DisplayCategory[] = [
-  "security-first",
-  "developer-tooling",
-  "content-utility",
-  "developer-debug",
-  "ops-network",
-];
-
-const toolCategory: Record<ProductToolId, DisplayCategory> = {
-  "website-check": "ops-network",
-  "network-doctor": "ops-network",
-  "dns-security": "ops-network",
-  "ip-lookup": "ops-network",
-  "cloudflare-trace": "ops-network",
-  api: "developer-debug",
-  json: "developer-tooling",
-  websocket: "developer-debug",
-  passgen: "security-first",
-  qrgen: "content-utility",
-  encode: "developer-tooling",
-  time: "content-utility",
-  "prompt-builder": "developer-tooling",
-  regex: "developer-tooling",
-  hash: "security-first",
-  jwt: "security-first",
-  uuid: "security-first",
-  "sensitive-data": "security-first",
-  cron: "developer-tooling",
-  yaml: "developer-tooling",
-  sql: "developer-tooling",
-  color: "content-utility",
-  diff: "developer-tooling",
-};
-
 const copy = {
   en: {
     search: "Find a tool or task",
@@ -103,6 +72,7 @@ const copy = {
     local: "Local processing · Not uploaded",
     network: "Internet required",
     networkTag: "Network-assisted",
+    locations: {LOCAL:"Browser", EDGE:"Edge", REMOTE:"Remote service"},
     paths: {
       none: "Stays in this browser",
       "direct-target": "Browser connects directly to your target",
@@ -110,28 +80,7 @@ const copy = {
       "opskitpro-probe": "Sent to the OpsKitPro probe",
       mixed: "Browser, edge, and probe observations",
     },
-    categories: {
-      "security-first": [
-        "Security & privacy tooling",
-        "Generate, detect, hash, and mask sensitive data locally before sharing.",
-      ],
-      "developer-tooling": [
-        "Text & data",
-        "Common text, data, and logic tools for daily engineering work.",
-      ],
-      "content-utility": [
-        "Content & workflow utility",
-        "Practical local tools for prompts, time, colors, QR, and routine conversions.",
-      ],
-      "developer-debug": [
-        "API & connection debugging",
-        "Local workflow + network-aware helpers for API and real-time debugging.",
-      ],
-      "ops-network": [
-        "Ops & network diagnostics",
-        "Public-network checks with clear data destinations and observation points.",
-      ],
-    },
+    categories: toolCategoryCopy.en,
   },
   zh: {
     search: "查找工具或任务",
@@ -141,6 +90,7 @@ const copy = {
     local: "本地处理 · 不上传",
     network: "需要联网",
     networkTag: "需联网",
+    locations: {LOCAL:"浏览器", EDGE:"边缘", REMOTE:"远程服务"},
     paths: {
       none: "数据留在当前浏览器",
       "direct-target": "浏览器直接连接你的目标",
@@ -148,33 +98,12 @@ const copy = {
       "opskitpro-probe": "发送给 OpsKitPro 探针",
       mixed: "浏览器、边缘和探针共同观察",
     },
-    categories: {
-      "security-first": [
-        "安全与脱敏工具",
-        "生成、检测、哈希与脱敏，优先在浏览器本地完成。",
-      ],
-      "developer-tooling": [
-        "文本与数据",
-        "日常开发常用的文本、数据和逻辑类本地辅助。",
-      ],
-      "content-utility": [
-        "内容与流程工具",
-        "面向日常工作流的本地辅助，如时间、二维码、颜色、提示词。",
-      ],
-      "developer-debug": [
-        "API 与连接调试",
-        "兼具本地处理与网络场景的 API 与 WebSocket 排障辅助。",
-      ],
-      "ops-network": [
-        "运维与网络诊断",
-        "公开网络场景诊断，明确显示数据流向和观测来源。",
-      ],
-    },
+    categories: toolCategoryCopy.zh,
   },
 } as const;
 
 type Filter = "all" | ToolProcessingMode;
-type CategoryFilter = "all" | DisplayCategory;
+type CategoryFilter = "all" | ToolPrimaryCategory;
 
 export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
   const text = copy[lang];
@@ -182,34 +111,31 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [query, setQuery] = useState("");
 
-  const groups = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase(lang === "zh" ? "zh-CN" : "en-US");
-    const matches = productTools.filter((tool) => {
-      if (filter !== "all" && tool.processingMode !== filter) return false;
-      if (
-        categoryFilter !== "all" &&
-        toolCategory[tool.id] !== categoryFilter
-      ) return false;
-      if (!normalized) return true;
-      const displayCategory = toolCategory[tool.id];
-      const haystack = [
-        tool.title[lang],
-        tool.description[lang],
-        tool.inputType[lang],
-        text.categories[displayCategory][0],
-      ].join(" ").toLocaleLowerCase(lang === "zh" ? "zh-CN" : "en-US");
-      return haystack.includes(normalized);
-    });
-    return categoryOrder.map((category) => ({
-      category,
-      tools: matches
-        .filter((tool) => toolCategory[tool.id] === category)
-        .sort((left, right) => left.title[lang].localeCompare(
-          right.title[lang],
-          lang === "zh" ? "zh-CN" : "en-US",
-        )),
-    })).filter((group) => group.tools.length > 0);
-  }, [filter, categoryFilter, lang, query, text.categories]);
+  useEffect(() => {
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search);
+      setQuery(params.get("q") || "");
+      const category = params.get("category") as ToolPrimaryCategory;
+      setCategoryFilter(toolCategoryOrder.includes(category) ? category : "all");
+      const mode = params.get("mode");
+      setFilter(mode === "local" || mode === "network" ? mode : "all");
+    };
+    restore(); window.addEventListener("popstate",restore);
+    return () => window.removeEventListener("popstate",restore);
+  }, []);
+  const update = (next: {query?:string; category?:CategoryFilter; mode?:Filter}) => {
+    const values = {query:next.query ?? query, category:next.category ?? categoryFilter, mode:next.mode ?? filter};
+    setQuery(values.query);setCategoryFilter(values.category);setFilter(values.mode);
+    const url = new URL(window.location.href);
+    for (const [key,value] of [["q",values.query],["category",values.category],["mode",values.mode]]) {
+      if (!value || (key !== "q" && value === "all")) url.searchParams.delete(key); else url.searchParams.set(key,value);
+    }
+    window.history.replaceState(window.history.state,"",url);
+  };
+  const matches = useMemo(()=>searchTools(query,{lang,category:categoryFilter,mode:filter}),[query,lang,categoryFilter,filter]);
+  const groups = query.trim()
+    ? [{category:"results" as const,tools:matches}].filter(group=>group.tools.length)
+    : toolCategoryOrder.map(category=>({category,tools:matches.filter(result=>result.tool.primaryCategory===category)})).filter(group=>group.tools.length);
 
   return (
     <div className="mt-6">
@@ -223,7 +149,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
             id="tool-search"
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => update({query:event.target.value})}
             placeholder={text.searchHint}
             className="min-h-11 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] py-2.5 pl-10 pr-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-secondary)] focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10"
           />
@@ -234,7 +160,7 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
               key={value}
               type="button"
               aria-pressed={filter === value}
-              onClick={() => setFilter(value)}
+              onClick={() => update({mode:value})}
               className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${filter === value ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"}`}
             >
               {text.filters[value]}
@@ -245,17 +171,17 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
           <button
             type="button"
             aria-pressed={categoryFilter === "all"}
-            onClick={() => setCategoryFilter("all")}
+            onClick={() => update({category:"all"})}
             className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${categoryFilter === "all" ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"}`}
           >
             {lang === "zh" ? "全部分类" : "All categories"}
           </button>
-          {categoryOrder.map((category) => (
+          {toolCategoryOrder.map((category) => (
             <button
               key={category}
               type="button"
               aria-pressed={categoryFilter === category}
-              onClick={() => setCategoryFilter(category)}
+              onClick={() => update({category})}
               className={`min-h-10 rounded-full border px-4 text-xs font-semibold transition ${categoryFilter === category ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"}`}
             >
               {text.categories[category][0]}
@@ -269,15 +195,15 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
       ) : (
         <div className="mt-7 space-y-8">
           {groups.map(({ category, tools }) => {
-            const [title, description] = text.categories[category];
+            const [title, description] = category === "results" ? [lang === "zh" ? "搜索结果" : "Search results", lang === "zh" ? "按任务相关性排序" : "Sorted by task relevance"] : text.categories[category];
             const CategoryIcon =
-              category === "security-first"
+              category === "secure"
                 ? ShieldCheck
-                : category === "content-utility"
+                : category === "generate"
                   ? ImageIcon
-                  : category === "ops-network"
+                  : category === "diagnose"
                     ? Wifi
-                    : category === "developer-debug"
+                    : category === "inspect"
                       ? Network
                       : Code2;
             return (
@@ -290,19 +216,19 @@ export function ToolCatalogClient({ lang }: { lang: ProductLocale }) {
                   </div>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {tools.map((rawTool) => {
+                  {tools.map(({tool:rawTool,note}) => {
                     const tool = localizeTool(rawTool, lang);
                     const Icon = icons[tool.id];
                     const isLocal = tool.processingMode === "local" && tool.networkPath === "none";
                     return (
-                      <Link key={tool.id} href={`/${lang}${tool.href}`} className="group flex min-h-[136px] flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 transition hover:border-[var(--accent-text)] hover:shadow-sm">
+                      <Link data-tool-id={tool.id} key={tool.id} href={`/${lang}${tool.href}`} className="group flex min-h-[136px] flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 transition hover:border-[var(--accent-text)] hover:shadow-sm">
                         <div className="flex items-center gap-3">
                           <span className="shrink-0 rounded-lg bg-[var(--accent-soft)] p-1.5 text-[var(--accent-text)]"><Icon aria-hidden="true" className="h-5 w-5" /></span>
                           <h3 className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-text)]">{tool.title}</h3>
                         </div>
-                        <p className="mb-1.5 mt-1.5 text-sm leading-5 text-[var(--text-secondary)]">{tool.description}</p>
+                        <p className="mb-1.5 mt-1.5 text-sm leading-5 text-[var(--text-secondary)]">{note || tool.description}</p>
                         <p className="mt-auto text-[13px] font-medium leading-5 text-[var(--accent-text)]">
-                          {isLocal ? text.local : `${text.networkTag} · ${text.paths[tool.networkPath]}`}
+                          {isLocal ? text.local : `${text.networkTag} · ${tool.networkPath === "direct-target" ? text.paths["direct-target"] : tool.processingLocations.map(location=>text.locations[location]).join(" / ")}`}
                         </p>
                       </Link>
                     );
