@@ -64,13 +64,13 @@ export const toolGuides = {
   "cloudflare-trace": {
     purpose: local("Explain how a request reaches Cloudflare, including colo, protocol, TLS, WARP, and Gateway context.", "解释请求如何到达 Cloudflare，包括机房、协议、TLS、WARP 和 Gateway 信息。"),
     input: local("Your current connection or a supported public target domain.", "当前网络连接，或受支持的公开目标域名。"),
-    output: local("Parsed Cloudflare trace fields with plain-language labels.", "带有通俗说明的 Cloudflare Trace 字段。"),
-    processing: local("Your own trace is observed at the Cloudflare edge; target checks may use an OpsKitPro server request.", "自身 Trace 在 Cloudflare 边缘观察；目标检测可能使用 OpsKitPro 服务端请求。"),
-    privacy: local("Cloudflare and OpsKitPro receive normal request metadata. The result is not a proof of identity or exact location.", "Cloudflare 和 OpsKitPro 会接收常规请求信息；结果不能证明身份或精确位置。"),
+    output: local("Validated Trace fields and a locally generated, redacted summary.", "经过校验的 Trace 字段，以及本地生成的脱敏摘要。"),
+    processing: local("Current connection: your browser to this site. Target checks: OpsKitPro server to the target.", "当前连接由浏览器访问本站；目标检测由 OpsKitPro 服务端访问目标。"),
+    privacy: local("Cloudflare and OpsKitPro receive normal request metadata. Share summaries are generated locally; full IP and target hostname are excluded by default.", "Cloudflare 和 OpsKitPro 接收常规请求信息。分享摘要在本地生成，默认不含完整 IP 和目标域名。"),
     limitation: local("Trace fields describe one request path and can change between networks, devices, or moments.", "Trace 字段只描述一次请求路径，可能随网络、设备和时间变化。"),
     example: local("Compare the colo and protocol on home broadband and mobile data when only one network feels slow.", "只有一种网络较慢时，对比家庭宽带与移动网络的机房和协议字段。"),
     related: ["network-doctor", "ip-lookup"],
-    lastReviewed: "2026-08-06",
+    lastReviewed: "2026-11-09",
   },
   api: {
     purpose: local("Run bounded DNS, IP, HTTP, and full diagnostic checks from scripts or agents.", "通过脚本或智能体调用有安全边界的 DNS、IP、HTTP 和完整诊断。"),

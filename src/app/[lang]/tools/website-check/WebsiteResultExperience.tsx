@@ -52,6 +52,7 @@ ${JSON.stringify(model.raw, null, 2)}
       <div className={styles.verdict}><h2>{model.title}</h2><span data-testid="http-freshness">{freshLabels[model.freshness]}</span></div>
       <p>{model.summary}</p>
     </header>
+    <div className={styles.exportActions}><button onClick={()=>copy(summary)}>{zh ? "复制结果摘要" : "Copy result summary"}</button><span role="status">{feedback}</span></div>
     <section aria-labelledby="key-evidence-title" className={styles.layer}>
       <h3 id="key-evidence-title">{zh ? "关键证据" : "Key evidence"}</h3>
       {keyEvidence.length === 0 && <p>{zh ? "尚未获得可判定的目标证据。" : "No conclusive target evidence returned."}</p>}
@@ -73,8 +74,8 @@ ${JSON.stringify(model.raw, null, 2)}
         <details><summary>{zh ? "原始响应 JSON" : "Raw response JSON"}</summary><pre>{JSON.stringify(model.raw, null, 2)}</pre><button onClick={()=>copy(JSON.stringify(model.raw,null,2))}>{zh ? "复制原始响应" : "Copy raw response"}</button></details>
         {failure && <p>{zh ? "诊断请求信息：" : "Diagnostic request: "}{failure.message}</p>}
         <details><summary>{zh ? "API 示例" : "API example"}</summary><p>{zh ? "公开 DNS API 会发起独立查询，不会返回本次诊断快照。" : "The public DNS API runs a separate query; it does not return this diagnostic snapshot."}</p><pre>{`curl -s 'https://opskitpro.com/api/tools/dns-lookup?domain=${encodeURIComponent(model.target)}'`}</pre><Link href={`/${lang}/tools/api#dns`}>{zh ? "参数、响应与调用限制 →" : "Parameters, responses and limits →"}</Link></details>
-        <div className={styles.exportActions}><button onClick={()=>copy(summary)}>{zh ? "复制结果摘要" : "Copy result summary"}</button><button onClick={()=>{ const url = new URL(window.location.href); url.searchParams.set("q",model.target); void copy(url.toString()); }}>{zh ? "复制重新检测链接" : "Copy rerun link"}</button>{result && <><button onClick={()=>download("json")}>{zh ? "导出 JSON 报告" : "Export JSON report"}</button><button onClick={()=>download("md")}>{zh ? "导出 Markdown" : "Export Markdown"}</button></>}</div>
-        <p className={styles.note}>{zh ? "链接会重新运行检测，不是永久结果快照。JSON 导出保留兼容字段；当前判断与页面一致，完整结果见 resultExperience。" : "Links rerun the diagnostic; they are not permanent result snapshots. JSON exports retain compatibility fields and match this assessment; full results are under resultExperience."}</p><p role="status">{feedback}</p>
+        <div className={styles.exportActions}><button onClick={()=>{ const url = new URL(window.location.href); url.searchParams.set("q",model.target); void copy(url.toString()); }}>{zh ? "复制重新检测链接" : "Copy rerun link"}</button>{result && <><button onClick={()=>download("json")}>{zh ? "导出 JSON 报告" : "Export JSON report"}</button><button onClick={()=>download("md")}>{zh ? "导出 Markdown" : "Export Markdown"}</button></>}</div>
+        <p className={styles.note}>{zh ? "链接会重新运行检测，不是永久结果快照。JSON 导出保留兼容字段；当前判断与页面一致，完整结果见 resultExperience。" : "Links rerun the diagnostic; they are not permanent result snapshots. JSON exports retain compatibility fields and match this assessment; full results are under resultExperience."}</p>
       </div>
     </details>
   </section>;

@@ -5,7 +5,7 @@ import { createSafeDiagnosticResult } from "./_hooks/helpers";
 
 const state = vi.hoisted(() => ({ domain: "", loading: false, error: null as string | null, result: null as Record<string, any> | null, runDiagnostic: vi.fn(), setDomain: vi.fn(), query: "" }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(state.query) }));
-vi.mock("./_hooks/useWebsiteCheck", () => ({ useWebsiteCheck: () => ({ ...state, currentStep: 0, localResolvers: {} }) }));
+vi.mock("./_hooks/useWebsiteCheck", () => ({ useWebsiteCheck: () => ({ ...state, phase: "idle", localResolvers: {} }) }));
 vi.mock("./_hooks/useDiagnosticHistory", () => ({ useDiagnosticHistory: () => ({ history: [], upsertHistory: vi.fn(), deleteHistory: vi.fn(), togglePin: vi.fn() }) }));
 const dict = { home: { diagnostics_placeholder: "example.com", diagnostics_btn: "Start website check" } };
 

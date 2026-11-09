@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Activity, Globe, History, Star, Terminal, Trash2, Zap } from "lucide-react";
+import { Activity, ChevronDown, Globe, History, Star, Terminal, Trash2, Zap } from "lucide-react";
 import { useDiagnosticHistory } from "./_hooks/useDiagnosticHistory";
 import { useWebsiteCheck } from "./_hooks/useWebsiteCheck";
 import { normalizeTargetInput } from "./_hooks/helpers";
@@ -16,7 +16,13 @@ export default function WebsiteCheckClient({ dict, lang }: { dict:any; lang:"zh"
   const zh = lang === "zh";
   const searchParams = useSearchParams();
   const { history, upsertHistory, deleteHistory, togglePin } = useDiagnosticHistory();
-  const { domain, setDomain, result, error, failure, loading, localResolvers, runDiagnostic, restoreDiagnostic } = useWebsiteCheck();
+  const { domain, setDomain, result, error, failure, loading, localResolvers, runDiagnostic, restoreDiagnostic, phase, startedAt, cancel } = useWebsiteCheck();
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!loading || !startedAt) return;
+    const update = () => setElapsed(Math.floor((Date.now() - startedAt) / 1000));
+    update(); const timer = setInterval(update, 1000); return () => clearInterval(timer);
+  }, [loading, startedAt]);
   const [inputError, setInputError] = useState(false);
   const returnChecked = useRef(false);
   const [returnView, setReturnView] = useState<DiagnosticReturn | null>(null);
@@ -77,7 +83,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict:any; lang:"zh"
               <Terminal aria-hidden="true" className="h-4 w-4" />JSON API
             </Link>
           </div>
-          <p className="mt-2 text-base leading-6 text-[var(--text-secondary)]">{localeText.heroSubtitle}</p>
+
         </div>
         <div className="mx-auto max-w-4xl">
           <form onSubmit={handleSubmit}>
@@ -105,18 +111,30 @@ export default function WebsiteCheckClient({ dict, lang }: { dict:any; lang:"zh"
             </p>}
             <p id="website-data-note" className="mt-3 text-[13px] leading-5 text-[var(--text-secondary)]">
               {lang === "zh"
-                ? "域名将发送给 OpsKitPro 探针，以及 Google、Cloudflare 和阿里 DNS；URL 路径、参数和登录信息不会发送。各观察点的结果分别展示。"
-                : "The hostname is sent to OpsKitPro probes and Google, Cloudflare and AliDNS resolvers. URL paths, query parameters and credentials are omitted. Each observation point is shown separately."}{" "}
+                ? "仅域名发送至 OpsKitPro、Google、Cloudflare 和阿里 DNS；不含 URL 路径、参数或登录信息。"
+                : "Only the hostname reaches OpsKitPro, Google, Cloudflare and AliDNS; URL paths, queries and credentials are omitted."}{" "}
               <Link href={`/${lang}/tools/docs#website-check`} className="font-semibold text-[var(--accent-text)] underline underline-offset-4">{lang === "zh" ? "数据处理说明" : "Data handling details"}</Link>
             </p>
           </form>
-          <div className="mt-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
-                <History aria-hidden="true" className="h-4 w-4 text-[var(--accent-text)]" />{localeText.actions.history}
-              </div>
+
+        </div>
+      </div>
+
+
+    {loading && <div className="mx-auto max-w-4xl rounded-lg border border-[var(--border-subtle)] p-4 text-sm text-[var(--text-secondary)]">
+      <div className="flex items-center justify-between gap-3"><span role="status">{zh ? `检测中 · ${elapsed}秒` : `Checking · ${elapsed}s`}</span><button type="button" onClick={cancel} className="underline min-h-10">{zh ? "停止等待" : "Stop waiting"}</button></div>
+      {elapsed >= 10 && <p>{zh ? "部分探测较慢，网络等待最多约30秒。" : "Some probes take longer; network wait is limited to about 30 seconds."}</p>}
+    </div>}
+    {phase === "cancelled" && <p role="status" className="mx-auto max-w-4xl text-sm">{zh ? "已停止等待此次检测。" : "Stopped waiting for this check."}</p>}
+    {phase === "partial" && <p role="status" className="mx-auto max-w-4xl text-sm">{zh ? "已获得部分结果，可重新检测。" : "Partial results received. You can retry."}</p>}
+    {!loading && (result || error || failure) && <WebsiteResultExperience key={result?.domain || failure?.target || domain} result={result} localResolvers={localResolvers} failure={failure || (error ? {target:result?.domain || domain,kind:"request",message:error}:null)} lang={lang} onNavigate={preserveReturn} onRetry={(target)=>void runDiagnostic(target,true)} />}
+          <details className="mx-auto mt-6 max-w-4xl rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-3">
+            <summary className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-2 text-[13px] font-medium text-[var(--text-secondary)]">
+                <History aria-hidden="true" className="h-4 w-4 text-[var(--accent-text)]" />{localeText.actions.history}<ChevronDown aria-hidden="true" className="h-4 w-4" />
+              </span>
               {history.length === 0 && <span className="text-[13px] text-[var(--text-secondary)]">{localeText.actions.noHistory}</span>}
-            </div>
+            </summary>
             {history.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {history.map((entry) => (
@@ -160,13 +178,7 @@ export default function WebsiteCheckClient({ dict, lang }: { dict:any; lang:"zh"
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      </div>
-
-
-    {loading && <div role="status" className="mx-auto max-w-4xl rounded-lg border border-[var(--border-subtle)] p-4 text-sm text-[var(--text-secondary)]">{zh ? "正在等待诊断服务返回结果…":"Waiting for the diagnostic service…"}</div>}
-    {!loading && (result || error || failure) && <WebsiteResultExperience key={result?.domain || failure?.target || domain} result={result} localResolvers={localResolvers} failure={failure || (error ? {target:domain,kind:"request",message:error}:null)} lang={lang} onNavigate={preserveReturn} onRetry={(target)=>void runDiagnostic(target,true)} />}
-    {!result && !loading && !error && !failure && <WebsiteCheckIntro lang={lang} />}
+          </details>
+    {!result && !loading && !error && !failure && phase === "idle" && <WebsiteCheckIntro lang={lang} />}
   </main>;
 }

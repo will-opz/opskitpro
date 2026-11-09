@@ -2,7 +2,7 @@ import { buildResultActions, type ResultAction } from "./result-actions";
 export type { ResultAction } from "./result-actions";
 import { assessHttpEvidence, type HttpEvidenceInput } from "@/lib/http-assessment";
 
-export type RequestFailure = { target: string; kind: "dns" | "timeout" | "request"; message: string };
+export type RequestFailure = { target: string; kind: "dns" | "timeout" | "request" | "rate_limit" | "invalid_response"; message: string };
 export type ResultState = "normal" | "abnormal" | "partial" | "unknown";
 export type ResultEvidence = { id: string; location: "LOCAL" | "EDGE" | "REMOTE"; source: string; value: string; time?: string; timeScope: "observation" | "report"; freshness: "current" | "cached" | "stale" | "unknown"; state: "observed" | "missing" };
 export type ResultExperience = { target: string; state: ResultState; title: string; summary: string; evidence: ResultEvidence[]; uncertainty: string[]; actions: ResultAction[]; freshness: ResultEvidence["freshness"]; raw: any };
@@ -67,6 +67,11 @@ export function buildResultExperience(result: any, failure: RequestFailure | nul
   else if (http.reachable && incomplete) { state = "partial"; summary = text(zh, "已有 HTTP 可用证据，但部分检查未返回可判定结果。", "HTTP reachability was observed, but some checks remain unconfirmed."); }
   else if (http.reachable) { state = "normal"; summary = text(zh, "返回的 DNS、HTTP 与 TLS 证据正常；这不代表所有网络均可访问。", "Returned DNS, HTTP and TLS evidence is normal; this does not cover every network."); }
   if (failure && !result && failure.kind !== "dns") { state = "unknown"; summary = text(zh, "诊断请求未完成，尚未取得目标证据；这不等于网站故障。", "The diagnostic request did not complete. Missing target evidence is not a website failure."); }
+  if (failure && !result) {
+    if (failure.kind === "timeout") summary = text(zh, "等待诊断超时，请重试；尚不能判断网站是否故障。", "The diagnostic timed out. Retry; this does not establish a website failure.");
+    if (failure.kind === "rate_limit") summary = text(zh, "请求较多，请稍后重试。", "Too many requests. Try again later.");
+    if (failure.kind === "invalid_response") summary = text(zh, "诊断服务未返回有效结果，请重试。", "The diagnostic service returned no valid result. Try again.");
+  }
   if (conflict || differingCodes) uncertainty.push(text(zh, "观察点返回不同结果；可能与访问控制、WAF、Geo / ASN 策略有关，当前数据不能确认具体原因。", "Responses differ by observation point. Access controls, WAF or Geo/ASN policies are possible causes, not established facts."));
   if (dnsFailed) uncertainty.push(text(zh, "当前数据不能区分 NXDOMAIN、解析器故障或公网地址限制。", "Current data cannot distinguish NXDOMAIN, resolver failure or public-address restrictions."));
   if (!observations.edge) uncertainty.push(text(zh, "未返回 EDGE 观察；未返回不代表该位置访问失败。", "No EDGE observation returned; absence does not mean failure there."));

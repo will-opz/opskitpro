@@ -1,359 +1,126 @@
 "use client";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { startToolRun } from "@/lib/audience-client";
+import { parseWebsiteTarget } from "@/lib/diagnostic-target";
+import { buildTraceSummary, parseTraceText, traceSource, traceState, traceTime, type TraceSnapshot } from "@/lib/cloudflare-trace";
+import { withinBudget } from "@/lib/request-budget";
 
-import { useState, useEffect, useCallback } from "react";
-import {
-  Server,
-  Shield,
-  Globe,
-  RefreshCw,
-  Search,
-  Activity,
-} from "lucide-react";
-import { ResultPanel, MetaRow, StatusBadge } from "@/components/diagnostic";
-
-interface CfTrace {
-  fl?: string;
-  h?: string;
-  ip?: string;
-  ts?: string;
-  visit_scheme?: string;
-  uag?: string;
-  colo?: string;
-  sliver?: string;
-  http?: string;
-  loc?: string;
-  tls?: string;
-  sni?: string;
-  warp?: string;
-  gateway?: string;
-  kex?: string;
-}
-
-export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
-  const [activeTab, setActiveTab] = useState<"my" | "target">("my");
-  const [myTrace, setMyTrace] = useState<CfTrace | null>(null);
-  const [myPhase, setMyPhase] = useState<"idle" | "loading" | "done" | "error">(
-    "idle",
-  );
-
-  const [targetDomain, setTargetDomain] = useState("");
-  const [targetTrace, setTargetTrace] = useState<CfTrace | null>(null);
-  const [targetPhase, setTargetPhase] = useState<
-    "idle" | "loading" | "done" | "error" | "not_cf"
-  >("idle");
-  const [targetErrorMsg, setTargetErrorMsg] = useState("");
-
-  const fetchMyTrace = useCallback(async (userAction = false) => {
+function useTrace(mode: "my" | "target") {
+  const [snapshot, setSnapshot] = useState<TraceSnapshot | null>(null);
+  const [phase, setPhase] = useState<"idle" | "loading" | "done" | "error" | "cancelled">("idle");
+  const [error, setError] = useState("");
+  const active = useRef<{ controller: AbortController; finish?: ReturnType<typeof startToolRun>["finish"] } | null>(null);
+  const stop = useCallback(() => { active.current?.controller.abort(); active.current?.finish?.("cancel"); active.current = null; }, []);
+  const cancel = () => { stop(); setPhase("cancelled"); };
+  const run = useCallback(async (userAction: boolean, target?: string) => {
+    if (active.current) return;
+    const controller = new AbortController();
     const usage = userAction ? startToolRun("cloudflare-trace") : null;
-    setMyPhase("loading");
+    const context = { controller, finish: usage?.finish }; active.current = context;
+    const current = () => active.current === context;
+    setPhase("loading"); setSnapshot(null); setError("");
+    const timeout = AbortSignal.timeout(8000);
+    const signal = AbortSignal.any([controller.signal, timeout]);
     try {
-      const res = await fetch("/cdn-cgi/trace");
-      if (!res.ok) throw new Error();
-      const text = await res.text();
-      const trace = parseTraceText(text);
-      if (!trace.ip || !trace.colo) throw new Error("Trace unavailable");
-      setMyTrace(trace);
-      usage?.finish("success");
-      setMyPhase("done");
-    } catch {
-      usage?.finish("error");
-      setMyPhase("error");
-    }
-  }, []);
-
-  const fetchTargetTrace = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!targetDomain.trim()) return;
-
-    const usage = startToolRun("cloudflare-trace");
-    // Clean up domain input
-    let cleanDomain = targetDomain.trim().toLowerCase();
-    cleanDomain = cleanDomain.replace(/^https?:\/\//, "");
-    cleanDomain = cleanDomain.split("/")[0];
-
-    setTargetPhase("loading");
-    setTargetErrorMsg("");
-    try {
-      const res = await fetch(
-        `/api/trace?domain=${encodeURIComponent(cleanDomain)}`,
-      );
-      const text = await res.text();
-
-      if (!res.ok) {
-        usage.finish("error");
-        let data: any = null;
-        try {
-          data = JSON.parse(text);
-        } catch {
-          /* ignore */
-        }
-
-        if (res.status === 404 && data?.error?.includes("Could not verify")) {
-          setTargetPhase("not_cf");
-        } else {
-          setTargetPhase("error");
-          setTargetErrorMsg(data?.error || "Failed to fetch trace");
-        }
-        return;
+      const response = await withinBudget(fetch(mode === "my" ? "/cdn-cgi/trace" : `/api/trace?domain=${encodeURIComponent(target ?? "")}`, { signal, cache: "no-store" }), 8000, signal);
+      const text = await withinBudget(response.text(), 8000, signal);
+      if (!response.ok) {
+        if (response.status === 429) throw new Error("rate_limit");
+        let code = "unavailable";
+        try { code = JSON.parse(text).error; } catch { /* Never expose raw error text. */ }
+        throw new Error(code);
       }
-
-      setTargetTrace(parseTraceText(text));
-      usage.finish("success");
-      setTargetPhase("done");
-    } catch {
-      usage.finish("error");
-      setTargetPhase("error");
-      setTargetErrorMsg("Network error");
+      const trace = parseTraceText(text);
+      if (!current()) return;
+      setSnapshot({ trace, mode, target, receivedAt: new Date().toISOString() });
+      setPhase("done"); usage?.finish("success");
+    } catch (cause) {
+      if (!current()) return;
+      setError(timeout.aborted || (cause instanceof Error && cause.name === "TimeoutError") ? "timeout" : cause instanceof Error ? cause.message : "unavailable");
+      setPhase("error"); usage?.finish("error");
+    } finally {
+      if (current()) active.current = null;
+      controller.abort();
     }
-  };
-
-  useEffect(() => {
-    if (activeTab === "my" && myPhase === "idle") {
-      fetchMyTrace();
-    }
-  }, [activeTab, fetchMyTrace, myPhase]);
-
-  const parseTraceText = (text: string): CfTrace => {
-    return Object.fromEntries(
-      text
-        .trim()
-        .split("\n")
-        .map((l) => l.split("="))
-        .filter((p) => p.length === 2)
-        .map(([k, v]) => [k.trim(), v.trim()]),
-    ) as unknown as CfTrace;
-  };
-
-  const t = {
-    zh: {
-      title: "Cloudflare Trace 中心",
-      subtitle: "即时解析目标域名或当前环境的 Cloudflare 边缘节点路由追踪。",
-      tabMy: "当前连接",
-      tabTarget: "目标域名",
-      colo: "数据中心 (Colo)",
-      ip: "访问 IP",
-      loc: "物理位置",
-      http: "HTTP 协议",
-      tls: "TLS 版本",
-      sni: "SNI",
-      warp: "WARP 状态",
-      gateway: "Zero Trust Gateway",
-      refresh: "刷新状态",
-      panel1: "核心路由信息",
-      panel2: "加密与协议",
-      targetPlaceholder: "example.com",
-      targetBtn: "探测 Trace",
-      targetHint:
-        "从 OpsKitPro 服务器探测目标的 /cdn-cgi/trace，非您本地浏览器直连。",
-      notCfTitle: "无法获取 Cloudflare Trace",
-      notCfDesc:
-        "目标网站可能未接入 Cloudflare，或屏蔽了 /cdn-cgi/trace 路径。",
-    },
-    en: {
-      title: "Cloudflare Trace Center",
-      subtitle:
-        "Analyze the Cloudflare edge routing for your connection or a target domain.",
-      tabMy: "My Cloudflare Trace",
-      tabTarget: "Target Domain Trace",
-      colo: "Data Center (Colo)",
-      ip: "Visitor IP",
-      loc: "Location",
-      http: "HTTP Protocol",
-      tls: "TLS Version",
-      sni: "SNI",
-      warp: "WARP Status",
-      gateway: "Zero Trust Gateway",
-      refresh: "Refresh",
-      panel1: "Core Routing",
-      panel2: "Encryption & Protocol",
-      targetPlaceholder: "example.com",
-      targetBtn: "Trace Target",
-      targetHint:
-        "This checks the target from OpsKitPro’s server-side probe, not from your browser.",
-      notCfTitle: "Cloudflare Trace Not Available",
-      notCfDesc:
-        "The target may not be using Cloudflare, or it blocks the /cdn-cgi/trace path.",
-    },
-  }[lang];
-
-  return (
-    <main className="w-full flex-grow">
-      <div className="glow" aria-hidden />
-
-      <section className="mx-auto w-full max-w-3xl px-4 pt-8 pb-4 sm:px-6 text-left">
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--text-primary)] mb-3">
-          {t.title}
-        </h1>
-        <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-xl mb-5">
-          {t.subtitle}
-        </p>
-
-        {/* Tabs */}
-        <div className="inline-flex rounded-xl bg-[var(--surface-secondary)] p-1 border border-[var(--border-subtle)] mb-4">
-          <button
-            aria-pressed={activeTab === "my"}
-            onClick={() => setActiveTab("my")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              activeTab === "my"
-                ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-          >
-            {t.tabMy}
-          </button>
-          <button
-            aria-pressed={activeTab === "target"}
-            onClick={() => setActiveTab("target")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              activeTab === "target"
-                ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-          >
-            {t.tabTarget}
-          </button>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-3xl px-4 sm:px-6 pb-16">
-        {/* TAB 1: My Trace */}
-        {activeTab === "my" && (
-          <div className="grid gap-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-semibold text-[var(--text-secondary)]">
-                {lang === "zh" ? "当前浏览器到 Cloudflare 的连接" : "Your connection to Cloudflare"}
-              </div>
-              {(myPhase === "done" || myPhase === "error") && (
-                <button
-                  onClick={() => void fetchMyTrace(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  {t.refresh}
-                </button>
-              )}
-            </div>
-
-            <ResultPanel
-              title={t.panel1}
-              icon={<Globe className="w-4 h-4" />}
-              phase={myPhase}
-            >
-              {myPhase === "error" ? <p role="alert" className="tool-empty">{lang === "zh" ? "无法获取当前连接的 Trace。此页面需要通过 Cloudflare 访问；你也可以切换到目标域名检测。" : "Trace is unavailable for this connection. This page needs to be served through Cloudflare. You can also check a target domain."}</p> : myPhase === "loading" ? <p role="status">{lang === "zh" ? "正在获取连接信息…" : "Loading connection details…"}</p> : myTrace && <TraceDataDisplay trace={myTrace} t={t} />}
-            </ResultPanel>
-          </div>
-        )}
-
-        {/* TAB 2: Target Trace */}
-        {activeTab === "target" && (
-          <div className="grid gap-4">
-            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-5 shadow-sm mb-4">
-              <label htmlFor="trace-target" className="mb-2 block text-sm font-semibold">{lang === "zh" ? "域名或 URL" : "Domain or URL"}</label>
-              <form onSubmit={fetchTargetTrace} className="flex flex-col sm:flex-row gap-2">
-                <input
-                  id="trace-target"
-                  type="text"
-                  placeholder={t.targetPlaceholder}
-                  value={targetDomain}
-                  onChange={(e) => setTargetDomain(e.target.value)}
-                  className="flex-grow rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3 text-sm focus:border-[var(--accent-color)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)]"
-                />
-                <button
-                  type="submit"
-                  disabled={targetPhase === "loading" || !targetDomain.trim()}
-                  className="ui-button-primary"
-                >
-                  {targetPhase === "loading" ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Search className="w-4 h-4" />
-                  )}
-                  <span>{t.targetBtn}</span>
-                </button>
-              </form>
-              <div className="mt-3 flex items-start gap-1.5 text-xs text-[var(--warning-text)] bg-[var(--warning-soft)] p-2.5 rounded-lg border border-amber-100">
-                <Shield className="w-4 h-4 shrink-0" />
-                <p>{t.targetHint}</p>
-              </div>
-            </div>
-
-            {targetPhase === "not_cf" && (
-              <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-secondary)] p-6 text-center">
-                <Activity className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-[var(--text-primary)] mb-1">
-                  {t.notCfTitle}
-                </h3>
-                <p className="text-sm text-[var(--text-muted)]">{t.notCfDesc}</p>
-              </div>
-            )}
-
-            {targetPhase === "error" && (
-              <div className="rounded-2xl border border-red-200 bg-[var(--danger-soft)] p-6 text-center text-[var(--danger-text)]">
-                <p className="font-semibold">{lang === "zh" ? "检测失败" : "Check failed"}</p>
-                <p className="text-sm mt-1">{targetErrorMsg}</p>
-              </div>
-            )}
-
-            {(targetPhase === "done" || targetPhase === "loading") && (
-              <ResultPanel
-                title={t.panel1}
-                icon={<Server className="w-4 h-4" />}
-                phase={targetPhase}
-              >
-                {targetTrace && <TraceDataDisplay trace={targetTrace} t={t} />}
-              </ResultPanel>
-            )}
-          </div>
-        )}
-      </section>
-    </main>
-  );
+  }, [mode]);
+  useEffect(() => stop, [stop]);
+  return { snapshot, phase, error, run, cancel };
 }
 
-function TraceDataDisplay({ trace, t }: { trace: CfTrace; t: any }) {
-  return (
-    <div className="grid gap-6">
-      <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1">
-        <div>
-          <MetaRow label={t.colo} value={trace.colo || "—"} mono />
-          <MetaRow label={t.ip} value={trace.ip || "—"} mono />
-          <MetaRow label={t.loc} value={trace.loc || "—"} mono />
-        </div>
-        <div>
-          <MetaRow label={t.http} value={trace.http || "—"} mono />
-          <MetaRow label={t.tls} value={trace.tls || "—"} mono />
-          <MetaRow
-            label={t.sni}
-            value={trace.sni === "plaintext" ? "off" : trace.sni || "—"}
-            mono
-          />
-        </div>
-      </div>
-
-      {/* Advanced Details separated by a small divider */}
-      <div className="border-t border-[var(--border-subtle)] pt-4 grid sm:grid-cols-2 gap-x-8 gap-y-1">
-        <div>
-          <div className="flex items-center justify-between py-2 border-b border-[var(--border-subtle)] last:border-0">
-            <span className="text-xs text-[var(--text-muted)]">{t.warp}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold font-mono text-[var(--text-primary)]">
-                {trace.warp || "off"}
-              </span>
-              <StatusBadge
-                status={
-                  trace.warp === "on" || trace.warp === "plus" ? "ok" : "slow"
-                }
-              />
-            </div>
-          </div>
-          <MetaRow label={t.gateway} value={trace.gateway || "off"} mono />
-        </div>
-        <div>
-          <MetaRow label="Time (ts)" value={trace.ts || "—"} mono />
-          <MetaRow label="Sliver" value={trace.sliver || "—"} mono />
-        </div>
-      </div>
+const button = "min-h-10 rounded-lg border border-[var(--border-strong)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-secondary)]";
+export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
+  const zh = lang === "zh";
+  const [tab, setTab] = useState<"my" | "target">("my");
+  const [input, setInput] = useState("");
+  const [invalid, setInvalid] = useState(false);
+  const my = useTrace("my"); const target = useTrace("target");
+  const { run: runMy } = my;
+  useEffect(() => { void runMy(false); }, [runMy]);
+  const state = tab === "my" ? my : target;
+  const errorText = state.error === "timeout" ? (zh ? "等待超时，请重试。" : "Request timed out. Try again.")
+    : state.error === "rate_limit" ? (zh ? "请求较多，请稍后重试。" : "Too many requests. Try again later.")
+    : state.error === "blocked" || state.error === "invalid_target" ? (zh ? "此目标无法探测，请使用公网域名。" : "This target cannot be probed. Use a public hostname.")
+    : state.error === "redirected" ? (zh ? "目标发生重定向，请使用最终域名重试。" : "The target redirected. Retry with its final hostname.")
+    : (zh ? "未获取到有效的 Cloudflare Trace，可重试或更换目标。" : "No valid Cloudflare Trace received. Retry or check another target.");
+  return <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+    <h1 className="mb-6 text-3xl font-semibold tracking-tight">Cloudflare Trace</h1>
+    <div className="mb-5 inline-flex gap-1 rounded-xl border border-[var(--border-subtle)] p-1">
+      {(["my", "target"] as const).map(mode => <button key={mode} type="button" aria-pressed={tab === mode} onClick={() => setTab(mode)} className={`${button} ${tab === mode ? "bg-[var(--surface-secondary)]" : "border-transparent"}`}>{mode === "my" ? zh ? "当前连接" : "Current connection" : zh ? "目标域名" : "Target domain"}</button>)}
     </div>
-  );
+    {tab === "target" ? <form onSubmit={event => { event.preventDefault(); const hostname = parseWebsiteTarget(input); setInvalid(!hostname); if (hostname) void target.run(true, hostname); }} className="mb-5">
+      <label htmlFor="trace-target" className="mb-2 block text-sm font-semibold">{zh ? "域名或 URL" : "Domain or URL"}</label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input id="trace-target" value={input} onChange={event => { setInput(event.target.value); setInvalid(false); }} placeholder="example.com" autoCapitalize="none" autoCorrect="off" spellCheck={false} aria-invalid={invalid || undefined} aria-describedby="trace-data-note" className="min-w-0 flex-1 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 py-3" />
+        <button className="ui-button-primary" disabled={target.phase === "loading" || !input.trim()}>{zh ? "探测 Trace" : "Trace target"}</button>
+      </div>
+      {invalid && <p role="alert" className="mt-2 text-sm">{zh ? "请输入有效域名或 HTTP(S) URL。" : "Enter a valid hostname or HTTP(S) URL."}</p>}
+      <p id="trace-data-note" className="mt-2 text-sm text-[var(--text-secondary)]">{zh ? "由 OpsKitPro 服务端访问目标；仅发送域名。" : "OpsKitPro probes the target server-side; only the hostname is sent."}</p>
+    </form> : <div className="mb-4 flex items-center justify-between gap-3"><span className="text-sm text-[var(--text-secondary)]">{zh ? "当前浏览器 → OpsKitPro" : "This browser → OpsKitPro"}</span><button className={button} disabled={my.phase === "loading"} onClick={() => void my.run(true)}>{zh ? "刷新" : "Refresh"}</button></div>}
+    {state.phase === "loading" && <div className="flex items-center justify-between gap-3"><p role="status">{zh ? "正在获取…" : "Loading…"}</p><button className={button} onClick={state.cancel}>{zh ? "停止等待" : "Stop waiting"}</button></div>}
+    {state.phase === "cancelled" && <p role="status">{zh ? "已停止等待此次探测。" : "Stopped waiting for this probe."}</p>}
+    {state.phase === "error" && <p role="alert" className="rounded-xl border border-[var(--border-subtle)] p-4 text-sm">{errorText}</p>}
+    {state.phase === "done" && state.snapshot && <TraceResult key={`${tab}-${state.snapshot.receivedAt}`} snapshot={state.snapshot} lang={lang} />}
+  </main>;
+}
+
+function TraceResult({ snapshot, lang }: { snapshot: TraceSnapshot; lang: "zh" | "en" }) {
+  const zh = lang === "zh"; const { trace, mode } = snapshot;
+  const [includeIp, setIncludeIp] = useState(false);
+  const [includeTarget, setIncludeTarget] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [copyFailed, setCopyFailed] = useState(false);
+  const [failedText, setFailedText] = useState("");
+  const preview = useRef<HTMLDetailsElement>(null);
+  const summary = buildTraceSummary(snapshot, lang, { includeIp, includeTarget });
+  const copy = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); setFeedback(zh ? "已复制" : "Copied"); setCopyFailed(false); }
+    catch { setFeedback(zh ? "剪贴板不可用，请在预览中手动复制。" : "Clipboard unavailable. Copy from the preview."); setCopyFailed(true); setFailedText(text); if (preview.current) preview.current.open = true; }
+  };
+  const download = () => {
+    const url = URL.createObjectURL(new Blob([summary], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a"); link.href = url; link.download = "opskitpro-cloudflare-trace.txt"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setFeedback(zh ? "已发起下载" : "Download initiated");
+  };
+  const rows = [[zh ? "数据中心" : "Data center", trace.colo], [zh ? "出口 IP" : "Egress IP", trace.ip], [zh ? "出口 IP 地区" : "Egress IP region", trace.loc || "—"], ["HTTP", trace.http || "—"], ["TLS", trace.tls || "—"], ["WARP", traceState(trace.warp, zh)], ["Gateway", traceState(trace.gateway, zh)]];
+  return <section aria-label={zh ? "Trace 结果" : "Trace result"} className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-primary)] p-4 sm:p-5">
+    <div className="mb-4 text-sm text-[var(--text-secondary)]"><p>{traceSource(mode, zh)}</p>{snapshot.target && <p className="break-all font-semibold text-[var(--text-primary)]">{snapshot.target}</p>}<p>{zh ? "观测" : "Observed"}: {traceTime(trace.ts)}</p></div>
+    <dl className="grid gap-x-6 sm:grid-cols-2">{rows.map(([label, value]) => <div key={label} className="flex min-w-0 flex-wrap items-baseline justify-between gap-2 border-b border-[var(--border-subtle)] py-3"><dt className="text-sm text-[var(--text-secondary)]">{label}</dt><dd className="break-all font-mono text-sm">{value}</dd></div>)}</dl>
+    <details className="mt-4 text-sm"><summary className="cursor-pointer py-2">{zh ? "如何理解结果" : "About these results"}</summary><div className="space-y-2 py-2 text-[var(--text-secondary)]">
+      <p>{mode === "my" ? zh ? "这是浏览器访问本站的单次请求。" : "This is one browser request to this site." : zh ? "出口 IP 属于 OpsKitPro 探测服务，不是你的 IP 或目标源站 IP。" : "The egress IP belongs to the OpsKitPro probe, not you or the target origin."}</p>
+      <p>{zh ? "Colo 是处理请求的数据中心；异地节点本身不代表故障。地区来自出口 IP，不是精确位置。" : "Colo is the serving data center; a distant node alone is not a fault. Region refers to the egress IP, not a precise location."}</p>
+      <p>{zh ? "HTTP / TLS 仅描述本次请求。WARP / Gateway 未启用不代表异常；缺失字段显示未知。" : "HTTP/TLS describe this request only. Disabled WARP/Gateway is neutral; missing values are unknown."}</p>
+      <p>{zh ? "SNI 保留原始值；plaintext 不代表 HTTPS 内容未加密。" : "SNI retains its raw value; plaintext does not mean HTTPS content is unencrypted."}</p>
+      <a href="https://developers.cloudflare.com/support/troubleshooting/general-troubleshooting/geographic-traffic-routing/" className="underline">{zh ? "Cloudflare 路由说明" : "Cloudflare routing documentation"}</a>
+    </div></details>
+    <div className="mt-4 flex flex-wrap gap-2"><button className="ui-button-primary" onClick={() => void copy(summary)}>{includeIp || includeTarget ? zh ? "复制所选摘要" : "Copy selected summary" : zh ? "复制脱敏摘要" : "Copy redacted summary"}</button><button className={button} onClick={download}>{zh ? "下载 TXT" : "Download TXT"}</button><button className={button} onClick={() => void copy(`${window.location.origin}/${lang}/tools/cloudflare-trace`)}>{zh ? "复制工具地址" : "Copy tool URL"}</button></div>
+    <p role="status" className="mt-2 text-sm">{feedback}</p>
+    <details ref={preview} className="mt-3 text-sm"><summary className="cursor-pointer py-2">{zh ? "分享预览与选项" : "Share preview and options"}</summary>
+      <div className="my-3 flex flex-wrap gap-4"><label className="flex items-center gap-2"><input type="checkbox" checked={includeIp} onChange={e => { setIncludeIp(e.target.checked); setFeedback(""); }} />{zh ? "包含完整出口 IP" : "Include full egress IP"}</label>{mode === "target" && <label className="flex items-center gap-2"><input type="checkbox" checked={includeTarget} onChange={e => { setIncludeTarget(e.target.checked); setFeedback(""); }} />{zh ? "包含目标域名" : "Include target hostname"}</label>}</div>
+      {(includeIp || includeTarget) && <p className="mb-2">{zh ? "所选信息将进入复制与下载内容。" : "Selected information is included in copies and downloads."}</p>}
+      <textarea aria-label={zh ? "分享摘要预览" : "Share summary preview"} readOnly value={summary} rows={12} className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-sm" />
+      {copyFailed && failedText !== summary && <textarea aria-label={zh ? "待复制文本" : "Text to copy"} readOnly value={failedText} className="mt-2 w-full border p-2" />}
+      {copyFailed && <p>{zh ? "选择上方文本即可手动复制。" : "Select the text above to copy manually."}</p>}
+    </details>
+    <details className="mt-3 text-sm"><summary className="cursor-pointer py-2">{zh ? "高级 · 原始字段" : "Advanced · raw fields"}</summary><p className="py-2">{zh ? "接收时间" : "Received"}: {snapshot.receivedAt.replace("T", " ").replace("Z", " UTC")}</p><pre className="overflow-auto whitespace-pre-wrap break-all">{Object.entries(trace).map(([key,value]) => `${key}=${value}`).join("\n")}</pre></details>
+  </section>;
 }
