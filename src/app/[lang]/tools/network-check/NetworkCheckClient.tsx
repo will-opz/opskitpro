@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useState, useCallback, useRef } from "react";
 import {
@@ -755,7 +756,9 @@ export default function NetworkCheckClient({
   // ── Main flow ──────────────────────────────────────────────────────────────
 
   const startCheck = useCallback(async () => {
-    sendAnalyticsEvent({ event: "core_tool_run", tool: "network-doctor" });
+    const audienceRun = startToolRun("network-check");
+      sendAnalyticsEvent({ event: "core_tool_run", tool: "network-doctor" });
+    try {
     abortRef.current = new AbortController();
     setPhase("running");
     setNetInfo(null);
@@ -909,7 +912,12 @@ export default function NetworkCheckClient({
 
     setCurrentStep("");
     setPhase("done");
-    sendAnalyticsEvent({ event: "core_tool_success", tool: "network-doctor" });
+    audienceRun.finish("success");
+        sendAnalyticsEvent({ event: "core_tool_success", tool: "network-doctor" });
+    } catch (error) {
+      audienceRun.finish(abortRef.current?.signal.aborted ? "cancel" : "error");
+      throw error;
+    } finally { audienceRun.finish("cancel"); }
   }, [nc, selectedSizeMb, lang, runPing, runDownload, getDnsPerf]);
 
   // ── Metric quality helpers ─────────────────────────────────────────────────

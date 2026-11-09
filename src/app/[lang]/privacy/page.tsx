@@ -43,7 +43,7 @@ export default async function PrivacyPage({
           {isZh ? "隐私政策" : "Privacy Policy"}
         </h1>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
-          {isZh ? "最后更新：2026 年 9 月" : "Last updated: September 2026"}
+          {isZh ? "最后更新：2026 年 11 月" : "Last updated: November 2026"}
         </p>
 
         <div className="mt-10 space-y-7 text-sm leading-7 text-[var(--text-secondary)]">
@@ -59,6 +59,10 @@ export default async function PrivacyPage({
             </p>
           </section>
 
+          <section>
+            <h2 className="text-base font-semibold">{isZh ? "匿名使用统计" : "Anonymous usage counts"}</h2>
+            <p className="mt-3">{isZh ? "启用使用统计时，我们记录公开页面路径、工具打开/运行/成功/失败次数和随机事件编号，用于去重和改进工具。不使用持久访客标识或跨设备追踪，不收集密码、诊断目标或工具输入输出。事件明细保留 90 个完整日及当前日，不含用户标识的每日汇总保留 400 天。机器人过滤是估算，不代表已验证的真实人数。" : "When usage measurement is enabled, we record public page paths, tool opens/runs/outcomes and random event IDs for deduplication and tool improvement. We use no persistent visitor IDs or cross-device tracking, and collect no passwords, diagnostic targets or tool input/output. Event details are retained for 90 complete days plus the current day; daily aggregates without user identifiers for 400 days. Bot filtering is an estimate, not a verified human count."}</p>
+          </section>
           {/* Data we collect */}
           <section>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
@@ -71,8 +75,8 @@ export default async function PrivacyPage({
             </p>
             <p className="mt-3">
               {isZh
-                ? "我们通过 Nginx 日志收集标准的访问日志（IP 地址、请求路径、响应状态、User-Agent），用于服务运维和流量分析。日志保留周期为 45 天。"
-                : "We collect standard access logs via Nginx (IP address, request path, response status, User-Agent) for service operations and traffic analysis. Logs are retained for 45 days."}
+                ? "我们通过 Nginx 日志收集标准的访问日志（IP 地址、请求路径、响应状态、User-Agent），用于服务运维和流量分析。日志保留 90 个完整日及当前日。"
+                : "We collect standard access logs via Nginx (IP address, request path, response status, User-Agent) for service operations and traffic analysis. Logs are retained for 90 complete days plus the current day."}
             </p>
           </section>
 

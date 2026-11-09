@@ -1,4 +1,6 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, Clipboard, FileUp, RotateCcw, X } from "lucide-react";
@@ -50,9 +52,10 @@ export default function HashChecksumClient({ lang }: { lang: Lang }) {
   const [textBytes, setTextBytes] = useState(0);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const workerRef = useRef<Worker | null>(null);
+  const fileUsageRef = useRef<ReturnType<typeof startToolRun> | null>(null);
   const requestRef = useRef(0);
 
-  useEffect(() => () => workerRef.current?.terminate(), []);
+  useEffect(() => () => { fileUsageRef.current?.finish("cancel"); workerRef.current?.terminate(); }, []);
 
   useEffect(() => {
     if (mode !== "text") return;
@@ -74,19 +77,21 @@ export default function HashChecksumClient({ lang }: { lang: Lang }) {
   }, [algorithm, mode, text]);
 
   const runFile = (selected: File, nextAlgorithm = algorithm) => {
+    fileUsageRef.current?.finish("cancel");
+    const usage = startToolRun("hash"); fileUsageRef.current = usage;
     requestRef.current += 1; const id = requestRef.current;
     workerRef.current?.terminate(); setDigest(""); setProgress(0); setExpected("");
-    if (selected.size > HASH_FILE_LIMIT_BYTES) { setStatus("file_limit"); return; }
+    if (selected.size > HASH_FILE_LIMIT_BYTES) { usage.finish("error"); setStatus("file_limit"); return; }
     let worker: Worker;
-    try { worker = createHashWorker(); } catch { setStatus("read_error"); return; }
+    try { worker = createHashWorker(); } catch { usage.finish("error"); setStatus("read_error"); return; }
     workerRef.current = worker; setStatus("processing");
     worker.onmessage = (event: MessageEvent<HashWorkerMessage>) => {
       if (event.data.id !== id) return;
       if (event.data.type === "progress") setProgress(event.data.total ? event.data.processed / event.data.total : 1);
-      if (event.data.type === "complete") { setDigest(event.data.digest); setProgress(1); setStatus("complete"); worker.terminate(); workerRef.current = null; }
-      if (event.data.type === "error") { setStatus(event.data.code); worker.terminate(); workerRef.current = null; }
+      if (event.data.type === "complete") { usage.finish("success"); setDigest(event.data.digest); setProgress(1); setStatus("complete"); worker.terminate(); workerRef.current = null; }
+      if (event.data.type === "error") { usage.finish("error"); setStatus(event.data.code); worker.terminate(); workerRef.current = null; }
     };
-    worker.onerror = () => { if (requestRef.current === id) setStatus("read_error"); worker.terminate(); workerRef.current = null; };
+    worker.onerror = () => { usage.finish("error"); if (requestRef.current === id) setStatus("read_error"); worker.terminate(); workerRef.current = null; };
     worker.postMessage({ id, file: selected, algorithm: nextAlgorithm });
   };
 
@@ -94,17 +99,19 @@ export default function HashChecksumClient({ lang }: { lang: Lang }) {
 
   const comparison = useMemo(() => digest ? compareChecksum(digest, expected, algorithm) : { status: "empty" as const }, [algorithm, digest, expected]);
   const selectFile = (selected?: File) => { if (!selected) return; setFile(selected); setMode("file"); runFile(selected); };
-  const cancel = () => { requestRef.current += 1; workerRef.current?.terminate(); workerRef.current = null; setStatus("cancelled"); setProgress(0); };
+  const cancel = () => { fileUsageRef.current?.finish("cancel"); requestRef.current += 1; workerRef.current?.terminate(); workerRef.current = null; setStatus("cancelled"); setProgress(0); };
   const clear = () => { cancel(); setText(""); setFile(null); setDigest(""); setExpected(""); setTextBytes(0); setStatus("idle"); };
   const copyDigest = async () => { try { await navigator.clipboard.writeText(digest); setCopyState("copied"); } catch { setCopyState("failed"); } window.setTimeout(() => setCopyState("idle"), 1800); };
-  const setNextAlgorithm = (next: HashAlgorithm) => { setAlgorithm(next); setDigest(""); setExpected(""); };
+  const setNextAlgorithm = (next: HashAlgorithm) => { if (mode === "text") markUsage(); setAlgorithm(next); setDigest(""); setExpected(""); };
 
-  return <main className="tool-page max-w-6xl">
+  const markUsage = useReactiveToolUsage("hash", mode !== "text" ? "cancel" : status === "processing" ? "pending" : status === "complete" ? "success" : status === "idle" || status === "cancelled" ? "cancel" : "error");
+
+  return <main onChangeCapture={(event) => { if ((event.target as HTMLElement).id === "hash-text") markUsage(); }} className="tool-page max-w-6xl">
     <ToolPageHeader title={c.title} description={c.subtitle} processing={c.privacy} />
     <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       <div className="ui-surface-elevated rounded-2xl p-4 sm:p-6">
         <div className="grid grid-cols-2 rounded-xl bg-[var(--surface-secondary)] p-1" role="tablist">
-          {(["text", "file"] as Mode[]).map((item) => <button key={item} role="tab" aria-selected={mode === item} onClick={() => { requestRef.current += 1; setMode(item); setDigest(""); setExpected(""); setStatus("idle"); workerRef.current?.terminate(); workerRef.current = null; }} className={`min-h-11 rounded-lg text-sm font-semibold ${mode === item ? "bg-[var(--bg-primary)] text-[var(--accent-text)] shadow-sm" : "text-[var(--text-muted)]"}`}>{c[item]}</button>)}
+          {(["text", "file"] as Mode[]).map((item) => <button key={item} role="tab" aria-selected={mode === item} onClick={() => { fileUsageRef.current?.finish("cancel"); requestRef.current += 1; setMode(item); setDigest(""); setExpected(""); setStatus("idle"); workerRef.current?.terminate(); workerRef.current = null; }} className={`min-h-11 rounded-lg text-sm font-semibold ${mode === item ? "bg-[var(--bg-primary)] text-[var(--accent-text)] shadow-sm" : "text-[var(--text-muted)]"}`}>{c[item]}</button>)}
         </div>
         <fieldset className="mt-5"><legend className="text-sm font-semibold text-[var(--text-primary)]">{c.algorithm}</legend><div className="mt-2 flex flex-wrap gap-2">{algorithms.map((item) => <button key={item.id} type="button" aria-pressed={algorithm === item.id} onClick={() => setNextAlgorithm(item.id)} className={`min-h-11 rounded-xl border px-3 text-xs font-semibold uppercase ${algorithm === item.id ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : item.legacy ? "border-amber-500/25 text-[var(--warning-text)]" : "border-[var(--border-subtle)] text-[var(--text-muted)]"}`}>{item.id.replace("sha", "SHA-").toUpperCase()}</button>)}</div></fieldset>
         {(algorithm === "md5" || algorithm === "sha1") && <div className="mt-4 flex gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3 text-xs leading-5 text-[var(--warning-text)]"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />{c.legacyWarning}</div>}

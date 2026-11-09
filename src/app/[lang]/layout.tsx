@@ -1,3 +1,4 @@
+import { AudiencePageView } from "@/components/AudiencePageView";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/dictionaries";
@@ -133,6 +134,7 @@ export default async function RootLayout({
         <div className="glow" />
         <div className="bg-grid-pattern absolute inset-0 opacity-[0.03] pointer-events-none" />
 
+        <AudiencePageView />
         <AdminSessionProvider lang={lang as "zh" | "en"}>{children}</AdminSessionProvider>
       </body>
     </html>

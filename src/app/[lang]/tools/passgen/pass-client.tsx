@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, QrCode, RefreshCw, ShieldCheck } from "lucide-react";
@@ -45,6 +46,7 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
 
   const generate = useCallback(
     (saveToHistory = false) => {
+      const usage = saveToHistory ? startToolRun("passgen") : null;
       try {
         let generated: string;
         if (mode === "passphrase") {
@@ -65,12 +67,14 @@ export default function PassClient({ dict, lang }: { dict: any; lang: Lang }) {
             excludedCharacters,
           });
         }
+        usage?.finish("success");
         setPassword(generated);
         setGenerationError("");
         if (saveToHistory) {
           setHistory((current) => [generated, ...current].slice(0, 5));
         }
       } catch {
+        usage?.finish("error");
         setPassword("");
         setGenerationError(
           lang === "zh"

@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import {
   useCallback,
@@ -259,6 +260,7 @@ export default function IPLookupClient({
   const [showJson, setShowJson] = useState(false);
   const [copied, setCopied] = useState<CopyKind | null>(null);
   const copyTimer = useRef<number | null>(null);
+  const usage = useRef<ReturnType<typeof startToolRun> | null>(null);
 
   const queryFromUrl = normalizeLookupTarget(searchParams.get("q") || "");
 
@@ -284,6 +286,7 @@ export default function IPLookupClient({
 
   const fetchIP = useCallback(
     async (target?: string) => {
+      const run = usage.current; usage.current = null;
       setLoading(true);
       setError(null);
       setNotice(null);
@@ -302,11 +305,13 @@ export default function IPLookupClient({
           throw new Error(result?.message || copy.errorDesc);
         }
 
+        run?.finish("success");
         setData(result);
         if (target && result.country_name === "Unknown") {
           setNotice(copy.fallbackDesc);
         }
       } catch (err) {
+        run?.finish("error");
         setError(err instanceof Error ? err.message : copy.errorDesc);
       } finally {
         setLoading(false);
@@ -330,6 +335,8 @@ export default function IPLookupClient({
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    usage.current?.finish("cancel");
+    usage.current = startToolRun("ip-lookup");
     const normalized = normalizeLookupTarget(inputIp);
     setInputIp(normalized);
 

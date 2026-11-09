@@ -1,4 +1,5 @@
 "use client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, RefreshCw, TimerReset } from "lucide-react";
@@ -109,7 +110,7 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
     }));
   }, [locale, parsedDate]);
 
-  const setNow = () => setInput(String(Math.floor(Date.now() / 1000)));
+  const setNow = () => { markUsage(); setInput(String(Math.floor(Date.now() / 1000))); };
 
   const copyValue = (label: string, value: string) => {
     navigator.clipboard.writeText(value);
@@ -117,8 +118,10 @@ export default function TimeClient({ lang }: { dict: any; lang: Lang }) {
     setTimeout(() => setCopied(""), 1600);
   };
 
+  const markUsage = useReactiveToolUsage("time", input ? (parsedDate ? "success" : "error") : "cancel");
+
   return (
-    <main className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
+    <main onChangeCapture={markUsage} className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
       <div className="mx-auto max-w-5xl">
         <ToolPageHeader
           title={t.title}

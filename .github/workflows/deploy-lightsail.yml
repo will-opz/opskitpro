@@ -12,6 +12,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
+  NEXT_PUBLIC_AUDIENCE_ENABLED: 'true'
 
 jobs:
   deploy:

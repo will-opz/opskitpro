@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -43,7 +44,8 @@ export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
   >("idle");
   const [targetErrorMsg, setTargetErrorMsg] = useState("");
 
-  const fetchMyTrace = useCallback(async () => {
+  const fetchMyTrace = useCallback(async (userAction = false) => {
+    const usage = userAction ? startToolRun("cloudflare-trace") : null;
     setMyPhase("loading");
     try {
       const res = await fetch("/cdn-cgi/trace");
@@ -52,8 +54,10 @@ export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
       const trace = parseTraceText(text);
       if (!trace.ip || !trace.colo) throw new Error("Trace unavailable");
       setMyTrace(trace);
+      usage?.finish("success");
       setMyPhase("done");
     } catch {
+      usage?.finish("error");
       setMyPhase("error");
     }
   }, []);
@@ -62,6 +66,7 @@ export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
     if (e) e.preventDefault();
     if (!targetDomain.trim()) return;
 
+    const usage = startToolRun("cloudflare-trace");
     // Clean up domain input
     let cleanDomain = targetDomain.trim().toLowerCase();
     cleanDomain = cleanDomain.replace(/^https?:\/\//, "");
@@ -76,6 +81,7 @@ export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
       const text = await res.text();
 
       if (!res.ok) {
+        usage.finish("error");
         let data: any = null;
         try {
           data = JSON.parse(text);
@@ -93,8 +99,10 @@ export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
       }
 
       setTargetTrace(parseTraceText(text));
+      usage.finish("success");
       setTargetPhase("done");
     } catch {
+      usage.finish("error");
       setTargetPhase("error");
       setTargetErrorMsg("Network error");
     }
@@ -218,7 +226,7 @@ export default function CloudflareTraceClient({ lang }: { lang: "zh" | "en" }) {
               </div>
               {(myPhase === "done" || myPhase === "error") && (
                 <button
-                  onClick={fetchMyTrace}
+                  onClick={() => void fetchMyTrace(true)}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />

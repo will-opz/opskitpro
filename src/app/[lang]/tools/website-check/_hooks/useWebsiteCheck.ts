@@ -1,3 +1,4 @@
+import { startToolRun } from "@/lib/audience-client";
 import { clearDiagnosticReturn, type DiagnosticReturn } from "../_lib/action-return";
 import type { RequestFailure } from "../_lib/result-experience";
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -82,6 +83,7 @@ export function useWebsiteCheck() {
       setResult(null);
       setFailure(null);
       setLoading(true);
+      const audienceRun = startToolRun("website-check");
       sendAnalyticsEvent({ event: "core_tool_run", tool: "website-check" });
       setError(null);
 
@@ -92,10 +94,10 @@ export function useWebsiteCheck() {
           d,
           LOCAL_RESULT_CACHE_TTL_MS,
         ).catch(() => null);
-        if (!current()) return;
+        if (!current()) { audienceRun.finish("cancel"); return; }
         if (cachedResult) {
           const browser = await collectSameOriginBrowserObservation(d);
-          if (!current()) return;
+          if (!current()) { audienceRun.finish("cancel"); return; }
           setResult({
             ...cachedResult,
             observations: {
@@ -104,6 +106,7 @@ export function useWebsiteCheck() {
             },
           });
 
+          audienceRun.finish("success");
           setLoading(false);
           if (cachedResult.domain) {
             await upsertHistory(cachedResult.domain, false).catch(() => null);
@@ -159,7 +162,7 @@ export function useWebsiteCheck() {
                 mode: "no-cors",
                 signal: controller.signal,
               });
-              if (!current()) return;
+              if (!current()) { audienceRun.finish("cancel"); return; }
               setLocalResolvers((prev) => ({
                 ...prev,
                 [r.id]: {
@@ -170,7 +173,7 @@ export function useWebsiteCheck() {
                 },
               }));
             } catch {
-              if (!current()) return;
+              if (!current()) { audienceRun.finish("cancel"); return; }
               setLocalResolvers((prev) => ({
                 ...prev,
                 [r.id]: {
@@ -191,12 +194,12 @@ export function useWebsiteCheck() {
             signal: AbortSignal.timeout(5000),
           });
           const data = await res.json();
-          if (!current()) return;
+          if (!current()) { audienceRun.finish("cancel"); return; }
           const ip =
             data.Answer?.find((a: any) => a.type === 1)?.data ||
             data.answer?.find((a: any) => a.type === 1)?.data ||
             null;
-          if (!current()) return;
+          if (!current()) { audienceRun.finish("cancel"); return; }
           setLocalResolvers((prev) => ({
             ...prev,
             [r.id]: {
@@ -207,7 +210,7 @@ export function useWebsiteCheck() {
             },
           }));
         } catch {
-          if (!current()) return;
+          if (!current()) { audienceRun.finish("cancel"); return; }
           setLocalResolvers((prev) => ({
             ...prev,
             [r.id]: { ...r, ip: null, latency: "ERR", status: "FAILED" },
@@ -230,7 +233,7 @@ export function useWebsiteCheck() {
         }
 
         const data = await res.json();
-        if (!current()) return;
+        if (!current()) { audienceRun.finish("cancel"); return; }
         if (!res.ok)
           throw new Error(
             data.message || `Diagnostic failed with status ${res.status}`,
@@ -245,9 +248,10 @@ export function useWebsiteCheck() {
               browser,
             };
           }
-          if (!current()) return;
+          if (!current()) { audienceRun.finish("cancel"); return; }
           setError(data.error || "Partial diagnostic failure");
-          sendAnalyticsEvent({ event: "core_tool_error", tool: "website-check" });
+          audienceRun.finish("error");
+        sendAnalyticsEvent({ event: "core_tool_error", tool: "website-check" });
           setResult(safeResult);
           if (safeResult.domain) {
             await upsertHistory(safeResult.domain, false).catch(() => null);
@@ -263,8 +267,9 @@ export function useWebsiteCheck() {
             browser,
           };
         }
-        if (!current()) return;
+        if (!current()) { audienceRun.finish("cancel"); return; }
         setResult(safeResult);
+        audienceRun.finish("success");
         sendAnalyticsEvent({ event: "core_tool_success", tool: "website-check" });
         if (!authenticated) {
           await writeCachedDiagnosticResult(
@@ -276,12 +281,14 @@ export function useWebsiteCheck() {
           await upsertHistory(safeResult.domain, false).catch(() => null);
         }
       } catch (err: any) {
-        if (!current()) return;
+        if (!current()) { audienceRun.finish("cancel"); return; }
         const message = err.message || "Unknown diagnostic request failure";
         setFailure({ target:d, kind: /did not resolve to a public A or AAAA/.test(message) ? "dns" : /timeout|timed out/i.test(message) || err.name === "TimeoutError" ? "timeout" : "request", message });
         setError(err.message || "Unknown forensic engine failure");
+        audienceRun.finish("error");
         sendAnalyticsEvent({ event: "core_tool_error", tool: "website-check" });
       } finally {
+        audienceRun.finish("cancel");
         if (current()) setLoading(false);
       }
     },

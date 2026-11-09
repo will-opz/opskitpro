@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { Check, Clipboard, Eraser, FlaskConical, GitCompareArrows, SwitchCamera } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -148,6 +149,7 @@ export default function DiffClient({ lang }: { lang: Lang }) {
   const [result, setResult] = useState<DiffResult | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const workerRef = useRef<Worker | null>(null);
+  const usageRef = useRef<ReturnType<typeof startToolRun> | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const requestId = useRef(0);
 
@@ -158,9 +160,10 @@ export default function DiffClient({ lang }: { lang: Lang }) {
     timeoutRef.current = null;
   };
 
-  useEffect(() => () => stopWorker(), []);
+  useEffect(() => () => { usageRef.current?.finish("cancel"); stopWorker(); }, []);
 
   const invalidate = () => {
+    usageRef.current?.finish("cancel");
     requestId.current += 1;
     stopWorker();
     setResult(null);
@@ -171,10 +174,13 @@ export default function DiffClient({ lang }: { lang: Lang }) {
   const runComparison = () => {
     invalidate();
     const currentId = requestId.current;
+    const usage = startToolRun("diff");
+    usageRef.current = usage;
     let worker: Worker;
     try {
       worker = createDiffWorker();
     } catch {
+      usage.finish("error");
       setState("worker_error");
       return;
     }
@@ -185,6 +191,7 @@ export default function DiffClient({ lang }: { lang: Lang }) {
       workerRef.current = null;
       if (requestId.current === currentId) {
         setResult(null);
+        usage.finish("error");
         setState("timeout");
       }
     }, WORKER_TIMEOUT_MS);
@@ -192,6 +199,7 @@ export default function DiffClient({ lang }: { lang: Lang }) {
     worker.onmessage = (event: MessageEvent<DiffResponse>) => {
       if (event.data.id !== currentId || requestId.current !== currentId) return;
       stopWorker();
+      usage.finish(event.data.result.ok ? "success" : "error");
       setResult(event.data.result);
       setState("complete");
     };
@@ -199,6 +207,7 @@ export default function DiffClient({ lang }: { lang: Lang }) {
       if (requestId.current !== currentId) return;
       stopWorker();
       setResult(null);
+      usage.finish("error");
       setState("worker_error");
     };
     worker.postMessage({ id: currentId, oldText, newText, options });

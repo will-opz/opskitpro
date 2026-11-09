@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useMemo, useState } from "react";
 import { ToolPageHeader } from "@/components/ToolPageHeader";
@@ -78,8 +79,10 @@ export default function ColorConverterClient({ lang }: { lang: Lang }) {
   }, [pickerValue]);
 
   const convert = () => {
+    const usage = startToolRun("color");
     setState("running");
     const result = parseColor(rawInput);
+    usage.finish(result.ok && !!result.color ? "success" : "error");
     if (!result.ok || !result.color) {
       setOutput("");
       setFormatted("");

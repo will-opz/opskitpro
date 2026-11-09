@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useMemo, useState } from "react";
 import { Clipboard, ClipboardCheck, RefreshCw, RotateCcw } from "lucide-react";
@@ -188,7 +189,9 @@ export default function CronGeneratorClient({ lang }: { lang: Lang }) {
   }, [result]);
 
   const parse = () => {
+    const usage = startToolRun("cron");
     const next = parseCronExpression(expression);
+    usage.finish(next.ok ? "success" : "error");
     setResult(next);
     setCopyState("idle");
   };

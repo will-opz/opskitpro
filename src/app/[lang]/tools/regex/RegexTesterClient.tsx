@@ -1,4 +1,5 @@
 "use client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Clipboard, Eraser, FlaskConical } from "lucide-react";
@@ -187,6 +188,7 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
   }, [result]);
 
   const toggleFlag = (flag: string) => {
+    markUsage();
     setFlags((current) => current.includes(flag) ? current.filter((item) => item !== flag) : [...current, flag]);
   };
 
@@ -223,8 +225,10 @@ export default function RegexTesterClient({ lang }: { lang: Lang }) {
           : result?.ok ? (result.matches.length ? text.matches(result.matches.length) : text.noMatches)
             : result?.message ?? text.idle;
 
+  const markUsage = useReactiveToolUsage("regex", !pattern || !testText ? "cancel" : state === "running" || state === "idle" ? "pending" : state === "complete" && result?.ok ? "success" : "error");
+
   return (
-    <main className="tool-page">
+    <main onChangeCapture={markUsage} className="tool-page">
       <ToolPageHeader title={text.title} description={text.subtitle} processing={text.privacy} />
 
       <section className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">

@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { AlertTriangle, Clipboard, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -83,8 +84,10 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
   const statusText = state === "running" ? t.formatting : "";
 
   const handleFormat = () => {
+    const usage = startToolRun("sql");
     setState("running");
     const formatted = formatSql(input);
+    usage.finish(formatted.ok ? "success" : "error");
     if (!formatted.ok) {
       setResult("");
       setError(t.errors[formatted.error as keyof typeof t.errors] ?? t.unknownError);

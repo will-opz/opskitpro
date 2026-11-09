@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { Check, Clipboard, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -83,11 +84,14 @@ export default function YamlClient({ lang }: { lang: Lang }) {
       : "text-[var(--text-muted)]";
 
   const runValidation = () => {
+    startToolRun("yaml").finish(validation.valid ? "success" : "error");
     setStatus(validation.valid ? "valid" : "invalid");
   };
 
   const runFormat = () => {
+    const usage = startToolRun("yaml");
     const result = formatYaml(input, indent);
+    usage.finish(result.valid ? "success" : "error");
     if (!result.valid) {
       setOutput("");
       setStatus("invalid");

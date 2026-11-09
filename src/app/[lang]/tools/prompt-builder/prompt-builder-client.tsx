@@ -1,4 +1,5 @@
 "use client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useMemo, useState } from "react";
 import {
@@ -127,6 +128,7 @@ export default function PromptBuilderClient({
   ].filter(Boolean).join("\n\n"), [form, lang, t]);
 
   const update = (key: keyof FormState, value: string | boolean) => {
+    markUsage();
     setForm((current) => ({ ...current, [key]: value }));
   };
 
@@ -135,6 +137,8 @@ export default function PromptBuilderClient({
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
   };
+
+  const markUsage = useReactiveToolUsage("prompt-builder", "success");
 
   return (
     <main className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">

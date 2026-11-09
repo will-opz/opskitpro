@@ -1,4 +1,5 @@
 "use client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useState } from "react";
 import { Download, Info } from "lucide-react";
@@ -41,8 +42,10 @@ export default function QRClient({ dict, lang }: { dict: any; lang: Lang }) {
     img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
+  const markUsage = useReactiveToolUsage("qrgen", text ? (isOverLimit ? "error" : "success") : "cancel");
+
   return (
-    <div className="min-h-0 bg-[var(--bg-primary)] text-[var(--text-secondary)] pt-8 md:pt-8 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
+    <div onChangeCapture={markUsage} className="min-h-0 bg-[var(--bg-primary)] text-[var(--text-secondary)] pt-8 md:pt-8 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
       <div className="max-w-4xl mx-auto">

@@ -1,4 +1,5 @@
 "use client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useMemo, useState } from "react";
 import { Braces, Check, Copy, RefreshCw } from "lucide-react";
@@ -139,8 +140,10 @@ export default function EncodeClient({
     await writeClipboard(result.value);
   };
 
+  const markUsage = useReactiveToolUsage("encode", input ? (result.error ? "error" : "success") : "cancel");
+
   return (
-    <main className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
+    <main onChangeCapture={markUsage} className="min-h-0 bg-[var(--bg-primary)] px-4 pb-8 pt-6 text-[var(--text-secondary)] sm:px-6 md:pt-8">
       <div className="mx-auto max-w-6xl">
         <ToolPageHeader
           title={t.title}
@@ -156,7 +159,7 @@ export default function EncodeClient({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setMode(item.id)}
+                  onClick={() => { markUsage(); setMode(item.id); }}
                   className={`shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold transition ${
                     active
                       ? "border-emerald-500 bg-[var(--accent-color)] text-[var(--accent-contrast)] shadow-sm"

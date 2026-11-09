@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useState, useCallback } from "react";
 import type {
@@ -63,6 +64,7 @@ export function useDnsLookup() {
       provider: DnsProvider = "cloudflare",
     ): Promise<DnsLookupResponse | null> => {
       setLoading(true);
+      const audienceRun = startToolRun("dns-lookup");
       sendAnalyticsEvent({ event: "core_tool_run", tool: "dns-security" });
       setError(null);
       setResult(null);
@@ -79,19 +81,22 @@ export function useDnsLookup() {
 
         if (data.error) {
           setError(data.error);
-          sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
+          audienceRun.finish("error");
+        sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
           // Add to history with error
           addToHistory(domain, type, provider, undefined, data.error);
           return null;
         }
 
         setResult(data);
+        audienceRun.finish("success");
         sendAnalyticsEvent({ event: "core_tool_success", tool: "dns-security" });
         addToHistory(domain, type, provider, data);
         return data;
       } catch (e: any) {
         const errorMsg = e.message || "DNS lookup failed";
         setError(errorMsg);
+        audienceRun.finish("error");
         sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
         addToHistory(domain, type, provider, undefined, errorMsg);
         return null;
@@ -109,6 +114,7 @@ export function useDnsLookup() {
       provider: DnsProvider = "cloudflare",
     ): Promise<DnsBatchResponse | null> => {
       setLoading(true);
+      const audienceRun = startToolRun("dns-lookup");
       sendAnalyticsEvent({ event: "core_tool_run", tool: "dns-security" });
       setError(null);
       setBatchResult(null);
@@ -128,15 +134,18 @@ export function useDnsLookup() {
 
         if (data.error) {
           setError(data.error);
-          sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
+          audienceRun.finish("error");
+        sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
           return null;
         }
 
         setBatchResult(data);
+        audienceRun.finish("success");
         sendAnalyticsEvent({ event: "core_tool_success", tool: "dns-security" });
         return data;
       } catch (e: any) {
         setError(e.message || "Batch lookup failed");
+        audienceRun.finish("error");
         sendAnalyticsEvent({ event: "core_tool_error", tool: "dns-security" });
         return null;
       } finally {

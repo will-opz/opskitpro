@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useMemo, useState } from "react";
 import {
@@ -69,24 +70,32 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     resetFeedback();
   };
   const setJsonResult = (kind: "formatted" | "minified") => {
+    const usage = startToolRun("json");
     try {
       const parsed = JSON.parse(input);
+      usage.finish("success");
       publish(kind === "formatted" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed), kind);
     } catch {
+      usage.finish("error");
       tool.clearResult(); resetFeedback();
     }
   };
   const handleRepair = () => {
     if (!input.trim()) return;
+    const usage = startToolRun("json");
     const repaired = repairJson(input);
     try {
+      usage.finish("success");
       publish(JSON.stringify(JSON.parse(repaired.repaired), null, 2), "repaired", repaired.fixes);
     } catch {
+      usage.finish("error");
       tool.clearResult(); resetFeedback();
     }
   };
   const handleConvert = (target: "yaml" | "toml") => {
+    const usage = startToolRun("json");
     const converted = target === "yaml" ? jsonToYaml(input) : jsonToToml(input);
+    usage.finish(converted.error ? "error" : "success");
     setShowConvert(false);
     if (converted.error) { tool.clearResult(); resetFeedback(); return; }
     publish(converted.output, target);

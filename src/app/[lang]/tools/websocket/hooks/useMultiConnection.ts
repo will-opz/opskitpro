@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useState, useCallback, useRef } from "react";
 import type {
@@ -94,7 +95,7 @@ export function useMultiConnection() {
   );
 
   const connect = useCallback(
-    (tabId: string, url: string, config?: Partial<WebSocketConfig>) => {
+    (tabId: string, url: string, config?: Partial<WebSocketConfig>, automated = false) => {
       const existingSocket = socketsRef.current.get(tabId);
       if (existingSocket?.readyState === WebSocket.OPEN) {
         existingSocket.close();
@@ -103,6 +104,7 @@ export function useMultiConnection() {
       const tab = tabs.find((t) => t.id === tabId);
       if (!tab) return;
 
+      const usage = automated ? null : startToolRun("websocket");
       const fullConfig = { ...tab.config, ...config, url };
       updateTab(tabId, { url, status: "connecting", config: fullConfig });
       addLog(tabId, "info", `Connecting to ${url}...`);
@@ -113,6 +115,7 @@ export function useMultiConnection() {
         socketsRef.current.set(tabId, ws);
 
         ws.onopen = () => {
+          usage?.finish("success");
           updateTab(tabId, {
             status: "connected",
             stats: { ...tab.stats, connectedAt: Date.now() },
@@ -164,6 +167,7 @@ export function useMultiConnection() {
         };
 
         ws.onclose = (event) => {
+          usage?.finish(event.code === 1000 ? "cancel" : "error");
           updateTab(tabId, {
             status: "disconnected",
             stats: { ...tab.stats, connectedAt: null },
@@ -182,7 +186,7 @@ export function useMultiConnection() {
                 `Reconnecting in ${fullConfig.reconnectInterval / 1000}s...`,
               );
               const timer = setTimeout(
-                () => connect(tabId, url, fullConfig),
+                () => connect(tabId, url, fullConfig, true),
                 fullConfig.reconnectInterval,
               );
               reconnectTimersRef.current.set(tabId, timer);
@@ -191,10 +195,12 @@ export function useMultiConnection() {
         };
 
         ws.onerror = () => {
+          usage?.finish("error");
           updateTab(tabId, { status: "error" });
           addLog(tabId, "error", "WebSocket error");
         };
       } catch (e: any) {
+        usage?.finish("error");
         updateTab(tabId, { status: "error" });
         addLog(tabId, "error", `Failed to connect: ${e.message}`);
       }

@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, Clipboard, Eraser, XCircle } from "lucide-react";
@@ -163,7 +164,9 @@ export default function JwtClient({ lang }: { lang: Lang }) {
 
   const handleAnalyze = () => {
     setHasAnalysis(Boolean(token.trim()));
-    setAnalysis(analyzeJwt(token, secret));
+    const next = analyzeJwt(token, secret);
+    startToolRun("jwt").finish(next.isJwt && !next.risks.malformed ? "success" : "error");
+    setAnalysis(next);
   };
 
   const verify = async () => {

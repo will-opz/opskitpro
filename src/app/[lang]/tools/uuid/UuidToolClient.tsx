@@ -1,4 +1,5 @@
 "use client";
+import { startToolRun } from "@/lib/audience-client";
 
 import { useMemo, useState } from "react";
 import { AlertCircle, Clipboard, RefreshCcw, RefreshCw } from "lucide-react";
@@ -134,6 +135,7 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
 
   const handleGenerate = async () => {
     if (countIsInvalid || (version === "v5" && !canGenerateV5)) return;
+    const usage = startToolRun("uuid");
     setIsGenerating(true);
     const nextGenerated: string[] = [];
     try {
@@ -141,7 +143,11 @@ export default function UuidToolClient({ lang }: { lang: Lang }) {
         const next = await generateUuid(version, namespace || undefined, version === "v5" ? name : undefined);
         nextGenerated.push(next);
       }
+      usage.finish("success");
       setGenerated((current) => [...nextGenerated.reverse(), ...current].slice(0, 200));
+    } catch (error) {
+      usage.finish("error");
+      throw error;
     } finally {
       setIsGenerating(false);
     }

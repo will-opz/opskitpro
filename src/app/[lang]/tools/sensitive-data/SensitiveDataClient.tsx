@@ -1,4 +1,5 @@
 "use client";
+import { useReactiveToolUsage } from "@/hooks/use-tool-usage";
 
 import { useMemo, useState } from "react";
 import { Clipboard, Eye, EyeOff } from "lucide-react";
@@ -176,8 +177,10 @@ export default function SensitiveDataClient({ lang }: { lang: Lang }) {
     }, 1500);
   };
 
+  const markUsage = useReactiveToolUsage("sensitive-data", input ? (result.complete ? "success" : "error") : "cancel");
+
   return (
-    <main className="tool-page">
+    <main onChangeCapture={markUsage} className="tool-page">
       <ToolPageHeader title={c.title} description={c.subtitle} processing={c.privacy} />
 
       <section className="mt-6 ui-surface-elevated rounded-2xl p-4 sm:p-6">
