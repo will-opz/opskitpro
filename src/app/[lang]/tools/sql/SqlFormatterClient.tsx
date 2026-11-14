@@ -3,6 +3,7 @@ import { startToolRun } from "@/lib/audience-client";
 
 import { AlertTriangle, Clipboard, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocalToolResult } from "@/hooks/useLocalToolResult";
 import { ToolPageHeader } from "@/components/ToolPageHeader";
 import { formatSql } from "./sql-engine";
 
@@ -69,8 +70,12 @@ type State = "idle" | "running" | "done" | "error";
 
 export default function SqlFormatterClient({ lang }: { lang: Lang }) {
   const t = copy[lang];
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState("");
+  const tool = useLocalToolResult<string>();
+  const { input } = tool;
+  const result = tool.result ?? "";
+  const staleMessage = lang === "zh"
+    ? "输入已变化，请重新运行后再复制。"
+    : "Input changed. Run again before copying.";
   const [error, setError] = useState("");
   const [state, setState] = useState<State>("idle");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
@@ -89,25 +94,27 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
     const formatted = formatSql(input);
     usage.finish(formatted.ok ? "success" : "error");
     if (!formatted.ok) {
-      setResult("");
+      tool.clearResult();
       setError(t.errors[formatted.error as keyof typeof t.errors] ?? t.unknownError);
       setState("error");
       return;
     }
-    setResult(formatted.formatted);
+    tool.publish(formatted.formatted);
+    setCopyState("idle");
     setError("");
     setState("done");
   };
 
   const clearAll = () => {
-    setInput("");
-    setResult("");
+    tool.setInput("");
+    tool.clearResult();
     setError("");
     setState("idle");
+    setCopyState("idle");
   };
 
   const copyOutput = async () => {
-    if (!result) return;
+    if (!result || !tool.canUseResult) return;
     try {
       await navigator.clipboard.writeText(result);
       setCopyState("copied");
@@ -138,7 +145,8 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
             spellCheck={false}
             value={input}
             onChange={(event) => {
-              setInput(event.target.value);
+              tool.setInput(event.target.value);
+              setCopyState("idle");
               if (state !== "running") {
                 setState("idle");
                 setError("");
@@ -182,9 +190,10 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           >
             {result || (state === "error" ? t.unknownError : t.noOutput)}
           </pre>
+          {tool.status === "stale" && <p role="status" className="mt-3 text-sm text-[var(--warning-text)]">{staleMessage}</p>}
           <button
             type="button"
-            disabled={!result}
+            disabled={!result || !tool.canUseResult}
             onClick={copyOutput}
             className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] px-4 py-2 text-sm font-semibold text-[var(--accent-text)] disabled:cursor-not-allowed disabled:opacity-40"
           >

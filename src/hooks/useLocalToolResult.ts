@@ -29,8 +29,8 @@ function reduce<T>(state: State<T>, action: Action<T>): State<T> {
 /** Input and result provenance stay in memory; never persisted or sent anywhere.
  * Tools with configurable transforms must call invalidate() when options change.
  */
-export function useLocalToolResult<T>() {
-  const [state, dispatch] = useReducer(reduce<T>, { input: "", revision: 0, snapshot: null });
+export function useLocalToolResult<T>(initialInput = "") {
+  const [state, dispatch] = useReducer(reduce<T>, { input: initialInput, revision: 0, snapshot: null });
   const status = !state.snapshot ? "idle" : state.snapshot.revision === state.revision ? "fresh" : "stale";
   return {
     input: state.input,

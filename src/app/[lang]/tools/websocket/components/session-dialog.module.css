@@ -1,0 +1,20 @@
+.dialog {
+  width: calc(100% - 2rem);
+  max-width: 28rem;
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-elevated);
+}
+
+.wide { max-width: 32rem; }
+.dialog:modal { overscroll-behavior: contain; }
+.dialog::backdrop {
+  background: rgb(0 0 0 / 50%);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}

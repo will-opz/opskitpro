@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import { SessionDialog } from "./SessionDialog";
 import {
   Save,
   FolderOpen,
@@ -22,6 +23,12 @@ interface SessionManagerProps {
   onLoadSession: (logs: LogEntry[]) => void;
 }
 
+// React's autoFocus focuses on mount, while these dialogs are still closed.
+// Preserve the native attribute so showModal() chooses it on every opening.
+function nativeAutofocus(element: HTMLElement | null) {
+  if (element) element.autofocus = true;
+}
+
 export function SessionManager({
   lang,
   currentUrl,
@@ -38,8 +45,11 @@ export function SessionManager({
     exportToHar,
   } = useMessageHistory();
 
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [showSessions, setShowSessions] = useState(false);
+  const saveDialog = useRef<HTMLDialogElement>(null);
+  const sessionsDialog = useRef<HTMLDialogElement>(null);
+  const saveTitleId = useId();
+  const sessionsTitleId = useId();
+  const nameId = useId();
   const [sessionName, setSessionName] = useState("");
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const copy =
@@ -77,12 +87,12 @@ export function SessionManager({
     if (currentLogs.length === 0) return;
     saveSession(sessionName || "", currentUrl, currentLogs);
     setSessionName("");
-    setShowSaveDialog(false);
+    saveDialog.current?.close();
   };
 
   const handleLoad = (logs: LogEntry[]) => {
     onLoadSession(logs);
-    setShowSessions(false);
+    sessionsDialog.current?.close();
   };
 
   const formatDate = (ts: number) => {
@@ -93,7 +103,7 @@ export function SessionManager({
     <div className="flex items-center gap-2">
       {/* Save Button */}
       <button
-        onClick={() => setShowSaveDialog(true)}
+        onClick={() => saveDialog.current?.showModal()}
         disabled={currentLogs.length === 0}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-[var(--accent-text)] rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
       >
@@ -103,7 +113,7 @@ export function SessionManager({
 
       {/* Load Button */}
       <button
-        onClick={() => setShowSessions(true)}
+        onClick={() => sessionsDialog.current?.showModal()}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg text-xs font-bold transition-all"
       >
         <FolderOpen className="w-3.5 h-3.5" />
@@ -163,19 +173,14 @@ export function SessionManager({
       </div>
 
       {/* Save Dialog */}
-      {showSaveDialog && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={() => setShowSaveDialog(false)}
-        >
+      <SessionDialog dialogRef={saveDialog} titleId={saveTitleId}>
           <div
-            className="bg-[var(--surface-primary)] rounded-2xl shadow-sm w-full max-w-md p-6"
-            onClick={(e) => e.stopPropagation()}
+            className="p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">{copy.saveSession}</h3>
+              <h3 id={saveTitleId} className="text-lg font-bold text-[var(--text-primary)]">{copy.saveSession}</h3>
               <button
-                onClick={() => setShowSaveDialog(false)}
+                onClick={() => saveDialog.current?.close()}
                 className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 aria-label={copy.close}
               >
@@ -184,16 +189,17 @@ export function SessionManager({
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+              <label htmlFor={nameId} className="block text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
                 {copy.sessionName}
               </label>
               <input
+                id={nameId}
                 type="text"
                 value={sessionName}
                 onChange={(e) => setSessionName(e.target.value)}
                 placeholder={copy.sessionPlaceholder}
                 className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
-                autoFocus
+                ref={nativeAutofocus}
               />
             </div>
 
@@ -216,7 +222,7 @@ export function SessionManager({
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowSaveDialog(false)}
+                onClick={() => saveDialog.current?.close()}
                 className="flex-1 px-4 py-2 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] rounded-xl font-bold hover:bg-zinc-200 transition-all"
               >
                 {copy.cancel}
@@ -229,21 +235,15 @@ export function SessionManager({
               </button>
             </div>
           </div>
-        </div>
-      )}
+      </SessionDialog>
 
       {/* Sessions List */}
-      {showSessions && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={() => setShowSessions(false)}
-        >
+      <SessionDialog dialogRef={sessionsDialog} titleId={sessionsTitleId} wide>
           <div
-            className="bg-[var(--surface-primary)] rounded-2xl shadow-sm w-full max-w-lg max-h-[80vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+            className="max-h-[80dvh] flex flex-col"
           >
             <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
-              <h3 className="text-lg font-bold text-[var(--text-primary)]">
+              <h3 id={sessionsTitleId} className="text-lg font-bold text-[var(--text-primary)]">
                 {copy.savedSessions}
               </h3>
               <div className="flex items-center gap-2">
@@ -256,7 +256,8 @@ export function SessionManager({
                   </button>
                 )}
                 <button
-                  onClick={() => setShowSessions(false)}
+                  onClick={() => sessionsDialog.current?.close()}
+                  ref={nativeAutofocus}
                   className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                   aria-label={copy.close}
                 >
@@ -265,7 +266,7 @@ export function SessionManager({
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-4">
+            <div className="min-h-0 flex-1 overflow-auto overscroll-contain p-4">
               {sessions.length === 0 ? (
                 <div className="text-center py-12 text-[var(--text-muted)]">
                   <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -326,8 +327,7 @@ export function SessionManager({
               )}
             </div>
           </div>
-        </div>
-      )}
+      </SessionDialog>
     </div>
   );
 }

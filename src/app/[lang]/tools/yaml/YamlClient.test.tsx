@@ -64,4 +64,34 @@ describe("YamlClient", () => {
 
     expect(screen.getByText("Invalid YAML")).toBeInTheDocument();
   });
+
+  it("keeps old output but prevents copying after input, indent or sample changes", () => {
+    render(<YamlClient lang="en" />);
+    const input = screen.getByLabelText("YAML input");
+    const format = screen.getByRole("button", { name: "Format YAML" });
+    const copy = () => screen.getByRole("button", { name: "Copy result" });
+    fireEvent.change(input, { target: { value: "service:\n  name: before" } });
+    fireEvent.click(format);
+    expect(copy()).toBeEnabled();
+    fireEvent.change(input, { target: { value: "service:\n  name: after" } });
+    expect(screen.getByRole("status")).toHaveTextContent("Run again");
+    expect(copy()).toBeDisabled();
+    fireEvent.click(copy());
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+    fireEvent.click(format);
+    expect(copy()).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "4" }));
+    expect(copy()).toBeDisabled();
+    fireEvent.click(format);
+    fireEvent.click(copy());
+    expect(navigator.clipboard.writeText).toHaveBeenLastCalledWith("service:\n    name: after");
+    fireEvent.click(screen.getByRole("button", { name: "Load sample" }));
+    expect(copy()).toBeDisabled();
+    fireEvent.click(format);
+    expect(copy()).toBeEnabled();
+    fireEvent.change(input, { target: { value: "a: [" } });
+    fireEvent.click(format);
+    expect(copy()).toBeDisabled();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
 });

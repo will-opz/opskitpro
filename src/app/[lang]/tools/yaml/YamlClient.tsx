@@ -3,6 +3,7 @@ import { startToolRun } from "@/lib/audience-client";
 
 import { Check, Clipboard, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useLocalToolResult } from "@/hooks/useLocalToolResult";
 import { ToolPageHeader } from "@/components/ToolPageHeader";
 
 import { formatYaml, validateYaml, YAML_LIMITS } from "./yaml-engine";
@@ -62,11 +63,21 @@ const copy = {
 
 export default function YamlClient({ lang }: { lang: Lang }) {
   const c = copy[lang];
-  const [input, setInput] = useState(sampleYaml);
+  const tool = useLocalToolResult<string>(sampleYaml);
+  const { input } = tool;
+  const output = tool.result ?? "";
   const [indent, setIndent] = useState(2);
   const [status, setStatus] = useState<Status>("idle");
-  const [output, setOutput] = useState("");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+
+  const staleMessage = lang === "zh"
+    ? "输入或选项已变化，请重新运行后再复制。"
+    : "Input or options changed. Run again before copying.";
+  const setInput = (value: string) => {
+    tool.setInput(value);
+    setStatus("idle");
+    setCopyState("idle");
+  };
 
   const validation = useMemo(() => validateYaml(input), [input]);
   const statusLabel = useMemo(() => {
@@ -93,24 +104,25 @@ export default function YamlClient({ lang }: { lang: Lang }) {
     const result = formatYaml(input, indent);
     usage.finish(result.valid ? "success" : "error");
     if (!result.valid) {
-      setOutput("");
+      tool.clearResult();
       setStatus("invalid");
       return;
     }
 
-    setOutput(result.formatted ?? "");
+    tool.publish(result.formatted ?? "");
+    setCopyState("idle");
     setStatus("formatted");
   };
 
   const clearAll = () => {
     setInput("");
-    setOutput("");
+    tool.clearResult();
     setStatus("idle");
     setCopyState("idle");
   };
 
   const copyOutput = async () => {
-    if (!output) return;
+    if (!output || !tool.canUseResult) return;
     try {
       await navigator.clipboard.writeText(output);
       setCopyState("copied");
@@ -150,7 +162,12 @@ export default function YamlClient({ lang }: { lang: Lang }) {
                 key={item}
                 type="button"
                 aria-pressed={indent === item}
-                onClick={() => setIndent(item)}
+                onClick={() => {
+                  if (indent !== item) tool.invalidate();
+                  setIndent(item);
+                  setStatus("idle");
+                  setCopyState("idle");
+                }}
                 className={`min-h-10 rounded-full border px-3 text-xs font-semibold ${indent === item ? "border-emerald-500/30 bg-emerald-500/10 text-[var(--accent-text)]" : "border-[var(--border-subtle)] text-[var(--text-muted)]"}`}
               >
                 {item}
@@ -176,8 +193,9 @@ export default function YamlClient({ lang }: { lang: Lang }) {
           <div className={`mt-2 min-h-20 max-h-96 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 font-mono text-sm leading-6 whitespace-pre-wrap ${status === "invalid" ? "text-[var(--danger-text)]" : "text-[var(--text-primary)]"}`}>
             {output || c.ready}
           </div>
+          {tool.status === "stale" && <p role="status" className="mt-3 text-sm text-[var(--warning-text)]">{staleMessage}</p>}
           <div className="mt-4 flex items-center justify-between gap-2">
-            <button type="button" onClick={copyOutput} disabled={!output} className="ui-button-primary min-h-10 px-4">
+            <button type="button" onClick={copyOutput} disabled={!output || !tool.canUseResult} className="ui-button-primary min-h-10 px-4">
               {copyState === "copied" ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
               {copyState === "copied" ? c.copied : copyState === "failed" ? c.copyFailed : c.copy}
             </button>
