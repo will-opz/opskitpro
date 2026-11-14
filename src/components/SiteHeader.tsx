@@ -37,7 +37,7 @@ export function SiteHeader({ lang }: { dict?: unknown; lang: "en" | "zh" }) {
       <div className={styles.controls}>
         <ToolSearch lang={lang} />
         <div className={styles.language}><LanguageToggle currentLang={lang} /></div>
-        <ThemeToggle />
+        <ThemeToggle lang={lang} />
         <details className={styles.mobileMenu} ref={menu} onKeyDown={(event) => { if (event.key === "Escape" && menu.current) { menu.current.open = false; menu.current.querySelector("summary")?.focus(); } }}>
           <summary aria-label={zh ? "导航菜单" : "Navigation menu"}><Menu size={21} aria-hidden="true" /></summary>
           <nav className={styles.mobileNav} aria-label={zh ? "移动导航" : "Mobile navigation"}>{links}<LanguageToggle currentLang={lang} /></nav>

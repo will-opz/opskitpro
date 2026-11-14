@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import "../globals.css";
 import { AdminSessionProvider } from "@/components/AdminSessionProvider";
@@ -11,6 +12,8 @@ import {
   getCloudflareAccessEmail,
   isAdminIdentity,
 } from "@/lib/admin-auth";
+
+export const viewport: Viewport = { colorScheme: "light dark" };
 
 export const dynamic = "force-dynamic";
 

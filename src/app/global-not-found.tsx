@@ -7,7 +7,7 @@ export const metadata = { title: "404 · OpsKitPro", robots: { index: false, fol
 export default function GlobalNotFound() {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: themeInitScript + `document.documentElement.lang = location.pathname.startsWith('/zh') ? 'zh' : 'en';` }} /></head>
+      <head><meta name="color-scheme" content="light dark" /><script dangerouslySetInnerHTML={{ __html: themeInitScript + `document.documentElement.lang = location.pathname.startsWith('/zh') ? 'zh' : 'en';` }} /></head>
       <body className="ui-shell"><NotFoundContent /></body>
     </html>
   );

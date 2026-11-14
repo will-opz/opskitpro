@@ -60,14 +60,10 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
       <div className="relative flex">
         <div
           ref={lineNumberRef}
-          className="hidden sm:flex flex-col items-end px-3 py-6 bg-[var(--surface-secondary)] border-r border-[var(--border-subtle)] text-xs font-mono text-[var(--text-faint)] select-none overflow-hidden leading-relaxed shrink-0 min-w-[3rem]"
+          className="absolute inset-y-0 left-0 hidden w-12 overflow-hidden whitespace-pre border-r border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-2 py-4 text-right font-mono text-[13px] leading-relaxed text-[var(--text-faint)] select-none sm:block"
           aria-hidden="true"
         >
-          {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i} className="leading-relaxed">
-              {i + 1}
-            </div>
-          ))}
+          {Array.from({ length: lineCount }, (_, i) => i + 1).join("\n")}
         </div>
         <textarea
           ref={textareaRef}
@@ -78,7 +74,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
           onScroll={handleScroll}
           placeholder={placeholder}
           spellCheck={false}
-          className="w-full min-h-[240px] sm:min-h-[320px] p-4 bg-transparent text-[var(--text-primary)] font-mono text-[13px] leading-relaxed focus:outline-none resize-y placeholder:text-[var(--text-faint)] selection:bg-[var(--accent-soft)]"
+          className="w-full min-h-[240px] sm:min-h-[320px] p-4 sm:pl-16 bg-transparent text-[var(--text-primary)] font-mono text-[13px] leading-relaxed focus:outline-none resize-y placeholder:text-[var(--text-faint)] selection:bg-[var(--accent-soft)]"
           style={{ tabSize: 2 }}
         />
       </div>

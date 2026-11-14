@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { AudiencePageView } from "@/components/AudiencePageView";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -18,6 +19,8 @@ async function resolveLocale(params: Promise<{ lang: string }>) {
   if (!isActiveLocale(lang)) notFound();
   return lang;
 }
+
+export const viewport: Viewport = { colorScheme: "light dark" };
 
 export const dynamicParams = false;
 

@@ -3,21 +3,16 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { useTheme } from "@/hooks/useTheme";
 import { Home, ArrowLeft } from "lucide-react";
 
 export function NotFoundContent() {
+  useTheme();
   const pathname = usePathname();
   const zh = pathname?.startsWith("/zh");
   const lang = zh ? "zh" : "en";
   useEffect(() => {
-    // The global 404 bypasses the normal theme provider. Reapply after hydration,
-    // which can replace attributes set by the first-paint script.
     document.documentElement.lang = lang;
-    try {
-      const theme = localStorage.getItem("opskit-theme") === "dark" ? "dark" : "light";
-      document.documentElement.classList.toggle("dark", theme === "dark");
-      document.documentElement.dataset.theme = theme;
-    } catch { /* Storage can be unavailable in private browsing. */ }
   }, [lang]);
   return (
     <main className="mx-auto flex min-h-[65vh] max-w-lg flex-col justify-center gap-4 px-6 py-12">

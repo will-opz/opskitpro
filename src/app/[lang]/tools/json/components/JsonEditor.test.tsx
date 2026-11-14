@@ -12,3 +12,13 @@ describe("JsonEditor keyboard navigation", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+ it("keeps large multi-line input intact without one DOM element per line", () => {
+    const value = Array.from({ length: 10000 }, (_, i) => String(i)).join("\n");
+    const { container } = render(<><label id="json-input-title">Input</label><JsonEditor value={value} onChange={vi.fn()} onValidate={vi.fn()} /></>);
+    expect(screen.getByRole("textbox", { name: "Input" })).toHaveValue(value);
+    const gutter = container.querySelector('[aria-hidden="true"]')!;
+    expect(gutter.childElementCount).toBe(0);
+    expect(gutter.textContent?.split("\n")).toHaveLength(10000);
+    expect(gutter.textContent?.endsWith("10000")).toBe(true);
+  });

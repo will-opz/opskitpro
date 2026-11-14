@@ -42,6 +42,8 @@ test('home palette uses same index, arrow/Enter navigation, and English accepts 
   await page.keyboard.press('ArrowDown');await expect(palette.locator('[data-search-tool="json"]')).toBeFocused();
   await page.keyboard.press('ArrowUp');await expect(palette.getByRole('textbox')).toBeFocused();
   await page.keyboard.press('Enter');await expect(page).toHaveURL(/\/en\/tools\/json$/);
+  // A changed URL can precede the destination header mounting during navigation.
+  await expect(page.getByRole('heading',{name:'JSON Formatter',exact:true})).toBeVisible();
   await page.keyboard.press('Control+k');await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.goto('/en/tools?q='+encodeURIComponent('证书过期'));
@@ -53,7 +55,9 @@ test('home palette uses same index, arrow/Enter navigation, and English accepts 
   await expect(page.locator('[data-tool-id]')).toHaveCount(1);
   const output=process.env.DISCOVERY_SCREENSHOTS;
   if(output) await page.screenshot({path:`${output}/tools-${test.info().project.name}.png`,style:'nextjs-portal{display:none}'});
-  await page.getByRole('button',{name:'Theme: Light',exact:true}).click();
+  await page.locator('summary[aria-label^="主题设置"]').click();
+  await page.getByRole('radio',{name:'暗色',exact:true}).check();
+  await page.keyboard.press('Escape');
   await page.getByRole('button',{name:'搜索工具',exact:true}).click();
   await page.getByRole('dialog').getByRole('textbox').fill('ip归属');
   await expect(page.getByRole('dialog').locator('[data-search-tool]').first()).toHaveAttribute('data-search-tool','ip-lookup');
