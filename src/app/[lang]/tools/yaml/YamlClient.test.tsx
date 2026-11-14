@@ -62,7 +62,8 @@ describe("YamlClient", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Validate only" }));
 
-    expect(screen.getByText("Invalid YAML")).toBeInTheDocument();
+    expect(screen.getByLabelText("YAML input")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("YAML input")).toHaveAccessibleDescription(/Line 2, column 1/);
   });
 
   it("keeps old output but prevents copying after input, indent or sample changes", () => {
@@ -92,6 +93,22 @@ describe("YamlClient", () => {
     fireEvent.change(input, { target: { value: "a: [" } });
     fireEvent.click(format);
     expect(copy()).toBeDisabled();
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
 });
+
+ it.each(["en", "zh"] as const)("associates localized empty/limit errors with the input (%s)", lang => {
+    render(<YamlClient lang={lang} />);
+    const input = screen.getByLabelText(lang === "en" ? "YAML input" : "YAML 输入");
+    fireEvent.change(input, { target: { value: "x".repeat(50_001) } });
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAccessibleDescription(lang === "en" ? "Input is too long. Reduce it to 50,000 characters or fewer." : "输入内容过长，请缩减到 50,000 字符以内。");
+    fireEvent.change(input, { target: { value: "" } });
+    expect(input).toHaveAttribute("aria-invalid", "false");
+    fireEvent.click(screen.getByRole("button", { name: lang === "en" ? "Validate only" : "仅校验" }));
+    expect(input).toHaveAccessibleDescription(lang === "en" ? "Enter YAML to validate." : "请输入要校验的 YAML 内容。");
+    expect(input).toHaveFocus();
+    fireEvent.change(input, { target: { value: "a: 1" } });
+    expect(input).toHaveAttribute("aria-invalid", "false");
+    expect(input).not.toHaveAttribute("aria-describedby");
+  });

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { isImeComposing } from "@/lib/ime";
 import Link from "next/link";
 import { ArrowRight, Search, X } from "lucide-react";
 import { searchTools } from "@/lib/tool-search";
@@ -30,7 +31,7 @@ export function ToolSearch({lang}: {lang:ProductLocale}) {
     return ()=>document.removeEventListener("keydown",keydown);
   },[]);
   const keyboard = (event:ReactKeyboardEvent) => {
-    if (event.nativeEvent.isComposing) return;
+    if (isImeComposing(event.nativeEvent)) return;
     const links = Array.from(dialog.current?.querySelectorAll<HTMLAnchorElement>('[data-search-tool]') ?? []);
     const index = links.indexOf(document.activeElement as HTMLAnchorElement);
     if (event.key === "ArrowDown") { event.preventDefault(); links[Math.min(index+1,links.length-1)]?.focus(); }

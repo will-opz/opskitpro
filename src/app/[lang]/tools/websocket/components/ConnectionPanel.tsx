@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   Play,
   Square,
@@ -12,6 +12,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import { isImeComposing } from "@/lib/ime";
 import { useConnectionHistory } from "../hooks";
 import type { ConnectionStatus, WebSocketConfig } from "../hooks";
 
@@ -38,6 +39,7 @@ export function ConnectionPanel({
   onDisconnect,
   onConfigChange,
 }: ConnectionPanelProps) {
+  const inputId = useId();
   const { history, addConnection, deleteConnection, clearHistory } =
     useConnectionHistory();
 
@@ -110,7 +112,7 @@ export function ConnectionPanel({
   return (
     <section className="glass-card rounded-2xl border border-black/5 bg-[var(--surface-primary)] p-4 backdrop-blur-xl sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <label className="text-xs uppercase font-bold text-[var(--text-muted)] tracking-widest flex items-center gap-2">
+        <h2 className="text-xs uppercase font-bold text-[var(--text-muted)] tracking-widest flex items-center gap-2">
           <span className="rounded-md bg-cyan-500/10 px-2 py-1 font-mono text-cyan-700">
             {copy.step}
           </span>
@@ -120,7 +122,7 @@ export function ConnectionPanel({
             <WifiOff className="w-3 h-3 text-[var(--text-muted)]" />
           )}
           <span>{copy.title}</span>
-        </label>
+        </h2>
 
         <div className="flex items-center gap-2">
           {/* History dropdown */}
@@ -218,17 +220,20 @@ export function ConnectionPanel({
       </div>
 
       {/* URL Input */}
-      <label className="mb-2 block text-xs font-medium text-[var(--text-secondary)]">
+      <label htmlFor={inputId} className="mb-2 block text-xs font-medium text-[var(--text-secondary)]">
         {copy.endpoint}
       </label>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
+          id={inputId}
           type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) =>
-            e.key === "Enter" && !isConnected && handleConnect()
-          }
+          onKeyDown={e => {
+            if (e.key !== "Enter" || isImeComposing(e.nativeEvent)) return;
+            e.preventDefault();
+            if (!isConnected && !isConnecting) handleConnect();
+          }}
           placeholder="wss://your-websocket-server.com"
           className="min-w-0 flex-grow rounded-xl border border-[var(--border-strong)] bg-[var(--surface-primary)] px-4 py-3 font-mono text-sm shadow-sm transition-all focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
           disabled={isConnected || isConnecting}
@@ -275,8 +280,9 @@ export function ConnectionPanel({
 
             {autoReconnect && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[var(--text-muted)]">{copy.interval}:</span>
+                <label htmlFor={`${inputId}-interval`} className="text-xs text-[var(--text-muted)]">{copy.interval} ({copy.seconds}):</label>
                 <input
+                  id={`${inputId}-interval`}
                   type="number"
                   value={reconnectInterval}
                   onChange={(e) => {

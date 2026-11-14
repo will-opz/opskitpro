@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   Plus,
   X,
@@ -10,6 +10,7 @@ import {
   Loader2,
   Edit3,
 } from "lucide-react";
+import { isImeComposing } from "@/lib/ime";
 import type { ConnectionTab } from "../hooks/useMultiConnection";
 
 interface ConnectionTabsProps {
@@ -21,6 +22,7 @@ interface ConnectionTabsProps {
   onRemoveTab: (id: string) => void;
   onRenameTab: (id: string, name: string) => void;
   canAddTab: boolean;
+  workspaceId: string;
 }
 
 export function ConnectionTabs({
@@ -32,7 +34,11 @@ export function ConnectionTabs({
   onRemoveTab,
   onRenameTab,
   canAddTab,
+  workspaceId,
 }: ConnectionTabsProps) {
+  const id = useId();
+  const buttons = useRef(new Map<string, HTMLButtonElement>());
+  const editing = useRef<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const displayName = (name: string) =>
@@ -43,11 +49,14 @@ export function ConnectionTabs({
 
   const startEdit = (tab: ConnectionTab, e: React.MouseEvent) => {
     e.stopPropagation();
+    editing.current = tab.id;
     setEditingId(tab.id);
     setEditName(tab.name);
   };
 
   const confirmEdit = (id: string) => {
+    if (editing.current !== id) return;
+    editing.current = null;
     if (editName.trim()) {
       onRenameTab(id, editName.trim());
     }
@@ -85,62 +94,68 @@ export function ConnectionTabs({
   };
 
   return (
-    <div className="flex items-center gap-1 bg-[var(--bg-tertiary)] p-1 rounded-xl overflow-x-auto">
+    <div role="group" aria-label={lang === "zh" ? "连接选择" : "Connections"} className="flex min-w-0 items-center gap-1 bg-[var(--bg-tertiary)] p-1 rounded-xl overflow-x-auto">
       {tabs.map((tab) => (
         <div
           key={tab.id}
-          onClick={() => onSelectTab(tab.id)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all border-b-2 ${
+          className={`flex shrink-0 items-center gap-1 px-2 py-1 rounded-lg transition-all border-b-2 ${
             activeTabId === tab.id
               ? `bg-[var(--surface-primary)] shadow-sm ${getStatusColor(tab.status, true)}`
               : "hover:bg-[var(--surface-primary)] border-transparent"
           }`}
         >
-          {getStatusIcon(tab.status)}
-
-          {editingId === tab.id ? (
+          <button
+            type="button"
+            ref={element => { if (element) buttons.current.set(tab.id, element); else buttons.current.delete(tab.id); }}
+            aria-pressed={activeTabId === tab.id}
+            aria-controls={workspaceId}
+            aria-describedby={`${id}-${tab.id}-status`}
+            onClick={() => onSelectTab(tab.id)}
+            className="flex min-h-10 items-center gap-2 rounded px-1 text-xs font-medium text-[var(--text-primary)]"
+          >
+            {getStatusIcon(tab.status)}
+            <span className="max-w-[100px] truncate">{displayName(tab.name)}</span>
+            <span id={`${id}-${tab.id}-status`} hidden>{lang === "zh"
+              ? ({ connected: "已连接", connecting: "连接中", error: "连接错误", disconnected: "未连接" }[tab.status])
+              : tab.status}</span>
+            {tab.logs.filter(l => l.type === "sent" || l.type === "received").length > 0 &&
+              <span aria-hidden="true" className="rounded-full bg-[var(--bg-tertiary)] px-1.5">{tab.logs.filter(l => l.type === "sent" || l.type === "received").length}</span>}
+          </button>
+          {editingId === tab.id && <>
+            <label htmlFor={`${id}-${tab.id}-name`} className="sr-only">{renameLabel}: {displayName(tab.name)}</label>
             <input
+              id={`${id}-${tab.id}-name`}
               type="text"
               value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") confirmEdit(tab.id);
-                if (e.key === "Escape") setEditingId(null);
+              onChange={e => setEditName(e.target.value)}
+              onKeyDown={e => {
+                if (isImeComposing(e.nativeEvent)) return;
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  confirmEdit(tab.id);
+                  buttons.current.get(tab.id)?.focus();
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  editing.current = null;
+                  setEditingId(null);
+                  buttons.current.get(tab.id)?.focus();
+                }
               }}
               onBlur={() => confirmEdit(tab.id)}
-              className="w-24 px-1 py-0.5 text-xs bg-[var(--surface-secondary)] border border-[var(--border-strong)] rounded focus:outline-none focus:ring-1 focus:ring-cyan-400"
+              className="w-28 min-h-10 rounded border border-[var(--border-strong)] bg-[var(--surface-secondary)] px-2 text-sm"
               autoFocus
-              onClick={(e) => e.stopPropagation()}
             />
-          ) : (
-            <span
-              className={`text-xs font-medium truncate max-w-[100px] ${
-                activeTabId === tab.id ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"
-              }`}
-            >
-              {displayName(tab.name)}
-            </span>
-          )}
-
-          {/* Message count badge */}
-          {tab.logs.filter((l) => l.type === "sent" || l.type === "received")
-            .length > 0 && (
-            <span className="px-1.5 py-0.5 bg-zinc-200 rounded-full text-xs font-bold text-[var(--text-muted)]">
-              {
-                tab.logs.filter(
-                  (l) => l.type === "sent" || l.type === "received",
-                ).length
-              }
-            </span>
-          )}
+          </>}
 
           {/* Actions */}
           <div className="flex items-center gap-0.5 ml-1">
             {editingId !== tab.id && (
               <button
                 onClick={(e) => startEdit(tab, e)}
-                className="p-0.5 text-[var(--text-faint)] hover:text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-all"
-                aria-label={renameLabel}
+                type="button"
+                className="flex min-h-10 min-w-10 items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                aria-label={`${renameLabel}: ${displayName(tab.name)}`}
                 title={renameLabel}
               >
                 <Edit3 className="w-3 h-3" />
@@ -151,10 +166,13 @@ export function ConnectionTabs({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  const next = activeTabId === tab.id ? tabs.find(item => item.id !== tab.id)?.id : activeTabId;
+                  if (next) buttons.current.get(next)?.focus();
                   onRemoveTab(tab.id);
                 }}
-                className="p-0.5 text-[var(--text-faint)] hover:text-red-500 transition-colors"
-                aria-label={closeLabel}
+                type="button"
+                className="flex min-h-10 min-w-10 items-center justify-center rounded text-[var(--text-muted)] hover:text-red-500"
+                aria-label={`${closeLabel}: ${displayName(tab.name)}`}
                 title={closeLabel}
               >
                 <X className="w-3.5 h-3.5" />
@@ -165,16 +183,16 @@ export function ConnectionTabs({
       ))}
 
       {/* Add tab button */}
-      {canAddTab && (
-        <button
-          onClick={onAddTab}
-          className="p-2 text-[var(--text-muted)] hover:text-cyan-600 hover:bg-[var(--surface-primary)] rounded-lg transition-all"
+      <button
+          type="button"
+          aria-disabled={!canAddTab}
+          onClick={() => { if (canAddTab) onAddTab(); }}
+          className="shrink-0 p-2 text-[var(--text-muted)] hover:text-cyan-600 hover:bg-[var(--surface-primary)] rounded-lg transition-all aria-disabled:opacity-40"
           aria-label={addLabel}
           title={addLabel}
         >
           <Plus className="w-4 h-4" />
-        </button>
-      )}
+      </button>
     </div>
   );
 }

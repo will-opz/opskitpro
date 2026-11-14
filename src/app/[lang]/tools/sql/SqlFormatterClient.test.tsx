@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SqlFormatterClient from "./SqlFormatterClient";
 
@@ -59,3 +59,26 @@ describe("SQL formatter client", () => {
     expect(screen.getByTestId("sql-output")).not.toHaveTextContent("after");
   });
 });
+
+ it("keeps errors until editing and never announces the full result", () => {
+    vi.useFakeTimers();
+    try {
+      render(<SqlFormatterClient lang="en" />);
+      const input = screen.getByLabelText("SQL input");
+      let descriptionAtFocus: string | null | undefined;
+      input.addEventListener("focus", () => {
+        descriptionAtFocus = document.getElementById(input.getAttribute("aria-describedby") ?? "")?.textContent;
+      });
+      fireEvent.change(input, { target: { value: "select (" } });
+      fireEvent.click(screen.getByRole("button", { name: "Format SQL" }));
+      act(() => vi.advanceTimersByTime(5000));
+      expect(input).toHaveAccessibleDescription("Brackets are unbalanced.");
+      expect(descriptionAtFocus).toContain("Brackets are unbalanced.");
+      expect(input).toHaveAttribute("aria-invalid", "true");
+      expect(input).toHaveFocus();
+      expect(screen.getByTestId("sql-output")).not.toHaveAttribute("aria-live");
+      fireEvent.change(input, { target: { value: "select 1;" } });
+      expect(input).toHaveAttribute("aria-invalid", "false");
+      expect(screen.queryByText("Brackets are unbalanced.")).not.toBeInTheDocument();
+    } finally { vi.useRealTimers(); }
+  });

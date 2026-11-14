@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   Send,
   Braces,
@@ -11,6 +11,7 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
+import { isImeComposing } from "@/lib/ime";
 import { useMessageTemplates } from "../hooks";
 import type { ConnectionStatus } from "../hooks";
 
@@ -21,6 +22,7 @@ interface MessageComposerProps {
 }
 
 export function MessageComposer({ lang, status, onSend }: MessageComposerProps) {
+  const inputId = useId();
   const {
     templates,
     customTemplates,
@@ -295,13 +297,19 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
       {/* Save template dialog */}
       {showSaveDialog && (
         <div className="flex flex-wrap items-center gap-2 border-b border-emerald-100 bg-[var(--accent-soft)] px-4 py-3">
+          <label htmlFor={`${inputId}-template`} className="text-xs font-medium">{copy.templateName}</label>
           <input
+            id={`${inputId}-template`}
             type="text"
             value={newTemplateName}
             onChange={(e) => setNewTemplateName(e.target.value)}
             placeholder={copy.templateName}
             className="min-w-40 flex-1 rounded-lg border border-emerald-200 bg-[var(--surface-primary)] px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            onKeyDown={(e) => e.key === "Enter" && handleSaveTemplate()}
+            onKeyDown={e => {
+              if (e.key !== "Enter" || isImeComposing(e.nativeEvent)) return;
+              e.preventDefault();
+              handleSaveTemplate();
+            }}
           />
           <button
             onClick={handleSaveTemplate}
@@ -327,9 +335,10 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
           </span>
           {currentVars.map((v) => (
             <div key={v} className="flex items-center gap-1">
-              <span className="text-xs font-mono text-blue-500">{`{{${v}}}`}</span>
+              <label htmlFor={`${inputId}-var-${v}`} className="text-xs font-mono text-blue-500">{`{{${v}}}`}</label>
               <input
                 type="text"
+                id={`${inputId}-var-${v}`}
                 value={templateVars[v] || ""}
                 onChange={(e) => updateTemplateVar(v, e.target.value)}
                 placeholder={v}
@@ -342,7 +351,11 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
 
       {/* Editor */}
       <div className="relative">
+        <label htmlFor={`${inputId}-message`} className="block px-4 pt-3 text-xs font-medium text-[var(--text-secondary)]">{lang === "zh" ? "消息内容" : "Message content"}</label>
         <textarea
+          id={`${inputId}-message`}
+          aria-invalid={!!jsonError}
+          aria-describedby={jsonError ? `${inputId}-error` : undefined}
           value={message}
           onChange={(e) => handleMessageChange(e.target.value)}
           onKeyDown={(e) => {
@@ -390,7 +403,7 @@ export function MessageComposer({ lang, status, onSend }: MessageComposerProps) 
 
       {/* JSON error message */}
       {jsonError && (
-        <div className="px-4 py-2 bg-[var(--danger-soft)] border-t border-red-100 text-xs font-mono text-[var(--danger-text)]">
+        <div id={`${inputId}-error`} className="px-4 py-2 bg-[var(--danger-soft)] border-t border-red-100 text-xs font-mono text-[var(--danger-text)]">
           {jsonError}
         </div>
       )}

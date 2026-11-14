@@ -2,7 +2,8 @@
 import { startToolRun } from "@/lib/audience-client";
 
 import { Check, Clipboard, RotateCcw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useLocalToolResult } from "@/hooks/useLocalToolResult";
 import { ToolPageHeader } from "@/components/ToolPageHeader";
 
@@ -63,6 +64,7 @@ const copy = {
 
 export default function YamlClient({ lang }: { lang: Lang }) {
   const c = copy[lang];
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const tool = useLocalToolResult<string>(sampleYaml);
   const { input } = tool;
   const output = tool.result ?? "";
@@ -80,6 +82,14 @@ export default function YamlClient({ lang }: { lang: Lang }) {
   };
 
   const validation = useMemo(() => validateYaml(input), [input]);
+  const invalid = !validation.valid && (!!input.trim() || status === "invalid");
+  const errorDetail = !input.trim()
+    ? (lang === "zh" ? "请输入要校验的 YAML 内容。" : "Enter YAML to validate.")
+    : input.length > YAML_LIMITS.maxChars
+      ? (lang === "zh" ? "输入内容过长，请缩减到 50,000 字符以内。" : "Input is too long. Reduce it to 50,000 characters or fewer.")
+      : validation.error
+        ? (lang === "zh" ? `第 ${validation.error.line} 行，第 ${validation.error.column} 列：${validation.error.reason}` : `Line ${validation.error.line}, column ${validation.error.column}: ${validation.error.reason}`)
+        : validation.errorMessage;
   const statusLabel = useMemo(() => {
     if (status === "formatted") return c.valid;
     if (status === "invalid") return c.invalid;
@@ -96,7 +106,9 @@ export default function YamlClient({ lang }: { lang: Lang }) {
 
   const runValidation = () => {
     startToolRun("yaml").finish(validation.valid ? "success" : "error");
-    setStatus(validation.valid ? "valid" : "invalid");
+    // Focus must see the committed error description, including empty input.
+    flushSync(() => setStatus(validation.valid ? "valid" : "invalid"));
+    if (!validation.valid) inputRef.current?.focus();
   };
 
   const runFormat = () => {
@@ -104,8 +116,11 @@ export default function YamlClient({ lang }: { lang: Lang }) {
     const result = formatYaml(input, indent);
     usage.finish(result.valid ? "success" : "error");
     if (!result.valid) {
-      tool.clearResult();
-      setStatus("invalid");
+      flushSync(() => {
+        tool.clearResult();
+        setStatus("invalid");
+      });
+      inputRef.current?.focus();
       return;
     }
 
@@ -147,6 +162,9 @@ export default function YamlClient({ lang }: { lang: Lang }) {
           </div>
           <textarea
             id="yaml-input"
+            ref={inputRef}
+            aria-invalid={invalid}
+            aria-describedby={invalid ? "yaml-error" : undefined}
             value={input}
             onChange={(event) => {
               setInput(event.target.value);
@@ -184,8 +202,8 @@ export default function YamlClient({ lang }: { lang: Lang }) {
 
           <p className={`mt-4 text-sm ${statusColor}`}>
             {statusLabel}
-            {validation.error ? ` (${validation.errorMessage})` : ""}
           </p>
+          {invalid && <p id="yaml-error" className="mt-2 text-sm text-[var(--danger-text)]">{errorDetail}</p>}
         </div>
 
         <div className="ui-surface rounded-2xl p-4 sm:p-6">
@@ -193,7 +211,10 @@ export default function YamlClient({ lang }: { lang: Lang }) {
           <div className={`mt-2 min-h-20 max-h-96 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 font-mono text-sm leading-6 whitespace-pre-wrap ${status === "invalid" ? "text-[var(--danger-text)]" : "text-[var(--text-primary)]"}`}>
             {output || c.ready}
           </div>
-          {tool.status === "stale" && <p role="status" className="mt-3 text-sm text-[var(--warning-text)]">{staleMessage}</p>}
+          <p role="status" aria-atomic="true" className={tool.status === "stale" ? "mt-3 text-sm text-[var(--warning-text)]" : "sr-only"}>
+            {tool.status === "stale" ? staleMessage : status === "formatted" || status === "valid"
+              ? (lang === "zh" ? "处理完成。" : "Processing complete.") : ""}
+          </p>
           <div className="mt-4 flex items-center justify-between gap-2">
             <button type="button" onClick={copyOutput} disabled={!output || !tool.canUseResult} className="ui-button-primary min-h-10 px-4">
               {copyState === "copied" ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}

@@ -2,7 +2,8 @@
 import { startToolRun } from "@/lib/audience-client";
 
 import { AlertTriangle, Clipboard, RefreshCw, RotateCcw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useLocalToolResult } from "@/hooks/useLocalToolResult";
 import { ToolPageHeader } from "@/components/ToolPageHeader";
 import { formatSql } from "./sql-engine";
@@ -70,6 +71,7 @@ type State = "idle" | "running" | "done" | "error";
 
 export default function SqlFormatterClient({ lang }: { lang: Lang }) {
   const t = copy[lang];
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const tool = useLocalToolResult<string>();
   const { input } = tool;
   const result = tool.result ?? "";
@@ -80,12 +82,6 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
   const [state, setState] = useState<State>("idle");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
 
-  useEffect(() => {
-    if (state !== "error") return;
-    const timer = window.setTimeout(() => setError(""), 2200);
-    return () => window.clearTimeout(timer);
-  }, [state]);
-
   const statusText = state === "running" ? t.formatting : "";
 
   const handleFormat = () => {
@@ -94,9 +90,13 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
     const formatted = formatSql(input);
     usage.finish(formatted.ok ? "success" : "error");
     if (!formatted.ok) {
-      tool.clearResult();
-      setError(t.errors[formatted.error as keyof typeof t.errors] ?? t.unknownError);
-      setState("error");
+      // Commit the description before focus so assistive tech reads the new error.
+      flushSync(() => {
+        tool.clearResult();
+        setError(t.errors[formatted.error as keyof typeof t.errors] ?? t.unknownError);
+        setState("error");
+      });
+      inputRef.current?.focus();
       return;
     }
     tool.publish(formatted.formatted);
@@ -141,6 +141,9 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           </label>
           <textarea
             id="sql-input"
+            ref={inputRef}
+            aria-invalid={!!error}
+            aria-describedby={error ? "sql-error" : undefined}
             rows={9}
             spellCheck={false}
             value={input}
@@ -173,7 +176,7 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           </div>
 
           {error && (
-            <div className="mt-5 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-[var(--danger-text)]">
+            <div id="sql-error" className="mt-5 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-[var(--danger-text)]">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               {error}
             </div>
@@ -186,11 +189,13 @@ export default function SqlFormatterClient({ lang }: { lang: Lang }) {
           <pre
             className="mt-3 min-h-20 max-h-[28rem] overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-3 text-xs leading-6 text-[var(--text-primary)]"
             data-testid="sql-output"
-            aria-live="polite"
           >
             {result || (state === "error" ? t.unknownError : t.noOutput)}
           </pre>
-          {tool.status === "stale" && <p role="status" className="mt-3 text-sm text-[var(--warning-text)]">{staleMessage}</p>}
+          <p role="status" aria-atomic="true" className={tool.status === "stale" ? "mt-3 text-sm text-[var(--warning-text)]" : "sr-only"}>
+            {tool.status === "stale" ? staleMessage : state === "done"
+              ? (lang === "zh" ? "格式化完成。" : "Formatting complete.") : ""}
+          </p>
           <button
             type="button"
             disabled={!result || !tool.canUseResult}

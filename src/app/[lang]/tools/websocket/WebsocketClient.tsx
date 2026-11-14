@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   Activity,
   Binary,
@@ -32,6 +32,7 @@ export default function WebsocketClient({
   dict: any;
   lang: Lang;
 }) {
+  const workspaceId = useId();
   const {
     tabs,
     activeTab,
@@ -177,6 +178,7 @@ export default function WebsocketClient({
                 onRemoveTab={removeTab}
                 onRenameTab={renameTab}
                 canAddTab={canAddTab}
+                workspaceId={workspaceId}
               />
               <SessionManager
                 lang={lang}
@@ -230,7 +232,7 @@ export default function WebsocketClient({
         )}
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div id={workspaceId} role="group" aria-label={lang === "zh" ? `连接工作区：${activeTab.name.replace(/^Connection (\d+)$/, "连接 $1")}` : `Connection workspace: ${activeTab.name}`} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Connection Panel */}
           <div className="lg:col-span-12">
             <ConnectionPanel
