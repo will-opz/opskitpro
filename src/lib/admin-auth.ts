@@ -19,13 +19,34 @@ export function getAllowedAdminEmails() {
     .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
 }
 
+function allowedAdminDomains(): string[] | null {
+  const domains = (process.env.OPSKITPRO_ADMIN_EMAIL_DOMAINS || "")
+    .split(",").map((domain) => domain.trim().toLowerCase()).filter(Boolean);
+  // Exact ASCII DNS names only: no @, wildcard, URL, suffix or subdomain matching.
+  const label = "[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?";
+  const domainPattern = new RegExp(`^${label}(?:\\.${label})+$`);
+  return domains.every((domain) => domain.length <= 253 && domainPattern.test(domain))
+    ? domains : null;
+}
+
+function emailAllowed(email: string, domains: string[]) {
+  if (getAllowedAdminEmails().includes(email)) return true;
+  const parts = email.split("@");
+  if (parts.length !== 2 || email.length > 254 || parts[0].length > 64) return false;
+  // A conservative dot-atom local part keeps malformed claims out of domain grants.
+  const atom = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+";
+  return new RegExp(`^${atom}(?:\\.${atom})*$`).test(parts[0]) && domains.includes(parts[1]);
+}
+
 function accessConfiguration() {
   const issuer = process.env.OPSKITPRO_ACCESS_ISSUER?.trim() || "";
   const audience = process.env.OPSKITPRO_ACCESS_AUDIENCE?.trim() || "";
+  const domains = allowedAdminDomains();
   // The issuer is operator configuration, never a URL supplied by a token.
   if (!/^https:\/\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.cloudflareaccess\.com$/.test(issuer)
-    || !audience || getAllowedAdminEmails().length === 0) return null;
-  return { issuer, audience };
+    || !audience || domains === null
+    || (getAllowedAdminEmails().length === 0 && domains.length === 0)) return null;
+  return { issuer, audience, domains };
 }
 
 export function isAdminConfigured() {
@@ -66,7 +87,7 @@ export async function getAdminIdentity(headers: HeaderReader): Promise<AdminIden
       || typeof payload.sub !== "string" || !payload.sub
       || typeof payload.email !== "string" || payload.type !== "app") return denied;
     const email = payload.email.trim().toLowerCase();
-    if (!getAllowedAdminEmails().includes(email)) return denied;
+    if (!emailAllowed(email, config.domains)) return denied;
     return { authenticated: true, email, provider: "cloudflare_access" };
   } catch {
     // Invalid tokens and unavailable/invalid JWKS fail closed. Never log tokens.

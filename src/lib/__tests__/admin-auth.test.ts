@@ -29,6 +29,7 @@ beforeEach(async () => {
   vi.stubEnv("OPSKITPRO_ACCESS_ISSUER", issuer);
   vi.stubEnv("OPSKITPRO_ACCESS_AUDIENCE", audience);
   vi.stubEnv("OPSKITPRO_ADMIN_EMAILS", email);
+  vi.stubEnv("OPSKITPRO_ADMIN_EMAIL_DOMAINS", "");
   fetchMock = vi.fn().mockImplementation(async () => Response.json({ keys: [jwk1] }));
   vi.stubGlobal("fetch", fetchMock);
   auth = await import("@/lib/admin-auth");
@@ -36,6 +37,37 @@ beforeEach(async () => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("Access admin trust boundary", () => {
+  it.each(["operator@example.org", "operator@example.net", "Operator+admin@EXAMPLE.ORG", email])("accepts approved exact email or domain: %s", async (identityEmail) => {
+    vi.stubEnv("OPSKITPRO_ADMIN_EMAIL_DOMAINS", " example.org,EXAMPLE.NET ");
+    const result = await auth.getAdminIdentity(headers(await token({ email: identityEmail })));
+    expect(result).toEqual({ authenticated: true, email: identityEmail.toLowerCase(), provider: "cloudflare_access" });
+  });
+  it.each([
+    "other@gmail.com", "admin@sub.example.org", "admin@notexample.org",
+    "admin@example.org.evil.test", "admin@example.org.", "admin@@example.org",
+    "@example.org", "a b@example.org", "a..b@example.org", ".a@example.org",
+    "a.@example.org", "a\n@example.org", '"a"@example.org',
+  ])("rejects domain lookalikes and malformed email: %s", async (identityEmail) => {
+    vi.stubEnv("OPSKITPRO_ADMIN_EMAIL_DOMAINS", "example.org,example.net");
+    expect((await auth.getAdminIdentity(headers(await token({ email: identityEmail })))).authenticated).toBe(false);
+  });
+  it.each(["*.example.org", "@example.org", "example.org.", "https://example.org", "example..org", "-example.org", "example", "éxample.org"])("fails closed on invalid domain config: %s", async (domain) => {
+    vi.stubEnv("OPSKITPRO_ADMIN_EMAIL_DOMAINS", `example.org,${domain}`);
+    expect(auth.isAdminConfigured()).toBe(false);
+    expect((await auth.getAdminIdentity(headers(await token()))).authenticated).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("allows a domain-only configuration but still requires a valid signed JWT", async () => {
+    vi.stubEnv("OPSKITPRO_ADMIN_EMAILS", "");
+    vi.stubEnv("OPSKITPRO_ADMIN_EMAIL_DOMAINS", "example.org");
+    expect(auth.isAdminConfigured()).toBe(true);
+    const claims = { email: "operator@example.org" };
+    expect((await auth.getAdminIdentity(headers(await token(claims)))).authenticated).toBe(true);
+    for (const assertion of [await token(claims, key2.privateKey), await token({ ...claims, aud: "wrong" }), await token({ ...claims, exp: 1 })]) {
+      expect((await auth.getAdminIdentity(headers(assertion))).authenticated).toBe(false);
+    }
+    expect((await auth.getAdminIdentity(headers(undefined, { "cf-access-authenticated-user-email": claims.email }))).authenticated).toBe(false);
+  });
   it("verifies a signed app JWT and uses signed email, not an email header", async () => {
     const identity = await auth.getAdminIdentity(headers(await token(), { "cf-access-authenticated-user-email": "attacker@example.com" }));
     expect(identity).toEqual({ authenticated: true, email, provider: "cloudflare_access" });

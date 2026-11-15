@@ -9,6 +9,13 @@ Configure server-only variables:
 - `OPSKITPRO_ACCESS_ISSUER`: exact `https://<team>.cloudflareaccess.com`, no trailing slash.
 - `OPSKITPRO_ACCESS_AUDIENCE`: the administrator Access application's AUD.
 - `OPSKITPRO_ADMIN_EMAILS`: comma-separated allowed administrator emails.
+- `OPSKITPRO_ADMIN_EMAIL_DOMAINS`: optional comma-separated exact email domains
+  (for example `example.org,example.net`, without `@`). Every authenticated email
+  in these domains receives administrator access. Domain matching accepts neither
+  subdomains nor wildcard/suffix lookalikes. Keep this list aligned with Access
+  **Include / Emails ending in** rules, alongside any existing exact emails.
+  Invalid domain configuration fails closed; either an exact-email list or a
+  domain list must be configured. Public APIs and MCP remain outside this policy.
 
 Missing or invalid configuration fails closed. The verifier accepts RS256 app
 JWTs only, validates signature/issuer/audience/expiration/not-before, requires
