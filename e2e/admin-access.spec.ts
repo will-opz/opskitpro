@@ -30,6 +30,33 @@ test('signed administrator works; expired/wrong audience requests do not', async
   }
 });
 
+test('admin language switches both ways in place without reloading or losing identity', async ({ page, context }) => {
+  await context.setExtraHTTPHeaders({ 'x-forwarded-proto': 'https', 'cf-access-jwt-assertion': fixture!.token });
+  await context.addCookies([{ name: 'NEXT_LOCALE', value: 'en', url: test.info().project.use.baseURL as string }]);
+  await page.goto('/admin/profile?view=account#details');
+  const url = page.url();
+  await expect(page.getByRole('heading', { name: 'User profile', exact: true })).toBeVisible();
+  for (const [from, to, lang, heading, privacy] of [
+    ['English', '简体中文', 'zh', '用户资料', '隐私政策'],
+    ['简体中文', 'English', 'en', 'User profile', 'Privacy'],
+  ]) {
+    let toggle = page.getByRole('button', { name: from, exact: true }).filter({ visible: true });
+    if (await toggle.count() === 0) {
+      await page.getByLabel(from === 'English' ? 'Navigation menu' : '导航菜单', { exact: true }).click();
+      toggle = page.getByRole('button', { name: from, exact: true }).filter({ visible: true });
+    }
+    await toggle.click();
+    await page.getByRole('button', { name: to, exact: true }).filter({ visible: true }).click();
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('lang', lang);
+    await expect(page.getByRole('link', { name: privacy, exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'OpsKitPro', exact: true })).toHaveAttribute('href', `/${lang}`);
+    await expect(page).toHaveURL(url);
+    const response = await context.request.get('/api/admin/session');
+    expect(await response.json()).toMatchObject({ authenticated: true, email: fixture!.email });
+  }
+});
+
 for (const lang of ['en', 'zh']) {
   test(`${lang} profile renders and logout navigates to Access without erasing tool storage`, async ({ page, context }) => {
     await context.setExtraHTTPHeaders({ 'x-forwarded-proto': 'https', 'cf-access-jwt-assertion': fixture!.token });

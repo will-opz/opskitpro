@@ -28,6 +28,12 @@ export function LanguageToggle({ currentLang }: { currentLang: ActiveLocale }) {
     document.cookie = `NEXT_LOCALE=${newLang}; path=/; max-age=31536000`;
     setIsOpen(false);
 
+    // Admin URLs stay unlocalized; refresh the cookie-dependent server layout.
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      router.refresh();
+      return;
+    }
+
     const segments = pathname.split("/");
     if (ACTIVE_LOCALES.includes(segments[1] as ActiveLocale)) {
       segments[1] = newLang;
