@@ -10,10 +10,6 @@ import {
 } from "@/lib/i18n";
 import { getRetiredBlogDestination } from "@/lib/blog-retirement";
 
-const ADMIN_COOKIE_NAME = "opskitpro_admin";
-const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
-const CLOUDFLARE_ACCESS_EMAIL_HEADER = "cf-access-authenticated-user-email";
-
 function isLocaleNeutralPublicPath(pathname: string) {
   if (pathname === "/" || pathname === "/about" || pathname === "/services") {
     return true;
@@ -21,72 +17,6 @@ function isLocaleNeutralPublicPath(pathname: string) {
 
   return ["/blog", "/errors", "/tools"].some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
-}
-
-async function sha256(value: string) {
-  const input = new TextEncoder().encode(value);
-  const hash = await crypto.subtle.digest("SHA-256", input);
-  return Array.from(new Uint8Array(hash))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function getAllowedAdminEmails() {
-  return (process.env.OPSKITPRO_ADMIN_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-async function attachCloudflareAccessAdminCookie(
-  request: NextRequest,
-  response: NextResponse,
-) {
-  const token = await getCloudflareAccessAdminToken(request);
-  if (!token) return response;
-
-  if (request.cookies.get(ADMIN_COOKIE_NAME)?.value === token) {
-    return response;
-  }
-
-  response.cookies.set(ADMIN_COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: ADMIN_COOKIE_MAX_AGE,
-    path: "/",
-  });
-
-  return response;
-}
-
-async function getCloudflareAccessAdminToken(request: NextRequest) {
-  const secret =
-    process.env.OPSKITPRO_ADMIN_SECRET ||
-    process.env.OPSKITPRO_ADMIN_PASSWORD ||
-    "";
-  const accessEmail =
-    request.headers.get(CLOUDFLARE_ACCESS_EMAIL_HEADER)?.trim().toLowerCase() ||
-    "";
-  const allowed = accessEmail && getAllowedAdminEmails().includes(accessEmail);
-
-  if (!secret || !allowed) return "";
-  return sha256(`cloudflare-access:${accessEmail}:${secret}`);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _injectCookie(headers: Headers, name: string, value: string) {
-  const existingCookie = headers.get("cookie") || "";
-  const withoutExisting = existingCookie
-    .split(";")
-    .map((part) => part.trim())
-    .filter((part) => part && !part.startsWith(`${name}=`))
-    .join("; ");
-
-  headers.set(
-    "cookie",
-    `${withoutExisting ? withoutExisting + "; " : ""}${name}=${value}`,
   );
 }
 
@@ -111,10 +41,7 @@ export async function proxy(request: NextRequest) {
       }
     }
     url.protocol = "https:";
-    return attachCloudflareAccessAdminCookie(
-      request,
-      NextResponse.redirect(url, 301),
-    );
+    return NextResponse.redirect(url, 301);
   }
 
   const pathLocale = getLocaleFromPathname(pathname);
@@ -136,10 +63,7 @@ export async function proxy(request: NextRequest) {
           }
         }
         url.pathname = `/${pathLocale}${destination}`;
-        return attachCloudflareAccessAdminCookie(
-          request,
-          NextResponse.redirect(url, 301),
-        );
+        return NextResponse.redirect(url, 301);
       }
     }
   }
@@ -157,10 +81,7 @@ export async function proxy(request: NextRequest) {
       }
     }
     url.pathname = pathname.replace(`/${pathLocale}/admin`, "/admin");
-    return attachCloudflareAccessAdminCookie(
-      request,
-      NextResponse.redirect(url, 301),
-    );
+    return NextResponse.redirect(url, 301);
   }
 
   if (isRetiredLocale(pathLocale)) {
@@ -173,10 +94,7 @@ export async function proxy(request: NextRequest) {
       }
     }
     url.pathname = pathname.replace(`/${pathLocale}`, `/${targetLocale}`);
-    return attachCloudflareAccessAdminCookie(
-      request,
-      NextResponse.redirect(url, 301),
-    );
+    return NextResponse.redirect(url, 301);
   }
 
   // 1. Check if the pathname already has an active locale prefix
@@ -186,13 +104,13 @@ export async function proxy(request: NextRequest) {
 
   if (hasLocale || pathname.startsWith("/admin")) {
     // Already localized or is admin path. Let the Next.js page handle it natively.
-    return attachCloudflareAccessAdminCookie(request, NextResponse.next());
+    return NextResponse.next();
   }
 
   // Unknown locale-neutral paths should reach the App Router directly so they
   // return one 404 response instead of a locale redirect followed by a 404.
   if (!isLocaleNeutralPublicPath(pathname)) {
-    return attachCloudflareAccessAdminCookie(request, NextResponse.next());
+    return NextResponse.next();
   }
 
   // 2. If no locale, we REDIRECT to a localized path.
@@ -223,7 +141,7 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  return attachCloudflareAccessAdminCookie(request, response);
+  return response;
 }
 
 export const config = {

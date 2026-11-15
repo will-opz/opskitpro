@@ -1,17 +1,12 @@
 import type { Viewport } from "next";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import "../globals.css";
 import { AdminSessionProvider } from "@/components/AdminSessionProvider";
-import { redirect } from "next/navigation";
 import { getDictionary } from "@/dictionaries";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { themeInitScript } from "@/lib/theme-init";
-import {
-  ADMIN_COOKIE_NAME,
-  getCloudflareAccessEmail,
-  isAdminIdentity,
-} from "@/lib/admin-auth";
+import { requireAdminIdentity } from "@/lib/admin-page-auth";
 
 export const viewport: Viewport = { colorScheme: "light dark" };
 
@@ -22,14 +17,9 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+  await requireAdminIdentity();
+  const cookieStore = await cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value || "en") as "zh" | "en";
-  const authenticated = await isAdminIdentity(
-    cookieStore.get(ADMIN_COOKIE_NAME)?.value,
-    getCloudflareAccessEmail(headerStore),
-  );
-
-  if (!authenticated) redirect(`/${lang}/nav?admin=1`);
 
   const dict = await getDictionary(lang);
 

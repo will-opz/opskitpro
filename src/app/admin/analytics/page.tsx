@@ -1,3 +1,4 @@
+import { requireAdminIdentity } from "@/lib/admin-page-auth";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -7,7 +8,8 @@ import {
   Laptop,
 } from "lucide-react";
 
-export default function AdminAnalyticsPage() {
+export default async function AdminAnalyticsPage() {
+  await requireAdminIdentity();
   return (
     <main className="mx-auto w-full max-w-5xl flex-grow px-4 pb-8 pt-6 sm:px-6">
       <Link

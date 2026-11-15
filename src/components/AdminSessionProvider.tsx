@@ -82,8 +82,13 @@ export function AdminSessionProvider({
     }
 
     setLoading(true);
-    return fetch("/api/admin/session")
-      .then((response) => response.json())
+    return fetch("/api/admin/session", { cache: "no-store", redirect: "error" })
+      .then((response) => {
+        if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) {
+          throw new Error("Admin session requires Access navigation");
+        }
+        return response.json();
+      })
       .then((data) => {
         const isAuthenticated = Boolean(data.authenticated);
         setAuthenticated(isAuthenticated);
@@ -100,7 +105,12 @@ export function AdminSessionProvider({
         return isAuthenticated;
       })
       .catch(() => {
-        setConfigured(false);
+        // Access may challenge the protected API before it reaches Next.js.
+        // Keep a full-page sign-in path available; never infer authentication.
+        setAuthenticated(false);
+        setConfigured(true);
+        setPasswordConfigured(false);
+        setAccessConfigured(true);
         setSessionChecked(true);
         return false;
       })
@@ -115,13 +125,13 @@ export function AdminSessionProvider({
   };
 
   const logout = async () => {
-    await fetch("/api/admin/session", { method: "DELETE" });
-    setAuthenticated(false);
-    setEmail("");
-    setProvider(null);
-    setSessionChecked(true);
-    router.push(`/${lang}/nav`);
-    router.refresh();
+    // Access owns the session. Full navigation reaches its logout handler;
+    // deleting the retired application cookie alone does not sign out of SSO.
+    try {
+      await fetch("/api/admin/session", { method: "DELETE", cache: "no-store" });
+    } finally {
+      window.location.assign("/cdn-cgi/access/logout");
+    }
   };
 
   return (
@@ -151,7 +161,7 @@ export function AdminSessionProvider({
                 ? nextPath
                 : "/admin";
             setLoginOpen(false);
-            router.push(`/admin/auth?next=${encodeURIComponent(target)}`);
+            window.location.assign(`/admin/auth?next=${encodeURIComponent(target)}`);
           }}
           onClose={() => setLoginOpen(false)}
           onLogin={(identity) => {

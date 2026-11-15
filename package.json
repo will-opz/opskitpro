@@ -43,7 +43,8 @@
     "react-dom": "^19.2.8",
     "server-only": "^0.0.1",
     "tldts": "7.0.27",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "jose": "^6.2.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

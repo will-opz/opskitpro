@@ -1,11 +1,7 @@
 import { CircleUserRound, KeyRound, ShieldCheck } from "lucide-react";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { ProfileActions } from "./ProfileActions";
-import {
-  ADMIN_COOKIE_NAME,
-  getAdminIdentity,
-  getCloudflareAccessEmail,
-} from "@/lib/admin-auth";
+import { requireAdminIdentity } from "@/lib/admin-page-auth";
 
 const copy = {
   zh: {
@@ -22,7 +18,7 @@ const copy = {
     scopeValue: "管理后台、个人导航、自定义入口",
     sessionTitle: "会话说明",
     sessionBody:
-      "Zero Trust 登录由 Cloudflare Access 校验白名单邮箱；密码登录作为备用入口。退出后会清除 OpsKitPro 管理会话。",
+      "管理请求会验证 Cloudflare Access 签名和管理员邮箱。退出登录将跳转至 Cloudflare Access 结束会话。",
   },
 
   en: {
@@ -39,19 +35,16 @@ const copy = {
     scopeValue: "Admin dashboard, personal navigation, custom entries",
     sessionTitle: "Session notes",
     sessionBody:
-      "Zero Trust sign-in is verified by Cloudflare Access against the email allowlist. Password sign-in remains a fallback. Signing out clears the OpsKitPro admin session.",
+      "Management requests verify the Cloudflare Access signature and admin email. Signing out navigates to Cloudflare Access to end the session.",
   },
 };
 
 export default async function AdminProfilePage() {
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+  const identity = await requireAdminIdentity();
+  const cookieStore = await cookies();
   const lang = (cookieStore.get("NEXT_LOCALE")?.value ||
     "en") as keyof typeof copy;
   const t = copy[lang] || copy.zh;
-  const identity = await getAdminIdentity(
-    cookieStore.get(ADMIN_COOKIE_NAME)?.value,
-    getCloudflareAccessEmail(headerStore),
-  );
   const providerLabel =
     identity.provider === "cloudflare_access"
       ? t.zeroTrust

@@ -179,7 +179,7 @@ describe("proxy — locale cookie", () => {
 });
 
 describe("proxy — Cloudflare Access admin cookie", () => {
-  it("sets the admin cookie for a whitelisted Cloudflare Access email", async () => {
+  it("never mints a cookie from a whitelisted but unverified email", async () => {
     process.env.OPSKITPRO_ADMIN_EMAILS = "will@example.com";
     process.env.OPSKITPRO_ADMIN_SECRET = "test-secret";
 
@@ -191,9 +191,7 @@ describe("proxy — Cloudflare Access admin cookie", () => {
     const res = await proxy(req);
     const setCookie = res.headers.get("set-cookie") ?? "";
 
-    expect(setCookie).toContain("opskitpro_admin=");
-    expect(setCookie.toLowerCase()).toContain("httponly");
-    expect(setCookie.toLowerCase()).toContain("samesite=lax");
+    expect(setCookie).not.toContain("opskitpro_admin=");
   });
 
   it("does not set the admin cookie for a non-whitelisted Cloudflare Access email", async () => {

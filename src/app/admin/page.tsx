@@ -1,3 +1,4 @@
+import { requireAdminIdentity } from "@/lib/admin-page-auth";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import {
@@ -31,6 +32,7 @@ const sections = [
 ];
 
 export default async function AdminPage() {
+  await requireAdminIdentity();
   const cookieStore = await cookies();
   const lang = cookieStore.get("NEXT_LOCALE")?.value === "zh" ? "zh" : "en";
   const localizedSections = sections.map((section) =>
