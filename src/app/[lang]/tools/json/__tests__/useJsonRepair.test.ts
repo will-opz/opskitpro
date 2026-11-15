@@ -142,6 +142,24 @@ describe("repairJson", () => {
 });
 
 describe("getJsonStats", () => {
+  it.each(["array", "object"])("counts 10000 nested %s levels without exhausting the call stack", (kind) => {
+    const value = kind === "array"
+      ? "[".repeat(10000) + "0" + "]".repeat(10000)
+      : '{"a":'.repeat(10000) + "0" + "}".repeat(10000);
+    expect(getJsonStats(value)).toMatchObject({ depth: 10000, keys: kind === "array" ? 0 : 10000, type: kind === "array" ? "Array" : "Object" });
+  });
+
+  it("preserves mixed-container, primitive and UTF-8 size semantics", () => {
+    const value = '{"a":[null,{"中文":true}],"b":[]}';
+    expect(getJsonStats(value)).toEqual({ keys: 3, depth: 3, type: "Object", size: `${new TextEncoder().encode(value).length} B` });
+    expect(getJsonStats("null")).toEqual({ keys: 0, depth: 0, type: "object", size: "4 B" });
+    expect(getJsonStats("[]")?.depth).toBe(0);
+  });
+
+  it("counts a wide array without truncating children", () => {
+    const value = "[" + Array(20000).fill('{"a":1}').join(",") + "]";
+    expect(getJsonStats(value)).toMatchObject({ keys: 20000, depth: 2 });
+  });
   it("should return null for invalid JSON", () => {
     expect(getJsonStats("not json")).toBeNull();
   });

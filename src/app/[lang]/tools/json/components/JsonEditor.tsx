@@ -7,6 +7,7 @@ interface JsonEditorProps {
   onChange: (value: string) => void;
   onValidate: (value: string) => void;
   placeholder?: string;
+  describedBy?: string;
 }
 
 export interface JsonEditorRef {
@@ -14,7 +15,7 @@ export interface JsonEditorRef {
 }
 
 export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
-  function JsonEditor({ value, onChange, onValidate, placeholder }, ref) {
+  function JsonEditor({ value, onChange, onValidate, placeholder, describedBy }, ref) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lineNumberRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +69,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(
         <textarea
           ref={textareaRef}
           aria-labelledby="json-input-title"
+          aria-describedby={describedBy}
           value={value}
           onChange={handleInput}
           onKeyDown={handleKeyDown}

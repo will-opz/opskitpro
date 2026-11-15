@@ -1,7 +1,75 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import zh from "@/dictionaries/zh.json";
+import en from "@/dictionaries/en.json";
 import JSONClient from "./json-client";
+
+const usage = vi.hoisted(() => ({ finish: vi.fn() }));
+vi.mock("@/lib/audience-client", () => ({ startToolRun: () => usage }));
+afterEach(() => vi.restoreAllMocks());
+
+describe("JSON operation failure recovery", () => {
+  it.each([
+    ["zh", "美化 JSON"], ["zh", "压缩 JSON"], ["en", "Beautify"], ["en", "Minify"],
+  ] as const)("%s %s reports a capacity error without changing input or enabling old output", (lang, action) => {
+    render(<JSONClient dict={lang === "zh" ? zh : en} lang={lang} />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: '{"ok":true}' } });
+    fireEvent.click(screen.getByRole("button", { name: action }));
+    fireEvent.change(input, { target: { value: '{"force":true}' } });
+    const stringify = JSON.stringify;
+    const spy = vi.spyOn(JSON, "stringify").mockImplementation((value, replacer, space) => {
+      if (value?.force) throw new RangeError("synthetic capacity failure");
+      return stringify(value, replacer as never, space);
+    });
+    usage.finish.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: action }));
+    expect(usage.finish).toHaveBeenCalledExactlyOnceWith("error");
+    expect(input).toHaveValue('{"force":true}');
+    expect(input).toHaveAttribute("aria-describedby", "json-operation-error");
+    expect(input).not.toHaveAttribute("aria-invalid", "true");
+    const message = document.getElementById("json-operation-error")!;
+    expect(message).toHaveAttribute("aria-live", "polite");
+    expect(message).toHaveTextContent(lang === "zh" ? "浏览器" : "browser");
+    expect(screen.getByRole("button", { name: lang === "zh" ? "复制" : "Copy" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: lang === "zh" ? "用作输入" : "Use as input" })).not.toBeInTheDocument();
+    spy.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: action }));
+    expect(message).toBeEmptyDOMElement();
+    expect(input).not.toHaveAttribute("aria-describedby");
+    expect(screen.getByRole("button", { name: lang === "zh" ? "复制" : "Copy" })).toBeEnabled();
+    expect(screen.getByTestId("json-output")).toHaveTextContent('"force"');
+  });
+
+  it("reports failed repair and clears feedback on edit and reset", () => {
+    render(<JSONClient dict={zh} lang="zh" />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "not json" } });
+    fireEvent.click(screen.getByRole("button", { name: "智能修复" }));
+    expect(document.getElementById("json-operation-error")).toHaveTextContent("无法完成操作");
+    expect(input).toHaveValue("not json");
+    fireEvent.change(input, { target: { value: "still not json" } });
+    expect(document.getElementById("json-operation-error")).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByRole("button", { name: "智能修复" }));
+    fireEvent.click(screen.getByRole("button", { name: "清空" }));
+    expect(input).toHaveValue("");
+    expect(document.getElementById("json-operation-error")).toBeEmptyDOMElement();
+  });
+
+  it("shows a recoverable error when the selected converter rejects valid JSON", () => {
+    render(<JSONClient dict={en} lang="en" />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "null" } });
+    fireEvent.click(screen.getByRole("button", { name: "Convert" }));
+    fireEvent.click(screen.getByRole("button", { name: "JSON → TOML" }));
+    expect(document.getElementById("json-operation-error")).toHaveTextContent("Unable to complete");
+    expect(input).toHaveValue("null");
+    expect(screen.getByRole("button", { name: "Copy" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Minify" }));
+    expect(document.getElementById("json-operation-error")).toBeEmptyDOMElement();
+    expect(screen.getByTestId("json-output")).toHaveTextContent("null");
+  });
+});
 
 describe("JSONClient core workflow", () => {
   beforeEach(() => {

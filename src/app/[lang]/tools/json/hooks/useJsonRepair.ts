@@ -199,20 +199,23 @@ export function getJsonStats(value: string): JsonStats | null {
     let maxDepth = 0;
     let keyCount = 0;
 
-    function walk(obj: any, depth: number) {
+    const pending: { value: unknown; depth: number }[] = [{ value: parsed, depth: 0 }];
+    while (pending.length) {
+      const { value: obj, depth } = pending.pop()!;
       if (depth > maxDepth) maxDepth = depth;
       if (obj && typeof obj === "object") {
         if (Array.isArray(obj)) {
-          obj.forEach((item) => walk(item, depth + 1));
+          for (const item of obj) pending.push({ value: item, depth: depth + 1 });
         } else {
           const keys = Object.keys(obj);
           keyCount += keys.length;
-          keys.forEach((k) => walk(obj[k], depth + 1));
+          for (const key of keys) {
+            pending.push({ value: (obj as Record<string, unknown>)[key], depth: depth + 1 });
+          }
         }
       }
     }
 
-    walk(parsed, 0);
     const type = Array.isArray(parsed)
       ? "Array"
       : typeof parsed === "object" && parsed !== null

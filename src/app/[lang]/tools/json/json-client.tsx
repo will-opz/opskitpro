@@ -43,6 +43,7 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     : "Result is based on previous input. Run again before copying or applying it.";
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
+  const [operationError, setOperationError] = useState("");
   const [showConvert, setShowConvert] = useState(false);
 
   const validation = useMemo(() => {
@@ -63,7 +64,17 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     [input, validation.state],
   );
 
-  const resetFeedback = () => { setCopied(false); setCopyError(""); };
+  const resetFeedback = () => { setCopied(false); setCopyError(""); setOperationError(""); };
+  const failOperation = (error?: unknown) => {
+    tool.clearResult(); resetFeedback();
+    setOperationError(error instanceof RangeError
+      ? lang === "zh"
+        ? "无法完成操作：嵌套层级或结果大小超出当前浏览器的处理能力。请减少嵌套或数据量后重试。原始输入未更改。"
+        : "Unable to complete this operation: nesting depth or output size exceeds this browser’s capacity. Reduce the nesting or data size and try again. Your input is unchanged."
+      : lang === "zh"
+        ? "无法完成操作。请检查输入是否符合所选操作的要求，修改后重试。原始输入未更改。"
+        : "Unable to complete this operation. Check that the input meets the selected operation’s requirements, edit it and try again. Your input is unchanged.");
+  };
   const setInput = (value: string) => { tool.setInput(value); resetFeedback(); };
   const publish = (output: string, kind: ResultKind, fixes: string[] = []) => {
     tool.publish({ output, kind, fixes });
@@ -73,23 +84,24 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     const usage = startToolRun("json");
     try {
       const parsed = JSON.parse(input);
+      const result = kind === "formatted" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed);
+      publish(result, kind);
       usage.finish("success");
-      publish(kind === "formatted" ? JSON.stringify(parsed, null, 2) : JSON.stringify(parsed), kind);
-    } catch {
+    } catch (error) {
       usage.finish("error");
-      tool.clearResult(); resetFeedback();
+      failOperation(error);
     }
   };
   const handleRepair = () => {
     if (!input.trim()) return;
     const usage = startToolRun("json");
-    const repaired = repairJson(input);
     try {
-      usage.finish("success");
+      const repaired = repairJson(input);
       publish(JSON.stringify(JSON.parse(repaired.repaired), null, 2), "repaired", repaired.fixes);
-    } catch {
+      usage.finish("success");
+    } catch (error) {
       usage.finish("error");
-      tool.clearResult(); resetFeedback();
+      failOperation(error);
     }
   };
   const handleConvert = (target: "yaml" | "toml") => {
@@ -97,7 +109,7 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
     const converted = target === "yaml" ? jsonToYaml(input) : jsonToToml(input);
     usage.finish(converted.error ? "error" : "success");
     setShowConvert(false);
-    if (converted.error) { tool.clearResult(); resetFeedback(); return; }
+    if (converted.error) { failOperation(); return; }
     publish(converted.output, target);
   };
   const copyResult = async () => {
@@ -169,7 +181,8 @@ export default function JSONClient({ dict, lang }: { dict: any; lang: Lang }) {
                   {validation.state === "valid" ? copy.valid : validation.state === "invalid" ? copy.invalid : copy.idle}
                 </span>
               </div>
-              <JsonEditor value={input} onChange={setInput} onValidate={() => {}} placeholder={copy.placeholder} />
+              <p id="json-operation-error" aria-live="polite" aria-atomic="true" className={operationError ? "border-b border-[var(--border-subtle)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger-text)]" : "sr-only"}>{operationError}</p>
+              <JsonEditor value={input} onChange={setInput} onValidate={() => {}} placeholder={copy.placeholder} describedBy={operationError ? "json-operation-error" : undefined} />
               <div className={`min-h-12 border-t px-4 py-3 text-xs ${validation.state === "invalid" ? "border-red-100 bg-[var(--danger-soft)] text-[var(--danger-text)]" : "border-[var(--border-subtle)] bg-[var(--surface-secondary)] text-[var(--text-muted)]"}`}>
                 {validation.state === "invalid" ? validation.error : stats ? `${stats.type} · ${stats.keys} ${copy.keys} · ${copy.depth} ${stats.depth} · ${stats.size}` : copy.input_hint}
               </div>
