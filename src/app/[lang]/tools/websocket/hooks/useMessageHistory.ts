@@ -3,72 +3,52 @@
 import { useState, useEffect, useCallback } from "react";
 import type { LogEntry } from "./useWebSocket";
 
-export interface SavedSession {
-  id: string;
-  name: string;
-  url: string;
-  logs: LogEntry[];
-  createdAt: number;
-  messageCount: number;
-}
-
-const STORAGE_KEY = "opskitpro_ws_sessions";
-const MAX_SESSIONS = 10;
+import { MAX_SESSIONS, MAX_SESSION_TEXT, SESSION_STORAGE_KEY, SessionDataError, parseSessions, validateSavedSession, sessionError, type SavedSession, type SessionError } from "./session-data";
+export type { SavedSession } from "./session-data";
 
 export function useMessageHistory() {
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState<SessionError | null>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const reloadSessions = useCallback(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setSessions(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to load sessions:", e);
-    }
-    setIsLoaded(true);
+      const next = parseSessions(localStorage.getItem(SESSION_STORAGE_KEY));
+      setSessions(next);
+      setError(null);
+      return next;
+    } catch (cause) {
+      setSessions([]);
+      setError(sessionError(cause));
+      return null;
+    } finally { setIsLoaded(true); }
+  }, []);
+  useEffect(() => { reloadSessions(); }, [reloadSessions]);
+
+  const mutateSessions = useCallback((change: (current: SavedSession[]) => SavedSession[]) => {
+    try {
+      // Fresh read prevents an outdated list from overwriting another tab or corrupt data.
+      const current = parseSessions(localStorage.getItem(SESSION_STORAGE_KEY));
+      const next = change(current);
+      const raw = JSON.stringify(next);
+      if (raw.length > MAX_SESSION_TEXT) throw new SessionDataError('too-large');
+      localStorage.setItem(SESSION_STORAGE_KEY, raw);
+      setSessions(next);
+      setError(null);
+      return true;
+    } catch (cause) { setError(sessionError(cause)); return false; }
   }, []);
 
-  const saveSessions = useCallback((newSessions: SavedSession[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSessions));
-      setSessions(newSessions);
-    } catch (e) {
-      console.error("Failed to save sessions:", e);
-    }
-  }, []);
-
-  const saveSession = useCallback(
-    (name: string, url: string, logs: LogEntry[]) => {
-      const session: SavedSession = {
-        id: Date.now().toString(36),
-        name: name || `Session ${new Date().toLocaleString()}`,
-        url,
-        logs,
-        createdAt: Date.now(),
-        messageCount: logs.filter(
-          (l) => l.type === "sent" || l.type === "received",
-        ).length,
-      };
-      saveSessions([session, ...sessions.slice(0, MAX_SESSIONS - 1)]);
-      return session;
-    },
-    [sessions, saveSessions],
-  );
-
-  const deleteSession = useCallback(
-    (id: string) => {
-      saveSessions(sessions.filter((s) => s.id !== id));
-    },
-    [sessions, saveSessions],
-  );
-
-  const clearSessions = useCallback(() => {
-    saveSessions([]);
-  }, [saveSessions]);
+  const saveSession = useCallback((name: string, url: string, logs: LogEntry[]) => {
+    return mutateSessions(current => {
+      const session = validateSavedSession({ version: 1, id: crypto.randomUUID(),
+        name: name.trim() || `Session ${new Date().toLocaleString()}`, url, logs,
+        createdAt: Date.now(), messageCount: 0 });
+      return [session, ...current.slice(0, MAX_SESSIONS - 1)];
+    });
+  }, [mutateSessions]);
+  const deleteSession = useCallback((id: string) => mutateSessions(current => current.filter(s => s.id !== id)), [mutateSessions]);
+  const clearSessions = useCallback(() => mutateSessions(() => []), [mutateSessions]);
 
   // Export functions
   const exportToJson = useCallback((logs: LogEntry[], filename?: string) => {
@@ -183,6 +163,8 @@ export function useMessageHistory() {
   return {
     sessions,
     isLoaded,
+    error,
+    reloadSessions,
     saveSession,
     deleteSession,
     clearSessions,

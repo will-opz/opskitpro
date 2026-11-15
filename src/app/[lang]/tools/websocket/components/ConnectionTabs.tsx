@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Plus,
   X,
@@ -23,6 +23,7 @@ interface ConnectionTabsProps {
   onRenameTab: (id: string, name: string) => void;
   canAddTab: boolean;
   workspaceId: string;
+  focusTabId?: string;
 }
 
 export function ConnectionTabs({
@@ -35,9 +36,11 @@ export function ConnectionTabs({
   onRenameTab,
   canAddTab,
   workspaceId,
+  focusTabId,
 }: ConnectionTabsProps) {
   const id = useId();
   const buttons = useRef(new Map<string, HTMLButtonElement>());
+  useEffect(() => { if (focusTabId) buttons.current.get(focusTabId)?.focus(); }, [focusTabId]);
   const editing = useRef<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");

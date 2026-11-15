@@ -62,6 +62,7 @@ export function ConnectionPanel({
 
   const handleQuickConnect = (connectUrl: string) => {
     setUrl(connectUrl);
+    onConfigChange({ url: connectUrl });
     addConnection(connectUrl, autoReconnect);
     onConnect(connectUrl, {
       autoReconnect,
@@ -228,7 +229,7 @@ export function ConnectionPanel({
           id={inputId}
           type="text"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => { setUrl(e.target.value); onConfigChange({ url: e.target.value }); }}
           onKeyDown={e => {
             if (e.key !== "Enter" || isImeComposing(e.nativeEvent)) return;
             e.preventDefault();
@@ -309,7 +310,7 @@ export function ConnectionPanel({
         {SAMPLE_URLS.map((s) => (
           <button
             key={s.url}
-            onClick={() => setUrl(s.url)}
+            onClick={() => { setUrl(s.url); onConfigChange({ url: s.url }); }}
             disabled={isConnected || isConnecting}
             className="text-xs bg-[var(--bg-tertiary)] hover:bg-cyan-500/10 hover:text-cyan-600 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >

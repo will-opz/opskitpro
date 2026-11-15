@@ -79,10 +79,10 @@ test("session dialogs use the top layer, contain focus, dismiss safely and prese
   await expect(list).not.toBeVisible();
   await expect(load).toBeFocused();
   await load.click();
-  await list.getByRole("button", { name: /Synthetic session 0/ }).click();
+  await list.getByRole("button", { name: /^Synthetic session 0/ }).click();
   await expect(list).not.toBeVisible();
-  // The existing load callback is a placeholder; create logs using an intercepted
-  // local test socket rather than changing that unrelated application behavior.
+  // Continue with an explicit connection to the intercepted test socket.
+  // Loading history itself must leave the restored tab disconnected.
   await page.getByPlaceholder("wss://your-websocket-server.com").fill("wss://example.com/test");
   await page.getByRole("button", { name: "连接", exact: true }).click();
   const save = page.getByRole("button", { name: "保存", exact: true });
@@ -107,7 +107,7 @@ test("session dialogs use the top layer, contain focus, dismiss safely and prese
   await dialog.getByRole("button", { name: "保存", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   await load.click();
-  await expect(list.getByRole("button", { name: /Draft to preserve/ })).toBeVisible();
+  await expect(list.getByRole("button", { name: /^Draft to preserve/ })).toBeVisible();
   await page.mouse.click(4, 4);
   await expect(list).not.toBeVisible();
   await expect(load).toBeFocused();

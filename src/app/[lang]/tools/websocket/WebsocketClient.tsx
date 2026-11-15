@@ -46,8 +46,12 @@ export default function WebsocketClient({
     renameTab,
     clearLogs,
     canAddTab,
+    restoreSession,
+    updateConfig,
   } = useMultiConnection();
 
+  const [restoredTabId, setRestoredTabId] = useState<string>();
+  const [restoreNotice, setRestoreNotice] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("text");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const shellText = {
@@ -103,9 +107,14 @@ export default function WebsocketClient({
     send(activeTabId, JSON.stringify({ type: "ping", timestamp: Date.now() }));
   };
 
-  const handleLoadSession = (logs: any[]) => {
-    // Would need to implement session loading into current tab
-    console.log("Load session:", logs.length, "messages");
+  const handleLoadSession = (session: unknown) => {
+    const result = restoreSession(session);
+    if (result.ok) {
+      setViewMode("text");
+      setRestoredTabId(result.tabId);
+      setRestoreNotice(lang === "zh" ? "已载入到新的未连接标签。没有连接或重放消息。" : "Loaded into a new disconnected tab. No connection or message replay.");
+    }
+    return result;
   };
 
   return (
@@ -179,6 +188,7 @@ export default function WebsocketClient({
                 onRenameTab={renameTab}
                 canAddTab={canAddTab}
                 workspaceId={workspaceId}
+                focusTabId={restoredTabId}
               />
               <SessionManager
                 lang={lang}
@@ -231,17 +241,22 @@ export default function WebsocketClient({
           </section>
         )}
 
+        <p role="status" className="mb-3 text-sm text-[var(--text-secondary)]">{restoreNotice}</p>
+        {activeTab.restored && <p className="mb-3 text-sm text-[var(--text-secondary)]">{lang === "zh"
+          ? "已恢复历史日志；实时连接统计从零开始。二进制记录仅保留显示文本。"
+          : "Restored history; live connection counters start at zero. Binary records contain display text only."}</p>}
         {/* Main Grid */}
         <div id={workspaceId} role="group" aria-label={lang === "zh" ? `连接工作区：${activeTab.name.replace(/^Connection (\d+)$/, "连接 $1")}` : `Connection workspace: ${activeTab.name}`} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Connection Panel */}
           <div className="lg:col-span-12">
             <ConnectionPanel
+              key={activeTabId}
               lang={lang}
               status={activeTab.status}
               config={activeTab.config}
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
-              onConfigChange={() => {}}
+              onConfigChange={config => updateConfig(activeTabId, config)}
             />
           </div>
 
@@ -279,6 +294,7 @@ export default function WebsocketClient({
           {/* Log Viewer */}
           <div className="lg:col-span-12">
             <LogViewer
+              key={activeTabId}
               lang={lang}
               logs={activeTab.logs}
               onClear={() => clearLogs(activeTabId)}

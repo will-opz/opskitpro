@@ -2,6 +2,9 @@
 import { startToolRun } from "@/lib/audience-client";
 
 import { useState, useCallback, useRef } from "react";
+import { validateSavedSession, sessionError, type SessionError } from "./session-data";
+
+export type RestoreResult = { ok: true; tabId: string } | { ok: false; error: SessionError };
 import type {
   ConnectionStatus,
   LogEntry,
@@ -13,6 +16,7 @@ export interface ConnectionTab {
   name: string;
   url: string;
   status: ConnectionStatus;
+  restored?: boolean;
   logs: LogEntry[];
   stats: {
     messagesSent: number;
@@ -54,6 +58,7 @@ export function useMultiConnection() {
   ]);
   const [activeTabId, setActiveTabId] = useState("default");
 
+  const tabIds = useRef(new Set(["default"]));
   const socketsRef = useRef<Map<string, WebSocket>>(new Map());
   const reconnectTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const reconnectAttemptsRef = useRef<Map<string, number>>(new Map());
@@ -272,10 +277,10 @@ export function useMultiConnection() {
   );
 
   const addTab = useCallback(() => {
-    if (tabs.length >= MAX_TABS) return null;
+    if (tabIds.current.size >= MAX_TABS) return null;
 
     const newTab: ConnectionTab = {
-      id: Date.now().toString(36),
+      id: crypto.randomUUID(),
       name: `Connection ${tabs.length + 1}`,
       url: "wss://echo.websocket.org",
       status: "disconnected",
@@ -297,15 +302,39 @@ export function useMultiConnection() {
       },
     };
 
+    tabIds.current.add(newTab.id);
     setTabs((prev) => [...prev, newTab]);
     setActiveTabId(newTab.id);
     return newTab;
   }, [tabs.length]);
 
+  const restoreSession = useCallback((value: unknown): RestoreResult => {
+    let session;
+    try { session = validateSavedSession(value); }
+    catch (cause) { return { ok: false, error: sessionError(cause) }; }
+    if (tabIds.current.size >= MAX_TABS) return { ok: false, error: 'limit' };
+    const id = crypto.randomUUID();
+    tabIds.current.add(id);
+    const tab: ConnectionTab = {
+      id, name: session.name, url: session.url, logs: session.logs, status: 'disconnected', restored: true,
+      stats: { messagesSent: 0, messagesReceived: 0, bytesSent: 0, bytesReceived: 0, connectedAt: null, latency: null },
+      config: { url: session.url, autoReconnect: false, reconnectInterval: 3000, maxReconnectAttempts: 5, binaryType: 'arraybuffer' },
+    };
+    setTabs(current => [...current, tab]);
+    setActiveTabId(id);
+    return { ok: true, tabId: id };
+  }, []);
+
+  const updateConfig = useCallback((tabId: string, config: Partial<WebSocketConfig>) => {
+    setTabs(current => current.map(tab => tab.id === tabId
+      ? { ...tab, url: config.url ?? tab.url, config: { ...tab.config, ...config } } : tab));
+  }, []);
+
   const removeTab = useCallback(
     (tabId: string) => {
       if (tabs.length <= 1) return;
 
+      tabIds.current.delete(tabId);
       disconnect(tabId);
       setTabs((prev) => prev.filter((t) => t.id !== tabId));
 
@@ -340,6 +369,8 @@ export function useMultiConnection() {
     disconnect,
     send,
     addTab,
+    restoreSession,
+    updateConfig,
     removeTab,
     renameTab,
     clearLogs,

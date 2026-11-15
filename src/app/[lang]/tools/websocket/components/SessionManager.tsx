@@ -15,12 +15,14 @@ import {
 } from "lucide-react";
 import { useMessageHistory } from "../hooks/useMessageHistory";
 import type { LogEntry } from "../hooks";
+import type { SavedSession, SessionError } from "../hooks/session-data";
+import type { RestoreResult } from "../hooks/useMultiConnection";
 
 interface SessionManagerProps {
   lang: "zh" | "en";
   currentUrl: string;
   currentLogs: LogEntry[];
-  onLoadSession: (logs: LogEntry[]) => void;
+  onLoadSession: (session: SavedSession) => RestoreResult;
 }
 
 // React's autoFocus focuses on mount, while these dialogs are still closed.
@@ -37,6 +39,8 @@ export function SessionManager({
 }: SessionManagerProps) {
   const {
     sessions,
+    error,
+    reloadSessions,
     saveSession,
     deleteSession,
     clearSessions,
@@ -50,6 +54,7 @@ export function SessionManager({
   const saveTitleId = useId();
   const sessionsTitleId = useId();
   const nameId = useId();
+  const [loadError, setLoadError] = useState<SessionError | null>(null);
   const [sessionName, setSessionName] = useState("");
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const copy =
@@ -67,6 +72,16 @@ export function SessionManager({
           clearAll: "清空",
           noSessions: "暂无已保存会话",
           close: "关闭",
+          retry: "重新读取",
+          historyHint: "载入到新的未连接标签，不会连接或重放消息。",
+          limits: "最多 10 个会话，每个 500 条日志；全部保存数据最多 2,000,000 个 UTF-16 字符。名称最多 200 字符，地址最多 8,192 字符。超限会拒绝，不会截断。",
+          errors: {
+            invalid: "会话数据损坏或地址无效，无法恢复。原始保存数据未更改；修复数据后可重新读取。",
+            unsupported: "此会话版本暂不支持。原始保存数据未更改。",
+            'too-large': "会话数据超过下方限制，操作未完成。原始保存数据未更改。",
+            storage: "无法读写本地会话存储。请检查浏览器存储权限后重试；本次操作未完成。",
+            limit: "最多打开 5 个连接标签。请先关闭一个标签再载入；现有标签未更改。",
+          },
         }
       : {
           save: "Save",
@@ -81,17 +96,29 @@ export function SessionManager({
           clearAll: "Clear all",
           noSessions: "No saved sessions",
           close: "Close",
+          retry: "Reload saved sessions",
+          historyHint: "Load into a new disconnected tab, without connecting or replaying messages.",
+          limits: "Up to 10 sessions and 500 logs each; all saved data is limited to 2,000,000 UTF-16 characters. Names: 200 characters; URLs: 8,192. Oversized data is rejected, never truncated.",
+          errors: {
+            invalid: "Session data is damaged or its address is invalid. Saved data is unchanged; repair it and reload to try again.",
+            unsupported: "This session version is not supported. Saved data is unchanged.",
+            'too-large': "Session data exceeds the limits below. The operation was not completed; saved data is unchanged.",
+            storage: "Cannot read or write local session storage. Check browser storage permissions and retry; the operation was not completed.",
+            limit: "Only 5 connection tabs can be open. Close one before loading; existing tabs are unchanged.",
+          },
         };
 
   const handleSave = () => {
     if (currentLogs.length === 0) return;
-    saveSession(sessionName || "", currentUrl, currentLogs);
+    if (!saveSession(sessionName || "", currentUrl, currentLogs)) return;
     setSessionName("");
     saveDialog.current?.close();
   };
 
-  const handleLoad = (logs: LogEntry[]) => {
-    onLoadSession(logs);
+  const handleLoad = (session: SavedSession) => {
+    const result = onLoadSession(session);
+    if (!result.ok) { setLoadError(result.error); return; }
+    setLoadError(null);
     sessionsDialog.current?.close();
   };
 
@@ -103,7 +130,7 @@ export function SessionManager({
     <div className="flex items-center gap-2">
       {/* Save Button */}
       <button
-        onClick={() => saveDialog.current?.showModal()}
+        onClick={() => { setLoadError(null); reloadSessions(); saveDialog.current?.showModal(); }}
         disabled={currentLogs.length === 0}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-[var(--accent-text)] rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
       >
@@ -113,7 +140,7 @@ export function SessionManager({
 
       {/* Load Button */}
       <button
-        onClick={() => sessionsDialog.current?.showModal()}
+        onClick={() => { setLoadError(null); reloadSessions(); sessionsDialog.current?.showModal(); }}
         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg text-xs font-bold transition-all"
       >
         <FolderOpen className="w-3.5 h-3.5" />
@@ -194,6 +221,7 @@ export function SessionManager({
               </label>
               <input
                 id={nameId}
+                maxLength={200}
                 type="text"
                 value={sessionName}
                 onChange={(e) => setSessionName(e.target.value)}
@@ -220,6 +248,8 @@ export function SessionManager({
               </div>
             </div>
 
+            <p className="mb-3 text-xs text-[var(--text-muted)]">{copy.limits}</p>
+            <p role="alert" className="mb-3 text-sm text-[var(--danger-text)]">{error ? copy.errors[error] : ""}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => saveDialog.current?.close()}
@@ -267,6 +297,10 @@ export function SessionManager({
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto overscroll-contain p-4">
+              <p className="mb-3 text-sm text-[var(--text-secondary)]">{copy.historyHint}</p>
+              <p className="mb-3 text-xs text-[var(--text-muted)]">{copy.limits}</p>
+              <p role="alert" className="mb-3 text-sm text-[var(--danger-text)]">{loadError || error ? copy.errors[(loadError || error)!] : ""}</p>
+              {error && <button type="button" className="ui-button-secondary mb-3" onClick={() => { setLoadError(null); reloadSessions(); }}>{copy.retry}</button>}
               {sessions.length === 0 ? (
                 <div className="text-center py-12 text-[var(--text-muted)]">
                   <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -281,7 +315,7 @@ export function SessionManager({
                     >
                       <div className="flex items-start justify-between">
                         <button
-                          onClick={() => handleLoad(session.logs)}
+                          onClick={() => handleLoad(session)}
                           className="flex-1 text-left"
                         >
                           <div className="font-semibold text-[var(--text-primary)]">
@@ -302,20 +336,20 @@ export function SessionManager({
                           </div>
                         </button>
 
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 opacity-100">
                           <button
                             onClick={() =>
                               exportToJson(session.logs, `${session.name}.json`)
                             }
                             className="p-1.5 text-[var(--text-muted)] hover:text-[var(--warning-text)]"
-                            title="Export JSON"
+                            aria-label={`${copy.export}: ${session.name}`}
                           >
                             <Download className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => deleteSession(session.id)}
                             className="p-1.5 text-[var(--text-muted)] hover:text-[var(--danger-text)]"
-                            title="Delete"
+                            aria-label={`${lang === "zh" ? "删除" : "Delete"}: ${session.name}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
