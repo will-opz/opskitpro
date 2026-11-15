@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, FormEvent, useContext, useState } from "react";
+import { createContext, FormEvent, useContext, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, ShieldCheck, X } from "lucide-react";
 
@@ -35,6 +35,11 @@ const labels = {
     cancel: "取消",
     failed: "邮箱或密码不正确。",
     notConfigured: "管理员登录尚未配置。",
+    close: "关闭登录",
+    checking: "正在检查登录状态…",
+    retry: "重试",
+    unavailable: "暂时无法检查登录状态。请重试，或继续使用 Cloudflare 登录。",
+    requestFailed: "登录请求未完成，请重试。",
   },
 
   en: {
@@ -52,6 +57,11 @@ const labels = {
     cancel: "Cancel",
     failed: "Incorrect email or password.",
     notConfigured: "Admin sign-in is not configured.",
+    close: "Close sign-in",
+    checking: "Checking sign-in status…",
+    retry: "Retry",
+    unavailable: "Unable to check sign-in status. Retry or continue with Cloudflare sign-in.",
+    requestFailed: "Sign-in request did not complete. Please retry.",
   },
 };
 
@@ -72,56 +82,76 @@ export function AdminSessionProvider({
   const [passwordConfigured, setPasswordConfigured] = useState(false);
   const [accessConfigured, setAccessConfigured] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sessionChecked, setSessionChecked] = useState(false);
+  const [sessionError, setSessionError] = useState(false);
+  const sessionRequest = useRef<AbortController | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [nextPath, setNextPath] = useState<string | undefined>();
 
-  const loadSession = async () => {
-    if (sessionChecked) {
-      return authenticated;
-    }
+  useEffect(() => () => {
+    sessionRequest.current?.abort();
+    sessionRequest.current = null;
+  }, []);
 
-    setLoading(true);
-    return fetch("/api/admin/session", { cache: "no-store", redirect: "error" })
-      .then((response) => {
-        if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) {
-          throw new Error("Admin session requires Access navigation");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        const isAuthenticated = Boolean(data.authenticated);
-        setAuthenticated(isAuthenticated);
-        setEmail(typeof data.email === "string" ? data.email : "");
-        setProvider(
-          data.provider === "cloudflare_access" || data.provider === "password"
-            ? data.provider
-            : null,
-        );
-        setConfigured(Boolean(data.configured));
-        setPasswordConfigured(Boolean(data.passwordConfigured));
-        setAccessConfigured(Boolean(data.accessConfigured));
-        setSessionChecked(true);
-        return isAuthenticated;
-      })
-      .catch(() => {
-        // Access may challenge the protected API before it reaches Next.js.
-        // Keep a full-page sign-in path available; never infer authentication.
-        setAuthenticated(false);
-        setConfigured(true);
-        setPasswordConfigured(false);
-        setAccessConfigured(true);
-        setSessionChecked(true);
-        return false;
-      })
-      .finally(() => setLoading(false));
+  const closeLogin = () => {
+    sessionRequest.current?.abort();
+    sessionRequest.current = null;
+    setLoading(false);
+    setLoginOpen(false);
   };
 
-  const openLogin = async (path?: string) => {
+  const loadSession = async () => {
+    sessionRequest.current?.abort();
+    const request = new AbortController();
+    sessionRequest.current = request;
+    const timeout = window.setTimeout(() => request.abort(), 10000);
+    setLoading(true);
+    setSessionError(false);
+    try {
+      const response = await fetch("/api/admin/session", {
+        cache: "no-store", redirect: "error", signal: request.signal,
+      });
+      if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("Session unavailable");
+      }
+      const data = await response.json();
+      if (!data || typeof data.authenticated !== "boolean" || typeof data.configured !== "boolean" ||
+          (data.authenticated && (typeof data.email !== "string" || !data.email ||
+            (data.provider !== "cloudflare_access" && data.provider !== "password")))) {
+        throw new Error("Invalid session response");
+      }
+      if (sessionRequest.current !== request || request.signal.aborted) return;
+      setAuthenticated(data.authenticated);
+      setEmail(typeof data.email === "string" ? data.email : "");
+      setProvider(data.provider === "cloudflare_access" || data.provider === "password" ? data.provider : null);
+      setConfigured(data.configured);
+      setPasswordConfigured(data.passwordConfigured === true);
+      setAccessConfigured(data.accessConfigured === true);
+      if (data.authenticated) setLoginOpen(false);
+    } catch {
+      if (sessionRequest.current !== request) return;
+      // A challenged API is not an identity. Keep full-page Access sign-in available.
+      setAuthenticated(false);
+      setEmail("");
+      setProvider(null);
+      setConfigured(true);
+      setPasswordConfigured(false);
+      setAccessConfigured(true);
+      setSessionError(true);
+    } finally {
+      window.clearTimeout(timeout);
+      if (sessionRequest.current === request) {
+        sessionRequest.current = null;
+        setLoading(false);
+      }
+    }
+  };
+
+  const openLogin = (path?: string) => {
     setNextPath(path);
-    const isAuthenticated = await loadSession();
-    if (isAuthenticated) return;
     setLoginOpen(true);
+    setPasswordConfigured(false);
+    setAccessConfigured(false);
+    void loadSession();
   };
 
   const logout = async () => {
@@ -153,6 +183,9 @@ export function AdminSessionProvider({
         <AdminLoginDialog
           lang={lang}
           configured={configured}
+          checking={loading}
+          sessionError={sessionError}
+          onRetry={() => void loadSession()}
           passwordConfigured={passwordConfigured}
           accessConfigured={accessConfigured}
           onAccessLogin={() => {
@@ -160,10 +193,10 @@ export function AdminSessionProvider({
               nextPath?.startsWith("/") && !nextPath.startsWith("//")
                 ? nextPath
                 : "/admin";
-            setLoginOpen(false);
+            closeLogin();
             window.location.assign(`/admin/auth?next=${encodeURIComponent(target)}`);
           }}
-          onClose={() => setLoginOpen(false)}
+          onClose={closeLogin}
           onLogin={(identity) => {
             setAuthenticated(true);
             setEmail(identity.email);
@@ -188,6 +221,9 @@ export function useAdminSession() {
 function AdminLoginDialog({
   lang,
   configured,
+  checking,
+  sessionError,
+  onRetry,
   passwordConfigured,
   accessConfigured,
   onAccessLogin,
@@ -196,6 +232,9 @@ function AdminLoginDialog({
 }: {
   lang: keyof typeof labels;
   configured: boolean;
+  checking: boolean;
+  sessionError: boolean;
+  onRetry: () => void;
   passwordConfigured: boolean;
   accessConfigured: boolean;
   onAccessLogin: () => void;
@@ -211,46 +250,70 @@ function AdminLoginDialog({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const dialog = useRef<HTMLDialogElement>(null);
+  const submission = useRef<AbortController | null>(null);
+  const id = useId();
+  useEffect(() => {
+    const element = dialog.current!;
+    element.showModal();
+    return () => {
+      submission.current?.abort();
+      submission.current = null;
+      element.close();
+    };
+  }, []);
+
+  const dismiss = () => {
+    submission.current?.abort();
+    submission.current = null;
+    dialog.current?.close();
+    onClose();
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submission.current) return;
+    const request = new AbortController();
+    submission.current = request;
+    const timeout = window.setTimeout(() => request.abort(), 10000);
     setError("");
     setSubmitting(true);
-
-    const response = await fetch("/api/admin/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    setSubmitting(false);
-    if (response.ok) {
-      const data = await response.json().catch(() => ({}));
-      return onLogin({
-        email: typeof data.email === "string" ? data.email : "",
-        provider:
-          data.provider === "cloudflare_access" || data.provider === "password"
-            ? data.provider
-            : "password",
+    try {
+      const response = await fetch("/api/admin/session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }), signal: request.signal, redirect: "error",
       });
+      if (!response.ok) {
+        if (submission.current === request) setError(response.status === 503 ? t.notConfigured : t.failed);
+        return;
+      }
+      const data = await response.json();
+      if (!data?.authenticated || typeof data.email !== "string" || !data.email ||
+          (data.provider !== "cloudflare_access" && data.provider !== "password")) {
+        throw new Error("Invalid sign-in response");
+      }
+      if (submission.current === request && !request.signal.aborted) onLogin(data);
+    } catch {
+      if (submission.current === request) setError(t.requestFailed);
+    } finally {
+      window.clearTimeout(timeout);
+      if (submission.current === request) {
+        submission.current = null;
+        setSubmitting(false);
+      }
     }
-    setError(response.status === 503 ? t.notConfigured : t.failed);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6">
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-black/40 backdrop-blur-sm"
-      />
+    <dialog ref={dialog} aria-labelledby={`${id}-title`} onCancel={dismiss} onClose={event => { if (!event.currentTarget.open) onClose(); }}
+      className="admin-login-dialog m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-auto rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-0 text-[var(--text-primary)] shadow-2xl">
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-md rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-5 shadow-2xl"
+        className="p-5"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+            <h2 id={`${id}-title`} className="text-lg font-semibold text-[var(--text-primary)]">
               {t.title}
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
@@ -259,13 +322,20 @@ function AdminLoginDialog({
           </div>
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"
+            onClick={dismiss}
+            aria-label={t.close}
+            autoFocus
+            className="min-h-10 min-w-10 rounded-lg p-2 text-[var(--text-muted)] hover:bg-[var(--surface-secondary)]"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        {accessConfigured && (
+        {checking && <p role="status" className="mb-3 text-sm">{t.checking}</p>}
+        {sessionError && <div className="mb-3">
+          <p role="alert" className="text-sm">{t.unavailable}</p>
+          <button type="button" onClick={onRetry} disabled={checking} className="ui-button-ghost mt-2 min-h-10">{t.retry}</button>
+        </div>}
+        {accessConfigured && !checking && (
           <button
             type="button"
             onClick={onAccessLogin}
@@ -291,7 +361,7 @@ function AdminLoginDialog({
             <span className="h-px flex-1 bg-[var(--border-subtle)]" />
           </div>
         )}
-        {passwordConfigured && (
+        {passwordConfigured && !checking && (
           <div className={accessConfigured ? "" : "mt-1"}>
             <div className="mb-3 flex items-start gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-4 py-3">
               <KeyRound className="mt-0.5 h-5 w-5 flex-none text-[var(--text-muted)]" />
@@ -304,20 +374,23 @@ function AdminLoginDialog({
                 </div>
               </div>
             </div>
-            <label className="block text-sm font-semibold text-[var(--text-secondary)]">
+            <label htmlFor={`${id}-email`} className="block text-sm font-semibold text-[var(--text-secondary)]">
               {t.email}
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="username"
-                autoFocus={!accessConfigured}
+                id={`${id}-email`}
+                aria-describedby={error ? `${id}-error` : undefined}
                 className="mt-2 h-11 w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-3 text-sm text-[var(--text-primary)] outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10"
               />
             </label>
-            <label className="mt-3 block text-sm font-semibold text-[var(--text-secondary)]">
+            <label htmlFor={`${id}-password`} className="mt-3 block text-sm font-semibold text-[var(--text-secondary)]">
               {t.password}
               <input
+                id={`${id}-password`}
+                aria-describedby={error ? `${id}-error` : undefined}
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -328,17 +401,17 @@ function AdminLoginDialog({
           </div>
         )}
         {error && (
-          <p className="mt-3 text-sm font-semibold text-red-500">{error}</p>
+          <p id={`${id}-error`} role="alert" className="mt-3 text-sm font-semibold text-[var(--danger-text)]">{error}</p>
         )}
         <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={dismiss}
             className="ui-button-ghost border border-[var(--border-subtle)]"
           >
             {t.cancel}
           </button>
-          {passwordConfigured && (
+          {passwordConfigured && !checking && (
             <button
               type="submit"
               disabled={submitting || !configured || !email.trim() || !password}
@@ -349,6 +422,6 @@ function AdminLoginDialog({
           )}
         </div>
       </form>
-    </div>
+    </dialog>
   );
 }

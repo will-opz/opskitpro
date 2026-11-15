@@ -326,3 +326,13 @@ section[id], h2[id] { scroll-margin-top: 6rem; }
   outline: 2px solid var(--accent-text);
   outline-offset: 3px;
 }
+
+.admin-login-dialog:modal {
+  overscroll-behavior: contain;
+}
+.admin-login-dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
