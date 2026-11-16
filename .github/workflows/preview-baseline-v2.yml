@@ -1,0 +1,64 @@
+name: Preview deployed baseline v2
+on:
+  workflow_dispatch:
+concurrency:
+  group: product-lightsail-v2
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  deploy:
+    # This workflow has no activation path, even when publication is enabled.
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_AUDIENCE_ENABLED: 'true'
+      REVISION: 840b1de89c66c56b66331c7a19115b80df340cae-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 840b1de89c66c56b66331c7a19115b80df340cae
+          persist-credentials: false
+      - name: Checkout reviewed deployment tooling
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: .preview-tooling
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/deploy-v2
+            deploy/requirements-production.lock
+      - name: Prepare deployment tooling only
+        run: |
+          mkdir -p scripts
+          cp -R .preview-tooling/scripts/deploy-v2 scripts/deploy-v2
+          rm -rf -- .preview-tooling
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:fast
+      - run: npm run package:standalone
+      - name: Validate artifact inventory
+        run: python3 scripts/deploy-v2/release_bundle.py --source .deploy/opskitpro --group product --revision "$REVISION" --output .release-v2.tar.gz --dry-run
+      - name: Seal artifact
+        run: python3 scripts/deploy-v2/release_bundle.py --source .deploy/opskitpro --group product --revision "$REVISION" --output .release-v2.tar.gz --apply
+      - name: Read-only production controller validation
+        env:
+          DEPLOY_HOST: ${{ secrets.LIGHTSAIL_V2_HOST }}
+          DEPLOY_USER: ${{ secrets.LIGHTSAIL_V2_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.LIGHTSAIL_V2_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.LIGHTSAIL_V2_KNOWN_HOSTS }}
+          DEPLOY_TARGET_ID: ${{ vars.DEPLOY_V2_TARGET_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          secret_dir="$(mktemp -d "$RUNNER_TEMP/opskit-deploy.XXXXXX")"
+          trap 'rm -f "$secret_dir/key" "$secret_dir/known_hosts"; rmdir "$secret_dir"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$secret_dir/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$secret_dir/known_hosts"
+          export DEPLOY_KEY_FILE="$secret_dir/key" DEPLOY_KNOWN_HOSTS_FILE="$secret_dir/known_hosts"
+          unset DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS
+          python3 scripts/deploy-v2/release_client.py --group product --revision "$REVISION" --archive .release-v2.tar.gz --dry-run
